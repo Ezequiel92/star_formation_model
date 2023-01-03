@@ -46,20 +46,20 @@ begin
 	
 	# ODE solver methods
 	const methods = [
-		(nothing, "default"),
-		(Rodas4(), "Rodas4"),
-		(Rodas42(), "Rodas42"),
-		(Rodas4P(), "Rodas4P"),
-		(Rodas4P2(), "Rodas4P2"),
-		(Rodas5(), "Rodas5"),
-		(KenCarp4(), "KenCarp4"),
+		(nothing,        "default"),
+		(Rodas4(),       "Rodas4"),
+		(Rodas42(),      "Rodas42"),
+		(Rodas4P(),      "Rodas4P"),
+		(Rodas4P2(),     "Rodas4P2"),
+		(Rodas5(),       "Rodas5"),
+		(KenCarp4(),     "KenCarp4"),
 		(Rosenbrock23(), "Rosenbrock23"),
-		(TRBDF2(), "TRBDF2"),
-		(QNDF(), "QNDF"),
-		(FBDF(), "FBDF"),
-		(Kvaerno5(), "Kvaerno5"),
-	    (RadauIIA5(), "RadauIIA5"),
-		(AN5(), "AN5"),
+		(TRBDF2(),       "TRBDF2"),
+		(QNDF(),         "QNDF"),
+		(FBDF(),         "FBDF"),
+		(Kvaerno5(),     "Kvaerno5"),
+	    (RadauIIA5(),    "RadauIIA5"),
+		(AN5(),          "AN5"),
 	];
 
     # Aliases:
