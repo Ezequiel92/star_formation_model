@@ -11,10 +11,15 @@ concurrency:
 
 jobs:
     build-and-deploy:
-        runs-on: ubuntu-latest
+        runs-on: windows-latest
         steps:
-            - name: Install lualatex
-              run: sudo apt-get update && sudo apt-get install -y texlive-full
+            - name: Setup TeX Live
+              uses: teatimeguest/setup-texlive-action@v2
+              with:
+                packages: >-
+                  scheme-basic
+                  tikz
+                  chemformula
               
             - name: Checkout this repository
               uses: actions/checkout@v3
@@ -47,7 +52,7 @@ jobs:
 
                   import PlutoSliderServer
 
-                  PlutoSliderServer.github_action(".";
+                  PlutoSliderServer.github_action("./";
                     Export_cache_dir="pluto_state_cache",
                     Export_baked_notebookfile=false,
                     Export_baked_state=false,
