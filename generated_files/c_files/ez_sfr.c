@@ -93,16 +93,16 @@ static double *read_ftable(const char *filepath, const int n_rows, const int n_c
  *  If the value is out of range, the function at its boundaries is used.
  *
  *  \param[in] x Value at which the interpolation function will be evaluated.
- *  \param[in] table Path to the table containing the values of x for every y.
+ *  \param[in] R_table Path to the table containing the values of x for every y.
  *
  *  \return The interpolation function.
  */
 #ifdef TESTING
-double interpolate1D(const double x, const char *table)
+double interpolate1D(const double x, const char *R_table)
 {
   double *R_data = read_ftable(table, R_NROWS, R_NCOLS);
 #else  /* #ifdef TESTING */
-static double interpolate1D(const double x, const double y, const double *R_data)
+static double interpolate1D(const double x, const double *R_data)
 {
 #endif /* #ifdef TESTING */
 
@@ -170,7 +170,7 @@ static double interpolate1D(const double x, const double y, const double *R_data
  *
  *  \param[in] x X coordinate at which the interpolation function will be evaluated.
  *  \param[in] y Y coordinate at which the interpolation function will be evaluated.
- *  \param[in] table Path to the table containing the values of z for every x and y.
+ *  \param[in] eta_table Path to the table containing the values of z for every x and y.
  *
  *  \return The interpolation function.
  */
@@ -521,6 +521,31 @@ double rate_of_star_formation(const int index)
     }
 
   /*************************************************************************************************
+   * Compute the integration time
+   *************************************************************************************************/
+
+  double current_time = All.Time * T_MYR;
+  double delta_time   = current_time - SphP[index].C_TIME;
+
+  /* Integration time [im Myr)] */
+  double it = (((integertime)1) << P[index].TimeBinHydro) * All.Timebase_interval * T_MYR * All.cf_atime / All.cf_time_hubble_a;
+  if(it <= 0.0)
+    {
+      return 0.0;
+    }
+  double accu_it = it;
+  if(!isnan(SphP[index].ACCU_IT) && delta_time < SphP[index].TAU_S)
+    { /* If this is not the first time for this particle */
+      accu_it = SphP[index].ACCU_IT + it;
+    }
+
+  /* Store the time parameters */
+  SphP[index].IT      = it;
+  SphP[index].ACCU_IT = accu_it;
+  SphP[index].C_TIME  = current_time;
+  SphP[index].D_TIME  = delta_time;
+
+  /*************************************************************************************************
    * Compute the parameters
    *************************************************************************************************/
 
@@ -534,25 +559,21 @@ double rate_of_star_formation(const int index)
       metallicity = SphP[index].Metallicity;
     }
 
-  /* Integration time [im Myr)] */
-  double it = (((integertime)1) << P[index].TimeBinHydro) * All.Timebase_interval * T_MYR * All.cf_atime / All.cf_time_hubble_a;
-  if(it <= 0.0)
-    {
-      return 0.0;
-    }
-  if(!isnan(SphP[index].ODE_IC_it))
-    { /* If this is not the first time for this particle */
-      double integration_time = it + SphP[index].ODE_IC_it;
-    }
-
   /* Compute the photodissociation efficiency */
-  double eta_d = interpolate(integration_time, metallicity, INTERP_ETA_D);
-  double eta_i = interpolate(integration_time, metallicity, INTERP_ETA_I);
+  double eta_d = interpolate2D(accu_it, metallicity, ETA_D_DATA);
+  double eta_i = interpolate2D(accu_it, metallicity, ETA_I_DATA);
 
   /* Mass recycling fraction */
-  double R = ODE_R;
+  double R = interpolate1D(metallicity, R_DATA);
 
   double parameters[] = {density, metallicity, eta_d, eta_i, R};
+
+  /* Store the parameters */
+  SphP[index].PAR_rho_C = density;
+  SphP[index].PAR_Z     = metallicity;
+  SphP[index].PAR_eta_d = eta_d;
+  SphP[index].PAR_eta_i = eta_i;
+  SphP[index].PAR_R     = R;
 
   /*************************************************************************************************
    * Compute the ICs
@@ -561,34 +582,27 @@ double rate_of_star_formation(const int index)
   /* Atomic gas fraction [dimensionless] */
   double a_f = 0.0;
   get_neutral_fraction(index, &af);
-  if(!isnan(SphP[index].atomicFraction))
+  if(!isnan(SphP[index].atomicFraction) && delta_time < SphP[index].TAU_S)
     { /* If this is not the first time for this particle */
       a_f = SphP[index].atomicFraction;
     }
 
   /* Ionized gas fraction */
-  double i_f = 1 - a_f;
+  double i_f = 1.0 - a_f;
   get_neutral_fraction(index, &af);
-  if(!isnan(SphP[index].ionizedFraction))
+  if(!isnan(SphP[index].ionizedFraction) && delta_time < SphP[index].TAU_S)
     { /* If this is not the first time for this particle */
       i_f = SphP[index].ionizedFraction;
     }
 
   /* Fraction of the neutral density that is molecular Hydrogen [dimensionless] */
   double m_f = 0.0;
-  if(!isnan(SphP[index].molecularFraction))
+  if(!isnan(SphP[index].molecularFraction) && delta_time < SphP[index].TAU_S)
     { /* If this is not the first time for this particle */
       m_f = SphP[index].molecularFraction;
     }
 
   const double ic[] = {i_f, a_f, m_f, 1.0 - i_f - a_f - m_f};
-
-  /* Store the parameters*/
-  SphP[index].PAR_rho_C = density;
-  SphP[index].PAR_Z     = metallicity;
-  SphP[index].PAR_eta_d = eta_d;
-  SphP[index].PAR_eta_i = eta_i;
-  SphP[index].PAR_R     = R;
 
   /* Store stellar time parameter */
   SphP[index].TAU_S = ODE_CS / sqrt((1 - fractions[3]) * density);
@@ -603,7 +617,7 @@ double rate_of_star_formation(const int index)
   SphP[index].stellarFraction   = fractions[3];
 
   /* Return the star formation rate in [Mₒ yr^(-1)] */
-  return fractions[3] * fn * (P[index].Mass * M_COSMO) / dt;
+  return fractions[3] * (P[index].Mass * M_COSMO) / accu_it;
 }
 
 #endif /* #ifndef TESTING */
