@@ -13,8 +13,8 @@ jobs:
     build-and-deploy:
         runs-on: ubuntu-latest
         steps:
-            - name: Install dependencies
-              run: sudo apt-get update && sudo apt install texlive-full -y
+            - name: Install lualatex
+              run: sudo apt-get update && sudo apt-get install -y texlive-full
               
             - name: Checkout this repository
               uses: actions/checkout@v3
