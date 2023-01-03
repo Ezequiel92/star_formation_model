@@ -12,9 +12,9 @@
  *              exchange between the different phases of neutral Hydrogen (atomic and molecular),
  *              and stars.
  *              contains functions:
- *                static double *read_ftable(const char *filepath, const int n_rows, const int n_cols)
- *                double interpolate(double x, double y, const void *interpolation_function)
- *                void *get_eta_interp_function(const char *eta_table)
+ *                double *read_ftable(const char *filepath, const int n_rows, const int n_cols)
+ *                double interpolate1D(const double x, const char *R_table)
+ *                double interpolate2D(const double x, const double y, const char *eta_table)
  *                static int sf_ode(double t, const double y[], double f[], void *ode_params)
  *                static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *ode_params)
  *                void integrate_ode(const double *ic, double *parameters, double it, double *fractions)
@@ -58,11 +58,7 @@
  *
  *  \return Values in the table as an array.
  */
-#ifdef TESTING
 double *read_ftable(const char *filepath, const int n_rows, const int n_cols)
-#else  /* #ifdef TESTING */
-static double *read_ftable(const char *filepath, const int n_rows, const int n_cols)
-#endif /* #ifdef TESTING */
 {
   FILE *file_ptr = fopen(filepath, "r");
   double *data   = malloc(n_rows * n_cols * sizeof(double));
@@ -100,7 +96,7 @@ static double *read_ftable(const char *filepath, const int n_rows, const int n_c
 #ifdef TESTING
 double interpolate1D(const double x, const char *R_table)
 {
-  double *R_data = read_ftable(table, R_NROWS, R_NCOLS);
+  double *R_data = read_ftable(R_table, R_NROWS, R_NCOLS);
 #else  /* #ifdef TESTING */
 static double interpolate1D(const double x, const double *R_data)
 {
@@ -444,9 +440,9 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
  *  \return void.
  */
 #ifdef TESTING
-int integrate_ode(const double *ic, double *parameters, double it, double *fractions)
+void integrate_ode(const double *ic, double *parameters, double it, double *fractions)
 #else  /* #ifdef TESTING */
-static int integrate_ode(const double *ic, double *parameters, double it, double *fractions)
+static void integrate_ode(const double *ic, double *parameters, double it, double *fractions)
 #endif /* #ifdef TESTING */
 {
   /* Initial conditions */
@@ -490,8 +486,6 @@ static int integrate_ode(const double *ic, double *parameters, double it, double
   fractions[1] = a_f;
   fractions[2] = m_f;
   fractions[3] = s_f;
-
-  return 0;
 }
 
 #ifndef TESTING
@@ -525,7 +519,11 @@ double rate_of_star_formation(const int index)
    *************************************************************************************************/
 
   double current_time = All.Time * T_MYR;
-  double delta_time   = current_time - SphP[index].C_TIME;
+  double delta_time   = 0.0;
+  if(!isnan(SphP[index].C_TIME))
+    {
+      delta_time = current_time - SphP[index].C_TIME;
+    }
 
   /* Integration time [im Myr)] */
   double it = (((integertime)1) << P[index].TimeBinHydro) * All.Timebase_interval * T_MYR * All.cf_atime / All.cf_time_hubble_a;
