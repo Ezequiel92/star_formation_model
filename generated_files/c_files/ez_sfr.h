@@ -113,7 +113,7 @@ static const double F_RHO[] = {1.0,};
 
 #endif /* #ifdef RHO_PDF */
 
-void *get_eta_interp_function(const char *eta_table);
+double *read_ftable(const char *filepath, const int n_rows, const int n_cols);
 double rate_of_star_formation(const int index);
 
 #endif /* #ifdef EZ_SFR_H */
