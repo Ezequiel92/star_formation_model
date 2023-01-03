@@ -585,45 +585,6 @@ write_R_table(joinpath(GEN_FILES, "interpolation_tables"))
 md"## Make `ez_sfr` folder"
   ╠═╡ =#
 
-# ╔═╡ 77c66e95-12f3-4508-a9be-06124db43d4a
-# ╠═╡ disabled = true
-# ╠═╡ skip_as_script = true
-#=╠═╡
-begin
-	ez_sfr_path = mkpath("../simulation_code/test_arepo/code/src/ez_sfr")
-
-	cp(
-		joinpath(C_FILES, "ez_sfr.c"),
-		joinpath(ez_sfr_path, "ez_sfr.c"),
-		force=true,
-	)
-	
-	cp(
-		joinpath(C_FILES, "ez_sfr.h"),
-		joinpath(ez_sfr_path, "ez_sfr.h"),
-		force=true,
-	)
-
-	cp(
-		ETA_D_TABLE,
-		joinpath(ez_sfr_path, "tables/eta_d.txt"),
-		force=true,
-	)
-
-	cp(
-		ETA_I_TABLE,
-		joinpath(ez_sfr_path, "tables/eta_i.txt"),
-		force=true,
-	)
-
-	cp(
-		R_TABLE,
-		joinpath(ez_sfr_path, "tables/R_Zsn.txt"),
-		force=true,
-	)
-end;
-  ╠═╡ =#
-
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
