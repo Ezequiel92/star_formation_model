@@ -100,9 +100,9 @@ function write_header_file(path::Union{String,Nothing})::Union{String,Nothing}
 	#define MW $(@sprintf("%.2f", MODEL.MW))  /* Weight of the molecular fraction in the computation of the SFR */
 	
 	/* Paths to the interpolation tables */
-	static char *ETA_D_TABLE = "../code/src/ez_sfr/interpolation_tables/eta_d.txt";
-	static char *ETA_I_TABLE = "../code/src/ez_sfr/interpolation_tables/eta_i.txt";
-	static char *R_TABLE = "../code/src/ez_sfr/interpolation_tables/R_Zsn.txt";
+	static char *ETA_D_TABLE = "../code/src/ez_sfr/tables/eta_d.txt";
+	static char *ETA_I_TABLE = "../code/src/ez_sfr/tables/eta_i.txt";
+	static char *R_TABLE = "../code/src/ez_sfr/tables/R_Zsn.txt";
 
 	typedef struct InterpFunc2D
 	{
