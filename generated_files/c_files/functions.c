@@ -197,7 +197,7 @@ void *get_interpolation_function(const char *table)
  *
  *  \return The interpolation function.
  */
-double interpolate1D(const double x, const char *table)
+double interpolate1D(double x, const char *table)
 {
   double *data = read_ftable(table, NROWS, 2);
   double *xa   = malloc(NROWS * sizeof(double));
@@ -218,6 +218,7 @@ double interpolate1D(const double x, const char *table)
 
   if(x < xa[0])
     {
+      x      = xa[0];
       x1     = xa[0];
       x2     = xa[1];
       idx_x1 = 0;
@@ -225,6 +226,7 @@ double interpolate1D(const double x, const char *table)
     }
   else if(x > xa[NROWS - 1])
     {
+      x      = xa[NROWS - 1];
       x1     = xa[NROWS - 2];
       x2     = xa[NROWS - 1];
       idx_x1 = NROWS - 2;
@@ -268,7 +270,7 @@ double interpolate1D(const double x, const char *table)
  *
  *  \return The interpolation function.
  */
-double interpolate2D(const double x, const double y, const char *table)
+double interpolate2D(double x, double y, const char *table)
 {
   double *eta_data = read_ftable(table, NROWS, NCOLS);
 
@@ -302,6 +304,7 @@ double interpolate2D(const double x, const double y, const char *table)
 
   if(x < xa[0])
     {
+      x      = xa[0];
       x1     = xa[0];
       x2     = xa[1];
       idx_x1 = 0;
@@ -309,6 +312,7 @@ double interpolate2D(const double x, const double y, const char *table)
     }
   else if(x > xa[nx - 1])
     {
+      x      = xa[nx - 1];
       x1     = xa[nx - 2];
       x2     = xa[nx - 1];
       idx_x1 = nx - 2;
@@ -331,6 +335,7 @@ double interpolate2D(const double x, const double y, const char *table)
 
   if(y < ya[0])
     {
+      y      = ya[0];
       y1     = ya[0];
       y2     = ya[1];
       idx_y1 = 0;
@@ -338,6 +343,7 @@ double interpolate2D(const double x, const double y, const char *table)
     }
   else if(y > ya[ny - 1])
     {
+      y      = ya[ny - 1];
       y1     = ya[ny - 2];
       y2     = ya[ny - 1];
       idx_y1 = ny - 2;
