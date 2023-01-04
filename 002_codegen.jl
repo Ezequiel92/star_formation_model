@@ -104,17 +104,6 @@ function write_header_file(path::Union{String,Nothing})::Union{String,Nothing}
 	static char *ETA_I_TABLE = "../code/src/ez_sfr/tables/eta_i.txt";
 	static char *R_TABLE = "../code/src/ez_sfr/tables/R_Zsn.txt";
 
-	typedef struct InterpFunc2D
-	{
-		gsl_spline2d *spline;
-		gsl_interp_accel *xacc;
-	    gsl_interp_accel *yacc;
-		double x_min;
-		double x_max;
-	    double y_min;
-		double y_max;
-	} InterpFunc2D;
-
 	#ifdef RHO_PDF
 	
 	/*
