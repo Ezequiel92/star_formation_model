@@ -292,12 +292,12 @@ md"""
 md"""
 ## Star formation rate
 
-For the star formation rata we take into account the strong correlation between molecular Hydrogen and star formation ([Bigiel2008](https://doi.org/10.1088/0004-6256/136/6/2846), [Bigiel2010](https://doi.org/10.1088/0004-6256/140/5/1194), [Wong2002](https://doi.org/10.1086/339287), [Robertson2008](https://doi.org/10.1086/587796), [Halle2013](https://doi.org/10.1051/0004-6361/201220952), [Thompson2013](https://doi.org/10.1088/0004-637x/780/2/145)). In particular we will follow [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) with
+For the star formation rate we take into account the strong correlation between molecular Hydrogen and star formation ([Bigiel2008](https://doi.org/10.1088/0004-6256/136/6/2846), [Bigiel2010](https://doi.org/10.1088/0004-6256/140/5/1194), [Wong2002](https://doi.org/10.1086/339287), [Robertson2008](https://doi.org/10.1086/587796), [Halle2013](https://doi.org/10.1051/0004-6361/201220952), [Thompson2013](https://doi.org/10.1088/0004-637x/780/2/145)). In particular we will follow [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) with
 
 $\begin{equation}
 	\mathrm{SFR} = \frac{A_w \, m_a + M_w \, m_m}{\tau_S}
 \end{equation}$
-where $A_w$ y $M_w$ are dimensionless free parameters that weigth the contribution of the atomic mass, $m_a$, and the molecular mass, $m_m$, respectively. $\tau_S$ is the characteristic timescale for star formation.
+where $A_w$ y $M_w$ are dimensionless free parameters that weight the contribution of the atomic mass, $m_a$, and the molecular mass, $m_m$, respectively. $\tau_S$ is the characteristic timescale for star formation.
 
 Given that the equations are written per unit of volume and cell density, $\rho_C$, the SFR enters the equations as
 
@@ -345,7 +345,7 @@ $\begin{align}
 
 where $\rho_g = \rho_i + \rho_a + \rho_m$ is the density of the gas, and $s_f$ the stellar cell mass fraction.
 
-There is a lot of uncertanty for the parameter $\epsilon_\star$, so we will follow [Krumholz2019](https://doi.org/10.1146/annurev-astro-091918-104430) using $\epsilon_\star = 0.5$. 
+There is a lot of uncertainty for the parameter $\epsilon_\star$, so we will follow [Krumholz2019](https://doi.org/10.1146/annurev-astro-091918-104430) using $\epsilon_\star = 0.5$. 
 
 With all the previous definitions, we have 
 
@@ -2205,9 +2205,9 @@ version = "3.3.10+0"
 
 [[deps.FastBroadcast]]
 deps = ["ArrayInterface", "ArrayInterfaceCore", "LinearAlgebra", "Polyester", "Static", "StrideArraysCore"]
-git-tree-sha1 = "24db26ecc4c8a00584672d3b4c6cb0bb3dad9d51"
+git-tree-sha1 = "4bef892787c972913d4d84e7255400759bb650e5"
 uuid = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
-version = "0.2.3"
+version = "0.2.4"
 
 [[deps.FastClosures]]
 git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
@@ -2564,9 +2564,9 @@ version = "2.1.2+0"
 
 [[deps.JumpProcesses]]
 deps = ["ArrayInterfaceCore", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "Markdown", "PoissonRandom", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "StaticArrays", "TreeViews", "UnPack"]
-git-tree-sha1 = "9695f07d684b4aa419292c67dd32471f61c89f70"
+git-tree-sha1 = "09ed2720b2e343e48780a3156c4a6cef8dd54192"
 uuid = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
-version = "9.3.0"
+version = "9.3.1"
 
 [[deps.KLU]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse_jll"]
@@ -2729,9 +2729,9 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LinearSolve]]
 deps = ["ArrayInterfaceCore", "DocStringExtensions", "FastLapackInterface", "GPUArraysCore", "IterativeSolvers", "KLU", "Krylov", "KrylovKit", "LinearAlgebra", "Preferences", "RecursiveFactorization", "Reexport", "SciMLBase", "Setfield", "SnoopPrecompile", "SparseArrays", "Sparspak", "SuiteSparse", "UnPack"]
-git-tree-sha1 = "fb818ddfb0a6243f45bc99de2c9636b8f16381ea"
+git-tree-sha1 = "cf1227e369513687658476e466a5b73a7c3dfa1f"
 uuid = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
-version = "1.32.2"
+version = "1.33.0"
 
 [[deps.LittleCMS_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pkg"]
@@ -2750,9 +2750,9 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[deps.LoopVectorization]]
 deps = ["ArrayInterface", "ArrayInterfaceCore", "ArrayInterfaceOffsetArrays", "ArrayInterfaceStaticArrays", "CPUSummary", "ChainRulesCore", "CloseOpenIntervals", "DocStringExtensions", "ForwardDiff", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "SIMDDualNumbers", "SIMDTypes", "SLEEFPirates", "SnoopPrecompile", "SpecialFunctions", "Static", "ThreadingUtilities", "UnPack", "VectorizationBase"]
-git-tree-sha1 = "0897c2d2138f090064559a3d90b12b8725d118c2"
+git-tree-sha1 = "155132d68bc33c826dbdeb452c5d0a79e2d0e586"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
-version = "0.12.143"
+version = "0.12.146"
 
 [[deps.MIMEs]]
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
@@ -3071,9 +3071,9 @@ version = "0.6.20"
 
 [[deps.PolyesterWeave]]
 deps = ["BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "Static", "ThreadingUtilities"]
-git-tree-sha1 = "050ca4aa2ca31484b51b849d8180caf8e4449c49"
+git-tree-sha1 = "43883d15c7cf16f340b9367c645cf88372f55641"
 uuid = "1d0040c9-8b98-4ee7-8388-3f51789ca0ad"
-version = "0.1.11"
+version = "0.1.13"
 
 [[deps.PolygonOps]]
 git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
@@ -3378,9 +3378,9 @@ version = "1.30.0"
 
 [[deps.Sparspak]]
 deps = ["Libdl", "LinearAlgebra", "Logging", "OffsetArrays", "Printf", "SparseArrays", "Test"]
-git-tree-sha1 = "dbe7d12e530416a26135d9566f00946aea1b2474"
+git-tree-sha1 = "2d8eee38ff44389ffcd26ef39b289c2db786f6e5"
 uuid = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
-version = "0.3.2"
+version = "0.3.3"
 
 [[deps.SpecialFunctions]]
 deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
@@ -3459,9 +3459,9 @@ version = "6.57.4"
 
 [[deps.StrideArraysCore]]
 deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "ManualMemory", "SIMDTypes", "Static", "ThreadingUtilities"]
-git-tree-sha1 = "8e91e5618bbca975312313c39ff827ea8f802fe3"
+git-tree-sha1 = "70b6ee0e5cc1745a28dd9ba040b8e5ee28fffc69"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
-version = "0.4.4"
+version = "0.4.5"
 
 [[deps.StringManipulation]]
 git-tree-sha1 = "46da2434b41f41ac3594ee9816ce5541c6096123"
@@ -3611,9 +3611,9 @@ version = "0.3.0"
 
 [[deps.TriangularSolve]]
 deps = ["CloseOpenIntervals", "IfElse", "LayoutPointers", "LinearAlgebra", "LoopVectorization", "Polyester", "SnoopPrecompile", "Static", "VectorizationBase"]
-git-tree-sha1 = "766f5b1fc80f667ad6eab787af21e19cd65cb1b7"
+git-tree-sha1 = "6cca884e0fe17916da63c62dc1bf5896ce5d723e"
 uuid = "d5829a12-d9aa-46ab-831f-fb7c9ab06edf"
-version = "0.1.16"
+version = "0.1.17"
 
 [[deps.Tricks]]
 git-tree-sha1 = "6bac775f2d42a611cdfcd1fb217ee719630c4175"
@@ -3673,9 +3673,9 @@ version = "1.2.0"
 
 [[deps.VectorizationBase]]
 deps = ["ArrayInterface", "CPUSummary", "HostCPUFeatures", "IfElse", "LayoutPointers", "Libdl", "LinearAlgebra", "SIMDTypes", "Static"]
-git-tree-sha1 = "fc79d0f926592ecaeaee164f6a4ca81b51115c3b"
+git-tree-sha1 = "6b1dc4fc039d273abc247eba675ac1299380e5d9"
 uuid = "3d5dd08c-fd9d-11e8-17fa-ed2836048c2f"
-version = "0.21.56"
+version = "0.21.57"
 
 [[deps.VertexSafeGraphs]]
 deps = ["Graphs"]
@@ -3847,7 +3847,7 @@ version = "3.5.0+0"
 # ╟─14c7f574-0623-4254-b8f7-97984d32351c
 # ╟─047bbd39-9cf9-4bd7-b38e-16aa505b0b08
 # ╟─2fe0dc4c-da44-4fc8-bef8-1fa615a0fe4a
-# ╟─744a9591-c7f1-496e-9bb4-47df2c8937dd
+# ╠═744a9591-c7f1-496e-9bb4-47df2c8937dd
 # ╟─af69ab25-0f06-4837-ac35-acbe38a4ffb1
 # ╠═806db782-1734-4112-ab7b-84e03f4c342d
 # ╠═1743b6dc-0a4e-4a02-90fe-3bc47833421a
