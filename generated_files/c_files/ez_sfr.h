@@ -8,28 +8,28 @@
 /* M [internal_units] * M_COSMO = M [Mₒ] */
 #define M_COSMO (All.UnitMass_in_g / SOLAR_MASS)
 
-/* ODE error constants */
-#define ABS_TOL 1.0e-8 /* Absolute tolerance */
-#define REL_TOL 0.0    /* Relative tolerance */
-
-/* η table constants */
+/* Interpolation tables */
 #define ETA_NROWS 107  // Number of rows in the η table
 #define ETA_NCOLS 7  // Number of columns in the η table
 #define R_NROWS 7  // Number of rows in the R table
 #define R_NCOLS 3  // Number of columns in the R table
+/* Paths */
+static char *ETA_D_TABLE_PATH = "../code/src/ez_sfr/tables/eta_d.txt";
+static char *ETA_I_TABLE_PATH = "../code/src/ez_sfr/tables/eta_i.txt";
+static char *R_TABLE_PATH     = "../code/src/ez_sfr/tables/R_Zsn.txt";
+
+/* ODE error constants */
+#define ABS_TOL 1.0e-8 /* Absolute tolerance */
+#define REL_TOL 0.0    /* Relative tolerance */
 
 /* ODE constants */
+#define N_EQU 4 /* Number of equations */
 #define ODE_CS 2.5735041e+03  /* [Myr * cm^(-3/2)] */
 #define ODE_CR 1.2234783e-01  /* [Myr * cm^(-3)] */
 #define ODE_CC 3.5385031e+00  /* [Myr * cm^(-3)] */
 #define ZEFF 1.3400e-05  /* 1e-3 Zₒ */
 #define AW 0.00  /* Weight of the atomic fraction in the computation of the SFR */         
 #define MW 1.00  /* Weight of the molecular fraction in the computation of the SFR */
-
-/* Paths to the interpolation tables */
-static char *ETA_D_TABLE = "../code/src/ez_sfr/tables/eta_d.txt";
-static char *ETA_I_TABLE = "../code/src/ez_sfr/tables/eta_i.txt";
-static char *R_TABLE = "../code/src/ez_sfr/tables/R_Zsn.txt";
 
 #ifdef RHO_PDF
 

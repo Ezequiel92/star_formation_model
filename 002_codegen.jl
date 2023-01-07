@@ -81,17 +81,22 @@ function write_header_file(path::Union{String,Nothing})::Union{String,Nothing}
 	/* M [internal_units] * M_COSMO = M [Mₒ] */
 	#define M_COSMO (All.UnitMass_in_g / SOLAR_MASS)
 	
-	/* ODE error constants */
-	#define ABS_TOL 1.0e-8 /* Absolute tolerance */
-	#define REL_TOL 0.0    /* Relative tolerance */
-	
-	/* η table constants */
+	/* Interpolation tables */
 	#define ETA_NROWS $(length(MODEL.Q_ages) + 1)  // Number of rows in the η table
 	#define ETA_NCOLS $(length(MODEL.Q_metals) + 1)  // Number of columns in the η table
 	#define R_NROWS $(length(MODEL.sy_metals))  // Number of rows in the R table
 	#define R_NCOLS 3  // Number of columns in the R table
+	/* Paths */
+	static char *ETA_D_TABLE_PATH = "../code/src/ez_sfr/tables/eta_d.txt";
+	static char *ETA_I_TABLE_PATH = "../code/src/ez_sfr/tables/eta_i.txt";
+	static char *R_TABLE_PATH     = "../code/src/ez_sfr/tables/R_Zsn.txt";
+	
+	/* ODE error constants */
+	#define ABS_TOL 1.0e-8 /* Absolute tolerance */
+	#define REL_TOL 0.0    /* Relative tolerance */
 	
 	/* ODE constants */
+	#define N_EQU $(MODEL.N_EQU) /* Number of equations */
 	#define ODE_CS $(@sprintf("%.7e", MODEL.cs))  /* [Myr * cm^(-3/2)] */
 	#define ODE_CR $(@sprintf("%.7e", MODEL.cr))  /* [Myr * cm^(-3)] */
 	#define ODE_CC $(@sprintf("%.7e", MODEL.cc))  /* [Myr * cm^(-3)] */
@@ -99,11 +104,6 @@ function write_header_file(path::Union{String,Nothing})::Union{String,Nothing}
 	#define AW $(@sprintf("%.2f", MODEL.AW))  /* Weight of the atomic fraction in the computation of the SFR */         
 	#define MW $(@sprintf("%.2f", MODEL.MW))  /* Weight of the molecular fraction in the computation of the SFR */
 	
-	/* Paths to the interpolation tables */
-	static char *ETA_D_TABLE = "../code/src/ez_sfr/tables/eta_d.txt";
-	static char *ETA_I_TABLE = "../code/src/ez_sfr/tables/eta_i.txt";
-	static char *R_TABLE = "../code/src/ez_sfr/tables/R_Zsn.txt";
-
 	#ifdef RHO_PDF
 	
 	/*
@@ -566,12 +566,6 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 write_R_table(joinpath(GEN_FILES, "interpolation_tables"))
-  ╠═╡ =#
-
-# ╔═╡ 8593bc97-9880-4d53-802d-12b1b72b4844
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"## Make `ez_sfr` folder"
   ╠═╡ =#
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1129,9 +1123,9 @@ version = "3.3.10+0"
 
 [[deps.FastBroadcast]]
 deps = ["ArrayInterface", "ArrayInterfaceCore", "LinearAlgebra", "Polyester", "Static", "StrideArraysCore"]
-git-tree-sha1 = "24db26ecc4c8a00584672d3b4c6cb0bb3dad9d51"
+git-tree-sha1 = "4bef892787c972913d4d84e7255400759bb650e5"
 uuid = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
-version = "0.2.3"
+version = "0.2.4"
 
 [[deps.FastClosures]]
 git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
@@ -1494,9 +1488,9 @@ version = "0.9.20"
 
 [[deps.JumpProcesses]]
 deps = ["ArrayInterfaceCore", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "Markdown", "PoissonRandom", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "StaticArrays", "TreeViews", "UnPack"]
-git-tree-sha1 = "9695f07d684b4aa419292c67dd32471f61c89f70"
+git-tree-sha1 = "09ed2720b2e343e48780a3156c4a6cef8dd54192"
 uuid = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
-version = "9.3.0"
+version = "9.3.1"
 
 [[deps.KLU]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse_jll"]
@@ -1659,9 +1653,9 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LinearSolve]]
 deps = ["ArrayInterfaceCore", "DocStringExtensions", "FastLapackInterface", "GPUArraysCore", "IterativeSolvers", "KLU", "Krylov", "KrylovKit", "LinearAlgebra", "Preferences", "RecursiveFactorization", "Reexport", "SciMLBase", "Setfield", "SnoopPrecompile", "SparseArrays", "Sparspak", "SuiteSparse", "UnPack"]
-git-tree-sha1 = "fb818ddfb0a6243f45bc99de2c9636b8f16381ea"
+git-tree-sha1 = "cf1227e369513687658476e466a5b73a7c3dfa1f"
 uuid = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
-version = "1.32.2"
+version = "1.33.0"
 
 [[deps.LittleCMS_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pkg"]
@@ -1680,15 +1674,15 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[deps.LoopVectorization]]
 deps = ["ArrayInterface", "ArrayInterfaceCore", "ArrayInterfaceOffsetArrays", "ArrayInterfaceStaticArrays", "CPUSummary", "ChainRulesCore", "CloseOpenIntervals", "DocStringExtensions", "ForwardDiff", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "SIMDDualNumbers", "SIMDTypes", "SLEEFPirates", "SnoopPrecompile", "SpecialFunctions", "Static", "ThreadingUtilities", "UnPack", "VectorizationBase"]
-git-tree-sha1 = "0897c2d2138f090064559a3d90b12b8725d118c2"
+git-tree-sha1 = "155132d68bc33c826dbdeb452c5d0a79e2d0e586"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
-version = "0.12.143"
+version = "0.12.146"
 
 [[deps.LoweredCodeUtils]]
 deps = ["JuliaInterpreter"]
-git-tree-sha1 = "dedbebe234e06e1ddad435f5c6f4b85cd8ce55f7"
+git-tree-sha1 = "60168780555f3e663c536500aa790b6368adc02a"
 uuid = "6f1432cf-f94c-5a45-995e-cdbf5db27b0b"
-version = "2.2.2"
+version = "2.3.0"
 
 [[deps.MIMEs]]
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
@@ -2019,9 +2013,9 @@ version = "0.6.20"
 
 [[deps.PolyesterWeave]]
 deps = ["BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "Static", "ThreadingUtilities"]
-git-tree-sha1 = "050ca4aa2ca31484b51b849d8180caf8e4449c49"
+git-tree-sha1 = "43883d15c7cf16f340b9367c645cf88372f55641"
 uuid = "1d0040c9-8b98-4ee7-8388-3f51789ca0ad"
-version = "0.1.11"
+version = "0.1.13"
 
 [[deps.PolygonOps]]
 git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
@@ -2190,9 +2184,9 @@ version = "1.1.1"
 
 [[deps.Revise]]
 deps = ["CodeTracking", "Distributed", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "Pkg", "REPL", "Requires", "UUIDs", "Unicode"]
-git-tree-sha1 = "dad726963ecea2d8a81e26286f625aee09a91b7c"
+git-tree-sha1 = "fd5dba2f01743555d8435f7c96437b29eae81a17"
 uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "3.4.0"
+version = "3.5.0"
 
 [[deps.Rmath]]
 deps = ["Random", "Rmath_jll"]
@@ -2332,9 +2326,9 @@ version = "1.30.0"
 
 [[deps.Sparspak]]
 deps = ["Libdl", "LinearAlgebra", "Logging", "OffsetArrays", "Printf", "SparseArrays", "Test"]
-git-tree-sha1 = "dbe7d12e530416a26135d9566f00946aea1b2474"
+git-tree-sha1 = "2d8eee38ff44389ffcd26ef39b289c2db786f6e5"
 uuid = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
-version = "0.3.2"
+version = "0.3.3"
 
 [[deps.SpecialFunctions]]
 deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
@@ -2413,9 +2407,9 @@ version = "6.57.4"
 
 [[deps.StrideArraysCore]]
 deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "ManualMemory", "SIMDTypes", "Static", "ThreadingUtilities"]
-git-tree-sha1 = "8e91e5618bbca975312313c39ff827ea8f802fe3"
+git-tree-sha1 = "70b6ee0e5cc1745a28dd9ba040b8e5ee28fffc69"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
-version = "0.4.4"
+version = "0.4.5"
 
 [[deps.StringManipulation]]
 git-tree-sha1 = "46da2434b41f41ac3594ee9816ce5541c6096123"
@@ -2565,9 +2559,9 @@ version = "0.3.0"
 
 [[deps.TriangularSolve]]
 deps = ["CloseOpenIntervals", "IfElse", "LayoutPointers", "LinearAlgebra", "LoopVectorization", "Polyester", "SnoopPrecompile", "Static", "VectorizationBase"]
-git-tree-sha1 = "766f5b1fc80f667ad6eab787af21e19cd65cb1b7"
+git-tree-sha1 = "6cca884e0fe17916da63c62dc1bf5896ce5d723e"
 uuid = "d5829a12-d9aa-46ab-831f-fb7c9ab06edf"
-version = "0.1.16"
+version = "0.1.17"
 
 [[deps.Tricks]]
 git-tree-sha1 = "6bac775f2d42a611cdfcd1fb217ee719630c4175"
@@ -2627,9 +2621,9 @@ version = "1.2.0"
 
 [[deps.VectorizationBase]]
 deps = ["ArrayInterface", "CPUSummary", "HostCPUFeatures", "IfElse", "LayoutPointers", "Libdl", "LinearAlgebra", "SIMDTypes", "Static"]
-git-tree-sha1 = "fc79d0f926592ecaeaee164f6a4ca81b51115c3b"
+git-tree-sha1 = "6b1dc4fc039d273abc247eba675ac1299380e5d9"
 uuid = "3d5dd08c-fd9d-11e8-17fa-ed2836048c2f"
-version = "0.21.56"
+version = "0.21.57"
 
 [[deps.VertexSafeGraphs]]
 deps = ["Graphs"]
@@ -2817,7 +2811,5 @@ version = "3.5.0+0"
 # ╟─adbfc2a1-287f-43e4-a2b9-a49bacd3faf1
 # ╠═8f25d9eb-2449-442c-956d-fa3552b35d4a
 # ╠═89be470d-ef8c-4a06-94ad-7bfd7f7e08fc
-# ╟─8593bc97-9880-4d53-802d-12b1b72b4844
-# ╠═77c66e95-12f3-4508-a9be-06124db43d4a
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

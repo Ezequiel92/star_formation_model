@@ -13,8 +13,8 @@
  *              and stars.
  *              contains functions:
  *                double *read_ftable(const char *filepath, const int n_rows, const int n_cols)
- *                double interpolate1D(const double x, const char *R_table)
- *                double interpolate2D(const double x, const double y, const char *eta_table)
+ *                double interpolate1D(double x, const char *R_table)
+ *                double interpolate2D(double x, double y, const char *eta_table)
  *                static int sf_ode(double t, const double y[], double f[], void *ode_params)
  *                static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *ode_params)
  *                void integrate_ode(const double *ic, double *parameters, double it, double *fractions)
@@ -29,11 +29,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <gsl/gsl_interp2d.h>
-#include <gsl/gsl_math.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv2.h>
-#include <gsl/gsl_spline2d.h>
 #include <libgen.h>
 
 #ifdef TESTING
@@ -94,11 +91,11 @@ double *read_ftable(const char *filepath, const int n_rows, const int n_cols)
  *  \return The interpolation function.
  */
 #ifdef TESTING
-double interpolate1D(const double x, const char *R_table)
+double interpolate1D(double x, const char *R_table)
 {
   double *R_data = read_ftable(R_table, R_NROWS, R_NCOLS);
 #else  /* #ifdef TESTING */
-static double interpolate1D(const double x, const double *R_data)
+static double interpolate1D(double x, const double *R_data)
 {
 #endif /* #ifdef TESTING */
 
@@ -120,6 +117,7 @@ static double interpolate1D(const double x, const double *R_data)
 
   if(x < xa[0])
     {
+      x      = xa[0];
       x1     = xa[0];
       x2     = xa[1];
       idx_x1 = 0;
@@ -127,6 +125,7 @@ static double interpolate1D(const double x, const double *R_data)
     }
   else if(x > xa[R_NROWS - 1])
     {
+      x      = xa[R_NROWS - 1];
       x1     = xa[R_NROWS - 2];
       x2     = xa[R_NROWS - 1];
       idx_x1 = R_NROWS - 2;
@@ -171,11 +170,11 @@ static double interpolate1D(const double x, const double *R_data)
  *  \return The interpolation function.
  */
 #ifdef TESTING
-double interpolate2D(const double x, const double y, const char *eta_table)
+double interpolate2D(double x, double y, const char *eta_table)
 {
   double *eta_data = read_ftable(eta_table, ETA_NROWS, ETA_NCOLS);
 #else  /* #ifdef TESTING */
-static double interpolate2D(const double x, const double y, const double *eta_data)
+static double interpolate2D(double x, double y, const double *eta_data)
 {
 #endif /* #ifdef TESTING */
 
@@ -209,6 +208,7 @@ static double interpolate2D(const double x, const double y, const double *eta_da
 
   if(x < xa[0])
     {
+      x      = xa[0];
       x1     = xa[0];
       x2     = xa[1];
       idx_x1 = 0;
@@ -216,6 +216,7 @@ static double interpolate2D(const double x, const double y, const double *eta_da
     }
   else if(x > xa[nx - 1])
     {
+      x      = xa[nx - 1];
       x1     = xa[nx - 2];
       x2     = xa[nx - 1];
       idx_x1 = nx - 2;
@@ -238,6 +239,7 @@ static double interpolate2D(const double x, const double y, const double *eta_da
 
   if(y < ya[0])
     {
+      y      = ya[0];
       y1     = ya[0];
       y2     = ya[1];
       idx_y1 = 0;
@@ -245,6 +247,7 @@ static double interpolate2D(const double x, const double y, const double *eta_da
     }
   else if(y > ya[ny - 1])
     {
+      y      = ya[ny - 1];
       y1     = ya[ny - 2];
       y2     = ya[ny - 1];
       idx_y1 = ny - 2;
@@ -460,7 +463,7 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
   double m_f = 0.0;
   double s_f = 0.0;
 
-  gsl_odeiv2_system sys     = {sf_ode, jacobian, 4, parameters};
+  gsl_odeiv2_system sys     = {sf_ode, jacobian, N_EQU, parameters};
   gsl_odeiv2_driver *driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_msbdf, it * 1e-3, ABS_TOL, REL_TOL);
 
   /* Use the density PDF to increase the effective resolution of the computation */
@@ -558,11 +561,11 @@ double rate_of_star_formation(const int index)
     }
 
   /* Compute the photodissociation efficiency */
-  double eta_d = interpolate2D(accu_it, metallicity, ETA_D_DATA);
-  double eta_i = interpolate2D(accu_it, metallicity, ETA_I_DATA);
+  double eta_d = interpolate2D(accu_it, metallicity, All.ETA_D_DATA);
+  double eta_i = interpolate2D(accu_it, metallicity, All.ETA_I_DATA);
 
   /* Mass recycling fraction */
-  double R = interpolate1D(metallicity, R_DATA);
+  double R = interpolate1D(metallicity, All.R_DATA);
 
   double parameters[] = {density, metallicity, eta_d, eta_i, R};
 
@@ -579,40 +582,44 @@ double rate_of_star_formation(const int index)
 
   /* Atomic gas fraction [dimensionless] */
   double a_f = 0.0;
-  get_neutral_fraction(index, &af);
-  if(!isnan(SphP[index].atomicFraction) && delta_time < SphP[index].TAU_S)
+  get_neutral_fraction(index, &a_f);
+  if(!isnan(SphP[index].ODEFractions[1]) && delta_time < SphP[index].TAU_S)
     { /* If this is not the first time for this particle */
-      a_f = SphP[index].atomicFraction;
+      a_f = SphP[index].ODEFractions[1];
     }
 
   /* Ionized gas fraction */
   double i_f = 1.0 - a_f;
-  get_neutral_fraction(index, &af);
-  if(!isnan(SphP[index].ionizedFraction) && delta_time < SphP[index].TAU_S)
+  get_neutral_fraction(index, &a_f);
+  if(!isnan(SphP[index].ODEFractions[0]) && delta_time < SphP[index].TAU_S)
     { /* If this is not the first time for this particle */
-      i_f = SphP[index].ionizedFraction;
+      i_f = SphP[index].ODEFractions[0];
     }
 
   /* Fraction of the neutral density that is molecular Hydrogen [dimensionless] */
   double m_f = 0.0;
-  if(!isnan(SphP[index].molecularFraction) && delta_time < SphP[index].TAU_S)
+  if(!isnan(SphP[index].ODEFractions[2]) && delta_time < SphP[index].TAU_S)
     { /* If this is not the first time for this particle */
-      m_f = SphP[index].molecularFraction;
+      m_f = SphP[index].ODEFractions[2];
     }
 
   const double ic[] = {i_f, a_f, m_f, 1.0 - i_f - a_f - m_f};
 
-  /* Store stellar time parameter */
-  SphP[index].TAU_S = ODE_CS / sqrt((1 - fractions[3]) * density);
+  /*************************************************************************************************
+   * Integrate the ODEs
+   *************************************************************************************************/
 
   double fractions[4] = {0.0};
   integrate_ode(ic, parameters, it, fractions);
 
+  /* Store stellar time parameter */
+  SphP[index].TAU_S = ODE_CS / sqrt((1 - fractions[3]) * density);
+
   /* Store the results after solving the ODEs */
-  SphP[index].ionizedFraction   = fractions[0];
-  SphP[index].atomicFraction    = fractions[1];
-  SphP[index].molecularFraction = fractions[2];
-  SphP[index].stellarFraction   = fractions[3];
+  for(size_t i = 0; i < N_EQU; ++i)
+    {
+      SphP[index].ODEFractions[i] = fractions[i];
+    }
 
   /* Return the star formation rate in [Mₒ yr^(-1)] */
   return fractions[3] * (P[index].Mass * M_COSMO) / accu_it;
