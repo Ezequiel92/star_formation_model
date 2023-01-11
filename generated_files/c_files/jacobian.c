@@ -21,7 +21,6 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 	gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 4, 4);
 	gsl_matrix *m = &dfdy_mat.matrix;
 	
-    /* Compute once operations that repeat in the Jacobian*/
     double aux_var = sqrt((1.0 - y[3]) * rho_C);
 
 	gsl_matrix_set(m, 0, 0, -16.346836800000002 * y[0] * rho_C);
