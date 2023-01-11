@@ -7,26 +7,10 @@ using InteractiveUtils
 # ╔═╡ b03ee99c-27f4-47df-bba5-2ea3dabdb45d
 using CairoMakie, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
 
-# ╔═╡ 51ec8e6f-70cb-45e4-9b62-2ecc1b161fb2
-# ╠═╡ skip_as_script = true
-#=╠═╡
+# ╔═╡ 3b9e3941-779a-4c3a-b87e-7e4456ddc85d
 md"""
 
-## Previous work
-
-### Bases
-
-[Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x)
-
-[Monaco2004](https://doi.org/10.1111/j.1365-2966.2004.07916.x)
-
-[Blitz2006](https://doi.org/10.1086/505417)
-
 ### To read
-
-[Murante2010](https://doi.org/10.1111/j.1365-2966.2010.16567.x)
-
-[Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x)
 
 [Monaco2012](https://doi.org/10.1111/j.1365-2966.2012.20482.x)
 
@@ -38,23 +22,22 @@ md"""
 
 [Valentini2022](https://doi.org/10.1093/mnras/stac2110)
 
-## Notes:
+## Introduction
 
-MUPPI is fully integrated within Gadget2 (Murante2010) or Gadget3 (Murante2012). It separates a gas particle in a hot and cold phase if a set of conditions for its density and temperature are match. MUPPI then evolves those phases with a stellar phase and an energy term (energy of the hot phase) according to 4 ODEs. Each SPH integration step the equations use the gas state (pressure, density, entropy) as parameters and to compute the IC (in the case that the particle is entering to the multiphase state for the first time) and evolves the equations. The state of the internal variables (hot mass, cold mass, stellar mass and hot phase energy) are kept to the next SPH step. So MUPPI evolves in lockstep with the SPH simulation, and because it follows new variables there is no conflict with the computations of Gadget, what Gadget computes is used as parameters only in MUPPI, these are not modified. 
+Based on the theoretical work on the multiphase structure of the insterstellar medium (MP ISM) (see [Field1969](https://doi.org/10.1086/180324), [Cowie1977](https://doi.org/10.1086/154911) and [McKee1977a](https://doi.org/10.1086/155350), but mainly [McKee1977b](https://doi.org/10.1086/155667), and the review in [Cox2005](https://doi.org/10.1146/annurev.astro.43.072103.150615)), [Yepes1997](https://doi.org/10.1093/mnras/284.1.235) and [Hultman1999](https://ui.adsabs.harvard.edu/abs/1999A%26A...347..769H) incorporated 2 phase (hot and cold) ISM to numerical simulation of galaxy formation (Eulerian and Lagrangian respectively). This work was extended by [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), adding galactic winds driven by star formation as a form of feedback. 
 
-In contrast, we follow and compute variables that are calculated by Arepo too, producing an inconsistent simulation. For example, the metallicity and the ionized fraction are computed in two different ways, one by Arepo in the hydrodynamical steps and the other by our equations. Arepo uses for example DoCooling() to compute the neutral and ionized fraction, considering the metallicity and the stellar feedback. So, in a way we are duplicating that but with a different scheme for the feedback and grafting it into Arepo. Not a complete replacement nor a completely independant computation.
+[Monaco2004](https://doi.org/10.1111/j.1365-2966.2004.07916.x) later develop a semi-analytic model in a similar vein to [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), which was the theoretical base for MUPPI (MUlti-Phase Particle Integrator, [Murante2010](https://doi.org/10.1111/j.1365-2966.2010.16567.x)), which implements a MP ISM in $\texttt{GADGET-2}$ with feedback.
 
-The metallicity could be eliminated from the equations and used only as a fixed parameter, but the gas fractions are integral to the model, as they are to Arepo feedback and cooling schemes. So, we must accept the inconsistency if we want to use this model and not a different one (or replace the whole feedback and cooling portions of Arepo). 
+MUPPI separates a gas particle in a hot and cold phase if a set of conditions for its density and temperature are match. It then evolves those components, plus a stellar phase and an energy term (energy of the hot gas) using 4 ODEs. In each SPH integration step the equations uses the gas state (pressure, density, entropy) as parameters, to compute the ICs (in the case that the particle is entering to the multiphase state for the first time), and evolves the equations. The state of the internal variables (hot mass, cold mass, stellar mass and hot phase energy) are kept to be used in the next SPH step. So, MUPPI evolves in lockstep with the SPH simulation. 
 
-One way to justify the inconsistency is to say that we are looking at the sub resolution feedback, while Arepo looks at the feedback at a larger scale, a resolved one, when you can consider the hydrodynamics. In contrast, below such resolution, we use a SAM to add feedback without interfering with the traditional one. Its the feedback, chemical and thermal that occurs at the individual stellar population level.
+MUPPI correlates star formation with the density of molecular was, which is stimated as a fraction of the cold gas, given by the pressure. In contrast [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) model the MP ISM explicitly following the molecuar and atomic fractions, correlating the star formation to the molecuar part too. Based on this work, [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) integrates an MP ISM in an SPH simulation, following molecular and atomic phases instead of hot and cold ones.
 
-Another alternative is to eliminate the metallicity and the ionized fractions (take the initial values as constant parameters during the whole integration of the ODEs), and evolved stars and the fraction of the neutral hydrogen that is atomic and that is molecular. The system will not be as self consistent and closed (mass conserving) as before. But now it will be fully compativble with Arepo, without duplicate values.
 
 [Mongardi2018](https://doi.org/10.1093/mnras/sty1283) Calls the [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x) prescription the "effective model" (Section 2.2).
 
 [Granato2021](https://doi.org/10.1093/mnras/stab362) and [Parente2022](https://doi.org/10.1093/mnras/stac1913) study the interacction of dust with MUPPI in simulations. They model the dust with two phases (small and large grains) using ODEs.
+
 """
-  ╠═╡ =#
 
 # ╔═╡ 08df960b-fd82-43ba-a9dc-bf5e83af587e
 # ╠═╡ skip_as_script = true
@@ -73,7 +56,7 @@ md"# Star formation model"
 #=╠═╡
 md"""
 
-## Introduction
+## Motivation
 
 The star formation rate (SFR) is a key characteristic of galaxies. In the context of the standard cosmological model, the SFR is determined by a combination of various processes that take place over the course of a galaxy's lifetime, such as gas cooling, star formation, chemical enrichment, and feedback from supernovae and galactic nuclei. These processes are influenced by factors like mergers, interactions, and mass accretion, which affect the amount and properties of the gas from which stars form. The density of a gas cloud is believed to be the most important factor in determining its star formation rate, although the details of this process are not yet fully understood. Observationally, the total gas density is found to be correlated to the star formation rate ([Kennicutt1998](https://doi.org/10.1086/305588)), and this correlation is even stronger when considering the molecular gas ([Wong2002](https://doi.org/10.1086/339287), [Bigiel2008](https://doi.org/10.1088/0004-6256/136/6/2846)).
 
@@ -1697,15 +1680,15 @@ CPUSummary = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.4"
+julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "be540597520ed929ea1445467efd9e278b1f0ecf"
+project_hash = "2c433d860c1a8e9110c8db266952ee664a770643"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
-git-tree-sha1 = "7772df04fda9bc25a44c9ef61e9dc7c92bb35d86"
+git-tree-sha1 = "df23d15b1090a3332a09a7a51da45bd9f0a07f92"
 uuid = "c3fe647b-3220-5bb0-a1ea-a7954cac585d"
-version = "0.27.7"
+version = "0.27.8"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -1869,9 +1852,9 @@ version = "0.4.2"
 
 [[deps.CPUSummary]]
 deps = ["CpuId", "IfElse", "Static"]
-git-tree-sha1 = "a7157ab6bcda173f533db4c93fc8a27a48843757"
+git-tree-sha1 = "5b735f654bdfd7b6c18c49f1d3ebff34b4b8af43"
 uuid = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
-version = "0.1.30"
+version = "0.2.1"
 
 [[deps.CRC32c]]
 uuid = "8bf52ea8-c179-5cab-976a-9e18b702a9bc"
@@ -2067,9 +2050,9 @@ version = "0.4.0"
 
 [[deps.DiffEqBase]]
 deps = ["ArrayInterfaceCore", "ChainRulesCore", "DataStructures", "Distributions", "DocStringExtensions", "FastBroadcast", "ForwardDiff", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "Logging", "MuladdMacro", "Parameters", "PreallocationTools", "Printf", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "Setfield", "SimpleNonlinearSolve", "SparseArrays", "Static", "StaticArrays", "Statistics", "Tricks", "ZygoteRules"]
-git-tree-sha1 = "29777943a9e73c7d6b47d93830038ebdaacc18db"
+git-tree-sha1 = "b410f0b8a52752e1c1723b4316382203f914672c"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "6.113.0"
+version = "6.113.1"
 
 [[deps.DiffEqCallbacks]]
 deps = ["DataStructures", "DiffEqBase", "ForwardDiff", "LinearAlgebra", "Markdown", "NLsolve", "Parameters", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArrays"]
@@ -2079,9 +2062,9 @@ version = "2.24.3"
 
 [[deps.DiffEqNoiseProcess]]
 deps = ["DiffEqBase", "Distributions", "GPUArraysCore", "LinearAlgebra", "Markdown", "Optim", "PoissonRandom", "QuadGK", "Random", "Random123", "RandomNumbers", "RecipesBase", "RecursiveArrayTools", "ResettableStacks", "SciMLBase", "StaticArrays", "Statistics"]
-git-tree-sha1 = "27350a71ca46c85a0bcdf7dca3b966f218c08f9a"
+git-tree-sha1 = "1a5c145ea1915b92e0d446c05e375f9c69c0348d"
 uuid = "77a26b50-5914-5dd7-bc55-306e6241c503"
-version = "5.15.0"
+version = "5.15.2"
 
 [[deps.DiffResults]]
 deps = ["StaticArraysCore"]
@@ -2628,9 +2611,9 @@ version = "0.4.5"
 
 [[deps.Latexify]]
 deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Printf", "Requires"]
-git-tree-sha1 = "ab9aa169d2160129beb241cb2750ca499b4e90e9"
+git-tree-sha1 = "2422f47b34d4b127720a18f86fa7b1aa2e141f29"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-version = "0.15.17"
+version = "0.15.18"
 
 [[deps.LayoutPointers]]
 deps = ["ArrayInterface", "ArrayInterfaceOffsetArrays", "ArrayInterfaceStaticArrays", "LinearAlgebra", "ManualMemory", "SIMDTypes", "Static"]
@@ -2977,9 +2960,9 @@ version = "1.4.1"
 
 [[deps.OrdinaryDiffEq]]
 deps = ["Adapt", "ArrayInterface", "ArrayInterfaceCore", "ArrayInterfaceGPUArrays", "ArrayInterfaceStaticArrays", "ArrayInterfaceStaticArraysCore", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLNLSolve", "SimpleNonlinearSolve", "SnoopPrecompile", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "e1563399318752a2df41d08ab1033a772bd0fa4b"
+git-tree-sha1 = "ca0c8939dbd3617ae3fdca13374d0b7501a2dd28"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.36.2"
+version = "6.37.0"
 
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -3065,15 +3048,15 @@ version = "0.4.3"
 
 [[deps.Polyester]]
 deps = ["ArrayInterface", "BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "ManualMemory", "PolyesterWeave", "Requires", "Static", "StrideArraysCore", "ThreadingUtilities"]
-git-tree-sha1 = "a5071cd52fc3fc0a960b825ddeb64e352fdf41e1"
+git-tree-sha1 = "7f8dd47630b265df9e1d117137ee1894b195e032"
 uuid = "f517fe37-dbe3-4b94-8317-1923a5111588"
-version = "0.6.20"
+version = "0.7.1"
 
 [[deps.PolyesterWeave]]
 deps = ["BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "Static", "ThreadingUtilities"]
-git-tree-sha1 = "43883d15c7cf16f340b9367c645cf88372f55641"
+git-tree-sha1 = "5d0a598c95f67ee0787723e38745cb954d143684"
 uuid = "1d0040c9-8b98-4ee7-8388-3f51789ca0ad"
-version = "0.1.13"
+version = "0.2.0"
 
 [[deps.PolygonOps]]
 git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
@@ -3195,21 +3178,21 @@ version = "0.4.3"
 
 [[deps.RecipesBase]]
 deps = ["SnoopPrecompile"]
-git-tree-sha1 = "18c35ed630d7229c5584b945641a73ca83fb5213"
+git-tree-sha1 = "261dddd3b862bd2c940cf6ca4d1c8fe593e457c8"
 uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
-version = "1.3.2"
+version = "1.3.3"
 
 [[deps.RecursiveArrayTools]]
 deps = ["Adapt", "ArrayInterfaceCore", "ArrayInterfaceStaticArraysCore", "ChainRulesCore", "DocStringExtensions", "FillArrays", "GPUArraysCore", "IteratorInterfaceExtensions", "LinearAlgebra", "RecipesBase", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables", "ZygoteRules"]
-git-tree-sha1 = "66e6a85fd5469429a3ac30de1bd491e48a6bac00"
+git-tree-sha1 = "fcf0962b399f3bc0fa13ae7274db7879c3ef9f1e"
 uuid = "731186ca-8d62-57ce-b412-fbd966d074cd"
-version = "2.34.1"
+version = "2.35.0"
 
 [[deps.RecursiveFactorization]]
 deps = ["LinearAlgebra", "LoopVectorization", "Polyester", "SnoopPrecompile", "StrideArraysCore", "TriangularSolve"]
-git-tree-sha1 = "2979cbb21580760431d2afb9b8f0f522899542f7"
+git-tree-sha1 = "9f9d83b485b5f3bfd0f8cb0b8733d573bd4c388f"
 uuid = "f2c3362d-daeb-58d1-803e-2bc74f2840b4"
-version = "0.2.13"
+version = "0.2.14"
 
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
@@ -3353,9 +3336,10 @@ uuid = "45858cf5-a6b0-47a3-bbea-62219f50df47"
 version = "0.1.2"
 
 [[deps.SnoopPrecompile]]
-git-tree-sha1 = "f604441450a3c0569830946e5b33b78c928e1a85"
+deps = ["Preferences"]
+git-tree-sha1 = "e760a70afdcd461cf01a575947738d359234665c"
 uuid = "66db9d55-30c0-4569-8b51-7e840670fc0c"
-version = "1.0.1"
+version = "1.0.3"
 
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
@@ -3378,9 +3362,9 @@ version = "1.30.0"
 
 [[deps.Sparspak]]
 deps = ["Libdl", "LinearAlgebra", "Logging", "OffsetArrays", "Printf", "SparseArrays", "Test"]
-git-tree-sha1 = "2d8eee38ff44389ffcd26ef39b289c2db786f6e5"
+git-tree-sha1 = "4149bb50ccf65bc9c9d55e7001ca7aa4a7649603"
 uuid = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
-version = "0.3.3"
+version = "0.3.4"
 
 [[deps.SpecialFunctions]]
 deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
@@ -3588,9 +3572,9 @@ version = "0.5.22"
 
 [[deps.TranscodingStreams]]
 deps = ["Random", "Test"]
-git-tree-sha1 = "e4bdc63f5c6d62e80eb1c0043fcc0360d5950ff7"
+git-tree-sha1 = "94f38103c984f89cf77c402f2a68dbd870f8165f"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.9.10"
+version = "0.9.11"
 
 [[deps.Transducers]]
 deps = ["Adapt", "ArgCheck", "BangBang", "Baselet", "CompositionsBase", "DefineSingletons", "Distributed", "InitialValues", "Logging", "Markdown", "MicroCollections", "Requires", "Setfield", "SplittablesBase", "Tables"]
@@ -3837,7 +3821,7 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─51ec8e6f-70cb-45e4-9b62-2ecc1b161fb2
+# ╠═3b9e3941-779a-4c3a-b87e-7e4456ddc85d
 # ╠═b03ee99c-27f4-47df-bba5-2ea3dabdb45d
 # ╟─08df960b-fd82-43ba-a9dc-bf5e83af587e
 # ╟─cbd51460-8ef0-49eb-8219-14986d8421e4
@@ -3847,7 +3831,7 @@ version = "3.5.0+0"
 # ╟─14c7f574-0623-4254-b8f7-97984d32351c
 # ╟─047bbd39-9cf9-4bd7-b38e-16aa505b0b08
 # ╟─2fe0dc4c-da44-4fc8-bef8-1fa615a0fe4a
-# ╠═744a9591-c7f1-496e-9bb4-47df2c8937dd
+# ╟─744a9591-c7f1-496e-9bb4-47df2c8937dd
 # ╟─af69ab25-0f06-4837-ac35-acbe38a4ffb1
 # ╠═806db782-1734-4112-ab7b-84e03f4c342d
 # ╠═1743b6dc-0a4e-4a02-90fe-3bc47833421a

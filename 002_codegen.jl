@@ -82,18 +82,14 @@ function write_header_file(path::Union{String,Nothing})::Union{String,Nothing}
 	#define M_COSMO (All.UnitMass_in_g / SOLAR_MASS)
 	
 	/* Interpolation tables */
-	#define ETA_NROWS $(length(MODEL.Q_ages) + 1)  // Number of rows in the η table
-	#define ETA_NCOLS $(length(MODEL.Q_metals) + 1)  // Number of columns in the η table
+	#define ETA_NROWS $(length(MODEL.Q_ages) + 1)  // Number of rows in the η tables
+	#define ETA_NCOLS $(length(MODEL.Q_metals) + 1)  // Number of columns in the η tables
 	#define R_NROWS $(length(MODEL.sy_metals))  // Number of rows in the R table
 	#define R_NCOLS 3  // Number of columns in the R table
 	/* Paths */
 	static char *ETA_D_TABLE_PATH = "../code/src/ez_sfr/tables/eta_d.txt";
 	static char *ETA_I_TABLE_PATH = "../code/src/ez_sfr/tables/eta_i.txt";
 	static char *R_TABLE_PATH     = "../code/src/ez_sfr/tables/R_Zsn.txt";
-	
-	/* ODE error constants */
-	#define ABS_TOL 1.0e-8 /* Absolute tolerance */
-	#define REL_TOL 0.0    /* Relative tolerance */
 	
 	/* ODE constants */
 	#define N_EQU $(MODEL.N_EQU) /* Number of equations */
@@ -103,11 +99,18 @@ function write_header_file(path::Union{String,Nothing})::Union{String,Nothing}
 	#define ZEFF $(@sprintf("%.4e", MODEL.Zeff))  /* 1e-3 Zₒ */
 	#define AW $(@sprintf("%.2f", MODEL.AW))  /* Weight of the atomic fraction in the computation of the SFR */         
 	#define MW $(@sprintf("%.2f", MODEL.MW))  /* Weight of the molecular fraction in the computation of the SFR */
+
+	typedef struct InterpolationTable
+	{
+	  double *data;  // Values of the table
+	  int n_rows;    // Number of rows in the table
+	  int n_cols;    // Number of columns in the table
+	} interpolation_table;
 	
 	#ifdef RHO_PDF
 	
 	/*
-	 * Density PDF from Burkhart (2018) https://doi.org/10.3847/1538-4357/aad002
+	 * Density PDF from Krumholz (2005) https://doi.org/10.1086/431734
 	 *
 	 * We used the following parameters (all dimensionless):
 	 *
@@ -149,7 +152,7 @@ function write_header_file(path::Union{String,Nothing})::Union{String,Nothing}
 
 	#endif /* #ifdef RHO_PDF */
 
-	double *read_ftable(const char *filepath, const int n_rows, const int n_cols);
+	void *read_ftable(const char *filepath, const int n_rows, const int n_cols);
 	double rate_of_star_formation(const int index);
 	
 	#endif /* #ifdef EZ_SFR_H */
@@ -342,7 +345,6 @@ function write_jacobian(path::Union{String,Nothing})#::Union{String,Nothing}
 		gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, $(MODEL.N_EQU), $(MODEL.N_EQU));
 		gsl_matrix *m = &dfdy_mat.matrix;
 		
-	    /* Compute once operations that repeat in the Jacobian*/
 	    double aux_var = sqrt((1.0 - y[3]) * rho_C);
 	
 	"""
@@ -609,15 +611,15 @@ UnitfulAstro = "~1.2.0"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.4"
+julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "a9ca483ba347d25d93cde7061ae1fb353966336b"
+project_hash = "73cb6b6e92ce7782563127992fb827b2ee768f84"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
-git-tree-sha1 = "7772df04fda9bc25a44c9ef61e9dc7c92bb35d86"
+git-tree-sha1 = "df23d15b1090a3332a09a7a51da45bd9f0a07f92"
 uuid = "c3fe647b-3220-5bb0-a1ea-a7954cac585d"
-version = "0.27.7"
+version = "0.27.8"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -781,9 +783,9 @@ version = "0.4.2"
 
 [[deps.CPUSummary]]
 deps = ["CpuId", "IfElse", "Static"]
-git-tree-sha1 = "a7157ab6bcda173f533db4c93fc8a27a48843757"
+git-tree-sha1 = "5b735f654bdfd7b6c18c49f1d3ebff34b4b8af43"
 uuid = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
-version = "0.1.30"
+version = "0.2.1"
 
 [[deps.CRC32c]]
 uuid = "8bf52ea8-c179-5cab-976a-9e18b702a9bc"
@@ -985,9 +987,9 @@ version = "0.4.0"
 
 [[deps.DiffEqBase]]
 deps = ["ArrayInterfaceCore", "ChainRulesCore", "DataStructures", "Distributions", "DocStringExtensions", "FastBroadcast", "ForwardDiff", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "Logging", "MuladdMacro", "Parameters", "PreallocationTools", "Printf", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "Setfield", "SimpleNonlinearSolve", "SparseArrays", "Static", "StaticArrays", "Statistics", "Tricks", "ZygoteRules"]
-git-tree-sha1 = "29777943a9e73c7d6b47d93830038ebdaacc18db"
+git-tree-sha1 = "b410f0b8a52752e1c1723b4316382203f914672c"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "6.113.0"
+version = "6.113.1"
 
 [[deps.DiffEqCallbacks]]
 deps = ["DataStructures", "DiffEqBase", "ForwardDiff", "LinearAlgebra", "Markdown", "NLsolve", "Parameters", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArrays"]
@@ -997,9 +999,9 @@ version = "2.24.3"
 
 [[deps.DiffEqNoiseProcess]]
 deps = ["DiffEqBase", "Distributions", "GPUArraysCore", "LinearAlgebra", "Markdown", "Optim", "PoissonRandom", "QuadGK", "Random", "Random123", "RandomNumbers", "RecipesBase", "RecursiveArrayTools", "ResettableStacks", "SciMLBase", "StaticArrays", "Statistics"]
-git-tree-sha1 = "27350a71ca46c85a0bcdf7dca3b966f218c08f9a"
+git-tree-sha1 = "1a5c145ea1915b92e0d446c05e375f9c69c0348d"
 uuid = "77a26b50-5914-5dd7-bc55-306e6241c503"
-version = "5.15.0"
+version = "5.15.2"
 
 [[deps.DiffResults]]
 deps = ["StaticArraysCore"]
@@ -1552,9 +1554,9 @@ version = "0.4.5"
 
 [[deps.Latexify]]
 deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Printf", "Requires"]
-git-tree-sha1 = "ab9aa169d2160129beb241cb2750ca499b4e90e9"
+git-tree-sha1 = "2422f47b34d4b127720a18f86fa7b1aa2e141f29"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-version = "0.15.17"
+version = "0.15.18"
 
 [[deps.LayoutPointers]]
 deps = ["ArrayInterface", "ArrayInterfaceOffsetArrays", "ArrayInterfaceStaticArrays", "LinearAlgebra", "ManualMemory", "SIMDTypes", "Static"]
@@ -1907,9 +1909,9 @@ version = "1.4.1"
 
 [[deps.OrdinaryDiffEq]]
 deps = ["Adapt", "ArrayInterface", "ArrayInterfaceCore", "ArrayInterfaceGPUArrays", "ArrayInterfaceStaticArrays", "ArrayInterfaceStaticArraysCore", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLNLSolve", "SimpleNonlinearSolve", "SnoopPrecompile", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "e1563399318752a2df41d08ab1033a772bd0fa4b"
+git-tree-sha1 = "ca0c8939dbd3617ae3fdca13374d0b7501a2dd28"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.36.2"
+version = "6.37.0"
 
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -2007,15 +2009,15 @@ version = "0.4.3"
 
 [[deps.Polyester]]
 deps = ["ArrayInterface", "BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "ManualMemory", "PolyesterWeave", "Requires", "Static", "StrideArraysCore", "ThreadingUtilities"]
-git-tree-sha1 = "a5071cd52fc3fc0a960b825ddeb64e352fdf41e1"
+git-tree-sha1 = "7f8dd47630b265df9e1d117137ee1894b195e032"
 uuid = "f517fe37-dbe3-4b94-8317-1923a5111588"
-version = "0.6.20"
+version = "0.7.1"
 
 [[deps.PolyesterWeave]]
 deps = ["BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "Static", "ThreadingUtilities"]
-git-tree-sha1 = "43883d15c7cf16f340b9367c645cf88372f55641"
+git-tree-sha1 = "5d0a598c95f67ee0787723e38745cb954d143684"
 uuid = "1d0040c9-8b98-4ee7-8388-3f51789ca0ad"
-version = "0.1.13"
+version = "0.2.0"
 
 [[deps.PolygonOps]]
 git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
@@ -2137,21 +2139,21 @@ version = "0.4.3"
 
 [[deps.RecipesBase]]
 deps = ["SnoopPrecompile"]
-git-tree-sha1 = "18c35ed630d7229c5584b945641a73ca83fb5213"
+git-tree-sha1 = "261dddd3b862bd2c940cf6ca4d1c8fe593e457c8"
 uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
-version = "1.3.2"
+version = "1.3.3"
 
 [[deps.RecursiveArrayTools]]
 deps = ["Adapt", "ArrayInterfaceCore", "ArrayInterfaceStaticArraysCore", "ChainRulesCore", "DocStringExtensions", "FillArrays", "GPUArraysCore", "IteratorInterfaceExtensions", "LinearAlgebra", "RecipesBase", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables", "ZygoteRules"]
-git-tree-sha1 = "66e6a85fd5469429a3ac30de1bd491e48a6bac00"
+git-tree-sha1 = "fcf0962b399f3bc0fa13ae7274db7879c3ef9f1e"
 uuid = "731186ca-8d62-57ce-b412-fbd966d074cd"
-version = "2.34.1"
+version = "2.35.0"
 
 [[deps.RecursiveFactorization]]
 deps = ["LinearAlgebra", "LoopVectorization", "Polyester", "SnoopPrecompile", "StrideArraysCore", "TriangularSolve"]
-git-tree-sha1 = "2979cbb21580760431d2afb9b8f0f522899542f7"
+git-tree-sha1 = "9f9d83b485b5f3bfd0f8cb0b8733d573bd4c388f"
 uuid = "f2c3362d-daeb-58d1-803e-2bc74f2840b4"
-version = "0.2.13"
+version = "0.2.14"
 
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
@@ -2301,9 +2303,10 @@ uuid = "45858cf5-a6b0-47a3-bbea-62219f50df47"
 version = "0.1.2"
 
 [[deps.SnoopPrecompile]]
-git-tree-sha1 = "f604441450a3c0569830946e5b33b78c928e1a85"
+deps = ["Preferences"]
+git-tree-sha1 = "e760a70afdcd461cf01a575947738d359234665c"
 uuid = "66db9d55-30c0-4569-8b51-7e840670fc0c"
-version = "1.0.1"
+version = "1.0.3"
 
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
@@ -2326,9 +2329,9 @@ version = "1.30.0"
 
 [[deps.Sparspak]]
 deps = ["Libdl", "LinearAlgebra", "Logging", "OffsetArrays", "Printf", "SparseArrays", "Test"]
-git-tree-sha1 = "2d8eee38ff44389ffcd26ef39b289c2db786f6e5"
+git-tree-sha1 = "4149bb50ccf65bc9c9d55e7001ca7aa4a7649603"
 uuid = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
-version = "0.3.3"
+version = "0.3.4"
 
 [[deps.SpecialFunctions]]
 deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
@@ -2536,9 +2539,9 @@ version = "0.5.22"
 
 [[deps.TranscodingStreams]]
 deps = ["Random", "Test"]
-git-tree-sha1 = "e4bdc63f5c6d62e80eb1c0043fcc0360d5950ff7"
+git-tree-sha1 = "94f38103c984f89cf77c402f2a68dbd870f8165f"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.9.10"
+version = "0.9.11"
 
 [[deps.Transducers]]
 deps = ["Adapt", "ArgCheck", "BangBang", "Baselet", "CompositionsBase", "DefineSingletons", "Distributed", "InitialValues", "Logging", "Markdown", "MicroCollections", "Requires", "Setfield", "SplittablesBase", "Tables"]
