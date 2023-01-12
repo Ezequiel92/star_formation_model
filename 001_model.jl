@@ -10,19 +10,13 @@ using CairoMakie, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquati
 # ╔═╡ 3b9e3941-779a-4c3a-b87e-7e4456ddc85d
 md"""
 
-### To read
+[Ascasibar2015](https://doi.org/10.1093/mnras/stv098)
 
-[Monaco2012](https://doi.org/10.1111/j.1365-2966.2012.20482.x)
+[Mollá2017](https://doi.org/10.1093/mnras/stx419)
 
-[Hopkins2013](https://doi.org/10.1093/mnras/stt723)
+[Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635)
 
-[Murante2014](https://doi.org/10.1093/mnras/stu2400)
-
-[Valentini2017](https://doi.org/10.1093/mnras/stx1352)
-
-[Valentini2022](https://doi.org/10.1093/mnras/stac2110)
-
-## Introduction
+## Previous work
 
 Based on the theoretical work on the multiphase structure of the insterstellar medium (MP ISM) (see [Field1969](https://doi.org/10.1086/180324), [Cowie1977](https://doi.org/10.1086/154911) and [McKee1977a](https://doi.org/10.1086/155350), but mainly [McKee1977b](https://doi.org/10.1086/155667), and the review in [Cox2005](https://doi.org/10.1146/annurev.astro.43.072103.150615)), [Yepes1997](https://doi.org/10.1093/mnras/284.1.235) and [Hultman1999](https://ui.adsabs.harvard.edu/abs/1999A%26A...347..769H) incorporated 2 phase (hot and cold) ISM to numerical simulation of galaxy formation (Eulerian and Lagrangian respectively). This work was extended by [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), adding galactic winds driven by star formation as a form of feedback. 
 
@@ -32,8 +26,12 @@ MUPPI separates a gas particle in a hot and cold phase if a set of conditions fo
 
 MUPPI correlates star formation with the density of molecular was, which is stimated as a fraction of the cold gas, given by the pressure. In contrast [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) model the MP ISM explicitly following the molecuar and atomic fractions, correlating the star formation to the molecuar part too. Based on this work, [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) integrates an MP ISM in an SPH simulation, following molecular and atomic phases instead of hot and cold ones.
 
+The idea to model molecular gas formation and evolution, within an MP ISM, as a way to regulate star formation, was firt implemented in [Pelupessy2006](https://doi.org/10.1086/504366). This was later expanded as a set of ODEs that follow the interaction between atomic gas, molecular gas and dust in [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), and further develop by [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) and [Tomassetti2014](https://doi.org/10.1093/mnras/stu2273). 
 
-[Mongardi2018](https://doi.org/10.1093/mnras/sty1283) Calls the [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x) prescription the "effective model" (Section 2.2).
+A SAM with molecular, atomic an ionized was implemented in [Berry2014](https://doi.org/10.1093/mnras/stu613), [Somerville2015](https://doi.org/10.1093/mnras/stv1877).
+
+[Sillero2021](https://doi.org/10.1093/mnras/stab1015) incorporates a computation of molecuar gas within $\texttt{GADGET-3}$, and couples it with star formation. Can provide a guide to structure our paper. Similarly for [Murante2014](https://doi.org/10.1093/mnras/stu2400).
+
 
 [Granato2021](https://doi.org/10.1093/mnras/stab362) and [Parente2022](https://doi.org/10.1093/mnras/stac1913) study the interacction of dust with MUPPI in simulations. They model the dust with two phases (small and large grains) using ODEs.
 
@@ -523,6 +521,9 @@ begin
 	const CC   = (Zsun * u"mp") / (2 * σv)
 	const cc   = ustrip(t_u * l_u^-3, CC / u"mp")
 end
+
+# ╔═╡ d1fe5fe6-2847-4d37-b3a7-d24d9491f19b
+1/ustrip(u"s" * l_u^-3, CC / u"mp")
 
 # ╔═╡ 1734df7f-1309-4ebd-a021-5f75f0bb78b2
 τC(s_f, ρC, Z) = cc / ((1 - s_f) * ρC * (Z + Zeff));
@@ -3853,6 +3854,7 @@ version = "3.5.0+0"
 # ╟─7e824ce1-1f82-48cc-a3c4-1acfba0e2100
 # ╟─4a7eb24b-0874-49a3-9b08-4ffb6a7f0ce7
 # ╠═f2a6676f-457a-476a-9ce7-c336aa9bf47f
+# ╠═d1fe5fe6-2847-4d37-b3a7-d24d9491f19b
 # ╠═1734df7f-1309-4ebd-a021-5f75f0bb78b2
 # ╟─4f7de8a3-7f59-4a7b-8980-53390e52e0d1
 # ╟─3767c7f9-a0bc-467a-a20a-5e5a266111c7
