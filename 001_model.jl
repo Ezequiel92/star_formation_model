@@ -10,12 +10,6 @@ using CairoMakie, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquati
 # ╔═╡ 3b9e3941-779a-4c3a-b87e-7e4456ddc85d
 md"""
 
-[Ascasibar2015](https://doi.org/10.1093/mnras/stv098)
-
-[Mollá2017](https://doi.org/10.1093/mnras/stx419)
-
-[Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635)
-
 ## Previous work
 
 Based on the theoretical work on the multiphase structure of the insterstellar medium (MP ISM) (see [Field1969](https://doi.org/10.1086/180324), [Cowie1977](https://doi.org/10.1086/154911) and [McKee1977a](https://doi.org/10.1086/155350), but mainly [McKee1977b](https://doi.org/10.1086/155667), and the review in [Cox2005](https://doi.org/10.1146/annurev.astro.43.072103.150615)), [Yepes1997](https://doi.org/10.1093/mnras/284.1.235) and [Hultman1999](https://ui.adsabs.harvard.edu/abs/1999A%26A...347..769H) incorporated 2 phase (hot and cold) ISM to numerical simulation of galaxy formation (Eulerian and Lagrangian respectively). This work was extended by [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), adding galactic winds driven by star formation as a form of feedback. 
@@ -32,8 +26,9 @@ A SAM with molecular, atomic an ionized was implemented in [Berry2014](https://d
 
 [Sillero2021](https://doi.org/10.1093/mnras/stab1015) incorporates a computation of molecuar gas within $\texttt{GADGET-3}$, and couples it with star formation. Can provide a guide to structure our paper. Similarly for [Murante2014](https://doi.org/10.1093/mnras/stu2400).
 
-
 [Granato2021](https://doi.org/10.1093/mnras/stab362) and [Parente2022](https://doi.org/10.1093/mnras/stac1913) study the interacction of dust with MUPPI in simulations. They model the dust with two phases (small and large grains) using ODEs.
+
+Based on [Ferrini1992](https://doi.org/10.1086/171066) and later work, [Mollá2015](https://doi.org/10.1111/j.1365-2966.2005.08782.x) develop a SAM to follow the metal component in galaxies. This chemical evolution models (CEMs) where subsequentily improve and extended in [Mollá2015](https://doi.org/10.1093/mnras/stv1102), [Mollá2016](https://doi.org/10.1093/mnras/stw1723), [Molla2017](https://doi.org/10.1093/mnras/stx419) and [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635). The later being the one we took as a base for our MP ISM model, to be implemented within $\texttt{Arepo}$, the same way MUPPI is within $\texttt{GADGET-3}$
 
 """
 
@@ -903,7 +898,7 @@ $\begin{equation}
 	R = \dfrac{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} (m - m_\mathrm{rem}(m)) \, \phi(m) \mathrm{d}m}{\int_{m_\mathrm{low}}^{m_\mathrm{high}} m \, \phi(m) \mathrm{d}m} \, ,
 \end{equation}$
 
-where $\phi(m)$ is the ISM, $m_\mathrm{low}$ and $m_\mathrm{high}$ are the extremes in the mass range of the ISM, $m_\mathrm{ir}$ is the mass limit for the instantaneous recycling hypothesis, and $m_\mathrm{rem}(m)$ is the remnant stellar mass given by the yield model.
+where $\phi(m)$ is the ISM, $m_\mathrm{low}$ and $m_\mathrm{high}$ are the extremes in the mass range of the ISM, $m_\mathrm{ir}$ is the mass limit for the instantaneous recycling hypothesis, and $m_\mathrm{rem}(m)$ is the remnant stellar mass given by the yield model, [Pipino2014](https://doi.org/10.1093/mnras/stu579) ans [Ascasibar2015](https://doi.org/10.1093/mnras/stv098).
 
 Notice that the denominator in the expression for $R$ is the total mass of the stellar population modeled by $\phi(m)$, so it is just a normalization, given that the IMF is generally defined except for a global constant.
 
@@ -920,7 +915,7 @@ Some traditional choices for the masses are $m_\mathrm{ir} = 8 \, M_\odot$, $m_\
 [Ascasibar2015](https://doi.org/10.1093/mnras/stv098) got $R \approx 0.18$ and $Z_{SN} \approx 0.09$, using the yield model of [Woosley1995](https://doi.org/10.2172/115557) and the IMF of [Kroupa2001](https://doi.org/10.1046/j.1365-8711.2001.04022.x), even though it is not clear which mass limits were used.
 
 The two previous equations were taken from [_Nucleosynthesis and Chemical Evolution of Galaxies_](https://doi.org/10.1017/CBO9780511812170) by Bernard Pagel (eq. 7.24 and 7.26), and [_Chemical Evolution
-of Galaxies_](https://doi.org/10.1007/978-94-010-0967-6) by Francesca Matteucci (eq. 2.74).
+of Galaxies_](https://doi.org/10.1007/978-94-010-0967-6) by Francesca Matteucci (eq. 2.74). 
 
 We will consider the following stellar yields models,
 
@@ -3867,7 +3862,7 @@ version = "3.5.0+0"
 # ╠═3e637368-6bdb-4d22-9a4a-df23c6682c2f
 # ╠═ef65a096-cc2a-4ce6-a06b-8671c99ca777
 # ╟─a0294888-90cf-4e5b-a4b8-ce2c63bdae7a
-# ╟─994f97fb-1c30-4825-9b29-35fe4ade8fb3
+# ╠═994f97fb-1c30-4825-9b29-35fe4ade8fb3
 # ╟─533b3cd0-c1f6-4ecd-b196-4ed35bf77135
 # ╟─be85ba3b-5439-4cf3-bb14-d24d61a283c3
 # ╟─b3a260b6-eb31-43a0-9fd6-60a507984319
