@@ -159,13 +159,65 @@ TikzPicture(
 # ╔═╡ 047bbd39-9cf9-4bd7-b38e-16aa505b0b08
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"""
-
-## Equations
-
-The previous diagram can be written as four first-order ODEs, (normalized by volume and by total cell density, $\rho_C$),
-"""
+md"## Equations"
   ╠═╡ =#
+
+# ╔═╡ 35e194f5-20dc-4391-b761-3696fe0bc117
+md"""
+### Ionized gas
+
+The ionized component gains mass through the ionization of atomic gas, and from the death of stars as supernovas. 
+
+The former is assumed to come mainly from the radiation of newborn stars, so it is given by
+
+$\begin{equation}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}i_f(t)\right|_{\text{ion}} = \eta_\text{ion} \, \psi(t) \, ,
+\end{equation}$
+
+where $\psi(t)$ is the star formation rate 
+
+$\begin{equation}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}s_f(t)\right|_{\text{SFR}} = \psi(t) \, ,
+\end{equation}$
+
+and $\eta_\text{ion}$ is the ionized mass rate per unit of created stellar mass. All the physics of the ionization process is in the parameter $\eta_\text{ion}$.
+
+The later, under the instantaneous recycling hypothesis, can be written as 
+
+$\begin{equation}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}i_f(t)\right|_{\text{recyc}} = R \, \psi(t) \, ,
+\end{equation}$
+
+where $R$ is the mass fraction of a stellar population that is returned to the ISM.
+
+### Atomic gas
+
+The atomic component gains mass through the dissociation of a Hydrogen molecule, and the recombination of free protons and electrons.
+
+The former, as with the ionized gas, is given by
+
+$\begin{equation}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}a_f(t)\right|_{\text{diss}} = \eta_\text{diss} \, \psi(t) \, ,
+\end{equation}$
+
+where $\eta_\text{diss}$ is the disassociated mass rate per unit of created stellar mass.
+
+The later will depend on the mass of ionized gas present, and the time scale of recombination ($\tau_R$), so is given by 
+
+$\begin{equation}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}a_f(t)\right|_{\text{diss}} = \frac{i_f(t)}{\tau_R(t)} \, .
+\end{equation}$
+
+### Molecular gas
+
+The molecular component gains mass mainly by the condensation of Hydrogen atoms in the surface of dust grains, this process depends on the mass of atomic gas, and the characteristic time scale of condensation ($\tau_C$). We are ignoring all the dust physics, and condensing that into the single time parameter,
+
+$\begin{equation}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}m_f(t)\right|_{\text{diss}} = \frac{a_f(t)}{\tau_C(t)} \, ,
+\end{equation}$
+
+From all the above, we can write the following system of four ODEs,
+"""
 
 # ╔═╡ 2fe0dc4c-da44-4fc8-bef8-1fa615a0fe4a
 # ╠═╡ skip_as_script = true
@@ -175,10 +227,10 @@ TikzPicture(
 	\node[white] {
   	${\boldmath
 	\begin{aligned}
-		\dv{}{t}i_f(t) &= - \textcolor{d_pink}{\frac{i_f(t)}{\tau_R(t)}} + \textcolor{d_blue}{\eta_\text{ion}\,\psi(t)} + \textcolor{d_yellow}{R\,\psi(t)} \, , \\
-		\dv{}{t}a_f(t) &= - \textcolor{d_orange}{\frac{a_f(t)}{\tau_C(t)}} + \textcolor{d_pink}{\frac{i_f(t)}{\tau_R(t)}} + \textcolor{d_green}{\eta_\text{diss}\,\psi(t)} - \textcolor{d_blue}{\eta_\text{ion}\,\psi(t)} \, , \\
-		\dv{}{t}m_f(t) &= \textcolor{d_orange}{\frac{a_f(t)}{\tau_C(t)}} - \textcolor{d_green}{\eta_\text{diss}\,\psi(t)} - \textcolor{red}{\psi(t)} \, , \\
-		\dv{}{t}s_f(t) &= \textcolor{red}{\psi(t)} - \textcolor{d_yellow}{R\,\psi(t)} \, ,
+		\dv{}{t}i_f(t) &= - \textcolor{d_pink}{\frac{i_f(t)}{\tau_R(t)}} + \textcolor{d_blue}{\eta_\text{ion} \, \psi(t)} + \textcolor{d_yellow}{R \, \psi(t)} \, , \\
+		\dv{}{t}a_f(t) &= - \textcolor{d_orange}{\frac{a_f(t)}{\tau_C(t)}} + \textcolor{d_pink}{\frac{i_f(t)}{\tau_R(t)}} + \textcolor{d_green}{\eta_\text{diss} \, \psi(t)} - \textcolor{d_blue}{\eta_\text{ion} \, \psi(t)} \, , \\
+		\dv{}{t}m_f(t) &= \textcolor{d_orange}{\frac{a_f(t)}{\tau_C(t)}} - \textcolor{d_green}{\eta_\text{diss} \, \psi(t)} - \textcolor{red}{\psi(t)} \, , \\
+		\dv{}{t}s_f(t) &= \textcolor{red}{\psi(t)} - \textcolor{d_yellow}{R \, \psi(t)} \, ,
 	\end{aligned}}$
 	};
 	""", 
@@ -3826,6 +3878,7 @@ version = "3.5.0+0"
 # ╟─64787011-b5b8-42be-b6e4-37ebc5138b3e
 # ╟─14c7f574-0623-4254-b8f7-97984d32351c
 # ╟─047bbd39-9cf9-4bd7-b38e-16aa505b0b08
+# ╟─35e194f5-20dc-4391-b761-3696fe0bc117
 # ╟─2fe0dc4c-da44-4fc8-bef8-1fa615a0fe4a
 # ╟─744a9591-c7f1-496e-9bb4-47df2c8937dd
 # ╟─af69ab25-0f06-4837-ac35-acbe38a4ffb1
