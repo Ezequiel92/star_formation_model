@@ -57,7 +57,7 @@ The idea to model the formation and evolution of the molecular gas, within an MP
 
 A SAM with molecular, atomic an ionized gas was first implemented by [Berry2014](https://doi.org/10.1093/mnras/stu613) and later [Somerville2015](https://doi.org/10.1093/mnras/stv1877), but as far as we are aware there are no MP ISM models with the three gas phases crafted into hydrodynamical codes.
 
-Based on [Ferrini1992](https://doi.org/10.1086/171066) and later work, [Mollá2015](https://doi.org/10.1111/j.1365-2966.2005.08782.x) develop a SAM to follow the metal component in galaxies. These chemical evolution models (CEMs) where subsequently improve and extended in [Mollá2015](https://doi.org/10.1093/mnras/stv1102), [Mollá2016](https://doi.org/10.1093/mnras/stw1723), [Molla2017](https://doi.org/10.1093/mnras/stx419) and [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635). The latter being a full SAM that models the MP ISM, considering the molecular, atomic and ionized phases of Hydrogen, plus dust and the stellar component. Our model follows closely the one developed by [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), but implemented within the hydrodynamical code $\texttt{Arepo}$, the same way MUPPI is into $\texttt{GADGET}$
+Based on [Ferrini1992](https://doi.org/10.1086/171066) and later work, [Mollá2015](https://doi.org/10.1111/j.1365-2966.2005.08782.x) develop a SAM to follow the metal component in galaxies. These chemical evolution models (CEMs) where subsequently improve and extended in [Mollá2015](https://doi.org/10.1093/mnras/stv1102), [Mollá2016](https://doi.org/10.1093/mnras/stw1723), [Mollá2017](https://doi.org/10.1093/mnras/stx419) and [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635). The latter being a full SAM that models the MP ISM, considering the molecular, atomic and ionized phases of Hydrogen, plus dust and the stellar component. Our model follows closely the one developed by [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), but implemented within the hydrodynamical code $\texttt{Arepo}$, the same way MUPPI is into $\texttt{GADGET}$.
 """
 
 # ╔═╡ a842b24e-8d26-41ab-9de3-91632aede893
@@ -3877,7 +3877,7 @@ version = "3.5.0+0"
 # ╟─08df960b-fd82-43ba-a9dc-bf5e83af587e
 # ╟─cbd51460-8ef0-49eb-8219-14986d8421e4
 # ╟─5814a7b3-8420-4a57-a2a2-d8c59db29a99
-# ╟─8eb6540d-f5b0-45e6-883c-0cc213e67e45
+# ╠═8eb6540d-f5b0-45e6-883c-0cc213e67e45
 # ╟─a842b24e-8d26-41ab-9de3-91632aede893
 # ╟─64787011-b5b8-42be-b6e4-37ebc5138b3e
 # ╟─14c7f574-0623-4254-b8f7-97984d32351c
