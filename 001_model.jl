@@ -9,27 +9,11 @@ using CairoMakie, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquati
 
 # ╔═╡ 3b9e3941-779a-4c3a-b87e-7e4456ddc85d
 md"""
-
-## Previous work
-
-Based on the theoretical work on the multiphase structure of the insterstellar medium (MP ISM) (see [Field1969](https://doi.org/10.1086/180324), [Cowie1977](https://doi.org/10.1086/154911) and [McKee1977a](https://doi.org/10.1086/155350), but mainly [McKee1977b](https://doi.org/10.1086/155667), and the review in [Cox2005](https://doi.org/10.1146/annurev.astro.43.072103.150615)), [Yepes1997](https://doi.org/10.1093/mnras/284.1.235) and [Hultman1999](https://ui.adsabs.harvard.edu/abs/1999A%26A...347..769H) incorporated 2 phase (hot and cold) ISM to numerical simulation of galaxy formation (Eulerian and Lagrangian respectively). This work was extended by [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), adding galactic winds driven by star formation as a form of feedback. 
-
-[Monaco2004](https://doi.org/10.1111/j.1365-2966.2004.07916.x) later develop a semi-analytic model in a similar vein to [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), which was the theoretical base for MUPPI (MUlti-Phase Particle Integrator, [Murante2010](https://doi.org/10.1111/j.1365-2966.2010.16567.x)), which implements a MP ISM in $\texttt{GADGET-2}$ with feedback.
-
-MUPPI separates a gas particle in a hot and cold phase if a set of conditions for its density and temperature are match. It then evolves those components, plus a stellar phase and an energy term (energy of the hot gas) using 4 ODEs. In each SPH integration step the equations uses the gas state (pressure, density, entropy) as parameters, to compute the ICs (in the case that the particle is entering to the multiphase state for the first time), and evolves the equations. The state of the internal variables (hot mass, cold mass, stellar mass and hot phase energy) are kept to be used in the next SPH step. So, MUPPI evolves in lockstep with the SPH simulation. 
-
-MUPPI correlates star formation with the density of molecular was, which is stimated as a fraction of the cold gas, given by the pressure. In contrast [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) model the MP ISM explicitly following the molecuar and atomic fractions, correlating the star formation to the molecuar part too. Based on this work, [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) integrates an MP ISM in an SPH simulation, following molecular and atomic phases instead of hot and cold ones.
-
-The idea to model molecular gas formation and evolution, within an MP ISM, as a way to regulate star formation, was firt implemented in [Pelupessy2006](https://doi.org/10.1086/504366). This was later expanded as a set of ODEs that follow the interaction between atomic gas, molecular gas and dust in [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), and further develop by [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) and [Tomassetti2014](https://doi.org/10.1093/mnras/stu2273). 
-
-A SAM with molecular, atomic an ionized was implemented in [Berry2014](https://doi.org/10.1093/mnras/stu613), [Somerville2015](https://doi.org/10.1093/mnras/stv1877).
+Note:
 
 [Sillero2021](https://doi.org/10.1093/mnras/stab1015) incorporates a computation of molecuar gas within $\texttt{GADGET-3}$, and couples it with star formation. Can provide a guide to structure our paper. Similarly for [Murante2014](https://doi.org/10.1093/mnras/stu2400).
 
 [Granato2021](https://doi.org/10.1093/mnras/stab362) and [Parente2022](https://doi.org/10.1093/mnras/stac1913) study the interacction of dust with MUPPI in simulations. They model the dust with two phases (small and large grains) using ODEs.
-
-Based on [Ferrini1992](https://doi.org/10.1086/171066) and later work, [Mollá2015](https://doi.org/10.1111/j.1365-2966.2005.08782.x) develop a SAM to follow the metal component in galaxies. This chemical evolution models (CEMs) where subsequentily improve and extended in [Mollá2015](https://doi.org/10.1093/mnras/stv1102), [Mollá2016](https://doi.org/10.1093/mnras/stw1723), [Molla2017](https://doi.org/10.1093/mnras/stx419) and [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635). The later being the one we took as a base for our MP ISM model, to be implemented within $\texttt{Arepo}$, the same way MUPPI is within $\texttt{GADGET-3}$
-
 """
 
 # ╔═╡ 08df960b-fd82-43ba-a9dc-bf5e83af587e
@@ -48,17 +32,33 @@ md"# Star formation model"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-
 ## Motivation
 
 The star formation rate (SFR) is a key characteristic of galaxies. In the context of the standard cosmological model, the SFR is determined by a combination of various processes that take place over the course of a galaxy's lifetime, such as gas cooling, star formation, chemical enrichment, and feedback from supernovae and galactic nuclei. These processes are influenced by factors like mergers, interactions, and mass accretion, which affect the amount and properties of the gas from which stars form. The density of a gas cloud is believed to be the most important factor in determining its star formation rate, although the details of this process are not yet fully understood. Observationally, the total gas density is found to be correlated to the star formation rate ([Kennicutt1998](https://doi.org/10.1086/305588)), and this correlation is even stronger when considering the molecular gas ([Wong2002](https://doi.org/10.1086/339287), [Bigiel2008](https://doi.org/10.1088/0004-6256/136/6/2846)).
 
 As the formation of dark matter halos and galaxies is highly non-linear, numerical simulations have become the preferred tool to investigate how galaxies form and evolve from early times up to the present.
-This type of simulations naturally include mergers/interactions and continuous gas accretion, processes that may induce changes in the SFR.  However, there are still significant uncertainties in the modelling of the evolution of the baryonic component, since the physical processes that affect baryons – such as star formation, feedback, and chemical enrichment – take place at scales that are too small to be resolved directly. As a result, these processes are  introduced using sub-grid physics, which involves a number of adjustable parameters that are not always independent of one another or constrained observationally. This can lead to inconsistencies in the predictions of different models ([Scannapieco2012](https://doi.org/10.1111/j.1365-2966.2012.20993.x)).
+This type of simulations naturally include mergers/interactions and continuous gas accretion, processes that may induce changes in the SFR.  However, there are still significant uncertainties in the modelling of the evolution of the baryonic component, since the physical processes that affect baryons – such as star formation, feedback, and chemical enrichment – take place at scales that are too small to be resolved directly. As a result, these processes are introduced using sub-grid physics, which involves several adjustable parameters that are not always independent of one another or constrained observationally. This can lead to inconsistencies in the predictions of different models ([Scannapieco2012](https://doi.org/10.1111/j.1365-2966.2012.20993.x)).
 
 Because of its importance in galaxy formation, it is critical for simulations to accurately describe the star formation process at the scales that can be resolved, as well as the associated feedback effects.
 """
   ╠═╡ =#
+
+# ╔═╡ 8eb6540d-f5b0-45e6-883c-0cc213e67e45
+md"""
+## Previous work
+
+Broadly, there has been two ways to model the multiphase structure of the interstellar medium (MP ISM), one is based on the physical properties of the gas (hot and cold phases), and the other on its chemical composition (molecular and atomic phases).
+
+The former was pioneer by [Field1969](https://doi.org/10.1086/180324) (see [Cowie1977](https://doi.org/10.1086/154911), [McKee1977a](https://doi.org/10.1086/155350), and for a review [Cox2005](https://doi.org/10.1146/annurev.astro.43.072103.150615)), within the context of semi analytic models (SAMs). The model develop by [McKee1977b](https://doi.org/10.1086/155667) was first incorporated into numerical simulation of galaxy formation by [Yepes1997](https://doi.org/10.1093/mnras/284.1.235) (Eulerian) and [Hultman1999](https://ui.adsabs.harvard.edu/abs/1999A%26A...347..769H) (Lagrangian). These works were later extended by [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), adding galactic winds driven by star formation as a form of feedback. 
+
+[Monaco2004](https://doi.org/10.1111/j.1365-2966.2004.07916.x) developed a semi-analytic model in a similar vein to [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), providing the theoretical foundation for MUPPI (MUlti-Phase Particle Integrator) ([Murante2010](https://doi.org/10.1111/j.1365-2966.2010.16567.x)), a sub-resolution MP ISM model that adds stellar feedback to $\texttt{GADGET-2}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)). MUPPI separates a gas particle in a hot and cold phase if a set of conditions for its density and temperature are match. It then evolves those components, plus a stellar phase and an energy term (energy of the hot gas) using a set of four ODEs. In each SPH integration step the equations uses the gas state (pressure, density, entropy) as parameters to compute the ICs (in the case that the particle is entering to the multiphase state for the first time), and to evolve the equations. The state of the internal variables (hot mass, cold mass, stellar mass and hot phase energy) are kept to be used in the next SPH step.
+
+The idea to model the formation and evolution of the molecular gas, within an MP ISM, was first implemented in [Pelupessy2006](https://doi.org/10.1086/504366). This was later expanded as a set of ODEs that follow the interaction between atomic gas, molecular gas and dust in [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), and further develop by [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) to integrate it into SPH simulations.
+
+A SAM with molecular, atomic an ionized gas was first implemented by [Berry2014](https://doi.org/10.1093/mnras/stu613) and later [Somerville2015](https://doi.org/10.1093/mnras/stv1877), but as far as we are aware there are no MP ISM models with the three gas phases crafted into hydrodynamical codes.
+
+Based on [Ferrini1992](https://doi.org/10.1086/171066) and later work, [Mollá2015](https://doi.org/10.1111/j.1365-2966.2005.08782.x) develop a SAM to follow the metal component in galaxies. These chemical evolution models (CEMs) where subsequently improve and extended in [Mollá2015](https://doi.org/10.1093/mnras/stv1102), [Mollá2016](https://doi.org/10.1093/mnras/stw1723), [Molla2017](https://doi.org/10.1093/mnras/stx419) and [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635). The latter being a full SAM that models the MP ISM, considering the molecular, atomic and ionized phases of Hydrogen, plus dust and the stellar component. Our model follows closely the one developed by [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), but implemented within the hydrodynamical code $\texttt{Arepo}$, the same way MUPPI is into $\texttt{GADGET}$
+"""
 
 # ╔═╡ a842b24e-8d26-41ab-9de3-91632aede893
 # ╠═╡ skip_as_script = true
@@ -69,7 +69,7 @@ md"""
 
 Given that the interstellar medium (ISM) is not homogeneous, we will model it as a multi-phase structure made up of four components. Three of which are the phases of Hydrogen, the ionized phase with a temperature of $\sim \! 10^4 \, \mathrm{K}$, the atomic phase with a temperature of $\sim \! 100 \, \mathrm{K}$, and the molecular phase with a temperature of $\sim \! 10 \, \mathrm{K}$. The final component is the stars.
 
-For every reaction that transfers mass between the phases, we will consider only the dominant channel. So, even though the gas is made up of Hydrogen and Helium, only the Hydrogen reactions are incorporated into the model. The processes involved are the photoionization of atoms; the recombination of electrons with ions; the conversion of atomic hydrogen into molecular hydrogen; and the destruction of the latter owing to the photodissociation caused by ultraviolet (UV) light from the young stellar population. In addition, we consider the formation by supernovas of ionized gas, and the influence of molecular and atomic gas on the star formation rate.
+For every reaction that transfers mass between the phases, we will consider only the dominant channel. So, even though the gas is made up of Hydrogen and Helium, only the Hydrogen reactions are incorporated into the model. The processes involved are the photoionization of atoms; the recombination of electrons with ions; the conversion of atomic hydrogen into molecular hydrogen; and the destruction of the latter owing to the photodissociation caused by ultraviolet (UV) light from the young stellar population. In addition, we consider the formation by supernovas of ionized gas, and the influence of the neutral gas on the star formation rate.
 
 We characterized the mass of the phases by their density fraction, with respect to the total cell density,
 
@@ -166,7 +166,7 @@ md"## Equations"
 md"""
 ### Ionized gas
 
-The ionized component gains mass through the ionization of atomic gas, and from the death of stars as supernovas. 
+The ionized component growths through the ionization of atomic gas, and from the remnants of supernova explosions. 
 
 The former is assumed to come mainly from the radiation of newborn stars, so it is given by
 
@@ -180,19 +180,19 @@ $\begin{equation}
 	\left. \frac{\mathrm{d}}{\mathrm{d}t}s_f(t)\right|_{\text{SFR}} = \psi(t) \, ,
 \end{equation}$
 
-and $\eta_\text{ion}$ is the ionized mass rate per unit of created stellar mass. All the physics of the ionization process is in the parameter $\eta_\text{ion}$.
+and $\eta_\text{ion}$ is the ionized mass rate per unit of created stellar mass. All the physics of the ionization process are summarized in the parameter $\eta_\text{ion}$.
 
-The later, under the instantaneous recycling hypothesis, can be written as 
+The latter, under the instantaneous recycling hypothesis, can be written as 
 
 $\begin{equation}
 	\left. \frac{\mathrm{d}}{\mathrm{d}t}i_f(t)\right|_{\text{recyc}} = R \, \psi(t) \, ,
 \end{equation}$
 
-where $R$ is the mass fraction of a stellar population that is returned to the ISM.
+where $R$ is the mass fraction of a stellar population that is returned to the ISM, where we assumed that all the returned mass is in the form of ionized gas. Ignoring the metal enrichment is a good approximation that does not alter the results.
 
 ### Atomic gas
 
-The atomic component gains mass through the dissociation of a Hydrogen molecule, and the recombination of free protons and electrons.
+The atomic component accumulates mass through the dissociation of a Hydrogen molecules, and the recombination of the ionized gas with free electrons.
 
 The former, as with the ionized gas, is given by
 
@@ -202,20 +202,23 @@ $\begin{equation}
 
 where $\eta_\text{diss}$ is the disassociated mass rate per unit of created stellar mass.
 
-The later will depend on the mass of ionized gas present, and the time scale of recombination ($\tau_R$), so is given by 
+The latter will depend on the mass of ionized gas present, and the time scale of recombination ($\tau_R$), so is given by 
 
 $\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}a_f(t)\right|_{\text{diss}} = \frac{i_f(t)}{\tau_R(t)} \, .
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}a_f(t)\right|_{\text{recon}} = \frac{i_f(t)}{\tau_R(t)} \, .
 \end{equation}$
 
 ### Molecular gas
 
-The molecular component gains mass mainly by the condensation of Hydrogen atoms in the surface of dust grains, this process depends on the mass of atomic gas, and the characteristic time scale of condensation ($\tau_C$). We are ignoring all the dust physics, and condensing that into the single time parameter,
+The molecular component gains mass mainly by the condensation of Hydrogen atoms in the surface of dust grains. This process depends on the mass of atomic gas, and the characteristic time scale of condensation ($\tau_C$). We are ignoring all the dust physics, and condensing that into the single time parameter,
 
 $\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}m_f(t)\right|_{\text{diss}} = \frac{a_f(t)}{\tau_C(t)} \, ,
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}m_f(t)\right|_{\text{cond}} = \frac{a_f(t)}{\tau_C(t)} \, ,
 \end{equation}$
+"""
 
+# ╔═╡ 70078b44-4d66-49b9-930e-74261df8be78
+md"""
 From all the above, we can write the following system of four ODEs,
 """
 
@@ -3869,16 +3872,18 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═3b9e3941-779a-4c3a-b87e-7e4456ddc85d
+# ╟─3b9e3941-779a-4c3a-b87e-7e4456ddc85d
 # ╠═b03ee99c-27f4-47df-bba5-2ea3dabdb45d
 # ╟─08df960b-fd82-43ba-a9dc-bf5e83af587e
 # ╟─cbd51460-8ef0-49eb-8219-14986d8421e4
 # ╟─5814a7b3-8420-4a57-a2a2-d8c59db29a99
+# ╟─8eb6540d-f5b0-45e6-883c-0cc213e67e45
 # ╟─a842b24e-8d26-41ab-9de3-91632aede893
 # ╟─64787011-b5b8-42be-b6e4-37ebc5138b3e
 # ╟─14c7f574-0623-4254-b8f7-97984d32351c
 # ╟─047bbd39-9cf9-4bd7-b38e-16aa505b0b08
 # ╟─35e194f5-20dc-4391-b761-3696fe0bc117
+# ╟─70078b44-4d66-49b9-930e-74261df8be78
 # ╟─2fe0dc4c-da44-4fc8-bef8-1fa615a0fe4a
 # ╟─744a9591-c7f1-496e-9bb4-47df2c8937dd
 # ╟─af69ab25-0f06-4837-ac35-acbe38a4ffb1
