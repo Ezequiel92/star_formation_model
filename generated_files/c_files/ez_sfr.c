@@ -4,7 +4,7 @@
  * \copyright   and contributing authors.
  *
  * \file        src/ez_sfr/ez_sfr.c
- * \date        01/2023
+ * \date        03/2023
  * \author      Ezequiel Lozano
  * \brief       Compute the star formation rate for a given gas cell.
  * \details     This file contains the routines to compute the star formation rate, according to our
@@ -12,10 +12,10 @@
  *              exchange between the different phases of Hydrogen (ionized, atomic and molecular),
  *              and stars.
  *              contains functions:
- *                void *read_ftable(const char *filepath, const int n_rows, const int n_cols)
+ *                void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
  *                static double interpolate1D(double x, const void *table)
  *                static double interpolate2D(double x, double y, const void *table)
- *                static int sf_ode(double t, const double y[], double f[], void *ode_params)
+ *                static int sf_ode(double t, const double y[], double f[], void *parameters)
  *                static void integrate_ode(const double *ic, double *parameters, double it, double *fractions)
  *                static double compute_sfr(const int index)
  *                double rate_of_star_formation(const int index)
@@ -44,41 +44,36 @@
 
 /*! \brief Loads a text file into memory, as a C array.
  *
- *  Read a text file with space separated values, and stores the numerical values as
- *  doubles in a C array. Each line in the file must be at most 1024 characters long.
+ *  Read a text file with space separated values, and store the numbers as doubles in a C array.
+ *  Each line in the file must be at most 1024 characters long.
  *
  *  The value on row i and column j will be stored as element i * n_cols + j in the array.
  *
- *  \param[in] filepath Path to the file.
+ *  \param[in] file_path Path to the file.
  *  \param[in] n_rows Number of rows in the table.
  *  \param[in] n_cols Number of columns in the table.
  *
- *  \return Values in the table as an `interpolation_table`.
+ *  \return The values of the text file in a `data_table` struct.
  */
-void *read_ftable(const char *filepath, const int n_rows, const int n_cols)
+void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
 {
-  FILE *file_ptr             = fopen(filepath, "r");
-  interpolation_table *table = malloc(sizeof(interpolation_table));
-  double *data               = malloc(n_rows * n_cols * sizeof(double));
-  char line[1024];
-  char *scan;
-  int offset;
-
-  for(size_t i = 0; i < n_rows; ++i)
+  FILE *file_ptr = fopen(file_path, "r");
+  if(!file_ptr)
     {
-      fgets(line, sizeof line, file_ptr);
-      scan   = line;
-      offset = 0;
+      fprintf(stderr, "Error: could not open file %s\n", file_path);
+      return NULL;
+    }
 
-      for(size_t j = 0; j < n_cols; ++j)
-        {
-          sscanf(scan, "%lf%n", &(data[i * n_cols + j]), &offset);
-          scan += offset;
-        }
+  int count    = n_rows * n_cols;
+  double *data = (double *)malloc(count * sizeof(double));
+  for(int i = 0; i < count; i++)
+    {
+      fscanf(file_ptr, "%lf", &data[i]);
     }
 
   fclose(file_ptr);
 
+  data_table *table = malloc(sizeof(data_table));
   table->data   = data;
   table->n_rows = n_rows;
   table->n_cols = n_cols;
@@ -86,12 +81,12 @@ void *read_ftable(const char *filepath, const int n_rows, const int n_cols)
   return (void *)table;
 }
 
-/*! \brief Use linear interpolation to compute f(x).
+/*! \brief Use linear interpolation to approximate f(x).
  *
- *  If the value is out of range, the boundary of the function is used.
+ *  If the value is out of range, the boundaries of the function are used (constant extrapolation).
  *
  *  \param[in] x Value at which the interpolation function will be evaluated.
- *  \param[in] table_path Path to the table containing the values of f(x), for every x.
+ *  \param[in] table_path Path to the table containing the values of f(xi), for many xi.
  *
  *  \return The interpolation function evaluated at `x`.
  */
@@ -104,10 +99,10 @@ static double interpolate1D(double x, const void *table)
 {
 #endif /* #ifdef TESTING */
 
-  interpolation_table *interp_table = (interpolation_table *)table;
-  double *data                      = interp_table->data;
-  int n_rows                        = interp_table->n_rows;
-  int n_cols                        = interp_table->n_cols;
+  data_table *interp_table = (data_table *)table;
+  double *data             = interp_table->data;
+  int n_rows               = interp_table->n_rows;
+  int n_cols               = interp_table->n_cols;
 
   double *xa = malloc(n_rows * sizeof(double));
   double *ya = malloc(n_rows * sizeof(double));
@@ -169,13 +164,13 @@ static double interpolate1D(double x, const void *table)
   return coeff * (term_01 + term_02);
 }
 
-/*! \brief Use bilinear interpolation to compute f(x,y).
+/*! \brief Use bilinear interpolation to approximate f(x,y).
  *
- *  If the values are out of range, the boundaries of the function are used.
+ *  If the values are out of range, the boundaries of the function are used (constant extrapolation).
  *
  *  \param[in] x X coordinate at which the interpolation function will be evaluated.
  *  \param[in] y Y coordinate at which the interpolation function will be evaluated.
- *  \param[in] eta_table Path to the table containing the values of f(x,y), for every x and y.
+ *  \param[in] table_path Path to the table containing the values of f(xi,yi), for many xi and yi.
  *
  *  \return The interpolation function evaluated at `x` and `y`.
  */
@@ -188,10 +183,10 @@ static double interpolate2D(double x, double y, const void *table)
 {
 #endif /* #ifdef TESTING */
 
-  interpolation_table *interp_table = (interpolation_table *)table;
-  double *data                      = interp_table->data;
-  int n_rows                        = interp_table->n_rows;
-  int n_cols                        = interp_table->n_cols;
+  data_table *interp_table = (data_table *)table;
+  double *data             = interp_table->data;
+  int n_rows               = interp_table->n_rows;
+  int n_cols               = interp_table->n_cols;
 
   int nx = n_rows - 1;
   int ny = n_cols - 1;
@@ -310,34 +305,35 @@ static double interpolate2D(double x, double y, const void *table)
  *  Molecular gas fraction:  mf(t) = ρm(t) / ρC --> y[2]
  *  Stellar fraction:        sf(t) = ρs(t) / ρC --> y[3]
  *
- *  where ρC = ρi(t) + ρa(t) + ρm(t) + ρs(t), and each equation has units of Myr^(-1).
+ *  where ρC = ρi(t) + ρa(t) + ρm(t) + ρs(t) is the total density of the gas cell,
+ *  and each equation has units of Myr^(-1).
  *
- *  \param[in] t Unused variable to comply with the gsl_odeiv2_driver_alloc_y_new() API.
+ *  \param[in] t Unused variable to comply with the `gsl_odeiv2_driver_alloc_y_new()` API.
  *  \param[in] y Values of the variables at which the ODEs will be evaluated.
  *  \param[out] f Where the results of evaluating the ODEs will be stored.
- *  \param[in] ode_params Parameters for the ODEs.
+ *  \param[in] parameters Parameters for the ODEs.
  *
- *  \return Constant GSL_SUCCESS, to confirm that the computation was successful.
+ *  \return Constant `GSL_SUCCESS`, to confirm that the computation was successful.
  */
-static int sf_ode(double t, const double y[], double f[], void *ode_params)
+static int sf_ode(double t, const double y[], double f[], void *parameters)
 {
   (void)(t);
 
   /*
    * Destructure the parameters
    *
-   * rho_C: Total cell density [mp * cm⁻³]
-   * Z:     Metallicity [dimensionless]
+   * rho_C: Total cell density                                 [mp * cm⁻³]
+   * Z:     Metallicity                                        [dimensionless]
    * eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
-   * eta_i: Photoionization efficiency of Hydrogen atoms [dimensionless]
-   * R:     Mass recycling fraction [dimensionless]
+   * eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
+   * R:     Mass recycling fraction                            [dimensionless]
    */
-  double *parameters = (double *)ode_params;
-  double rho_C       = parameters[0];
-  double Z           = parameters[1];
-  double eta_d       = parameters[2];
-  double eta_i       = parameters[3];
-  double R           = parameters[4];
+  double *p    = (double *)parameters;
+  double rho_C = p[0];
+  double Z     = p[1];
+  double eta_d = p[2];
+  double eta_i = p[3];
+  double R     = p[4];
 
   /* Compute auxiliary equations */
   double tau_R           = ODE_CR / (y[0] * rho_C);
@@ -367,16 +363,16 @@ static int sf_ode(double t, const double y[], double f[], void *ode_params)
  *
  * Parameters
  *
- * rho_C: Total cell density [mp * cm⁻³]
- * Z:     Metallicity [dimensionless]
+ * rho_C: Total cell density                                 [mp * cm⁻³]
+ * Z:     Metallicity                                        [dimensionless]
  * eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
- * eta_i: Photoionization efficiency of Hydrogen atoms [dimensionless]
- * R:     Mass recycling fraction [dimensionless]
+ * eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
+ * R:     Mass recycling fraction                            [dimensionless]
  *
  *  \param[in] ic Initial conditions.
  *  \param[in] parameters Parameters for the ODEs.
  *  \param[in] it Integration time in Myr.
- *  \param[out] fractions Array to store the resulting fraction after integration.
+ *  \param[out] fractions Array to store the resulting fractions after integration.
  *
  *  \return void.
  */
@@ -405,7 +401,7 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
   gsl_odeiv2_system sys     = {sf_ode, NULL, N_EQU, parameters};
   gsl_odeiv2_driver *driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_msadams, it * 1e-3, 1e-6, 0.0);
 
-  /* Use the density PDF to increase the effective resolution of the computation */
+  /* Use a ISM density PDF model to increase the effective resolution of the computation */
   for(size_t i = 0; i < DIVISIONS; ++i)
     {
       double y[]    = {i0, a0, m0, s0};
@@ -434,7 +430,7 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
 
 /*! \brief Compute the star formation rate.
  *
- *  Compute the star formation rate using the star fraction of the cell.
+ *  Compute the star formation rate using the star mass fraction of the cell.
  *
  *  \param[in] index Index of the gas cell in question.
  *
@@ -505,14 +501,14 @@ double rate_of_star_formation(const int index)
       accu_integration_time += SphP[index].accu_integration_time;
     }
 
-  /* Store the time parameters */
+  /* Store the integration time parameters */
   SphP[index].current_time          = current_time;
   SphP[index].delta_time            = delta_time;
   SphP[index].integration_time      = integration_time;
   SphP[index].accu_integration_time = accu_integration_time;
 
   /*************************************************************************************************
-   * Compute the parameters
+   * Compute the parameters for the ODEs
    *************************************************************************************************/
 
   /* Cell density [cm⁻³] */
@@ -543,7 +539,7 @@ double rate_of_star_formation(const int index)
    * Compute the initial conditions
    *************************************************************************************************/
 
-  /* Ionized gas fraction [dimensionless] */
+  /* Ionized gas mass fraction [dimensionless] */
   double i_f = 0.0;
   get_ionized_fraction(index, &i_f);
   if(!isnan(SphP[index].ODE_fractions[0]) && delta_time < SphP[index].tau_S)
@@ -551,14 +547,14 @@ double rate_of_star_formation(const int index)
       i_f = SphP[index].ODE_fractions[0];
     }
 
-  /* Atomic gas fraction [dimensionless] */
+  /* Atomic gas mass fraction [dimensionless] */
   double a_f = 1.0 - i_f;
   if(!isnan(SphP[index].ODE_fractions[1]) && delta_time < SphP[index].tau_S)
     {
       a_f = SphP[index].ODE_fractions[1];
     }
 
-  /* Molecular gas fraction [dimensionless] */
+  /* Molecular gas mass fraction [dimensionless] */
   double m_f = 0.0;
   if(!isnan(SphP[index].ODE_fractions[2]) && delta_time < SphP[index].tau_S)
     {
@@ -574,7 +570,7 @@ double rate_of_star_formation(const int index)
   double fractions[4] = {0.0};
   integrate_ode(ic, parameters, integration_time, fractions);
 
-  /* Store the star formation time parameter */
+  /* Store the time scale of parameter star formation (τS) */
   SphP[index].tau_S = ODE_CS / sqrt((1 - fractions[3]) * rhoC);
 
   /* Store the results after solving the ODEs */

@@ -63,22 +63,22 @@ double *read_ftable(const char *filepath, const int n_rows, const int n_cols)
   return data;
 }
 
-// double *read_numbers_from_file(const char *file_path, int rows, int cols) {
-//     FILE *fp = fopen(file_path, "r");
-//     if (!fp) {
-//         printf("Error: could not open file %s\n", file_path);
-//         return NULL;
-//     }
+double *read_numbers_from_file(const char *file_path, int rows, int cols) {
+    FILE *fp = fopen(file_path, "r");
+    if (!fp) {
+        printf("Error: could not open file %s\n", file_path);
+        return NULL;
+    }
 
-//     int count = rows * cols;
-//     double *numbers = (double *) malloc(count * sizeof(double));
-//     for (int i = 0; i < count; i++) {
-//         fscanf(fp, "%lf", &numbers[i]);
-//     }
+    int count = rows * cols;
+    double *numbers = (double *) malloc(count * sizeof(double));
+    for (int i = 0; i < count; i++) {
+        fscanf(fp, "%lf", &numbers[i]);
+    }
 
-//     fclose(fp);
-//     return numbers;
-// }
+    fclose(fp);
+    return numbers;
+}
 
 
 /*! \brief Evaluate a GSL interpolation function, using flat extrapolation.

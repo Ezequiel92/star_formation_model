@@ -1,75 +1,75 @@
-#ifndef EZ_SFR_H
-#define EZ_SFR_H
+	#ifndef EZ_SFR_H
+	#define EZ_SFR_H
+	
+	/* T [internal_units] * T_MYR = T [Myr] */
+	#define T_MYR (All.UnitTime_in_s / All.HubbleParam / SEC_PER_YEAR / 1000000)
+	/* RHO [internal_units] * RHO_COSMO = RHO [cm^(-3)] */
+	#define RHO_COSMO (All.UnitDensity_in_cgs * All.HubbleParam * All.HubbleParam * All.cf_a3inv / PROTONMASS)
+	/* M [internal_units] * M_COSMO = M [Mₒ] */
+	#define M_COSMO (All.UnitMass_in_g / SOLAR_MASS)
+	
+	/* Interpolation tables */
+	#define ETA_NROWS 107  // Number of rows in the η tables
+	#define ETA_NCOLS 7  // Number of columns in the η tables
+	#define R_NROWS 7  // Number of rows in the R table
+	#define R_NCOLS 3  // Number of columns in the R table
+	/* Paths */
+	static char *ETA_D_TABLE_PATH = "../code/src/ez_sfr/tables/eta_d.txt";
+	static char *ETA_I_TABLE_PATH = "../code/src/ez_sfr/tables/eta_i.txt";
+	static char *R_TABLE_PATH     = "../code/src/ez_sfr/tables/R_Zsn.txt";
+	
+	/* ODE constants */
+	#define N_EQU 4 /* Number of equations */
+	#define ODE_CS 2.5735041e+03  /* [Myr * cm^(-3/2)] */
+	#define ODE_CR 1.2234783e-01  /* [Myr * cm^(-3)] */
+	#define ODE_CC 3.5385031e+00  /* [Myr * cm^(-3)] */
+	#define ZEFF 1.3400e-05  /* 1e-3 Zₒ */
+	#define AW 0.00  /* Weight of the atomic fraction in the computation of the SFR */         
+	#define MW 1.00  /* Weight of the molecular fraction in the computation of the SFR */
 
-/* T [internal_units] * T_MYR = T [Myr] */
-#define T_MYR (All.UnitTime_in_s / All.HubbleParam / SEC_PER_YEAR / 1000000)
-/* RHO [internal_units] * RHO_COSMO = RHO [cm^(-3)] */
-#define RHO_COSMO (All.UnitDensity_in_cgs * All.HubbleParam * All.HubbleParam * All.cf_a3inv / PROTONMASS)
-/* M [internal_units] * M_COSMO = M [Mₒ] */
-#define M_COSMO (All.UnitMass_in_g / SOLAR_MASS)
-
-/* Interpolation tables */
-#define ETA_NROWS 107  // Number of rows in the η tables
-#define ETA_NCOLS 7  // Number of columns in the η tables
-#define R_NROWS 7  // Number of rows in the R table
-#define R_NCOLS 3  // Number of columns in the R table
-/* Paths */
-static char *ETA_D_TABLE_PATH = "../code/src/ez_sfr/tables/eta_d.txt";
-static char *ETA_I_TABLE_PATH = "../code/src/ez_sfr/tables/eta_i.txt";
-static char *R_TABLE_PATH     = "../code/src/ez_sfr/tables/R_Zsn.txt";
-
-/* ODE constants */
-#define N_EQU 4 /* Number of equations */
-#define ODE_CS 2.5735041e+03  /* [Myr * cm^(-3/2)] */
-#define ODE_CR 1.2234783e-01  /* [Myr * cm^(-3)] */
-#define ODE_CC 3.5385031e+00  /* [Myr * cm^(-3)] */
-#define ZEFF 1.3400e-05  /* 1e-3 Zₒ */
-#define AW 0.00  /* Weight of the atomic fraction in the computation of the SFR */         
-#define MW 1.00  /* Weight of the molecular fraction in the computation of the SFR */
-
-typedef struct InterpolationTable
-{
-  double *data;  // Values of the table
-  int n_rows;    // Number of rows in the table
-  int n_cols;    // Number of columns in the table
-} interpolation_table;
-
-#ifdef RHO_PDF
-
-/*
- * Density PDF from Krumholz (2005) https://doi.org/10.1086/431734
- *
- * We used the following parameters (all dimensionless):
- *
- * divisions = 20
- * range of log10(rho/rho_0) = (-6.0, 6.0)
- * α (power law slope) = 2.0
- * b (turbulent forcing parameter) = 0.5
- * Ms (mach number) = 10.0
- */
-#define DIVISIONS 20
-/* Integrated PDF of the interstellar gas density */
-static const double PDF[] = {
-	0.0107029097,
-	0.0212985946,
-	0.0379878324,
-	0.0607274862,
-	0.0870112819,
-	0.1117421531,
-	0.1286207158,
-	0.1326960245,
-	0.1227038406,
-	0.1016977334,
-	0.0755468486,
-	0.0503004598,
-	0.0300176109,
-	0.0160555948,
-	0.0076969705,
-	0.0033071430,
-	0.0012735674,
-	0.0004395643,
-	0.0001359721,
-	0.0000376963,
+	typedef struct DataTable
+	{
+  		double *data;  // Values of the table
+  		int n_rows;    // Number of rows in the table
+  		int n_cols;    // Number of columns in the table
+	} 	data_table;
+	
+	#ifdef RHO_PDF
+	
+	/*
+	 * Density PDF from Krumholz (2005) https://doi.org/10.1086/431734
+	 *
+	 * We used the following parameters (all dimensionless):
+	 *
+	 * divisions = 20
+	 * range of log10(rho/rho_0) = (-6.0, 6.0)
+	 * α (power law slope) = 2.0
+	 * b (turbulent forcing parameter) = 0.5
+	 * Ms (mach number) = 10.0
+	 */
+	#define DIVISIONS 20
+	/* Integrated PDF of the interstellar gas density */
+	static const double PDF[] = {
+		0.0107028600,
+	0.0212984957,
+	0.0379876559,
+	0.0607272041,
+	0.0870108777,
+	0.1117416340,
+	0.1286201183,
+	0.1326954080,
+	0.1227032705,
+	0.1016972610,
+	0.0755464976,
+	0.0503002261,
+	0.0300174715,
+	0.0160555202,
+	0.0076969348,
+	0.0033071276,
+	0.0012735615,
+	0.0004395623,
+	0.0001370353,
+	0.0000412781,
 };
 /* Density factor: ρ = ρ₀ * F_RHO */
 static const double F_RHO[] = {
@@ -105,7 +105,7 @@ static const double F_RHO[] = {1.0,};
 
 #endif /* #ifdef RHO_PDF */
 
-void *read_ftable(const char *filepath, const int n_rows, const int n_cols);
+void *read_ftable(const char *file_path, const int n_rows, const int n_cols);
 double rate_of_star_formation(const int index);
 
 #endif /* #ifdef EZ_SFR_H */
