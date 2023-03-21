@@ -1,4 +1,4 @@
-static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *ode_params)
+static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
 {
 	(void)(t);
 
@@ -11,12 +11,12 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 	* eta_i: Photoionization efficiency of Hydrogen atoms [dimensionless]
 	* R:     Mass recycling fraction [dimensionless]
 	*/
-	double *parameters = (double *)ode_params;
-	double rho_C       = parameters[0];
-	double Z           = parameters[1];
-	double eta_d       = parameters[2];
-	double eta_i       = parameters[3];
-	double R           = parameters[4];
+	double *p    = (double *)parameters;
+	double rho_C = p[0];
+	double Z     = p[1];
+	double eta_d = p[2];
+	double eta_i = p[3];
+	double R     = p[4];
 
 	gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 4, 4);
 	gsl_matrix *m = &dfdy_mat.matrix;
