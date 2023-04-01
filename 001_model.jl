@@ -5,16 +5,7 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ b03ee99c-27f4-47df-bba5-2ea3dabdb45d
-using CairoMakie, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, Symbolics, SpecialFunctions, TikzPictures, Trapz, Unitful, UnitfulAstro
-
-# ╔═╡ 3b9e3941-779a-4c3a-b87e-7e4456ddc85d
-md"""
-Note:
-
-[Sillero2021](https://doi.org/10.1093/mnras/stab1015) incorporates a computation of molecuar gas within $\texttt{GADGET-3}$, and couples it with star formation. Can provide a guide to structure our paper. Similarly for [Murante2014](https://doi.org/10.1093/mnras/stu2400).
-
-[Granato2021](https://doi.org/10.1093/mnras/stab362) and [Parente2022](https://doi.org/10.1093/mnras/stac1913) study the interacction of dust with MUPPI in simulations. They model the dust with two phases (small and large grains) using ODEs.
-"""
+using CairoMakie, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
 
 # ╔═╡ 08df960b-fd82-43ba-a9dc-bf5e83af587e
 # ╠═╡ skip_as_script = true
@@ -34,7 +25,7 @@ md"# Star formation model"
 md"""
 ## Motivation
 
-The star formation rate (SFR) is a key characteristic of galaxies. In the context of the standard cosmological model, the SFR is determined by a combination of various processes that take place over the course of a galaxy's lifetime, such as gas cooling, star formation, chemical enrichment, and feedback from supernovae and galactic nuclei. These processes are influenced by factors like mergers, interactions, and mass accretion, which affect the amount and properties of the gas from which stars form. The density of a gas cloud is believed to be the most important factor in determining its star formation rate, although the details of this process are not yet fully understood. Observationally, the total gas density is found to be correlated to the star formation rate ([Kennicutt1998](https://doi.org/10.1086/305588)), and this correlation is even stronger when considering the molecular gas ([Wong2002](https://doi.org/10.1086/339287), [Bigiel2008](https://doi.org/10.1088/0004-6256/136/6/2846)).
+The star formation rate (SFR) is a key characteristic of galaxies. In the context of the standard cosmological model, the SFR is determined by a combination of various processes that take place over the course of a galaxy's lifetime, such as gas cooling, star formation, chemical enrichment, and feedback from supernovae and galactic nuclei. These processes are influenced by factors like mergers, interactions, and mass accretion, which affect the amount and properties of the gas from which stars form. The density of a gas cloud is believed to be the most important factor in determining its star formation rate, although the details of this process are not yet fully understood. Observationally, the total gas density is found to be correlated to the star formation rate ([Kennicutt1998](https://doi.org/10.1086/305588)), and this correlation is even stronger when considering the molecular gas ([Wong2002](https://doi.org/10.1086/339287), [Bigiel2008](https://doi.org/10.1088/0004-6256/136/6/2846)). The underlying reason is the intrinsic relation between molecular gas mass and SFR, which can be found at resolved scales ([Baker2021](https://doi.org/10.1093/mnras/stab3672)) and at integrated (i.e. galaxy wide) scales across redshifts ([Baker2022](https://doi.org/10.1093/mnras/stac3413)).
 
 As the formation of dark matter halos and galaxies is highly non-linear, numerical simulations have become the preferred tool to investigate how galaxies form and evolve from early times up to the present.
 This type of simulations naturally include mergers/interactions and continuous gas accretion, processes that may induce changes in the SFR.  However, there are still significant uncertainties in the modelling of the evolution of the baryonic component, since the physical processes that affect baryons – such as star formation, feedback, and chemical enrichment – take place at scales that are too small to be resolved directly. As a result, these processes are introduced using sub-grid physics, which involves several adjustable parameters that are not always independent of one another or constrained observationally. This can lead to inconsistencies in the predictions of different models ([Scannapieco2012](https://doi.org/10.1111/j.1365-2966.2012.20993.x)).
@@ -376,7 +367,13 @@ $\begin{align}
 
 where $\rho_g = \rho_i + \rho_a + \rho_m$ is the density of the gas, and $s_f$ the stellar cell mass fraction.
 
-There is a lot of uncertainty for the parameter $\epsilon_\star$, so we will follow [Krumholz2019](https://doi.org/10.1146/annurev-astro-091918-104430) using $\epsilon_\star = 0.5$. 
+There is a lot of uncertainty for the parameter $\epsilon_\star$ ([Lee2016](https://doi.org/10.3847/1538-4357/833/2/229) and [Utomo2018](https://doi.org/10.3847/2041-8213/aacf8f)), so we will follow [Matzner2000](https://doi.org/10.1086/317785) using $\epsilon_\star = 0.5$. This results in a net efficiency of star formation per dynamical time 
+
+$\begin{equation}
+	f_\star = \frac{\epsilon_\text{ff}}{\epsilon_\star} = 0.02 \, ,
+\end{equation}$
+
+in agreement with [Kennicutt1998](https://doi.org/10.1086/305588) and [Evans2014](https://doi.org/10.1088/0004-637X/782/2/114). We note though that this parameter has been shown to have little influence on the global properties of simulated galaxies ([Li2018](https://doi.org/10.3847/1538-4357/aac9b8) and [Brown2022](https://doi.org/10.1093/mnras/stac1164)).
 
 With all the previous definitions, we have 
 
@@ -547,7 +544,7 @@ $\begin{equation}
     n_\mathrm{dust} \, \langle\sigma v\rangle_\mathrm{dust} \approx \frac{Z + Z_\mathrm{eff}}{Z_\odot} \, n_g \, \langle\sigma v\rangle_\odot \, , 
 \end{equation}$
 
-where $n_g$ denotes the gas number density, $Z$ is the metallicity, $Z_\odot = 0.0134$ ([Asplund2009](https://doi.org/10.1146/annurev.astro.46.060407.145222)) the solar metallicity, $\langle\sigma v\rangle_\odot = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1}$ ([Draine1996](http://doi.org/10.1086/177689)) is the rate of molecular hydrogen formation for $T = 100 \, K$, and $Z_\mathrm{eff} \approx 10^{-3} \, Z_\odot$ ([Glover2007](http://dx.doi.org/10.1086/519445)) is an initial value of metallicity needed to kickstart the star formation process, given that the initial abundance of metals and dust grains is zero, and stars only form from molecular clouds. This initial value accounts for all other channels of molecular formation, a detailed study of which would have a minimal impact on the results.
+where $n_g$ denotes the gas number density, $Z$ is the metallicity, $Z_\odot = 0.0153$ ([Caffau2010](https://doi.org/10.1007/s11207-010-9541-4)) the solar metallicity, $\langle\sigma v\rangle_\odot = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1}$ ([Draine1996](http://doi.org/10.1086/177689)) is the rate of molecular hydrogen formation for $T = 100 \, K$, and $Z_\mathrm{eff} \approx 10^{-3} \, Z_\odot$ ([Glover2007](http://dx.doi.org/10.1086/519445)) is an initial value of metallicity needed to kickstart the star formation process, given that the initial abundance of metals and dust grains is zero, and stars only form from molecular clouds. This initial value accounts for all other channels of molecular formation, a detailed study of which would have a minimal impact on the results.
 
 We have $n_g = \rho_g / m_p$, where we used that number density $n$ is essentially the same quantity as $\rho$, the only difference being the proton mass working as a conversion factor for the different units. So, the characteristic time is given by
 
@@ -566,7 +563,7 @@ $\begin{equation}
 # ╔═╡ f2a6676f-457a-476a-9ce7-c336aa9bf47f
 begin
     const σv   = 6e-17u"cm^3 * s^-1"
-    const Zsun = 0.0134
+    const Zsun = 0.0153
 	const Zeff = 1e-3 * Zsun
 	const CC   = (Zsun * m_u) / (2 * σv)
 	const cc   = ustrip(t_u * l_u^-3, CC / m_u)
@@ -1316,12 +1313,6 @@ begin
 	)
 end;
 
-# ╔═╡ 64d5bc37-334c-40ab-a9d4-9b5b1a5f8325
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### ρ PDF default parameters"
-  ╠═╡ =#
-
 # ╔═╡ e2e4ae4f-dcdc-4999-88f2-853378be859a
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1479,131 +1470,6 @@ ode_function = ODEFunction{true}(
 md"## Integration"
   ╠═╡ =#
 
-# ╔═╡ 4cfe1c80-c67e-4dd3-825b-d893800d68c0
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"# Density PDF"
-  ╠═╡ =#
-
-# ╔═╡ d7ba9e0c-5cfa-4176-adff-12cb8e20679b
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### Parameters"
-  ╠═╡ =#
-
-# ╔═╡ 82e78dc9-b89e-48d9-9f70-6f3238dfd196
-Base.@kwdef struct PDF_params
-    # Density PDF function
-    func::Function
-    # Power law slope
-    α::Float64
-    # Dimensionless turbulent forcing parameter
-    b::Float64
-    # Mach number
-    Ms::Float64
-    # (min, max) values for s = log(ρ/ρ₀)
-    deviation::NTuple{2,Float64}
-    # Number of division of the density PDF
-    divisions::Int64
-end;
-
-# ╔═╡ 7f883740-fee7-454d-8024-39f2bdecd4a8
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### Mass fractions"
-  ╠═╡ =#
-
-# ╔═╡ 7a2987ef-d37e-4c7a-aaa8-8186694bea88
-######################################################################################
-# Compute the density PDF mass fractions
-#
-# params:  Parameters for the density PDF
-# log_var: Selects which variable will be used and how the function will be divided
-#   log_var == true:  s = log(ρ/ρ₀) and logarithmic divisions
-#   log_var == false: f = ρ/ρ₀ and linear divisions
-######################################################################################
-
-function mass_fraction(params::PDF_params, log_var::Bool)::NTuple{2,Vector{Float64}}
-    
-	if params.divisions == 1
-        return [1], [log_var ? 0 : 1.0]
-    end
-
-    # Select which variable will be used and how the function will be divided
-    # log_var == true: s = log(ρ/ρ₀) and logarithmic divisions
-    # log_var == false: f = ρ/ρ₀ and linear divisions
-    dev = log_var ? params.deviation : exp.(params.deviation)
-
-    # Compute the step in the range of the variable s = log(ρ/ρ₀) or f = ρ/ρ₀
-    step = (dev[2] - dev[1]) / params.divisions
-
-    # Compute the range of values of s = log(ρ/ρ₀) or f = ρ/ρ₀
-    points = [dev[1] + step * (i - 0.5) for i in 1:(params.divisions)]
-
-    # Compute the fractions of mass within each division
-    mass_f = [
-        quadgk(
-            x -> params.func(x, params),
-            log_var ? point - (step / 2) : log(point - (step / 2)),
-            log_var ? point + (step / 2) : log(point + (step / 2)),
-            order=10,
-            atol=10e-10,
-        )[1] for point in points
-    ]
-
-    return (mass_f ./ sum(mass_f)), points
-	
-end;
-
-# ╔═╡ 8864b4d3-6a9f-4e7b-8cd6-ed32a0116f4a
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### Density PDF by Burkhart (2018)"
-  ╠═╡ =#
-
-# ╔═╡ 340db4b9-5096-4806-bca9-12760ecb5df0
-######################################################################################
-# Density PDF acording to Burkhart (2018)
-# https://doi.org/10.3847/1538-4357/aad002
-######################################################################################
-
-function pBurkhart2018(s::Float64, params::PDF_params)::Float64
-
-    b = params.b
-    Ms = params.Ms
-    α = params.α
-
-    σs2 = log(1 + b^2 * Ms^2)
-    s0 = -0.5 * σs2
-    st = (α - 0.5) * σs2
-    C = exp((α - 1) * 0.5 * α * σs2) / sqrt(2π * σs2)
-    N = 1 / ((C * exp(-α * st)) / α + 0.5 + 0.5 * erf((2 * st + σs2) / sqrt(8 * σs2)))
-
-    if s < st
-        return (N / sqrt(2π * σs2)) * exp(-((s - s0)^2) / (2 * σs2))
-    else
-        return N * C * exp(-α * s)
-    end
-
-end;
-
-# ╔═╡ 14da0522-1a6b-4d65-af6f-2cb325d5f44c
-begin
-    const PDF_PARAMS = PDF_params(
-		func = pBurkhart2018,      # Density PDF function 
-		α = 2.0,                   # Power law slope
-		b = 0.5,                   # Dimensionless turbulent forcing parameter
-		Ms = 10.0,                 # Mach number
-		deviation = (-6, 6),       # (min, max) values for s = log(ρ/ρ₀)
-		divisions = 20,            # Number of division of the density PDF
-	)
-
-    # Pre computation of the default mass fractions 
-    # for each division of the density PDF
-    const (MASS_FRAC, S_POINTS) = mass_fraction(PDF_PARAMS, true)
-    const F_POINTS = exp.(S_POINTS)
-end;
-
 # ╔═╡ bbb7263a-91e4-4a23-9e5f-416b6b7fcf6e
 ######################################################################################
 # Solve the system of ODEs
@@ -1612,8 +1478,6 @@ end;
 # base_params: Parameters for the ODEs, [ρC, Z]
 # tspan:       Integration span, (ti, tf) [Myr]
 # times:       Times at which the solution will be returned [Myr]
-# ρ_PDF:       If a probability density distribution will be used for the ISM
-# pdf_params:  Parameters for the density PDF
 # args:        Positional arguments for the solver of DifferentialEquations.jl
 # kwargs:      Keyword arguments for the solver of DifferentialEquations.jl
 ######################################################################################
@@ -1623,8 +1487,6 @@ function integrate_model(
 	base_params::Vector{Float64},
 	tspan::NTuple{2,Float64};
     times::Vector{Float64}=[tspan[2],],
-    ρ_PDF::Bool=false,
-    pdf_params::PDF_params=PDF_PARAMS,
     args::Tuple=(),
     kwargs::NamedTuple=(
 		dense=false, 
@@ -1642,55 +1504,15 @@ function integrate_model(
 	R, _   = recycled_fractions(Z)
 		
 	parameters = [ρC, Z, ηd, ηi, R]
-	
-    if ρ_PDF
 
-        ################################################
-        # Integrate using a distribution of densities
-        ################################################
-
-        mass_frac, s_points = mass_fraction(pdf_params, true)
-        f_points = exp.(s_points)
-        fracs = fill(zeros(Float64, N_EQU), length(times))
-        ρ0 = copy(parameters[1])
-
-        for i in 1:pdf_params.divisions
-			
-            parameters[1] = f_points[i] * ρ0
-			
-            sol = solve(ODEProblem(
-				ode_function, 
-				ic, 
-				tspan, 
-				parameters,
-			), args...; kwargs...)
-			
-            for (j, s) in enumerate(sol(times))
-                fracs[j] = fracs[j] .+ (s .* mass_frac[i])
-            end
-			
-        end
-
-        parameters[1] = ρC
-
-    else
-
-        ################################################
-        # Integrate using the mean density
-        ################################################
-
-        sol = solve(ODEProblem(
-			ode_function, 
-			ic, 
-			tspan, 
-			parameters,
-		), args...; kwargs...)
+    sol = solve(ODEProblem(
+		ode_function, 
+		ic, 
+		tspan, 
+		parameters,
+	), args...; kwargs...)
 		
-        fracs = sol(times).u
-		
-    end
-
-    return fracs
+    return sol(times).u
 	
 end;
 
@@ -1706,7 +1528,6 @@ Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 TikzPictures = "37f6aa50-8035-52d0-81c2-5a1d08754b2d"
 Trapz = "592b5752-818d-11e9-1e9a-2b8ca4a44cd1"
@@ -1714,14 +1535,13 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 UnitfulAstro = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
 
 [compat]
-CairoMakie = "~0.10.2"
+CairoMakie = "~0.10.3"
 DataFrames = "~1.5.0"
 DataFramesMeta = "~0.13.0"
 DifferentialEquations = "~7.7.0"
 Interpolations = "~0.14.7"
 PlutoUI = "~0.7.50"
 QuadGK = "~2.8.1"
-SpecialFunctions = "~2.2.0"
 Symbolics = "~5.1.0"
 TikzPictures = "~3.4.2"
 Trapz = "~2.0.3"
@@ -1738,7 +1558,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "7fee1ac5d8d817b217a56c5dd6eaa738392302b7"
+project_hash = "48272e9c65389faf76a37e7adf55b3db660dcc38"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
@@ -1787,9 +1607,9 @@ version = "0.2.0"
 
 [[deps.ArrayInterface]]
 deps = ["Adapt", "LinearAlgebra", "Requires", "SnoopPrecompile", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "a89acc90c551067cd84119ff018619a1a76c6277"
+git-tree-sha1 = "53bb1691fb8560633ed8c0fa11d8b0900aaa805c"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "7.2.1"
+version = "7.4.2"
 
 [[deps.ArrayInterfaceCore]]
 deps = ["LinearAlgebra", "SnoopPrecompile", "SparseArrays", "SuiteSparse"]
@@ -1878,9 +1698,9 @@ version = "1.0.5"
 
 [[deps.CairoMakie]]
 deps = ["Base64", "Cairo", "Colors", "FFTW", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "Makie", "SHA", "SnoopPrecompile"]
-git-tree-sha1 = "abb7df708fe1335367518659989627100a61f3f0"
+git-tree-sha1 = "7a6a830076a6eb2a8289e751e7237c04a1ce0ddd"
 uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-version = "0.10.2"
+version = "0.10.3"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -2057,9 +1877,9 @@ version = "6.122.1"
 
 [[deps.DiffEqCallbacks]]
 deps = ["DataStructures", "DiffEqBase", "ForwardDiff", "LinearAlgebra", "Markdown", "NLsolve", "Parameters", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArraysCore"]
-git-tree-sha1 = "b497f63a13fe37e03ed7ac72d71b72aad17b46c4"
+git-tree-sha1 = "63b6be7b396ad395825f3cc48c56b53bfaf7e69d"
 uuid = "459566f4-90b8-5000-8ac3-15dfb0a30def"
-version = "2.26.0"
+version = "2.26.1"
 
 [[deps.DiffEqNoiseProcess]]
 deps = ["DiffEqBase", "Distributions", "GPUArraysCore", "LinearAlgebra", "Markdown", "Optim", "PoissonRandom", "QuadGK", "Random", "Random123", "RandomNumbers", "RecipesBase", "RecursiveArrayTools", "Requires", "ResettableStacks", "SciMLBase", "StaticArrays", "Statistics"]
@@ -2215,15 +2035,15 @@ uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
 [[deps.FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
-git-tree-sha1 = "3b245d1e50466ca0c9529e2033a3c92387c59c2f"
+git-tree-sha1 = "7072f1e3e5a8be51d525d64f63d3ec1287ff2790"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "0.13.9"
+version = "0.13.11"
 
 [[deps.FiniteDiff]]
 deps = ["ArrayInterface", "LinearAlgebra", "Requires", "Setfield", "SparseArrays", "StaticArrays"]
-git-tree-sha1 = "ed1b56934a2f7a65035976985da71b6a65b4f2cf"
+git-tree-sha1 = "03fcb1c42ec905d15b305359603888ec3e65f886"
 uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
-version = "2.18.0"
+version = "2.19.0"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -2302,9 +2122,9 @@ version = "0.5.3"
 
 [[deps.GeoInterface]]
 deps = ["Extents"]
-git-tree-sha1 = "e07a1b98ed72e3cdd02c6ceaab94b8a606faca40"
+git-tree-sha1 = "0eb6de0b312688f852f347171aba888658e29f20"
 uuid = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
-version = "1.2.1"
+version = "1.3.0"
 
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "GeoInterface", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
@@ -2378,10 +2198,10 @@ uuid = "3e5b6fbb-0976-4d2c-9146-d79de83f2fb0"
 version = "0.1.14"
 
 [[deps.HypergeometricFunctions]]
-deps = ["DualNumbers", "LinearAlgebra", "OpenLibm_jll", "SpecialFunctions", "Test"]
-git-tree-sha1 = "709d864e3ed6e3545230601f94e11ebc65994641"
+deps = ["DualNumbers", "LinearAlgebra", "OpenLibm_jll", "SpecialFunctions"]
+git-tree-sha1 = "fd77260897e227f9623fcd65d6a3ba6e88f8e947"
 uuid = "34004b35-14d8-5ef3-9330-4cdb6864b03a"
-version = "0.3.11"
+version = "0.3.12"
 
 [[deps.Hyperscript]]
 deps = ["Test"]
@@ -2549,9 +2369,9 @@ version = "2.1.91+0"
 
 [[deps.JumpProcesses]]
 deps = ["ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "Markdown", "PoissonRandom", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "StaticArrays", "TreeViews", "UnPack"]
-git-tree-sha1 = "341cb268f83a2d214f12ba214489fb8fde2e3c54"
+git-tree-sha1 = "740c685ba3d7f218663436b2152041563c19db6e"
 uuid = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
-version = "9.6.0"
+version = "9.6.1"
 
 [[deps.KLU]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse_jll"]
@@ -2719,10 +2539,10 @@ deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LinearSolve]]
-deps = ["ArrayInterface", "DocStringExtensions", "FastLapackInterface", "GPUArraysCore", "IterativeSolvers", "KLU", "Krylov", "KrylovKit", "LinearAlgebra", "Preferences", "RecursiveFactorization", "Reexport", "SciMLBase", "SciMLOperators", "Setfield", "SnoopPrecompile", "SparseArrays", "Sparspak", "SuiteSparse", "UnPack"]
-git-tree-sha1 = "fd65db5fff7238ba4c0b7a61de7e81748d73fa14"
+deps = ["ArrayInterface", "DocStringExtensions", "EnumX", "FastLapackInterface", "GPUArraysCore", "IterativeSolvers", "KLU", "Krylov", "KrylovKit", "LinearAlgebra", "Preferences", "RecursiveFactorization", "Reexport", "SciMLBase", "SciMLOperators", "Setfield", "SnoopPrecompile", "SparseArrays", "Sparspak", "SuiteSparse", "UnPack"]
+git-tree-sha1 = "62f966529c72c4677c2e65e35c0627e08c90f0e1"
 uuid = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
-version = "1.38.0"
+version = "1.41.0"
 
 [[deps.LittleCMS_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pkg"]
@@ -2741,9 +2561,9 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[deps.LoopVectorization]]
 deps = ["ArrayInterface", "ArrayInterfaceCore", "CPUSummary", "ChainRulesCore", "CloseOpenIntervals", "DocStringExtensions", "ForwardDiff", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "SIMDTypes", "SLEEFPirates", "SnoopPrecompile", "SpecialFunctions", "Static", "StaticArrayInterface", "ThreadingUtilities", "UnPack", "VectorizationBase"]
-git-tree-sha1 = "2acf6874142d05d5d1ad49e8d3786b8cd800936d"
+git-tree-sha1 = "a282dbdbc2860134d6809acd951543ce359bcf15"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
-version = "0.12.152"
+version = "0.12.155"
 
 [[deps.MIMEs]]
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
@@ -2764,15 +2584,15 @@ version = "0.5.10"
 
 [[deps.Makie]]
 deps = ["Animations", "Base64", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "Distributions", "DocStringExtensions", "Downloads", "FFMPEG", "FileIO", "FixedPointNumbers", "Formatting", "FreeType", "FreeTypeAbstraction", "GeometryBasics", "GridLayoutBase", "ImageIO", "InteractiveUtils", "IntervalSets", "Isoband", "KernelDensity", "LaTeXStrings", "LinearAlgebra", "MakieCore", "Markdown", "Match", "MathTeXEngine", "MiniQhull", "Observables", "OffsetArrays", "Packing", "PlotUtils", "PolygonOps", "Printf", "Random", "RelocatableFolders", "Setfield", "Showoff", "SignedDistanceFields", "SnoopPrecompile", "SparseArrays", "StableHashTraits", "Statistics", "StatsBase", "StatsFuns", "StructArrays", "TriplotBase", "UnicodeFun"]
-git-tree-sha1 = "274fa9c60a10b98ab8521886eb4fe22d257dca65"
+git-tree-sha1 = "e7b6e3eebbadcdfd9f40ad99be84044968a562ee"
 uuid = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-version = "0.19.2"
+version = "0.19.3"
 
 [[deps.MakieCore]]
 deps = ["Observables"]
-git-tree-sha1 = "2c3fc86d52dfbada1a2e5e150e50f06c30ef149c"
+git-tree-sha1 = "9926529455a331ed73c19ff06d16906737a876ed"
 uuid = "20f20a25-4f0e-4fdf-b5d1-57303727442b"
-version = "0.6.2"
+version = "0.6.3"
 
 [[deps.ManualMemory]]
 git-tree-sha1 = "bcaef4fc7a0cfe2cba636d84cda54b5e4e4ca3cd"
@@ -2795,9 +2615,9 @@ version = "1.2.0"
 
 [[deps.MathTeXEngine]]
 deps = ["AbstractTrees", "Automa", "DataStructures", "FreeTypeAbstraction", "GeometryBasics", "LaTeXStrings", "REPL", "RelocatableFolders", "Test", "UnicodeFun"]
-git-tree-sha1 = "f04120d9adf4f49be242db0b905bea0be32198d1"
+git-tree-sha1 = "64890e1e8087b71c03bd6b8af99b49c805b2a78d"
 uuid = "0a4f8689-d25c-4efe-a92b-7142dfc1aa53"
-version = "0.5.4"
+version = "0.5.5"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -2875,10 +2695,10 @@ uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 version = "1.2.0"
 
 [[deps.NonlinearSolve]]
-deps = ["ArrayInterface", "DiffEqBase", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "LinearSolve", "RecursiveArrayTools", "Reexport", "SciMLBase", "SimpleNonlinearSolve", "SnoopPrecompile", "SparseArrays", "SparseDiffTools", "StaticArraysCore", "UnPack"]
-git-tree-sha1 = "3f856788ba532419c07ba2e0dc37b06e5d784992"
+deps = ["ArrayInterface", "DiffEqBase", "EnumX", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "LinearSolve", "RecursiveArrayTools", "Reexport", "SciMLBase", "SimpleNonlinearSolve", "SnoopPrecompile", "SparseArrays", "SparseDiffTools", "StaticArraysCore", "UnPack"]
+git-tree-sha1 = "a6000c813371cd3cd9cbbdf8a356fc3a97138d92"
 uuid = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
-version = "1.5.0"
+version = "1.6.0"
 
 [[deps.Observables]]
 git-tree-sha1 = "6862738f9796b3edc1c09d0890afce4eca9e7e93"
@@ -2950,15 +2770,15 @@ uuid = "91d4177d-7536-5919-b921-800302f37372"
 version = "1.3.2+0"
 
 [[deps.OrderedCollections]]
-git-tree-sha1 = "85f8e6578bf1f9ee0d11e7bb1b1456435479d47c"
+git-tree-sha1 = "d78db6df34313deaca15c5c0b9ff562c704fe1ab"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
-version = "1.4.1"
+version = "1.5.0"
 
 [[deps.OrdinaryDiffEq]]
 deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "IfElse", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLNLSolve", "SimpleNonlinearSolve", "SimpleUnPack", "SnoopPrecompile", "SparseArrays", "SparseDiffTools", "StaticArrayInterface", "StaticArrays", "TruncatedStacktraces"]
-git-tree-sha1 = "02a61c518bb8da4d20f4247063213b19aa0d7fbb"
+git-tree-sha1 = "9fb1f72106bfa1370006b90771cfbcce6c7468b6"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.49.3"
+version = "6.49.4"
 
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -3179,10 +2999,10 @@ uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 version = "1.3.3"
 
 [[deps.RecursiveArrayTools]]
-deps = ["Adapt", "ArrayInterface", "ChainRulesCore", "DocStringExtensions", "FillArrays", "GPUArraysCore", "IteratorInterfaceExtensions", "LinearAlgebra", "RecipesBase", "Requires", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables", "ZygoteRules"]
-git-tree-sha1 = "3dcb2a98436389c0aac964428a5fa099118944de"
+deps = ["Adapt", "ArrayInterface", "DocStringExtensions", "GPUArraysCore", "IteratorInterfaceExtensions", "LinearAlgebra", "RecipesBase", "Requires", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables"]
+git-tree-sha1 = "6131b752a3d1c4748424ea9e6d8df789cf4f6f9d"
 uuid = "731186ca-8d62-57ce-b412-fbd966d074cd"
-version = "2.38.0"
+version = "2.38.1"
 
 [[deps.RecursiveFactorization]]
 deps = ["LinearAlgebra", "LoopVectorization", "Polyester", "SnoopPrecompile", "StrideArraysCore", "TriangularSolve"]
@@ -3227,9 +3047,9 @@ version = "0.4.0+0"
 
 [[deps.RuntimeGeneratedFunctions]]
 deps = ["ExprTools", "SHA", "Serialization"]
-git-tree-sha1 = "50314d2ef65fce648975a8e80ae6d8409ebbf835"
+git-tree-sha1 = "f139e81a81e6c29c40f1971c9e5309b09c03f2c3"
 uuid = "7e49a35a-f44a-4d26-94aa-eba1b4ca6b47"
-version = "0.5.5"
+version = "0.5.6"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
@@ -3260,15 +3080,15 @@ version = "0.3.3"
 
 [[deps.SciMLBase]]
 deps = ["ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "Preferences", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "SnoopPrecompile", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables", "TruncatedStacktraces"]
-git-tree-sha1 = "d78c2134ea1484559aa53cae133c0504ba31abec"
+git-tree-sha1 = "6bb55eff20ee05151b5cb4e777691fabae1524a3"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "1.91.1"
+version = "1.91.3"
 
 [[deps.SciMLNLSolve]]
 deps = ["DiffEqBase", "LineSearches", "NLsolve", "Reexport", "SciMLBase"]
-git-tree-sha1 = "66c7f901dbcad51791136e2d90ee67240256ecde"
+git-tree-sha1 = "2e1606c282fae6bd9aed4f159695774a44b9c75f"
 uuid = "e9a6253c-8580-4d32-9898-8661bb511710"
-version = "0.1.3"
+version = "0.1.4"
 
 [[deps.SciMLOperators]]
 deps = ["ArrayInterface", "DocStringExtensions", "Lazy", "LinearAlgebra", "Setfield", "SparseArrays", "StaticArraysCore", "Tricks"]
@@ -3399,9 +3219,9 @@ version = "1.3.0"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
-git-tree-sha1 = "7756ce473bd10b67245bdebdc8d8670a85f6230b"
+git-tree-sha1 = "b8d897fe7fa688e93aef573711cb207c08c9e11e"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.5.18"
+version = "1.5.19"
 
 [[deps.StaticArraysCore]]
 git-tree-sha1 = "6b7ba252635a5eff6a0b0664a41ee140a1c9e72a"
@@ -3414,9 +3234,9 @@ uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [[deps.StatsAPI]]
 deps = ["LinearAlgebra"]
-git-tree-sha1 = "f9af7f195fb13589dd2e2d57fdb401717d2eb1f6"
+git-tree-sha1 = "45a7769a04a3cf80da1c1c7c60caf932e6f4c9f7"
 uuid = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
-version = "1.5.0"
+version = "1.6.0"
 
 [[deps.StatsBase]]
 deps = ["DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
@@ -3544,9 +3364,9 @@ version = "0.5.1"
 
 [[deps.TiffImages]]
 deps = ["ColorTypes", "DataStructures", "DocStringExtensions", "FileIO", "FixedPointNumbers", "IndirectArrays", "Inflate", "Mmap", "OffsetArrays", "PkgVersion", "ProgressMeter", "UUIDs"]
-git-tree-sha1 = "7e6b0e3e571be0b4dd4d2a9a3a83b65c04351ccc"
+git-tree-sha1 = "8621f5c499a8aa4aa970b1ae381aae0ef1576966"
 uuid = "731e570b-9d59-4bfa-96dc-6df516fadf69"
-version = "0.6.3"
+version = "0.6.4"
 
 [[deps.TikzPictures]]
 deps = ["LaTeXStrings", "Poppler_jll", "Requires", "Tectonic"]
@@ -3584,9 +3404,9 @@ uuid = "d5829a12-d9aa-46ab-831f-fb7c9ab06edf"
 version = "0.1.19"
 
 [[deps.Tricks]]
-git-tree-sha1 = "6bac775f2d42a611cdfcd1fb217ee719630c4175"
+git-tree-sha1 = "aadb748be58b492045b4f56166b5188aa63ce549"
 uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
-version = "0.1.6"
+version = "0.1.7"
 
 [[deps.TriplotBase]]
 git-tree-sha1 = "4d4ed7f294cda19382ff7de4c137d24d16adc89b"
@@ -3595,9 +3415,9 @@ version = "0.1.0"
 
 [[deps.TruncatedStacktraces]]
 deps = ["InteractiveUtils", "MacroTools", "Preferences"]
-git-tree-sha1 = "6901000d75a14520bdd067fe90b9392384eb04a7"
+git-tree-sha1 = "7bc1632a4eafbe9bd94cf1a784a9a4eb5e040a91"
 uuid = "781d530d-4396-4725-bb49-402e4bee1e77"
-version = "1.2.0"
+version = "1.3.0"
 
 [[deps.TupleTools]]
 git-tree-sha1 = "3c712976c47707ff893cf6ba4354aa14db1d8938"
@@ -3653,9 +3473,9 @@ version = "0.1.2"
 
 [[deps.VectorizationBase]]
 deps = ["ArrayInterface", "CPUSummary", "HostCPUFeatures", "IfElse", "LayoutPointers", "Libdl", "LinearAlgebra", "SIMDTypes", "Static", "StaticArrayInterface"]
-git-tree-sha1 = "a2d69abfc8b9b71a5db110f9757d0cd4a27877c0"
+git-tree-sha1 = "f78fc4c3abbf5ab65108a41664e88fb131ab8946"
 uuid = "3d5dd08c-fd9d-11e8-17fa-ed2836048c2f"
-version = "0.21.61"
+version = "0.21.63"
 
 [[deps.VertexSafeGraphs]]
 deps = ["Graphs"]
@@ -3817,7 +3637,6 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─3b9e3941-779a-4c3a-b87e-7e4456ddc85d
 # ╠═b03ee99c-27f4-47df-bba5-2ea3dabdb45d
 # ╟─08df960b-fd82-43ba-a9dc-bf5e83af587e
 # ╟─cbd51460-8ef0-49eb-8219-14986d8421e4
@@ -3876,8 +3695,6 @@ version = "3.5.0+0"
 # ╟─9666bdc8-cbc0-4757-9bd8-a76477c252eb
 # ╟─ca9a233b-d3ca-4a76-a3d8-f29884ac9484
 # ╠═d8bee772-3979-42cd-9e38-8df0925b4e6b
-# ╟─64d5bc37-334c-40ab-a9d4-9b5b1a5f8325
-# ╠═14da0522-1a6b-4d65-af6f-2cb325d5f44c
 # ╟─e2e4ae4f-dcdc-4999-88f2-853378be859a
 # ╠═177f8253-6c35-495b-9119-ce5e8e15cba8
 # ╟─b3969810-ab25-4e91-ad5a-80560b80977e
@@ -3888,12 +3705,5 @@ version = "3.5.0+0"
 # ╠═64e7e6aa-4265-4de2-a9c6-474d125b45cc
 # ╟─4607856c-7472-4131-a2ee-29f7150f5cb4
 # ╠═bbb7263a-91e4-4a23-9e5f-416b6b7fcf6e
-# ╟─4cfe1c80-c67e-4dd3-825b-d893800d68c0
-# ╟─d7ba9e0c-5cfa-4176-adff-12cb8e20679b
-# ╠═82e78dc9-b89e-48d9-9f70-6f3238dfd196
-# ╟─7f883740-fee7-454d-8024-39f2bdecd4a8
-# ╠═7a2987ef-d37e-4c7a-aaa8-8186694bea88
-# ╟─8864b4d3-6a9f-4e7b-8cd6-ed32a0116f4a
-# ╠═340db4b9-5096-4806-bca9-12760ecb5df0
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
