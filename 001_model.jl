@@ -373,7 +373,7 @@ $\begin{equation}
 	f_\star = \frac{\epsilon_\text{ff}}{\epsilon_\star} = 0.02 \, ,
 \end{equation}$
 
-in agreement with [Kennicutt1998](https://doi.org/10.1086/305588) and [Evans2014](https://doi.org/10.1088/0004-637X/782/2/114). We note though that this parameter has been shown to have little influence on the global properties of simulated galaxies ([Li2018](https://doi.org/10.3847/1538-4357/aac9b8) and [Brown2022](https://doi.org/10.1093/mnras/stac1164)).
+in relative agreement with [Kennicutt1998](https://doi.org/10.1086/305588) and [Evans2014](https://doi.org/10.1088/0004-637X/782/2/114). We note though that this parameter has been shown to have little influence on the global properties of simulated galaxies ([Li2018](https://doi.org/10.3847/1538-4357/aac9b8) and [Brown2022](https://doi.org/10.1093/mnras/stac1164)).
 
 With all the previous definitions, we have 
 
