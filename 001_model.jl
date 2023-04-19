@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.24
 
 using Markdown
 using InteractiveUtils
@@ -356,7 +356,7 @@ Following [Krumholz2019](https://doi.org/10.1146/annurev-astro-091918-104430), w
 $\begin{equation}
     \tau_S = \frac{\epsilon_\star}{\epsilon_\text{ff}}\,t_\text{ff} \, ,
 \end{equation}$
-where $\epsilon_\star$ is the mass fraction of gas which will be converted into stars, $t_\text{ff}$ is the free-fall time, and $\epsilon_\text{ff} = 0.01$ ([Krumholz2019](https://doi.org/10.1146/annurev-astro-091918-104430)) is the fraction of a cloud's mass that is transformed into stars per cloud free-fall time (also known as star-formation efficiency). 
+where $\epsilon_\star$ is the star formation efficiency (mass fraction of gas which will be converted into stars, in the literature is of $\mathcal{O}(\epsilon) \approx 1$), $t_\text{ff}$ is the free-fall time, and $\epsilon_\text{ff}$ is the star-formation efficiency per free fall time (the fraction of a cloud's mass that is transformed into stars per cloud free-fall time, in the literature is of $\mathcal{O}(\epsilon_\text{ff}) \approx 0.01$).
 
 We have that $t_\text{ff}$ and $\epsilon_\star$ can be written as
 
@@ -367,7 +367,7 @@ $\begin{align}
 
 where $\rho_g = \rho_i + \rho_a + \rho_m$ is the density of the gas, and $s_f$ the stellar cell mass fraction.
 
-There is a lot of uncertainty for the parameter $\epsilon_\star$ ([Lee2016](https://doi.org/10.3847/1538-4357/833/2/229) and [Utomo2018](https://doi.org/10.3847/2041-8213/aacf8f)), so we will follow [Matzner2000](https://doi.org/10.1086/317785) using $\epsilon_\star = 0.5$. This results in a net efficiency of star formation per dynamical time 
+There is a lot of uncertainty for the parameter $\epsilon_\star$ ([Lee2016](https://doi.org/10.3847/1538-4357/833/2/229) and [Utomo2018](https://doi.org/10.3847/2041-8213/aacf8f)), so we will follow [Matzner2000](https://doi.org/10.1086/317785) using $\epsilon_\star = 0.5$. This results in a net efficiency of star formation of 
 
 $\begin{equation}
 	f_\star = \frac{\epsilon_\text{ff}}{\epsilon_\star} = 0.02 \, ,
@@ -544,7 +544,7 @@ $\begin{equation}
     n_\mathrm{dust} \, \langle\sigma v\rangle_\mathrm{dust} \approx \frac{Z + Z_\mathrm{eff}}{Z_\odot} \, n_g \, \langle\sigma v\rangle_\odot \, , 
 \end{equation}$
 
-where $n_g$ denotes the gas number density, $Z$ is the metallicity, $Z_\odot = 0.0153$ ([Caffau2010](https://doi.org/10.1007/s11207-010-9541-4)) the solar metallicity, $\langle\sigma v\rangle_\odot = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1}$ ([Draine1996](http://doi.org/10.1086/177689)) is the rate of molecular hydrogen formation for $T = 100 \, K$, and $Z_\mathrm{eff} \approx 10^{-3} \, Z_\odot$ ([Glover2007](http://dx.doi.org/10.1086/519445)) is an initial value of metallicity needed to kickstart the star formation process, given that the initial abundance of metals and dust grains is zero, and stars only form from molecular clouds. This initial value accounts for all other channels of molecular formation, a detailed study of which would have a minimal impact on the results.
+where $n_g$ denotes the gas number density, $Z$ is the metallicity, $Z_\odot$ the solar metallicity, $\langle\sigma v\rangle_\odot = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1}$ ([Draine1996](http://doi.org/10.1086/177689)) is the rate of molecular hydrogen formation for $T = 100 \, K$, and $Z_\mathrm{eff} \approx 10^{-3} \, Z_\odot$ ([Glover2007](http://dx.doi.org/10.1086/519445)) is an initial value of metallicity needed to kickstart the star formation process, given that the initial abundance of metals and dust grains is zero, and stars only form from molecular clouds. This initial value accounts for all other channels of molecular formation, a detailed study of which would have a minimal impact on the results.
 
 We have $n_g = \rho_g / m_p$, where we used that number density $n$ is essentially the same quantity as $\rho$, the only difference being the proton mass working as a conversion factor for the different units. So, the characteristic time is given by
 
@@ -557,13 +557,25 @@ where
 $\begin{equation}
 	C_C = \frac{Z_\odot \, m_p}{2 \, \langle\sigma v\rangle_\odot} \, .
 \end{equation}$
+
+We find several values of the solar metallicity in the literature
+
+ * [Asplund2006]( https://doi.org/10.1553/cia147s76) and [Grevesse2007](https://doi.org/10.1007/s11214-007-9173-7): $Z_\odot = 0.0122$ 
+ * Used in Arepo: $Z_\odot = 0.0127$
+ * [Asplund2009](https://doi.org/10.1146/annurev.astro.46.060407.145222): $Z_\odot = 0.0134$
+ * [Lodders2009](https://doi.org/10.1007/978-3-540-88055-4_34): $Z_\odot = 0.0141$
+ * [Caffau2010](https://doi.org/10.1007/s11207-010-9541-4): $Z_\odot = 0.0153$ 
+ * [Grevesse1998](https://doi.org/10.1023/A:1005161325181): $Z_\odot = 0.0169$
+ * [Steiger2016](https://doi.org/10.3847/0004-637X/816/1/13): $Z_\odot = 0.0196$
+
+For consitency with the codebase, we will use $Z_\odot = 0.0127$, noting that is only 35% off the largest value in the list ([Steiger2016](https://doi.org/10.3847/0004-637X/816/1/13)), which is not significant for such a simple model with many other uncertanties.
 """
   ╠═╡ =#
 
 # ╔═╡ f2a6676f-457a-476a-9ce7-c336aa9bf47f
 begin
     const σv   = 6e-17u"cm^3 * s^-1"
-    const Zsun = 0.0153
+    const Zsun = 0.0127
 	const Zeff = 1e-3 * Zsun
 	const CC   = (Zsun * m_u) / (2 * σv)
 	const cc   = ustrip(t_u * l_u^-3, CC / m_u)
