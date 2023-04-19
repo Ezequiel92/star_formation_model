@@ -640,19 +640,14 @@ end
 # ╔═╡ aae8d0ac-2909-4b09-8f7b-3c581a873895
 # let
 	
-# 	int_func_sf = TESTING.integrate_with_julia(false; phase="stellar")
-# 	int_func_mf = TESTING.integrate_with_julia(false; phase="molecular")
-# 	int_func_af = TESTING.integrate_with_julia(false; phase="atomic")
-# 	int_func_if = TESTING.integrate_with_julia(false; phase="ionized")
+# 	int_func_sf = TESTING.integrate_with_julia(; phase="stellar")
+# 	int_func_mf = TESTING.integrate_with_julia(; phase="molecular")
+# 	int_func_af = TESTING.integrate_with_julia(; phase="atomic")
+# 	int_func_if = TESTING.integrate_with_julia(; phase="ionized")
 
-# 	ic          = [0.5, 0.5, 0.0, 0.0]
+# 	ic          = [0.15, 0.85, 0.0, 0.0]
 # 	base_params = [[ρC, ref_Z] for ρC in ρC_list]
-# 	it          = 10.0
-
-# 	s_f = [int_func_sf(ic, base_param, it) for base_param in base_params]
-# 	m_f = [int_func_mf(ic, base_param, it) for base_param in base_params]
-# 	a_f = [int_func_af(ic, base_param, it) for base_param in base_params]
-# 	i_f = [int_func_if(ic, base_param, it) for base_param in base_params]
+# 	its         = [1, 5, 10.0]
 
 #     set_theme!()
 
@@ -662,9 +657,7 @@ end
 # 		f[1,1], 
 # 		xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
 #         ylabel=L"\mathrm{M_\star / M_{celda}}",
-# 		title=@sprintf(
-# 			"i₀ = %.2g  a₀ = %.2g  Z = %.2f  it = %.1f Myr", 0.5, 0.5, ref_Z, 10,
-# 		),
+# 		title=@sprintf("i₀ = %.2g  a₀ = %.2g  Z = %.2f", 0.15, 0.85, ref_Z),
 # 		titlesize=40,
 # 		xlabelsize=42,
 # 		ylabelsize=42,
@@ -673,9 +666,14 @@ end
 # 		xscale=log10,
 # 	)
 
-#     lines!(ax, ρC_list, s_f, linewidth=6)
+# 	for it in its 
+# 		s_f = [int_func_sf(ic, base_param, it) for base_param in base_params]
+#     	lines!(ax, ρC_list, s_f, linewidth=6, label=L"i_t = %$it \, \mathrm{Myr}")
+# 	end
 
-#     CairoMakie.save("C:/Users/Ezequiel/Desktop/model_plots/star_fraction_vs_density.png", f)
+# 	axislegend(; position=:lt, labelsize=25)
+
+#     CairoMakie.save("C:/Users/Ezequiel/Desktop/star_fraction_vs_density.png", f)
 
 # 	# Molecular fraction
 # 	f = Figure(resolution = (1280, 960))
@@ -683,9 +681,7 @@ end
 # 		f[1,1], 
 # 		xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
 #         ylabel=L"\mathrm{M_{mol} / M_{celda}}",
-# 		title=@sprintf(
-# 			"i₀ = %.2g  a₀ = %.2g  Z = %.2f  it = %.1f Myr", 0.5, 0.5, ref_Z, 10,
-# 		),
+# 		title=@sprintf("i₀ = %.2g  a₀ = %.2g  Z = %.2f", 0.15, 0.85, ref_Z),
 # 		titlesize=40,
 # 		xlabelsize=42,
 # 		ylabelsize=42,
@@ -694,9 +690,14 @@ end
 # 		xscale=log10,
 # 	)
 
-#     lines!(ax, ρC_list, m_f, linewidth=6)
+# 	for it in its 
+# 		m_f = [int_func_mf(ic, base_param, it) for base_param in base_params]
+#     	lines!(ax, ρC_list, m_f, linewidth=6, label=L"i_t = %$it \, \mathrm{Myr}")
+# 	end
 
-#     CairoMakie.save("C:/Users/Ezequiel/Desktop/model_plots/molecular_fraction_vs_density.png", f)
+# 	axislegend(; position=:rb, labelsize=25)
+
+#     CairoMakie.save("C:/Users/Ezequiel/Desktop/molecular_fraction_vs_density.png", f)
 
 # 	# Atomic fraction
 # 	f = Figure(resolution = (1280, 960))
@@ -704,9 +705,7 @@ end
 # 		f[1,1], 
 # 		xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
 #         ylabel=L"\mathrm{M_{atom} / M_{celda}}",
-# 		title=@sprintf(
-# 			"i₀ = %.2g  a₀ = %.2g  Z = %.2f  it = %.1f Myr", 0.5, 0.5, ref_Z, 10,
-# 		),
+# 		title=@sprintf("i₀ = %.2g  a₀ = %.2g  Z = %.2f", 0.15, 0.85, ref_Z),
 # 		titlesize=40,
 # 		xlabelsize=42,
 # 		ylabelsize=42,
@@ -715,9 +714,14 @@ end
 # 		xscale=log10,
 # 	)
 
-#     lines!(ax, ρC_list, a_f, linewidth=6)
+# 	for it in its 	
+# 		a_f = [int_func_af(ic, base_param, it) for base_param in base_params]
+#     	lines!(ax, ρC_list, a_f, linewidth=6, label=L"i_t = %$it \, \mathrm{Myr}")
+# 	end
 
-#     CairoMakie.save("C:/Users/Ezequiel/Desktop/model_plots/atomic_fraction_vs_density.png", f)
+# 	axislegend(; position=:rt, labelsize=25)
+
+#     CairoMakie.save("C:/Users/Ezequiel/Desktop/atomic_fraction_vs_density.png", f)
 
 # 	# Ionized fraction
 # 	f = Figure(resolution = (1280, 960))
@@ -725,9 +729,7 @@ end
 # 		f[1,1], 
 # 		xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
 #         ylabel=L"\mathrm{M_{ion} / M_{celda}}",
-# 		title=@sprintf(
-# 			"i₀ = %.2g  a₀ = %.2g  Z = %.2f  it = %.1f Myr", 0.5, 0.5, ref_Z, 10,
-# 		),
+# 		title=@sprintf("i₀ = %.2g  a₀ = %.2g  Z = %.2f", 0.15, 0.85, ref_Z),
 # 		titlesize=40,
 # 		xlabelsize=42,
 # 		ylabelsize=42,
@@ -736,19 +738,24 @@ end
 # 		xscale=log10,
 # 	)
 
-#     lines!(ax, ρC_list, i_f, linewidth=6)
+# 	for it in its 	
+# 		i_f = [int_func_if(ic, base_param, it) for base_param in base_params]
+# 		lines!(ax, ρC_list, i_f, linewidth=6, label=L"i_t = %$it \, \mathrm{Myr}")
+# 	end
 
-#     CairoMakie.save("C:/Users/Ezequiel/Desktop/model_plots/ionized_fraction_vs_density.png", f)
+# 	axislegend(; position=:rt, labelsize=25)
+
+#     CairoMakie.save("C:/Users/Ezequiel/Desktop/ionized_fraction_vs_density.png", f)
 	
 # end;
 
 # ╔═╡ 6f405853-6d64-488f-bfb9-f68247f5a1f1
 # let
 	
-# 	int_func_sf = TESTING.integrate_with_julia(false; phase="stellar")
-# 	int_func_mf = TESTING.integrate_with_julia(false; phase="molecular")
-# 	int_func_af = TESTING.integrate_with_julia(false; phase="atomic")
-# 	int_func_if = TESTING.integrate_with_julia(false; phase="ionized")
+# 	int_func_sf = TESTING.integrate_with_julia(; phase="stellar")
+# 	int_func_mf = TESTING.integrate_with_julia(; phase="molecular")
+# 	int_func_af = TESTING.integrate_with_julia(; phase="atomic")
+# 	int_func_if = TESTING.integrate_with_julia(; phase="ionized")
 
 # 	ic          = [0.5, 0.5, 0.0, 0.0]
 # 	base_params = [[4000, Z] for Z in Z_list]
@@ -889,7 +896,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "c04ba0af113f07f9284b880f7638ca9d38ab3eef"
+project_hash = "34a350008463b40b4011353fe46a5401ea45a2de"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]

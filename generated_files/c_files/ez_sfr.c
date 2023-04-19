@@ -336,13 +336,18 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
   double eta_i = p[3];
   double R     = p[4];
 
+  double i_f = fmax(0.0, y[0]);
+  double a_f = fmax(0.0, y[1]);
+  double m_f = fmax(0.0, y[2]);
+  double s_f = fmax(0.0, y[3]);
+
   /* Compute auxiliary equations */
-  double tau_R           = ODE_CR / (y[0] * rho_C);
-  double tau_C           = ODE_CC / ((1 - y[3]) * rho_C * (Z + ZEFF));
-  double tau_S           = ODE_CS / sqrt((1 - y[3]) * rho_C);
-  double recombination   = y[0] / tau_R;
+  double tau_R           = ODE_CR / (i_f * rho_C);
+  double tau_C           = ODE_CC / ((1 - s_f) * rho_C * (Z + ZEFF));
+  double tau_S           = ODE_CS / sqrt((1 - s_f) * rho_C);
+  double recombination   = i_f / tau_R;
   double cloud_formation = y[1] / tau_C;
-  double sfr             = (AW * y[1] + MW * y[2]) / tau_S;
+  double sfr             = (AW * a_f + MW * m_f) / tau_S;
 
   /* Evaluate the ODE system */
   f[0] = -recombination + (eta_i + R) * sfr;
@@ -396,31 +401,36 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
   gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 4, 4);
   gsl_matrix *m            = &dfdy_mat.matrix;
 
-  double aux_var = sqrt((1.0 - y[3]) * rho_C);
+  double i_f = fmax(0.0, y[0]);
+  double a_f = fmax(0.0, y[1]);
+  double m_f = fmax(0.0, y[2]);
+  double s_f = fmax(0.0, y[3]);
 
-  gsl_matrix_set(m, 0, 0, -16.346836800000002 * y[0] * rho_C);
+  double aux_var = sqrt((1.0 - s_f) * rho_C);
+
+  gsl_matrix_set(m, 0, 0, -16.346836800000002 * i_f * rho_C);
   gsl_matrix_set(m, 0, 1, 0);
   gsl_matrix_set(m, 0, 2, 0.0003885752566316025 * (eta_i + R) * aux_var);
-  gsl_matrix_set(m, 0, 3, (-0.0003885752566316025 * (eta_i + R) * y[2] * rho_C) / (2 * aux_var));
+  gsl_matrix_set(m, 0, 3, (-0.0003885752566316025 * (eta_i + R) * m_f * rho_C) / (2 * aux_var));
 
-  gsl_matrix_set(m, 1, 0, 16.346836800000002 * y[0] * rho_C);
-  gsl_matrix_set(m, 1, 1, 0.2826053731343284 * (1.34e-5 + Z) * (-1 + y[3]) * rho_C);
+  gsl_matrix_set(m, 1, 0, 16.346836800000002 * i_f * rho_C);
+  gsl_matrix_set(m, 1, 1, 0.29818204724409453 * (-1 + s_f) * (1.27e-5 + Z) * rho_C);
   gsl_matrix_set(m, 1, 2, 0.0003885752566316025 * (-1 * eta_i + eta_d) * aux_var);
   gsl_matrix_set(m, 1, 3,
-                 (-0.0003885752566316025 * (-1 * eta_i + eta_d) * y[2] * rho_C) / (2 * aux_var) +
-                     0.2826053731343284 * (1.34e-5 + Z) * y[1] * rho_C);
+                 (-0.0003885752566316025 * (-1 * eta_i + eta_d) * m_f * rho_C) / (2 * aux_var) +
+                     0.29818204724409453 * (1.27e-5 + Z) * a_f * rho_C);
 
   gsl_matrix_set(m, 2, 0, 0);
-  gsl_matrix_set(m, 2, 1, 0.2826053731343284 * (1 - y[3]) * (1.34e-5 + Z) * rho_C);
+  gsl_matrix_set(m, 2, 1, 0.29818204724409453 * (1 - s_f) * (1.27e-5 + Z) * rho_C);
   gsl_matrix_set(m, 2, 2, 0.0003885752566316025 * (-1 - eta_d) * aux_var);
   gsl_matrix_set(
       m, 2, 3,
-      (-0.0003885752566316025 * (-1 - eta_d) * y[2] * rho_C) / (2 * aux_var) - 0.2826053731343284 * (1.34e-5 + Z) * y[1] * rho_C);
+      (-0.0003885752566316025 * (-1 - eta_d) * m_f * rho_C) / (2 * aux_var) - 0.29818204724409453 * (1.27e-5 + Z) * a_f * rho_C);
 
   gsl_matrix_set(m, 3, 0, 0);
   gsl_matrix_set(m, 3, 1, 0);
   gsl_matrix_set(m, 3, 2, 0.0003885752566316025 * (1 - R) * aux_var);
-  gsl_matrix_set(m, 3, 3, (-0.0003885752566316025 * (1 - R) * y[2] * rho_C) / (2 * aux_var));
+  gsl_matrix_set(m, 3, 3, (-0.0003885752566316025 * (1 - R) * m_f * rho_C) / (2 * aux_var));
 
   dfdt[0] = 0;
   dfdt[1] = 0;

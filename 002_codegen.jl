@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.25
 
 using Markdown
 using InteractiveUtils
@@ -291,8 +291,13 @@ function write_jacobian(path::Union{String,Nothing})#::Union{String,Nothing}
 
 		gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, $(MODEL.N_EQU), $(MODEL.N_EQU));
 		gsl_matrix *m = &dfdy_mat.matrix;
+	
+	    double i_f = fmax(0.0, y[0]);
+	    double a_f = fmax(0.0, y[1]);
+	    double m_f = fmax(0.0, y[2]);
+	    double s_f = fmax(0.0, y[3]);
 		
-	    double aux_var = sqrt((1.0 - y[3]) * rho_C);
+	    double aux_var = sqrt((1.0 - s_f) * rho_C);
 	
 	"""
 
@@ -338,13 +343,16 @@ function write_jacobian(path::Union{String,Nothing})#::Union{String,Nothing}
   				"RHS2[2]" => "eta_d",
   				"RHS2[3]" => "eta_i",
 				"RHS2[4]" => "R",
-				"+ -"     => "- ",
-				
+				"+ -"     => "- ",				
 			)	
 			jacobian_string *= replace(
 				c_function,
 				"sqrt((1 - 1 * y[3]) * rho_C)" => "aux_var",
 				"- 1 *"                        => "-",
+				"y[0]"    => "i_f",
+	    		"y[1]"    => "a_f",
+	            "y[2]"    => "m_f",
+	            "y[3]"    => "s_f",
 			)
 			
 		end
