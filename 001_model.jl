@@ -560,7 +560,7 @@ $\begin{equation}
 
 We find several values of the solar metallicity in the literature
 
- * [Asplund2006]( https://doi.org/10.1553/cia147s76) and [Grevesse2007](https://doi.org/10.1007/s11214-007-9173-7): $Z_\odot = 0.0122$ 
+ * [Asplund2006](https://doi.org/10.1553/cia147s76) and [Grevesse2007](https://doi.org/10.1007/s11214-007-9173-7): $Z_\odot = 0.0122$ 
  * Used in Arepo: $Z_\odot = 0.0127$
  * [Asplund2009](https://doi.org/10.1146/annurev.astro.46.060407.145222): $Z_\odot = 0.0134$
  * [Lodders2009](https://doi.org/10.1007/978-3-540-88055-4_34): $Z_\odot = 0.0141$
