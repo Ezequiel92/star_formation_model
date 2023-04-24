@@ -346,7 +346,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
   double tau_C           = ODE_CC / ((1 - s_f) * rho_C * (Z + ZEFF));
   double tau_S           = ODE_CS / sqrt((1 - s_f) * rho_C);
   double recombination   = i_f / tau_R;
-  double cloud_formation = y[1] / tau_C;
+  double cloud_formation = a_f / tau_C;
   double sfr             = (AW * a_f + MW * m_f) / tau_S;
 
   /* Evaluate the ODE system */
