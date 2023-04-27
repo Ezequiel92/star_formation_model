@@ -147,6 +147,59 @@ TikzPicture(
 )
   ╠═╡ =#
 
+# ╔═╡ 43eafb0f-08a8-4e53-9017-50b97ac48a52
+TikzPicture(
+	L"""
+		\node[box, white] (stars) at (180:2cm) {Stars};
+		\node[box, white, text width=2em] (atom) at (0:2cm) {HI};
+		\node[box, white, text width=2em] (molecule) at (270:2cm) {\ch{H2}};
+		\node[box, white, text width=2em] (ion) at (90:2cm) {HII};
+		\draw[line, white, ->]
+		(ion) edge [bend left, "$\textcolor{d_pink}{\frac{i_f(t)}{\tau_R(t)}} - \textcolor{d_blue}{\eta_\text{ion} \, \psi(t)}$"] (atom)
+		(atom) edge [bend left, "$\textcolor{d_orange}{\frac{a_f(t)}{\tau_C(t)}} - \textcolor{d_green}{\eta_\text{diss} \, \psi(t)}$"] (molecule)
+		(stars) edge [bend left, "$\textcolor{d_yellow}{R \, \psi(t)}$"] (ion)
+		(molecule) edge [bend left, "$\textcolor{red}{\psi(t)}$"] (stars);
+	""", 
+	width="55em",
+	preamble = """
+		\\usepackage{chemformula}
+		\\definecolor{d_pink}{HTML}{C721DD}
+		\\definecolor{d_orange}{HTML}{D14A00}
+		\\definecolor{d_green}{HTML}{008C00}
+		\\definecolor{d_blue}{HTML}{007FB1}
+		\\definecolor{d_yellow}{HTML}{D1AC00}
+		\\usetikzlibrary{shapes.misc, arrows, positioning, quotes, fit}
+		\\tikzset{
+    		>=stealth',
+    		box/.style={
+        		rectangle,
+        		rounded corners,
+        		draw=black, 
+        		thick,
+        		text width=4em,
+        		minimum height=2em,
+        		text centered,
+    		},
+			line/.style = {
+				thick,
+			},
+			every edge quotes/.append style = {
+				font=\\small, 
+				align=center, 
+				auto,
+			},
+			myrect/.style={
+				rectangle,
+				draw,
+				inner sep=0pt,
+				fit=\\#1,
+				thick, 
+				rounded corners,
+			},
+		}
+	""",
+)
+
 # ╔═╡ 047bbd39-9cf9-4bd7-b38e-16aa505b0b08
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -530,7 +583,7 @@ end
 md"""
 ### Condensation time
 
-We will only consider Hydrogen reactions as a first approximation. There are several channels for the formation of molecular Hydrogen, but the most efficient ones involve the interaction of $H$ atoms on the surface of dust grains, so we have
+We will only consider Hydrogen reactions as a first approximation. There are several channels for the formation of molecular Hydrogen, but the most efficient ones involve the interaction of $H$ atoms on the surface of dust grains, so we have ([Mollá2017](https://doi.org/10.1093/mnras/stx419))
 
 $\begin{equation}
     \tau_C = \frac{1}{2\,n_\mathrm{dust} \, \langle\sigma v\rangle_\mathrm{dust}}  \, , 
@@ -538,20 +591,22 @@ $\begin{equation}
 
 where $n_\mathrm{dust}$ is the number density of dust grains in the ISM, and $\langle\sigma v\rangle_\mathrm{dust}$ is the thermally averaged cross-section for the formation of molecular Hydrogen (see [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) and reference therein).
 
-From [Mollá2017](https://doi.org/10.1093/mnras/stx419) we have that
+We can write the density and cross-section as
 
 $\begin{equation}
-    n_\mathrm{dust} \, \langle\sigma v\rangle_\mathrm{dust} \approx \frac{Z + Z_\mathrm{eff}}{Z_\odot} \, n_g \, \langle\sigma v\rangle_\odot \, , 
+    n_\mathrm{dust} \, \langle\sigma v\rangle_\mathrm{dust} \approx (Z + Z_\mathrm{eff}) \, n_{ng} \, \frac{\langle\sigma v\rangle_\odot}{Z_\odot} \, , 
 \end{equation}$
 
-where $n_g$ denotes the gas number density, $Z$ is the metallicity, $Z_\odot$ the solar metallicity, $\langle\sigma v\rangle_\odot = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1}$ ([Draine1996](http://doi.org/10.1086/177689) pg. 271) is the rate of molecular hydrogen formation for $T = 100 \, K$, and $Z_\mathrm{eff} \approx 10^{-3} \, Z_\odot$ ([Glover2007](http://dx.doi.org/10.1086/519445) pg. 10) is an initial value of metallicity needed to kickstart the star formation process, given that the initial abundance of metals and dust grains is zero, and stars only form from molecular clouds. This initial value accounts for all other channels of molecular formation, a detailed study of which would have a minimal impact on the results.
+where $n_g$ denotes the neutral gas number density, $Z$ is the metallicity, $Z_\odot$ the solar metallicity, $\langle\sigma v\rangle_\odot = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1}$ (see note below), and $Z_\mathrm{eff} \approx 10^{-3} \, Z_\odot$ ([Glover2007](http://dx.doi.org/10.1086/519445) pg. 10) is an initial value of metallicity needed to kickstart the star formation process. We need this because the initial abundance of metals and dust grains is zero, and stars only form from molecular clouds. This initial value accounts for all other channels of molecular formation, a detailed study of which would have a minimal impact on the results.
 
-A global factor multiplying $\tau_C$ can be added ([Pelupessy2006](https://doi.org/10.1086/504366) pg.1025 and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) pg. 3061), to accoun for all the uncertanties. We will use this as an adjustable parameter, to pinpoint the molecular mass in simulation of isolated galaxies.
+In regards to notation we note that previous works call the term $Z \, \langle\sigma v\rangle_\mathrm{dust}$, the grain-surface $\mathrm{H_2}$ formation rate coefficient (units of $\mathrm{cm^3 \, s^{-1}}$): $R$ in [Goldshmidt1995](https://doi.org/10.1086/175168) and [Draine1996](https://doi.org/10.1086/177689), $R_f$ in [Pelupessy2006](https://doi.org/10.1086/504366), and $R_d$ in [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x). For $100 \, \mathrm{K}$ and solar metallicity [Draine1996](https://doi.org/10.1086/177689) gives $R = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1}$, from which we got the expresion $\langle\sigma v\rangle_d = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1} \, Z_\odot^{-1} = \langle\sigma v\rangle_\odot \, Z_\odot^{-1}$.
 
-We have $n_g = \rho_g / m_p$, where we used that number density $n$ is essentially the same quantity as $\rho$, the only difference being the proton mass working as a conversion factor for the different units. So, the characteristic time is given by
+A global factor multiplying $R$ can be added ([Pelupessy2006](https://doi.org/10.1086/504366) (pg.1025) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) (pg. 3061) use the concentration fractor), to account for all the uncertanties.
+
+We have $n_{ng} = \rho_{ng} / m_p$, where we used that number density $n$ is essentially the same quantity as $\rho$, the only difference being the proton mass working as a conversion factor for the different units. So, the characteristic time is given by
 
 $\begin{equation}
-    \tau_C = \frac{C_C}{(1 - s_f) \, \rho_C \, (Z + Z_\mathrm{eff})} \, ,
+    \tau_C = \frac{C_C}{(af_ + m_f) \, \rho_C \, (Z + Z_\mathrm{eff})} \, ,
 \end{equation}$
 
 where
@@ -584,7 +639,7 @@ begin
 end
 
 # ╔═╡ 1734df7f-1309-4ebd-a021-5f75f0bb78b2
-τC(s_f, ρC, Z) = cc / ((1 - s_f) * ρC * (Z + Zeff));
+τC(a_f, m_f, ρC, Z) = cc / ((a_f + m_f) * ρC * (Z + Zeff));
 
 # ╔═╡ 4f7de8a3-7f59-4a7b-8980-53390e52e0d1
 # ╠═╡ skip_as_script = true
@@ -599,17 +654,19 @@ let
 		ylabel=L"\tau_C \, / \, \mathrm{Myr}",
 		xlabelsize=32,
 		ylabelsize=32,
+		titlesize=35,
 		xticklabelsize=25,
 		yticklabelsize=25,
 		xscale=log10,
 		yscale=log10,
+		title=L"a_f + m_f = 0.5"
 	)
 
 	ρC = exp10.(range(-1, 5, 30))
 
 	for Zs in range(0, 2, 5)
-		label = L"s_f = 0.1 \,\, \mathrm{and} \,\, Z \, / \, Z_\odot = %$(Zs)"
-		lines!(ax, ρC, ρ -> τC.(0.1, ρ, Zs * Zsun); linewidth=3, label)
+		label = L"Z \, / \, Z_\odot = %$(Zs)"
+		lines!(ax, ρC, ρ -> τC.(0.0, 0.5, ρ, Zs * Zsun); linewidth=3, label)
 	end
 
 	axislegend(; position=:rt, labelsize=25)
@@ -1359,7 +1416,7 @@ function system!(dydt, ic, parameters, t)
   
     # Auxiliary equations
 	recombination   = i / τR(i, ρC)
-    cloud_formation = a / τC(s, ρC, Z)
+    cloud_formation = a / τC(a, m, ρC, Z)
 	sfr             = ψ(a, m, τS(s, ρC))
 
     # ODE system
@@ -3659,6 +3716,7 @@ version = "3.5.0+0"
 # ╟─a842b24e-8d26-41ab-9de3-91632aede893
 # ╟─64787011-b5b8-42be-b6e4-37ebc5138b3e
 # ╟─14c7f574-0623-4254-b8f7-97984d32351c
+# ╟─43eafb0f-08a8-4e53-9017-50b97ac48a52
 # ╟─047bbd39-9cf9-4bd7-b38e-16aa505b0b08
 # ╟─35e194f5-20dc-4391-b761-3696fe0bc117
 # ╟─70078b44-4d66-49b9-930e-74261df8be78
@@ -3683,7 +3741,7 @@ version = "3.5.0+0"
 # ╠═00030fd8-a9db-4903-b2ed-21a64db30588
 # ╠═d4f91aa3-183a-4abf-8f7a-7a05d4333e3a
 # ╟─7e824ce1-1f82-48cc-a3c4-1acfba0e2100
-# ╟─4a7eb24b-0874-49a3-9b08-4ffb6a7f0ce7
+# ╠═4a7eb24b-0874-49a3-9b08-4ffb6a7f0ce7
 # ╠═f2a6676f-457a-476a-9ce7-c336aa9bf47f
 # ╠═1734df7f-1309-4ebd-a021-5f75f0bb78b2
 # ╟─4f7de8a3-7f59-4a7b-8980-53390e52e0d1
