@@ -607,7 +607,8 @@ md"## Condensation time"
 #=╠═╡
 let
     τC = MODEL.τC.(
-		getindex.(fractions, MODEL.phase_name_to_index["stellar"]), 
+		getindex.(fractions, MODEL.phase_name_to_index["atomic"]), 
+		getindex.(fractions, MODEL.phase_name_to_index["molecular"]),
 		ref_ρC,
 		ref_Z,
 	)

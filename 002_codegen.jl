@@ -348,7 +348,8 @@ function write_jacobian(path::Union{String,Nothing})#::Union{String,Nothing}
 			jacobian_string *= replace(
 				c_function,
 				"sqrt((1 - 1 * y[3]) * rho_C)" => "aux_var",
-				"- 1 *"                        => "-",
+				"-1 * "                        => "- ",
+				"- 1 * "                        => "- ",
 				"y[0]"    => "i_f",
 	    		"y[1]"    => "a_f",
 	            "y[2]"    => "m_f",
