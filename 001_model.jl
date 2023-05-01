@@ -597,7 +597,7 @@ $\begin{equation}
     n_\mathrm{dust} \, \langle\sigma v\rangle_\mathrm{dust} \approx (Z + Z_\mathrm{eff}) \, n_{ng} \, \frac{\langle\sigma v\rangle_\odot}{Z_\odot} \, , 
 \end{equation}$
 
-where $n_g$ denotes the neutral gas number density, $Z$ is the metallicity, $Z_\odot$ the solar metallicity, $\langle\sigma v\rangle_\odot = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1}$ (see note below), and $Z_\mathrm{eff} \approx 10^{-3} \, Z_\odot$ ([Glover2007](http://dx.doi.org/10.1086/519445) pg. 10) is an initial value of metallicity needed to kickstart the star formation process. We need this because the initial abundance of metals and dust grains is zero, and stars only form from molecular clouds. This initial value accounts for all other channels of molecular formation, a detailed study of which would have a minimal impact on the results.
+where $n_g$ denotes the neutral gas number density, $Z$ is the metallicity, $Z_\odot$ the solar metallicity, $\langle\sigma v\rangle_\odot = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1}$ (see note below), and $Z_\mathrm{eff} \approx 10^{-3} \, Z_\odot$ ([Glover2007](https://doi.org/10.1086/519445) pg. 10) is an initial value of metallicity needed to kickstart the star formation process. We need this because the initial abundance of metals and dust grains is zero, and stars only form from molecular clouds. This initial value accounts for all other channels of molecular formation, a detailed study of which would have a minimal impact on the results.
 
 In regards to notation we note that previous works call the term $Z \, \langle\sigma v\rangle_\mathrm{dust}$, the grain-surface $\mathrm{H_2}$ formation rate coefficient (units of $\mathrm{cm^3 \, s^{-1}}$): $R$ in [Goldshmidt1995](https://doi.org/10.1086/175168) and [Draine1996](https://doi.org/10.1086/177689), $R_f$ in [Pelupessy2006](https://doi.org/10.1086/504366), and $R_d$ in [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x). For $100 \, \mathrm{K}$ and solar metallicity [Draine1996](https://doi.org/10.1086/177689) gives $R = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1}$, from which we got the expresion $\langle\sigma v\rangle_d = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1} \, Z_\odot^{-1} = \langle\sigma v\rangle_\odot \, Z_\odot^{-1}$.
 
@@ -606,7 +606,7 @@ A global factor multiplying $R$ can be added ([Pelupessy2006](https://doi.org/10
 We have $n_{ng} = \rho_{ng} / m_p$, where we used that number density $n$ is essentially the same quantity as $\rho$, the only difference being the proton mass working as a conversion factor for the different units. So, the characteristic time is given by
 
 $\begin{equation}
-    \tau_C = \frac{C_C}{(af_ + m_f) \, \rho_C \, (Z + Z_\mathrm{eff})} \, ,
+    \tau_C = \frac{C_C}{(a_f + m_f) \, \rho_C \, (Z + Z_\mathrm{eff})} \, ,
 \end{equation}$
 
 where
@@ -628,6 +628,24 @@ We find several values of the solar metallicity in the literature
 For consitency with the codebase, we will use $Z_\odot = 0.0127$, noting that is only 35% off the largest value in the list ([Steiger2016](https://doi.org/10.3847/0004-637X/816/1/13)), which is not significant for such a simple model with many other uncertanties.
 """
   ╠═╡ =#
+
+# ╔═╡ 1335861d-d539-4986-b9c1-d883a4fe8405
+md"""
+ * [Hollenbach1971](https://doi.org/10.1086/150755) (expresion explicita para R)
+ * [Jura1974](https://doi.org/10.1086/152975) (dn/dt = R*n*nH)
+ * [Jura1975](https://doi.org/10.1086/153545)
+ * [Black1987](https://doi.org/10.1086/165740)
+ * [Sternberg1988](https://doi.org/10.1086/166664)
+ * [Goldshmidt1995](https://doi.org/10.1086/175168)
+ * [Draine1996](https://doi.org/10.1086/177689)
+ * [Cazaux2002](https://doi.org/10.1086/342607)
+ * [Cazaux2004](https://doi.org/10.1086/381775)
+ * [Pelupessy2006](https://doi.org/10.1086/504366) (R como funcion de T y Z)
+ * [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55)
+ * [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x)
+ * [Mollá2017](https://doi.org/10.1093/mnras/stx419)
+ * [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635)
+"""
 
 # ╔═╡ f2a6676f-457a-476a-9ce7-c336aa9bf47f
 begin
@@ -1613,7 +1631,7 @@ DifferentialEquations = "~7.7.0"
 Interpolations = "~0.14.7"
 PlutoUI = "~0.7.50"
 QuadGK = "~2.8.1"
-Symbolics = "~5.2.0"
+Symbolics = "~5.3.1"
 TikzPictures = "~3.4.2"
 Trapz = "~2.0.3"
 Unitful = "~1.12.3"
@@ -1629,7 +1647,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "3a4f90052fd84e5839f2c81f72345b7e303f35ce"
+project_hash = "9fa7ab136d1758479978b4d76a7c780b32e0fd2d"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Random", "RandomExtensions", "SparseArrays", "Test"]
@@ -1815,10 +1833,10 @@ uuid = "a2cac450-b92f-5266-8821-25eda20663c8"
 version = "0.4.0"
 
 [[deps.ColorSchemes]]
-deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "Random", "SnoopPrecompile"]
-git-tree-sha1 = "aa3edc8f8dea6cbfa176ee12f7c2fc82f0608ed3"
+deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]
+git-tree-sha1 = "be6ab11021cd29f0344d5c4357b163af05a48cba"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-version = "3.20.0"
+version = "3.21.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -2440,9 +2458,9 @@ version = "2.1.91+0"
 
 [[deps.JumpProcesses]]
 deps = ["ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "Markdown", "PoissonRandom", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "StaticArrays", "TreeViews", "UnPack"]
-git-tree-sha1 = "e55c354cbc898aab742ef4374dff2c10d306e187"
+git-tree-sha1 = "50bd271af7f6cc23be7d24c8c4804809bb5d05ae"
 uuid = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
-version = "9.6.2"
+version = "9.6.3"
 
 [[deps.KLU]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse_jll"]
@@ -2452,9 +2470,9 @@ version = "0.4.0"
 
 [[deps.KernelDensity]]
 deps = ["Distributions", "DocStringExtensions", "FFTW", "Interpolations", "StatsBase"]
-git-tree-sha1 = "9816b296736292a80b9a3200eb7fbb57aaa3917a"
+git-tree-sha1 = "4a9513ad756e712177bd342ba6c022b515ed8d76"
 uuid = "5ab0869b-81aa-558d-bb23-cbf5423bbe9b"
-version = "0.6.5"
+version = "0.6.6"
 
 [[deps.Krylov]]
 deps = ["LinearAlgebra", "Printf", "SparseArrays"]
@@ -2504,9 +2522,9 @@ version = "0.4.6"
 
 [[deps.Latexify]]
 deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Printf", "Requires"]
-git-tree-sha1 = "ee342fcc2b8762c43a60dfbbf73bc2258703af19"
+git-tree-sha1 = "099e356f267354f46ba65087981a77da23a279b7"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-version = "0.15.19"
+version = "0.16.0"
 
 [[deps.LayoutPointers]]
 deps = ["ArrayInterface", "LinearAlgebra", "ManualMemory", "SIMDTypes", "Static", "StaticArrayInterface"]
@@ -2916,10 +2934,10 @@ uuid = "eebad327-c553-4316-9ea0-9fa01ccd7688"
 version = "0.3.2"
 
 [[deps.PlotUtils]]
-deps = ["ColorSchemes", "Colors", "Dates", "Printf", "Random", "Reexport", "SnoopPrecompile", "Statistics"]
-git-tree-sha1 = "c95373e73290cf50a8a22c3375e4625ded5c5280"
+deps = ["ColorSchemes", "Colors", "Dates", "PrecompileTools", "Printf", "Random", "Reexport", "Statistics"]
+git-tree-sha1 = "f92e1315dadf8c46561fb9396e525f7200cdc227"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
-version = "1.3.4"
+version = "1.3.5"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
@@ -2973,6 +2991,12 @@ deps = ["Adapt", "ArrayInterface", "ForwardDiff", "Requires"]
 git-tree-sha1 = "f739b1b3cc7b9949af3b35089931f2b58c289163"
 uuid = "d236fae5-4411-538c-8e31-a6e3d9e00b46"
 version = "0.4.12"
+
+[[deps.PrecompileTools]]
+deps = ["Preferences"]
+git-tree-sha1 = "2e47054ffe7d0a8872e977c0d09eb4b3d162ebde"
+uuid = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
+version = "1.0.2"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -3036,9 +3060,9 @@ uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [[deps.Random123]]
 deps = ["Random", "RandomNumbers"]
-git-tree-sha1 = "7a1a306b72cfa60634f03a911405f4e64d1b718b"
+git-tree-sha1 = "552f30e847641591ba3f39fd1bed559b9deb0ef3"
 uuid = "74087812-796a-5b5d-8853-05524746bad3"
-version = "1.6.0"
+version = "1.6.1"
 
 [[deps.RandomExtensions]]
 deps = ["Random", "SparseArrays"]
@@ -3059,9 +3083,9 @@ version = "0.3.2"
 
 [[deps.Ratios]]
 deps = ["Requires"]
-git-tree-sha1 = "dc84268fe0e3335a62e315a3a7cf2afa7178a734"
+git-tree-sha1 = "6d7bb727e76147ba18eed998700998e17b8e4911"
 uuid = "c84ed2f1-dad5-54f0-aa8e-dbefe2724439"
-version = "0.4.3"
+version = "0.4.4"
 
 [[deps.RecipesBase]]
 deps = ["SnoopPrecompile"]
@@ -3290,9 +3314,9 @@ version = "1.4.0"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
-git-tree-sha1 = "63e84b7fdf5021026d0f17f76af7c57772313d99"
+git-tree-sha1 = "fd9a77cfd87116a27b2121c1988045f428b35a36"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.5.21"
+version = "1.5.22"
 
 [[deps.StaticArraysCore]]
 git-tree-sha1 = "6b7ba252635a5eff6a0b0664a41ee140a1c9e72a"
@@ -3335,9 +3359,9 @@ version = "6.60.0"
 
 [[deps.StrideArraysCore]]
 deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "ManualMemory", "SIMDTypes", "Static", "StaticArrayInterface", "ThreadingUtilities"]
-git-tree-sha1 = "f5a57d3c111c79fcc1f8fed6058a8753d061c6d2"
+git-tree-sha1 = "b3e9c174a9df77ed7b66fc0aa605def3351a0653"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
-version = "0.4.12"
+version = "0.4.13"
 
 [[deps.StringManipulation]]
 git-tree-sha1 = "46da2434b41f41ac3594ee9816ce5541c6096123"
@@ -3385,9 +3409,9 @@ version = "1.0.5"
 
 [[deps.Symbolics]]
 deps = ["ArrayInterface", "ConstructionBase", "DataStructures", "DiffRules", "Distributions", "DocStringExtensions", "DomainSets", "Groebner", "IfElse", "LaTeXStrings", "LambertW", "Latexify", "Libdl", "LinearAlgebra", "MacroTools", "Markdown", "NaNMath", "RecipesBase", "Reexport", "Requires", "RuntimeGeneratedFunctions", "SciMLBase", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArrays", "SymbolicUtils", "TreeViews"]
-git-tree-sha1 = "7ecd651e3829d2957478516e92f693f12d5b4781"
+git-tree-sha1 = "e23ec62c083ca8f15a4b7174331b3b8d1c511e47"
 uuid = "0c5d862f-8b57-4792-8d23-62f2024744c7"
-version = "5.2.0"
+version = "5.3.1"
 
 [[deps.TOML]]
 deps = ["Dates"]
@@ -3741,7 +3765,8 @@ version = "3.5.0+0"
 # ╠═00030fd8-a9db-4903-b2ed-21a64db30588
 # ╠═d4f91aa3-183a-4abf-8f7a-7a05d4333e3a
 # ╟─7e824ce1-1f82-48cc-a3c4-1acfba0e2100
-# ╠═4a7eb24b-0874-49a3-9b08-4ffb6a7f0ce7
+# ╟─4a7eb24b-0874-49a3-9b08-4ffb6a7f0ce7
+# ╠═1335861d-d539-4986-b9c1-d883a4fe8405
 # ╠═f2a6676f-457a-476a-9ce7-c336aa9bf47f
 # ╠═1734df7f-1309-4ebd-a021-5f75f0bb78b2
 # ╟─4f7de8a3-7f59-4a7b-8980-53390e52e0d1
