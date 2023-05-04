@@ -395,14 +395,25 @@ end;
 # ╔═╡ dc6fd12b-c821-4e20-a896-25c8aab9df94
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"## Time scales"
+md"## Physical processes"
   ╠═╡ =#
+
+# ╔═╡ eeb0d759-67c3-4341-8cfb-f8f582fc3f7c
+md"""
+First, we will compute the relation between number densities ($n_j$) and the dimensionless fractions used in our model ($j_f := \rho_j / \rho_C$).
+
+$\begin{equation}
+    n_j := \frac{N_j}{V_C} = \frac{M_j}{m_j} \, \frac{1}{V_C} = \frac{\rho_j}{m_j} = \frac{\rho_j}{\rho_C} \, \frac{\rho_C}{m_j} = j_f \, \frac{\rho_C}{m_j} \, , 
+\end{equation}$
+
+where $V_C$ and $\rho_C$ are the volume and mass densities of the cell, $N_j$, $M_j$ and $\rho_j$ are the total number, total mass and mass density of the $j$ component, and $m_j$ is the mass of a single element of the $j$ component. Given that the final conversion factor $\rho_C / m_j$, in the context of our model, is a constant, we can freely go from the derivative of $n_j$ to the one of $j_f$.
+"""
 
 # ╔═╡ 1d27ec35-65ca-4c94-9e8d-54d1c11e759f
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-### Star formation time
+### Star formation
 
 Following [Krumholz2019](https://doi.org/10.1146/annurev-astro-091918-104430), we define $\tau_S$ as the characteristic timescale for star formation; i.e., all the gas that can be converted into stars has done so in a timescale $\tau_S$. In particular, we have
 
@@ -496,48 +507,53 @@ end
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-### Recombination time
+### Recombination
 
-From dimensional analysis, we have that the characteristic time for the recombination reaction
+The rate of recombination for hydrogen atoms can be written as ([Osterbrock2006](http://www.worldcat.org/oclc/60611705), [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) and [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635))
 
 $\begin{equation}
-    e^- + p^+ \longleftrightarrow H + \gamma \, ,
+    \frac{d}{dt} n_{HI} \biggr\rvert_\mathrm{recomb.} = \alpha_H(T) \, n_e \, n_{HII} \, , 
 \end{equation}$
 
-is given by
+where $\alpha_H(T)$ is the recombination coefficient, $n_e$ is the electron number density, and $n_{HII}$ is the ionized hydrogen number density. We note that, by mass balance and within our model, $n_e = n_{HII}$.
+
+Using the conversion factor already mentioned we can write
+
+$\begin{align}
+    \frac{d}{dt} a_f \biggr\rvert_\mathrm{recomb.} &= \frac{m_p}{\rho_C} \, \alpha_H(T) \, n_e \, n_{HII} \\
+	&= \frac{m_p}{\rho_C} \, \alpha_H(T) \, i_f \, \frac{\rho_C}{m_p} \, i_f \, \frac{\rho_C}{m_p} \\
+    &= \alpha_H(T) \, i_f^{\,2} \, \frac{\rho_C}{m_p} \, .
+\end{align}$
+
+We can readily find fits for $\alpha_H(T)$ in the literature ([Seaton1959](https://doi.org/10.1093/mnras/119.2.81), [Black1981](https://doi.org/10.1093/mnras/197.3.553), [Verner1996](https://doi.org/10.1086/192284) and [Osterbrock2006](http://www.worldcat.org/oclc/60611705)), in particular if we take $T = 10^4 \, \mathrm{K}$ for the ionized phase, and ignore transitions to the ground state we get
+
+$\begin{align}
+    \alpha_H(10^4 \, \mathrm{K}) = \alpha_H = 2.6 \times 10^{-13} \, \mathrm{cm}^3 \, \mathrm{s}^{-1} \, .
+\end{align}$
+
+So, we finally write
 
 $\begin{equation}
-    \tau_R = \frac{1}{n_e \langle\sigma \, v\rangle} \, , 
+    \frac{d}{dt} a_f \biggr\rvert_\mathrm{recomb.} = \alpha_H \, i_f^{\,2} \, \frac{\rho_C}{m_p} = \frac{i_f}{\tau_R} \, , 
 \end{equation}$
 
-where $n_e$ is the number fraction of electrons, and $\langle\sigma\,v\rangle$ is the recombination rate.
-
-From [Osterbrock2006](http://www.worldcat.org/oclc/60611705) (pg. 22) we have that
+where we defined the time scale
 
 $\begin{equation}
-    \langle\sigma\,v\rangle \approx \alpha_B(10^4 \, K) = 2.59 \times 10^{-13} \, \mathrm{cm}^3 \, \mathrm{s}^{-1} \, ,
+    \tau_R = \frac{m_p}{\alpha_H \, i_f \, \rho_C} = \frac{C_R}{i_f \, \rho_C} \, , 
 \end{equation}$
 
-where we only used case B recombination, which considers all but one transition channel. A transition directly to the ground state does not result in net recombination, because the emitted photon has enough energy to ionize another atom. Thus it is a better approximation to exclude that case.
-
-The electron density is $n_e = n_i$, where $n_i$ in the number density of ionized Hydrogen atoms, so $n_e$ is essentially the same quantity as $\rho_i$, where the only difference is a conversion factor for the different units, $n_e = n_i = \rho_i / m_p$, where $m_p$ is the proton mass.
-
-We have then
+and the constant
 
 $\begin{equation}
-    \tau_R = \frac{C_R}{\rho_i} = \frac{C_R}{i_f \, \rho_C} \, , 
-\end{equation}$
-where
-
-$\begin{equation}
-	C_R = \frac{m_p}{\alpha_B(10^4 \, K)} \, .
+	C_R = \frac{m_p}{\alpha_H} \, .
 \end{equation}$
 """
   ╠═╡ =#
 
 # ╔═╡ 00030fd8-a9db-4903-b2ed-21a64db30588
 begin
-	const αB = 2.59e-13u"cm^3 * s^-1"
+	const αB = 2.6e-13u"cm^3 * s^-1"
 	const CR = m_u / αB
 	const cr = ustrip(t_u * l_u^-3, CR / m_u)
 end
@@ -554,8 +570,8 @@ let
 	f = Figure()
 	ax = Axis(
 		f[1,1], 
-		xlabel=L"ρ_C \, / \, \mathrm{cm^{-3}}", 
-		ylabel=L"\tau_R \, / \, \mathrm{Myr}",
+		xlabel=L"ρ_C \, / \, \mathrm{%$l_u^{-3}}", 
+		ylabel=L"\tau_R \, / \, \mathrm{%$t_u}",
 		xlabelsize=32,
 		ylabelsize=32,
 		xticklabelsize=25,
@@ -571,7 +587,7 @@ let
 		lines!(ax, ρC, ρ -> τR.(i_f, ρ); linewidth=3, label)
 	end
 
-	axislegend(; position=:rt, labelsize=25)
+	axislegend(; position=:rt, labelsize=28)
 
 	f
 end
@@ -581,78 +597,100 @@ end
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-### Condensation time
+### Condensation
 
-We will only consider Hydrogen reactions as a first approximation. There are several channels for the formation of molecular Hydrogen, but the most efficient ones involve the interaction of $H$ atoms on the surface of dust grains, so we have ([Mollá2017](https://doi.org/10.1093/mnras/stx419))
-
-$\begin{equation}
-    \tau_C = \frac{1}{2\,n_\mathrm{dust} \, \langle\sigma v\rangle_\mathrm{dust}}  \, , 
-\end{equation}$
-
-where $n_\mathrm{dust}$ is the number density of dust grains in the ISM, and $\langle\sigma v\rangle_\mathrm{dust}$ is the thermally averaged cross-section for the formation of molecular Hydrogen (see [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) and reference therein).
-
-We can write the density and cross-section as
+From at least [Hollenbach1971a](https://doi.org/10.1086/150754) and [Hollenbach1971b](https://doi.org/10.1086/150755), we know that the rate of molecular hydrogen formation due to the condensation of atomic gas in the surface of dust grains is
 
 $\begin{equation}
-    n_\mathrm{dust} \, \langle\sigma v\rangle_\mathrm{dust} \approx (Z + Z_\mathrm{eff}) \, n_{ng} \, \frac{\langle\sigma v\rangle_\odot}{Z_\odot} \, , 
+    \frac{d}{dt} n_{H_2} \biggr\rvert_\mathrm{cond.} = R \, n_H \, n_{HI}  \, , 
 \end{equation}$
 
-where $n_g$ denotes the neutral gas number density, $Z$ is the metallicity, $Z_\odot$ the solar metallicity, $\langle\sigma v\rangle_\odot = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1}$ (see note below), and $Z_\mathrm{eff} \approx 10^{-3} \, Z_\odot$ ([Glover2007](https://doi.org/10.1086/519445) pg. 10) is an initial value of metallicity needed to kickstart the star formation process. We need this because the initial abundance of metals and dust grains is zero, and stars only form from molecular clouds. This initial value accounts for all other channels of molecular formation, a detailed study of which would have a minimal impact on the results.
+where $R$ is the dust grain $H_2$ formation rate coefficient, $n_H$ is the hydrogen nucleus number density, and $n_{HI}$ is the atomic hydrogen number density.
 
-In regards to notation we note that previous works call the term $Z \, \langle\sigma v\rangle_\mathrm{dust}$, the grain-surface $\mathrm{H_2}$ formation rate coefficient (units of $\mathrm{cm^3 \, s^{-1}}$): $R$ in [Goldshmidt1995](https://doi.org/10.1086/175168) and [Draine1996](https://doi.org/10.1086/177689), $R_f$ in [Pelupessy2006](https://doi.org/10.1086/504366), and $R_d$ in [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x). For $100 \, \mathrm{K}$ and solar metallicity [Draine1996](https://doi.org/10.1086/177689) gives $R = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1}$, from which we got the expresion $\langle\sigma v\rangle_d = 6 \times 10^{-17} \, \mathrm{cm}^3 \, \mathrm{s}^{-1} \, Z_\odot^{-1} = \langle\sigma v\rangle_\odot \, Z_\odot^{-1}$.
+In the literature, $n_H$ is generally defined as $n_H = n_{HI} + 2 \, n_{H_2}$, given that most studies consider small regions (compare to hydrodynamical simulations) dominated by cold gas ($T \sim 100\,\mathrm{K}$), the only relevant phases are the atomic and molecular gas. If we where to be strictly consistent with our hypothesis of complete gas mixing ($V_C = \mathrm{cte.}$) we should use $n_H = n_{HI} + 2\, n_{H_2} + n_{HII}$, but considering that the difference is small (in comparison with other uncertainties to be discussed), and that the experimental values are measure with $n_H$ as $n_{HI} + 2\, n_{H_2}$, we will stick with that definition.
 
-A global factor multiplying $R$ can be added ([Pelupessy2006](https://doi.org/10.1086/504366) (pg.1025) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) (pg. 3061) use the concentration fractor), to account for all the uncertanties.
+We also note that the expression for $\frac{d}{dt} n_{H_2}$ is only used in equilibrium equations in most of the early works ([Hollenbach1971a](https://doi.org/10.1086/150754), [Hollenbach1971b](https://doi.org/10.1086/150755), [Jura1974](https://doi.org/10.1086/152975), [Jura1975](https://doi.org/10.1086/153545), [Black1987](https://doi.org/10.1086/165740), [Sternberg1988](https://doi.org/10.1086/166664), [Goldshmidt1995](https://doi.org/10.1086/175168)), while first appearing in an actual differential equation that does not assume equilibrium in [Draine1996](https://doi.org/10.1086/177689).
 
-We have $n_{ng} = \rho_{ng} / m_p$, where we used that number density $n$ is essentially the same quantity as $\rho$, the only difference being the proton mass working as a conversion factor for the different units. So, the characteristic time is given by
+Using the conversion factor already mentioned we can write
+
+$\begin{align}
+    \frac{d}{dt} m_f \biggr\rvert_\mathrm{cond.} &= \frac{2 \, m_p}{\rho_C} \, R \, \left(n_{HI} + 2\, n_{H_2}\right) \, n_{HI} \\
+	&= \frac{2 \, m_p}{\rho_C} \, R \, \left(a_f \, \frac{\rho_C}{m_p} + 2 \, m_f \, \frac{\rho_C}{2 \, m_p}\right) \, a_f \, \frac{\rho_C}{m_p} \\ 
+	&= 2 \, R \, (a_f + m_f) \, a_f \, \frac{\rho_C}{m_p} \\
+	&= \frac{a_f}{\tau_C} \, , 
+\end{align}$
+
+where we defined the time scale
 
 $\begin{equation}
-    \tau_C = \frac{C_C}{(a_f + m_f) \, \rho_C \, (Z + Z_\mathrm{eff})} \, ,
+    \tau_C := \frac{m_p}{2 \, R \, \rho_C \, (a_f + m_f)} \, .
 \end{equation}$
+
+A table with a list of values for $R$ is presented below. We note that more than one value of $R$, and its dependance with other parameters may be discussed within each reference, in the table we reflect the fiducial value used by each author
+
+| $R \,\, [10^{-17} \, \mathrm{cm^3 \, s^{-1}}]$ | Reference |
+|:-----:|:--------------------------------------------------:|
+| $1$   | [Hollenbach1971b](https://doi.org/10.1086/150755)  |
+| $5$   | [Jura1974](https://doi.org/10.1086/152975)         |
+| $3$   | [Jura1975](https://doi.org/10.1086/153545)         |
+| $9$   | [Black1987](https://doi.org/10.1086/165740)        |
+| $3$   | [Goldshmidt1995](https://doi.org/10.1086/175168)   |
+| $6$   | [Draine1996](https://doi.org/10.1086/177689)       |
+| $3.5$ | [Wolfire2008](https://doi.org/10.1086/587688)      |
+
+Theoretical and experimental work has shown that $R \propto T^{1/2}$ ([Black1987](https://doi.org/10.1086/165740)), and $R \propto n_\mathrm{dust}$ ([Hollenbach1971b](https://doi.org/10.1086/150755)). Assuming the simplest dust model $n_\mathrm{dust} \propto Z$ we have $R \propto T^{1/2} \, Z$ ([Pelupessy2006](https://doi.org/10.1086/504366) and [Wolfire2008](https://doi.org/10.1086/587688)).
+
+Following previous prescriptions ([Pelupessy2006](https://doi.org/10.1086/504366), [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), [Mollá2017](https://doi.org/10.1093/mnras/stx419), [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635)), we will only scale $R$ with the metallicity, using $\sim 100\,\mathrm{K}$ for the temperature of the cold neutral gas. The reference value for $Z_\odot$ is 
+
+$\begin{equation}
+    R(Z=Z_\odot) := R_\odot = 6 \times 10^{-17}\mathrm{cm^3 \, s^{-1}} \, .
+\end{equation}$
+
+so we have 
+
+$\begin{equation}
+    R = Z \, \frac{R_\odot}{Z_\odot} \, .
+\end{equation}$
+
+We note that the exact value of $R_\odot$ within $1 \, \mathrm{dex}$ does not affect significantly the results. We will consider an adjustable global factor, as was done with the clumping factor $C_\rho$ in [Pelupessy2006](https://doi.org/10.1086/504366) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), to account for all the uncertainties.
+
+The fact that the final expression for $R$ would give $0$ when $Z = 0$, is a problem two fold. First, $\tau_C$ would diverge, and second, it shows the incorrect hypothesis that the only conversion channel for $HI \rightarrow H_2$ is the condensation on the surface of dust grains. To solve this problems we do the replacement $Z \rightarrow Z + Z_\mathrm{eff}$, with $Z_\mathrm{eff} = 10^{-3} \, Z_\odot$, which eliminates the divergence and takes into account the molecular formation that occurs below $10^{-3} \, Z_\odot$ ([Glover2007](https://doi.org/10.1086/519445)).
+
+So, we finally have 
+
+$\begin{align}
+    \tau_C &= \frac{m_p \, Z_\odot}{2 \, R_\odot \, (Z + Z_\mathrm{eff}) \, \rho_C \, (a_f + m_f)} \\
+	&= \frac{C_C}{(Z + Z_\mathrm{eff}) \, \rho_C \, (a_f + m_f)} \, , 
+\end{align}$
 
 where
 
 $\begin{equation}
-	C_C = \frac{Z_\odot \, m_p}{2 \, \langle\sigma v\rangle_\odot} \, .
+	C_C = \frac{m_p \, Z_\odot}{2 \, R_\odot} \, .
 \end{equation}$
 
-We find several values of the solar metallicity in the literature
+For the solar metallicity we find several values in the literature
 
- * [Asplund2006](https://doi.org/10.1553/cia147s76) and [Grevesse2007](https://doi.org/10.1007/s11214-007-9173-7): $Z_\odot = 0.0122$ 
- * Used in Arepo: $Z_\odot = 0.0127$
- * [Asplund2009](https://doi.org/10.1146/annurev.astro.46.060407.145222): $Z_\odot = 0.0134$
- * [Lodders2009](https://doi.org/10.1007/978-3-540-88055-4_34): $Z_\odot = 0.0141$
- * [Caffau2010](https://doi.org/10.1007/s11207-010-9541-4): $Z_\odot = 0.0153$ 
- * [Grevesse1998](https://doi.org/10.1023/A:1005161325181): $Z_\odot = 0.0169$
- * [Steiger2016](https://doi.org/10.3847/0004-637X/816/1/13): $Z_\odot = 0.0196$
+| $Z_\odot$ | Reference                                                            |
+|:--------:|:---------------------------------------------------------------------:|
+| $0.0122$ | [Asplund2006](https://doi.org/10.1553/cia147s76) and [Grevesse2007](https://doi.org/10.1007/s11214-007-9173-7)                                        |
+| $0.0127$ | Arepo                                                                 |
+| $0.0134$ | [Asplund2009](https://doi.org/10.1146/annurev.astro.46.060407.145222) |
+| $0.0141$ | [Lodders2009](https://doi.org/10.1007/978-3-540-88055-4_34)           |
+| $0.0153$ | [Grevesse1998](https://doi.org/10.1023/A:1005161325181)               |
+| $0.0169$ | [Draine1996](https://doi.org/10.1086/177689)                          |
+| $0.0196$ | [Steiger2016](https://doi.org/10.3847/0004-637X/816/1/13)             |
 
-For consitency with the codebase, we will use $Z_\odot = 0.0127$, noting that is only 35% off the largest value in the list ([Steiger2016](https://doi.org/10.3847/0004-637X/816/1/13)), which is not significant for such a simple model with many other uncertanties.
+To keep it consistent with the Arepo codebase, we will use $Z_\odot = 0.0127$, noting that is only $35\%$ off the largest value in the list ([Steiger2016](https://doi.org/10.3847/0004-637X/816/1/13)), which is not significant for such a simple model with many other uncertainties.
 """
   ╠═╡ =#
 
-# ╔═╡ 1335861d-d539-4986-b9c1-d883a4fe8405
-md"""
- * [Hollenbach1971](https://doi.org/10.1086/150755) (expresion explicita para R)
- * [Jura1974](https://doi.org/10.1086/152975) (dn/dt = R*n*nH)
- * [Jura1975](https://doi.org/10.1086/153545)
- * [Black1987](https://doi.org/10.1086/165740)
- * [Sternberg1988](https://doi.org/10.1086/166664)
- * [Goldshmidt1995](https://doi.org/10.1086/175168)
- * [Draine1996](https://doi.org/10.1086/177689)
- * [Cazaux2002](https://doi.org/10.1086/342607)
- * [Cazaux2004](https://doi.org/10.1086/381775)
- * [Pelupessy2006](https://doi.org/10.1086/504366) (R como funcion de T y Z)
- * [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55)
- * [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x)
- * [Mollá2017](https://doi.org/10.1093/mnras/stx419)
- * [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635)
-"""
-
 # ╔═╡ f2a6676f-457a-476a-9ce7-c336aa9bf47f
 begin
-    const σv   = 6e-17u"cm^3 * s^-1"
+    const Rsun = 6e-17u"cm^3 * s^-1"
     const Zsun = 0.0127
 	const Zeff = 1e-3 * Zsun
-	const CC   = (Zsun * m_u) / (2 * σv)
+	const CC   = (Zsun * m_u) / (2 * Rsun)
 	const cc   = ustrip(t_u * l_u^-3, CC / m_u)
 end
 
@@ -668,8 +706,8 @@ let
 	f = Figure()
 	ax = Axis(
 		f[1,1], 
-		xlabel=L"ρ_C \, / \, \mathrm{cm^{-3}}", 
-		ylabel=L"\tau_C \, / \, \mathrm{Myr}",
+		xlabel=L"ρ_C \, / \, \mathrm{%$l_u^{-3}}", 
+		ylabel=L"\tau_C \, / \, \mathrm{%$t_u}",
 		xlabelsize=32,
 		ylabelsize=32,
 		titlesize=35,
@@ -687,7 +725,7 @@ let
 		lines!(ax, ρC, ρ -> τC.(0.0, 0.5, ρ, Zs * Zsun); linewidth=3, label)
 	end
 
-	axislegend(; position=:rt, labelsize=25)
+	axislegend(; position=:rt, labelsize=28)
 
 	f
 end
@@ -3757,6 +3795,7 @@ version = "3.5.0+0"
 # ╠═cf488d0e-3294-45b2-b40c-fa18062c97d2
 # ╠═bc67cf22-4caa-497d-aae9-e5d1191468e2
 # ╟─dc6fd12b-c821-4e20-a896-25c8aab9df94
+# ╟─eeb0d759-67c3-4341-8cfb-f8f582fc3f7c
 # ╟─1d27ec35-65ca-4c94-9e8d-54d1c11e759f
 # ╠═68732d91-805a-4663-9166-f8483213a8d2
 # ╠═27281e53-e519-4ad0-af5d-59fb0e208534
@@ -3766,7 +3805,6 @@ version = "3.5.0+0"
 # ╠═d4f91aa3-183a-4abf-8f7a-7a05d4333e3a
 # ╟─7e824ce1-1f82-48cc-a3c4-1acfba0e2100
 # ╟─4a7eb24b-0874-49a3-9b08-4ffb6a7f0ce7
-# ╠═1335861d-d539-4986-b9c1-d883a4fe8405
 # ╠═f2a6676f-457a-476a-9ce7-c336aa9bf47f
 # ╠═1734df7f-1309-4ebd-a021-5f75f0bb78b2
 # ╟─4f7de8a3-7f59-4a7b-8980-53390e52e0d1
