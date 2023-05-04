@@ -28,12 +28,12 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 	
     double aux_var = sqrt((1.0 - s_f) * rho_C);
 
-	gsl_matrix_set(m, 0, 0, -16.346836800000002 * i_f * rho_C);
+	gsl_matrix_set(m, 0, 0, -16.409952 * i_f * rho_C);
 	gsl_matrix_set(m, 0, 1, 0);
 	gsl_matrix_set(m, 0, 2, 0.0003885752566316025 * (eta_i + R) * aux_var);
 	gsl_matrix_set(m, 0, 3, (-0.0003885752566316025 * (eta_i + R) * m_f * rho_C) / (2 * aux_var));
 
-	gsl_matrix_set(m, 1, 0, 16.346836800000002 * i_f * rho_C);
+	gsl_matrix_set(m, 1, 0, 16.409952 * i_f * rho_C);
 	gsl_matrix_set(m, 1, 1, 0.29818204724409453 * (- a_f - m_f) * (1.27e-5 + Z) * rho_C - 0.29818204724409453 * (1.27e-5 + Z) * a_f * rho_C);
 	gsl_matrix_set(m, 1, 2, 0.0003885752566316025 * (- eta_i + eta_d) * aux_var - 0.29818204724409453 * (1.27e-5 + Z) * a_f * rho_C);
 	gsl_matrix_set(m, 1, 3, (-0.0003885752566316025 * (- eta_i + eta_d) * m_f * rho_C) / (2 * aux_var));
