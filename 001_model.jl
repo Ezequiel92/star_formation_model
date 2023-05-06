@@ -652,7 +652,7 @@ $\begin{equation}
     R = Z \, \frac{R_\odot}{Z_\odot} \, .
 \end{equation}$
 
-We note that the exact value of $R_\odot$ within $1 \, \mathrm{dex}$ does not affect significantly the results. We will consider an adjustable global factor, as was done with the clumping factor $C_\rho$ in [Pelupessy2006](https://doi.org/10.1086/504366) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), to account for all the uncertainties.
+We note that the exact value of $R_\odot$ within $1 \, \mathrm{dex}$ does not affect significantly the results. We will consider an adjustable global factor, as was done with the clumping factor $C_\rho$ in [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), to account for all the uncertainties.
 
 The fact that the final expression for $R$ would give $0$ when $Z = 0$, is a problem two fold. First, $\tau_C$ would diverge, and second, it shows the incorrect hypothesis that the only conversion channel for $HI \rightarrow H_2$ is the condensation on the surface of dust grains. To solve this problems we do the replacement $Z \rightarrow Z + Z_\mathrm{eff}$, with $Z_\mathrm{eff} = 10^{-3} \, Z_\odot$, which eliminates the divergence and takes into account the molecular formation that occurs below $10^{-3} \, Z_\odot$ ([Glover2007](https://doi.org/10.1086/519445)).
 
@@ -690,7 +690,8 @@ begin
     const Rsun = 6e-17u"cm^3 * s^-1"
     const Zsun = 0.0127
 	const Zeff = 1e-3 * Zsun
-	const CC   = (Zsun * m_u) / (2 * Rsun)
+	const Cρ   = 1.0
+	const CC   = (Zsun * m_u) / (2 * Rsun * Cρ)
 	const cc   = ustrip(t_u * l_u^-3, CC / m_u)
 end
 
