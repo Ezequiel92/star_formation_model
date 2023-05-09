@@ -35,6 +35,8 @@ Because of its importance in galaxy formation, it is critical for simulations to
   ╠═╡ =#
 
 # ╔═╡ 8eb6540d-f5b0-45e6-883c-0cc213e67e45
+# ╠═╡ skip_as_script = true
+#=╠═╡
 md"""
 ## Previous work
 
@@ -50,6 +52,7 @@ A SAM with molecular, atomic an ionized gas was first implemented by [Berry2014]
 
 Based on [Ferrini1992](https://doi.org/10.1086/171066) and later work, [Mollá2015](https://doi.org/10.1111/j.1365-2966.2005.08782.x) develop a SAM to follow the metal component in galaxies. These chemical evolution models (CEMs) where subsequently improve and extended in [Mollá2015](https://doi.org/10.1093/mnras/stv1102), [Mollá2016](https://doi.org/10.1093/mnras/stw1723), [Mollá2017](https://doi.org/10.1093/mnras/stx419) and [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635). The latter being a full SAM that models the MP ISM, considering the molecular, atomic and ionized phases of Hydrogen, plus dust and the stellar component. Our model follows closely the one developed by [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), but implemented within the hydrodynamical code $\texttt{Arepo}$, the same way MUPPI is into $\texttt{GADGET}$.
 """
+  ╠═╡ =#
 
 # ╔═╡ a842b24e-8d26-41ab-9de3-91632aede893
 # ╠═╡ skip_as_script = true
@@ -58,16 +61,16 @@ md"""
 
 ## Phases and notation
 
-Given that the interstellar medium (ISM) is not homogeneous, we will model it as a multi-phase structure made up of four components. Three of which are the phases of Hydrogen, the ionized phase with a temperature of $\sim \! 10^4 \, \mathrm{K}$, the atomic phase with a temperature of $\sim \! 100 \, \mathrm{K}$, and the molecular phase with a temperature of $\sim \! 10 \, \mathrm{K}$. The final component is the stars.
+We will model the interstellar medium (ISM) as a multi-phase structure made up of four components. Three of which are different states of Hydrogen, ionized gas with a temperature of $\sim \! 10^4 \, \mathrm{K}$, atomic gas with a temperature of $\sim \! 100 \, \mathrm{K}$, and molecular gas with a temperature of $\sim \! 10 \, \mathrm{K}$. The final component is the stars.
 
-For every reaction that transfers mass between the phases, we will consider only the dominant channel. So, even though the gas is made up of Hydrogen and Helium, only the Hydrogen reactions are incorporated into the model. The processes involved are the photoionization of atoms; the recombination of electrons with ions; the conversion of atomic hydrogen into molecular hydrogen; and the destruction of the latter owing to the photodissociation caused by ultraviolet (UV) light from the young stellar population. In addition, we consider the formation by supernovas of ionized gas, and the influence of the neutral gas on the star formation rate.
+For every reaction that transfers mass between the phases, we will consider only the dominant channel. So, even though the gas is mostly made up of Hydrogen and Helium, only the Hydrogen reactions are incorporated into the model. The processes involved are the photoionization of atoms, the recombination of electrons with ions, the conversion of atomic hydrogen into molecular hydrogen; and the destruction of the latter owing to the photodissociation caused by ultraviolet (UV) light from the young stellar population. In addition, we consider the formation of ionized gas by supernovas, and the influence of the molecular gas on the star formation rate.
 
-We characterized the mass of the phases by their density fraction, with respect to the total cell density,
+We characterized the mass of the phases by their density fraction with respect to the total cell density,
 
-*  Ionized gas, $i_f(t) ≔ \rho_i / \rho_C \, ,$
-*  Atomic gas, $a_f(t) ≔ \rho_a / \rho_C \, ,$
-*  Molecular gas, $m_f(t) ≔ \rho_m / \rho_C \, ,$
-*  Stars, $s_f(t) ≔ \rho_s / \rho_C \, ,$
+*  Ionized gas: $i_f(t) ≔ \rho_i / \rho_C \, ,$
+*  Atomic gas: $a_f(t) ≔ \rho_a / \rho_C \, ,$
+*  Molecular gas: $m_f(t) ≔ \rho_m / \rho_C \, ,$
+*  Stars: $s_f(t) ≔ \rho_s / \rho_C \, ,$
 
 where $\rho_i$, $\rho_a$, $\rho_m$, $\rho_s$ are the corresponding volume densities, and
 
@@ -76,6 +79,22 @@ $\begin{equation}
 \end{equation}$
 
 is the total cell density.
+
+Now, we will compute the relation between number densities ($n_j$) and the dimensionless fractions defined above ($j_f := \rho_j / \rho_C$).
+
+$\begin{equation}
+    n_j := \frac{N_j}{V_C} = \frac{M_j}{m_j} \, \frac{1}{V_C} = \frac{\rho_j}{m_j} = \frac{\rho_j}{\rho_C} \, \frac{\rho_C}{m_j} = j_f \, \frac{\rho_C}{m_j} \, , 
+\end{equation}$
+
+where $V_C$ and $\rho_C$ are the volume and mass densities of the cell, $N_j$, $M_j$ and $\rho_j$ are the total number, total mass and mass density of the $j$ component, and $m_j$ is the mass of a single element of the $j$ component. Given that the final conversion factor $\rho_C / m_j$, in the context of our model, is a constant, we can freely go from the derivative of $n_j$ to the one of $j_f$.
+
+In the same way, we can find the relation between $M_j$ and $j_f$,
+
+$\begin{equation}
+    M_j = \frac{M_j}{V_C} \, V_C = \rho_j \, V_C = \frac{\rho_j}{\rho_C} \, \rho_C \, V_C = j_f \, M_C \, .
+\end{equation}$
+
+where as before, the conversion factor is a constant. So, using these relations we can write any differential equation for the quantities $M_j$ and $n_j$ as an equation for $j_f$.
 """
   ╠═╡ =#
 
@@ -84,8 +103,14 @@ is the total cell density.
 #=╠═╡
 md"""
 ## Physical relationships
+"""
+  ╠═╡ =#
 
-The following diagram shows the reactions between the different phases,
+# ╔═╡ b2b23d48-9c3d-44d3-9106-745eecc9b561
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+The following diagram shows the physical processes of the model by name,
 """
   ╠═╡ =#
 
@@ -147,7 +172,83 @@ TikzPicture(
 )
   ╠═╡ =#
 
+# ╔═╡ 047bbd39-9cf9-4bd7-b38e-16aa505b0b08
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"## Equations"
+  ╠═╡ =#
+
+# ╔═╡ 35e194f5-20dc-4391-b761-3696fe0bc117
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+### Stars
+
+We define $\psi(t)$ as the star formation rate 
+
+$\begin{equation}
+	 \psi(t) := \left. \frac{\mathrm{d}}{\mathrm{d}t}s_f(t)\right|_{\text{SFR}} \, ,
+\end{equation}$
+
+### Ionized gas
+
+The ionized component growths through the ionization of atomic gas, and from the remnants of supernova explosions. 
+
+The former is assumed to come mainly from the radiation of newborn stars, so it is given by
+
+$\begin{equation}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}i_f(t)\right|_{\text{ion.}} = \eta_\text{ion} \, \psi(t) \, ,
+\end{equation}$
+
+where $\eta_\text{ion}$ is the ionized mass rate per unit of created stellar mass. All the physics of the ionization process are summarized in the parameter $\eta_\text{ion}$.
+
+The latter, under the instantaneous recycling hypothesis, can be written as 
+
+$\begin{equation}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}i_f(t)\right|_{\text{recyc.}} = R \, \psi(t) \, ,
+\end{equation}$
+
+where $R$ is the mass fraction of a stellar population that is returned to the ISM, where we assumed that all the returned mass is in the form of ionized gas. Ignoring the metal enrichment is a good approximation that does not alter the results.
+
+### Atomic gas
+
+The atomic component accumulates mass through the dissociation of a Hydrogen molecules, and the recombination of the ionized gas with free electrons.
+
+The former, as with the ionized gas, is given by
+
+$\begin{equation}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}a_f(t)\right|_{\text{diss.}} = \eta_\text{diss} \, \psi(t) \, ,
+\end{equation}$
+
+where $\eta_\text{diss}$ is the disassociated mass rate per unit of created stellar mass.
+
+The latter, will depend on the mass of ionized gas present, and the time scale of recombination ($\tau_R$), so is given by 
+
+$\begin{equation}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}a_f(t)\right|_{\text{recon.}} = \frac{i_f(t)}{\tau_R(t)} \, .
+\end{equation}$
+
+### Molecular gas
+
+The molecular component gains mass mainly by the condensation of hydrogen atoms in the surface of dust grains. This process depends on the mass of atomic gas, and the characteristic time scale of condensation ($\tau_C$). We are condensing all the dust physics into the single time parameter,
+
+$\begin{equation}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}m_f(t)\right|_{\text{cond.}} = \frac{a_f(t)}{\tau_C(t)} \, ,
+\end{equation}$
+"""
+  ╠═╡ =#
+
+# ╔═╡ c843a9e7-c0e1-42c1-bace-c866f777232f
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+The following diagram shows the mathematical expresions for the processes of the model,
+"""
+  ╠═╡ =#
+
 # ╔═╡ 43eafb0f-08a8-4e53-9017-50b97ac48a52
+# ╠═╡ skip_as_script = true
+#=╠═╡
 TikzPicture(
 	L"""
 		\node[box, white] (stars) at (180:2cm) {Stars};
@@ -199,72 +300,15 @@ TikzPicture(
 		}
 	""",
 )
-
-# ╔═╡ 047bbd39-9cf9-4bd7-b38e-16aa505b0b08
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"## Equations"
   ╠═╡ =#
 
-# ╔═╡ 35e194f5-20dc-4391-b761-3696fe0bc117
-md"""
-### Ionized gas
-
-The ionized component growths through the ionization of atomic gas, and from the remnants of supernova explosions. 
-
-The former is assumed to come mainly from the radiation of newborn stars, so it is given by
-
-$\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}i_f(t)\right|_{\text{ion}} = \eta_\text{ion} \, \psi(t) \, ,
-\end{equation}$
-
-where $\psi(t)$ is the star formation rate 
-
-$\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}s_f(t)\right|_{\text{SFR}} = \psi(t) \, ,
-\end{equation}$
-
-and $\eta_\text{ion}$ is the ionized mass rate per unit of created stellar mass. All the physics of the ionization process are summarized in the parameter $\eta_\text{ion}$.
-
-The latter, under the instantaneous recycling hypothesis, can be written as 
-
-$\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}i_f(t)\right|_{\text{recyc}} = R \, \psi(t) \, ,
-\end{equation}$
-
-where $R$ is the mass fraction of a stellar population that is returned to the ISM, where we assumed that all the returned mass is in the form of ionized gas. Ignoring the metal enrichment is a good approximation that does not alter the results.
-
-### Atomic gas
-
-The atomic component accumulates mass through the dissociation of a Hydrogen molecules, and the recombination of the ionized gas with free electrons.
-
-The former, as with the ionized gas, is given by
-
-$\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}a_f(t)\right|_{\text{diss}} = \eta_\text{diss} \, \psi(t) \, ,
-\end{equation}$
-
-where $\eta_\text{diss}$ is the disassociated mass rate per unit of created stellar mass.
-
-The latter will depend on the mass of ionized gas present, and the time scale of recombination ($\tau_R$), so is given by 
-
-$\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}a_f(t)\right|_{\text{recon}} = \frac{i_f(t)}{\tau_R(t)} \, .
-\end{equation}$
-
-### Molecular gas
-
-The molecular component gains mass mainly by the condensation of Hydrogen atoms in the surface of dust grains. This process depends on the mass of atomic gas, and the characteristic time scale of condensation ($\tau_C$). We are ignoring all the dust physics, and condensing that into the single time parameter,
-
-$\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}m_f(t)\right|_{\text{cond}} = \frac{a_f(t)}{\tau_C(t)} \, ,
-\end{equation}$
-"""
-
 # ╔═╡ 70078b44-4d66-49b9-930e-74261df8be78
+# ╠═╡ skip_as_script = true
+#=╠═╡
 md"""
 From all the above, we can write the following system of four ODEs,
 """
+  ╠═╡ =#
 
 # ╔═╡ 2fe0dc4c-da44-4fc8-bef8-1fa615a0fe4a
 # ╠═╡ skip_as_script = true
@@ -361,25 +405,32 @@ md"""
 """
   ╠═╡ =#
 
+# ╔═╡ dc6fd12b-c821-4e20-a896-25c8aab9df94
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"## Physical processes"
+  ╠═╡ =#
+
 # ╔═╡ ac553b12-4857-4cc1-8ea2-fe9e8863b429
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-## Star formation rate
+### Star formation
 
-For the star formation rate we take into account the strong correlation between molecular Hydrogen and star formation ([Bigiel2008](https://doi.org/10.1088/0004-6256/136/6/2846), [Bigiel2010](https://doi.org/10.1088/0004-6256/140/5/1194), [Wong2002](https://doi.org/10.1086/339287), [Robertson2008](https://doi.org/10.1086/587796), [Halle2013](https://doi.org/10.1051/0004-6361/201220952), [Thompson2013](https://doi.org/10.1088/0004-637x/780/2/145)). In particular we will follow [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) with
+For the star formation we will use the notation and definition commonly used in the field (for a review see [McKee2007](https://doi.org/10.1146/annurev.astro.45.051806.110602), [Krumholz2014](https://doi.org/10.1016/j.physrep.2014.02.001), and [Krumholz2019](https://doi.org/10.1146/annurev-astro-091918-104430)). 
 
-$\begin{equation}
-	\mathrm{SFR} = \frac{A_w \, m_a + M_w \, m_m}{\tau_S}
-\end{equation}$
-where $A_w$ y $M_w$ are dimensionless free parameters that weight the contribution of the atomic mass, $m_a$, and the molecular mass, $m_m$, respectively. $\tau_S$ is the characteristic timescale for star formation.
-
-Given that the equations are written per unit of volume and cell density, $\rho_C$, the SFR enters the equations as
+In particular we will follow [Krumholz2005](https://doi.org/10.1086/431734), but taking into account the strong correlation between molecular hydrogen and star formation ([Bigiel2008](https://doi.org/10.1088/0004-6256/136/6/2846), [Bigiel2010](https://doi.org/10.1088/0004-6256/140/5/1194), [Wong2002](https://doi.org/10.1086/339287), [Robertson2008](https://doi.org/10.1086/587796), [Halle2013](https://doi.org/10.1051/0004-6361/201220952), [Thompson2013](https://doi.org/10.1088/0004-637x/780/2/145)). So, we end up with the simple model
 
 $\begin{equation}
-	\psi = \mathrm{SFR} \, / \, V / \rho_C = \frac{A_w \, a_f + M_w \, m_f}{\tau_S} \, ,
+	\mathrm{SFR} = \frac{M_m}{\tau_S}
 \end{equation}$
-where $a_f$ and $m_f$ are the mass fractions of atomic and molecular gas, respectively.
+where $M_m$ is the molecular mass, and $\tau_S$ is the characteristic timescale for star formation (defined by this very relation).
+
+Given that the equations are written for the dimensionless fractions, the SFR enters the as
+
+$\begin{equation}
+	\psi := \mathrm{SFR} \, M_C = \frac{m_f}{\tau_S} \, .
+\end{equation}$
 """
   ╠═╡ =#
 
@@ -392,52 +443,27 @@ end;
 # ╔═╡ bc67cf22-4caa-497d-aae9-e5d1191468e2
 ψ(a, m, τS) = (AW * a + MW * m) / τS;
 
-# ╔═╡ dc6fd12b-c821-4e20-a896-25c8aab9df94
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"## Physical processes"
-  ╠═╡ =#
-
-# ╔═╡ eeb0d759-67c3-4341-8cfb-f8f582fc3f7c
-md"""
-First, we will compute the relation between number densities ($n_j$) and the dimensionless fractions used in our model ($j_f := \rho_j / \rho_C$).
-
-$\begin{equation}
-    n_j := \frac{N_j}{V_C} = \frac{M_j}{m_j} \, \frac{1}{V_C} = \frac{\rho_j}{m_j} = \frac{\rho_j}{\rho_C} \, \frac{\rho_C}{m_j} = j_f \, \frac{\rho_C}{m_j} \, , 
-\end{equation}$
-
-where $V_C$ and $\rho_C$ are the volume and mass densities of the cell, $N_j$, $M_j$ and $\rho_j$ are the total number, total mass and mass density of the $j$ component, and $m_j$ is the mass of a single element of the $j$ component. Given that the final conversion factor $\rho_C / m_j$, in the context of our model, is a constant, we can freely go from the derivative of $n_j$ to the one of $j_f$.
-"""
-
 # ╔═╡ 1d27ec35-65ca-4c94-9e8d-54d1c11e759f
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-### Star formation
-
-Following [Krumholz2019](https://doi.org/10.1146/annurev-astro-091918-104430), we define $\tau_S$ as the characteristic timescale for star formation; i.e., all the gas that can be converted into stars has done so in a timescale $\tau_S$. In particular, we have
+Following [Krumholz2005](https://doi.org/10.1086/431734), we write the characteristic timescale for star formation, as
 
 $\begin{equation}
-    \tau_S = \frac{\epsilon_\star}{\epsilon_\text{ff}}\,t_\text{ff} \, ,
+    \tau_S =  \frac{t_\text{ff}}{\epsilon_\text{ff}} \, ,
 \end{equation}$
-where $\epsilon_\star$ is the star formation efficiency (mass fraction of gas which will be converted into stars, in the literature is of $\mathcal{O}(\epsilon) \approx 1$), $t_\text{ff}$ is the free-fall time, and $\epsilon_\text{ff}$ is the star-formation efficiency per free fall time (the fraction of a cloud's mass that is transformed into stars per cloud free-fall time, in the literature is of $\mathcal{O}(\epsilon_\text{ff}) \approx 0.01$).
 
-We have that $t_\text{ff}$ and $\epsilon_\star$ can be written as
+where $\epsilon_\text{ff}$ is the star formation efficiency, (in the literature of $\mathcal{O}(\epsilon_\text{ff}) \approx 0.01$ [Krumholz2014](https://doi.org/10.1016/j.physrep.2014.02.001)), and $t_\text{ff}$ is the free-fall time, which is the time for a pressure-free, spherical cloud to collapse to a point owing to its self-gravity.
 
-$\begin{align}
-    t_\text{ff} &= \sqrt{\frac{3\pi}{32 \, G\, \rho_g}} \, , \\
-    \epsilon_\star &= s_f(t \rightarrow \infty) \, ,
-\end{align}$
-
-where $\rho_g = \rho_i + \rho_a + \rho_m$ is the density of the gas, and $s_f$ the stellar cell mass fraction.
-
-There is a lot of uncertainty for the parameter $\epsilon_\star$ ([Lee2016](https://doi.org/10.3847/1538-4357/833/2/229) and [Utomo2018](https://doi.org/10.3847/2041-8213/aacf8f)), so we will follow [Matzner2000](https://doi.org/10.1086/317785) using $\epsilon_\star = 0.5$. This results in a net efficiency of star formation of 
+The free-fall time can be written as
 
 $\begin{equation}
-	f_\star = \frac{\epsilon_\text{ff}}{\epsilon_\star} = 0.02 \, ,
+    t_\text{ff} = \sqrt{\frac{3\pi}{32 \, G\, \rho_g}} \, ,
 \end{equation}$
 
-in relative agreement with [Kennicutt1998](https://doi.org/10.1086/305588) and [Evans2014](https://doi.org/10.1088/0004-637X/782/2/114). We note though that this parameter has been shown to have little influence on the global properties of simulated galaxies ([Li2018](https://doi.org/10.3847/1538-4357/aac9b8) and [Brown2022](https://doi.org/10.1093/mnras/stac1164)).
+where $\rho_g = \rho_i + \rho_a + \rho_m$ is the density of the gas.
+
+There is a lot of uncertainty for the parameter $\epsilon_\text{ff}$ ([Lee2016](https://doi.org/10.3847/1538-4357/833/2/229) and [Utomo2018](https://doi.org/10.3847/2041-8213/aacf8f)). In particular we will use $\epsilon_\text{ff} = 0.02$, in relative agreement with [Kennicutt1998](https://doi.org/10.1086/305588) and [Evans2014](https://doi.org/10.1088/0004-637X/782/2/114). We note though that this parameter has been shown to have little influence on the global properties of simulated galaxies ([Li2018](https://doi.org/10.3847/1538-4357/aac9b8) and [Brown2022](https://doi.org/10.1093/mnras/stac1164)).
 
 With all the previous definitions, we have 
 
@@ -447,7 +473,7 @@ $\begin{equation}
 where
 
 $\begin{equation}
-    C_S = \frac{\epsilon_\star}{\epsilon_\text{ff}} \, \sqrt{\frac{3\pi}{32 \, G}} \, .
+    C_S = \frac{1}{\epsilon_\text{ff}} \, \sqrt{\frac{3\pi}{32 \, G}} \, .
 \end{equation}$
 
 and where we have used
@@ -462,9 +488,8 @@ $\begin{align}
 
 # ╔═╡ 68732d91-805a-4663-9166-f8483213a8d2
 begin
-    const ϵff = 0.01
-    const ϵₛ  = 0.5
-	const CS  = (ϵₛ / ϵff) * sqrt(3π / 32u"G")
+    const ϵff = 0.02
+	const CS  = sqrt(3π / 32u"G") / ϵff
 	const cs  = ustrip(t_u * l_u^-(3/2), CS / sqrt(m_u))
 end
 
@@ -480,8 +505,8 @@ let
 	f = Figure()
 	ax = Axis(
 		f[1,1], 
-		xlabel=L"ρ_C \, / \, \mathrm{cm^{-3}}", 
-		ylabel=L"\tau_S \, / \, \mathrm{Myr}",
+		xlabel=L"ρ_C \, / \, \mathrm{%$l_u^{-3}}", 
+		ylabel=L"\tau_S \, / \, \mathrm{%$t_u}",
 		xlabelsize=32,
 		ylabelsize=32,
 		xticklabelsize=25,
@@ -543,7 +568,7 @@ $\begin{equation}
     \tau_R = \frac{m_p}{\alpha_H \, i_f \, \rho_C} = \frac{C_R}{i_f \, \rho_C} \, , 
 \end{equation}$
 
-and the constant
+with the constant
 
 $\begin{equation}
 	C_R = \frac{m_p}{\alpha_H} \, .
@@ -553,8 +578,8 @@ $\begin{equation}
 
 # ╔═╡ 00030fd8-a9db-4903-b2ed-21a64db30588
 begin
-	const αB = 2.6e-13u"cm^3 * s^-1"
-	const CR = m_u / αB
+	const αH = 2.6e-13u"cm^3 * s^-1"
+	const CR = m_u / αH
 	const cr = ustrip(t_u * l_u^-3, CR / m_u)
 end
 
@@ -607,7 +632,7 @@ $\begin{equation}
 
 where $R$ is the dust grain $H_2$ formation rate coefficient, $n_H$ is the hydrogen nucleus number density, and $n_{HI}$ is the atomic hydrogen number density.
 
-In the literature, $n_H$ is generally defined as $n_H = n_{HI} + 2 \, n_{H_2}$, given that most studies consider small regions (compare to hydrodynamical simulations) dominated by cold gas ($T \sim 100\,\mathrm{K}$), the only relevant phases are the atomic and molecular gas. If we where to be strictly consistent with our hypothesis of complete gas mixing ($V_C = \mathrm{cte.}$) we should use $n_H = n_{HI} + 2\, n_{H_2} + n_{HII}$, but considering that the difference is small (in comparison with other uncertainties to be discussed), and that the experimental values are measure with $n_H$ as $n_{HI} + 2\, n_{H_2}$, we will stick with that definition.
+In the literature, $n_H$ is generally defined as $n_H = n_{HI} + 2 \, n_{H_2}$, given that most studies consider small regions (compare to hydrodynamical simulations) dominated by cold gas ($T \sim 100\,\mathrm{K}$), the only relevant phases are the atomic and molecular gas. Given that we consider not only atomic and molecular gas, we should use $n_H = n_{HI} + 2\, n_{H_2} + n_{HII}$, but considering that the difference is small (in comparison with other uncertainties to be discussed), and that the experimental values are measure with $n_H$ as $n_{HI} + 2\, n_{H_2}$, we will stick with that definition. With this choice, we are assuming that within our cell there is a phase separation, where the star formation cloud consist of mainly cold atomic and molecular gas, even though our hydrodinamical simulations don't resolve within a cell.
 
 We also note that the expression for $\frac{d}{dt} n_{H_2}$ is only used in equilibrium equations in most of the early works ([Hollenbach1971a](https://doi.org/10.1086/150754), [Hollenbach1971b](https://doi.org/10.1086/150755), [Jura1974](https://doi.org/10.1086/152975), [Jura1975](https://doi.org/10.1086/153545), [Black1987](https://doi.org/10.1086/165740), [Sternberg1988](https://doi.org/10.1086/166664), [Goldshmidt1995](https://doi.org/10.1086/175168)), while first appearing in an actual differential equation that does not assume equilibrium in [Draine1996](https://doi.org/10.1086/177689).
 
@@ -640,10 +665,10 @@ A table with a list of values for $R$ is presented below. We note that more than
 
 Theoretical and experimental work has shown that $R \propto T^{1/2}$ ([Black1987](https://doi.org/10.1086/165740)), and $R \propto n_\mathrm{dust}$ ([Hollenbach1971b](https://doi.org/10.1086/150755)). Assuming the simplest dust model $n_\mathrm{dust} \propto Z$ we have $R \propto T^{1/2} \, Z$ ([Pelupessy2006](https://doi.org/10.1086/504366) and [Wolfire2008](https://doi.org/10.1086/587688)).
 
-Following previous prescriptions ([Pelupessy2006](https://doi.org/10.1086/504366), [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), [Mollá2017](https://doi.org/10.1093/mnras/stx419), [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635)), we will only scale $R$ with the metallicity, using $\sim 100\,\mathrm{K}$ for the temperature of the cold neutral gas. The reference value for $Z_\odot$ is 
+Following previous prescriptions ([Pelupessy2006](https://doi.org/10.1086/504366), [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), [Mollá2017](https://doi.org/10.1093/mnras/stx419), [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635)), we will only scale $R$ with the metallicity, using $\sim 100\,\mathrm{K}$ for the temperature of the cold neutral gas. Our reference value for $Z_\odot$ is ([Wolfire2008](https://doi.org/10.1086/587688))
 
 $\begin{equation}
-    R(Z=Z_\odot) := R_\odot = 6 \times 10^{-17}\mathrm{cm^3 \, s^{-1}} \, .
+    R(Z=Z_\odot) := R_\odot = 3.5 \times 10^{-17}\mathrm{cm^3 \, s^{-1}} \, .
 \end{equation}$
 
 so we have 
@@ -652,21 +677,21 @@ $\begin{equation}
     R = Z \, \frac{R_\odot}{Z_\odot} \, .
 \end{equation}$
 
-We note that the exact value of $R_\odot$ within $1 \, \mathrm{dex}$ does not affect significantly the results. We will consider an adjustable global factor, as was done with the clumping factor $C_\rho$ in [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), to account for all the uncertainties.
+We note that the exact value of $R_\odot$ within $1 \, \mathrm{dex}$ does not affect significantly the results. We will use an adjustable global factor, as was done with the clumping factor $C_\rho$ in [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), to account for all the uncertainties.
 
 The fact that the final expression for $R$ would give $0$ when $Z = 0$, is a problem two fold. First, $\tau_C$ would diverge, and second, it shows the incorrect hypothesis that the only conversion channel for $HI \rightarrow H_2$ is the condensation on the surface of dust grains. To solve this problems we do the replacement $Z \rightarrow Z + Z_\mathrm{eff}$, with $Z_\mathrm{eff} = 10^{-3} \, Z_\odot$, which eliminates the divergence and takes into account the molecular formation that occurs below $10^{-3} \, Z_\odot$ ([Glover2007](https://doi.org/10.1086/519445)).
 
 So, we finally have 
 
 $\begin{align}
-    \tau_C &= \frac{m_p \, Z_\odot}{2 \, R_\odot \, (Z + Z_\mathrm{eff}) \, \rho_C \, (a_f + m_f)} \\
+    \tau_C &= \frac{m_p \, Z_\odot}{2 \, R_\odot \, C_\rho \, (Z + Z_\mathrm{eff}) \, \rho_C \, (a_f + m_f)} \\
 	&= \frac{C_C}{(Z + Z_\mathrm{eff}) \, \rho_C \, (a_f + m_f)} \, , 
 \end{align}$
 
 where
 
 $\begin{equation}
-	C_C = \frac{m_p \, Z_\odot}{2 \, R_\odot} \, .
+	C_C = \frac{m_p \, Z_\odot}{2 \, R_\odot \, C_\rho} \, .
 \end{equation}$
 
 For the solar metallicity we find several values in the literature
@@ -687,7 +712,7 @@ To keep it consistent with the Arepo codebase, we will use $Z_\odot = 0.0127$, n
 
 # ╔═╡ f2a6676f-457a-476a-9ce7-c336aa9bf47f
 begin
-    const Rsun = 6e-17u"cm^3 * s^-1"
+    const Rsun = 3.5e-17u"cm^3 * s^-1"
     const Zsun = 0.0127
 	const Zeff = 1e-3 * Zsun
 	const Cρ   = 1.0
@@ -1006,10 +1031,12 @@ let
 		f[1,1], 
 		xlabel=L"\mathrm{stellar \,\, age \, / \, Myr}", 
 		ylabel=L"\eta_d",
+		title=L"\mathrm{IMF}: \,\, \mathrm{%$IMF}",
 		xlabelsize=32,
 		ylabelsize=32,
 		xticklabelsize=25,
 		yticklabelsize=25,
+		titlesize=30,
 		xscale=log10,
 	)
 
@@ -1038,10 +1065,12 @@ let
 		f[1,1], 
 		xlabel=L"\mathrm{stellar \,\, age \, / \, Myr}", 
 		ylabel=L"\eta_i",
+		title=L"\mathrm{IMF}: \,\, \mathrm{%$IMF}",
 		xlabelsize=32,
 		ylabelsize=32,
 		xticklabelsize=25,
 		yticklabelsize=25,
+		titlesize=30,
 		xscale=log10,
 	)
 
@@ -1067,7 +1096,7 @@ md"""
 
 There are two mass recycling parameters, $R$ which is defined as the mass fraction of a stellar population that is returned to the ISM under the instantaneous recycling hypothesis (stars under certain mass live forever, and stars above that mass die instantly), and $Z_\mathrm{SN}$ which is the fraction of the returned gas that is composed of metals (the rest is assumed to be ionized gas). 
 
-Notice that the instantaneous recycling hypothesis can be avoided by considering the lifetimes of the stars (using empirical relations) as it is done in [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) (sections 2.2.2 and 2.2.3). This would effectively make $R$ time dependant (the integrals below would have to be computed at each evaluation of the equations) increasing significantly the computational cost, so we avoid this and assume $R$ constant during the time scales of the problem.
+Notice that the instantaneous recycling hypothesis can be avoided by considering the lifetimes of the stars (using empirical relations) as it is done in [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) (sections 2.2.2 and 2.2.3). This would effectively make $R$ time dependant (the integrals below would have to be computed at each evaluation of the equations) increasing significantly the computational cost, so we avoid this and assume a constant $R$ during the ODE integration time scales.
 
 A stellar yield model gives the amount (as a fraction of the stellar mass) of each element that is returned to the ISM by stars with masses between $m$ and $m + \mathrm{d}m$, so they can be used to compute
 
@@ -1075,9 +1104,9 @@ $\begin{equation}
 	R = \dfrac{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} (m - m_\mathrm{rem}(m)) \, \phi(m) \mathrm{d}m}{\int_{m_\mathrm{low}}^{m_\mathrm{high}} m \, \phi(m) \mathrm{d}m} \, ,
 \end{equation}$
 
-where $\phi(m)$ is the ISM, $m_\mathrm{low}$ and $m_\mathrm{high}$ are the extremes in the mass range of the ISM, $m_\mathrm{ir}$ is the mass limit for the instantaneous recycling hypothesis, and $m_\mathrm{rem}(m)$ is the remnant stellar mass given by the yield model, [Pipino2014](https://doi.org/10.1093/mnras/stu579) ans [Ascasibar2015](https://doi.org/10.1093/mnras/stv098).
+where $\phi(m)$ is the ISM, $m_\mathrm{low}$ and $m_\mathrm{high}$ are the extremes in the mass range of the ISM, $m_\mathrm{ir}$ is the mass limit for the instantaneous recycling hypothesis, and $m_\mathrm{rem}(m)$ is the remnant stellar mass given by the yield model ([Pipino2014](https://doi.org/10.1093/mnras/stu579) and [Ascasibar2015](https://doi.org/10.1093/mnras/stv098)).
 
-Notice that the denominator in the expression for $R$ is the total mass of the stellar population modeled by $\phi(m)$, so it is just a normalization, given that the IMF is generally defined except for a global constant.
+Notice that the denominator in the expression for $R$ is the total mass of the stellar population modeled by $\phi(m)$, so it is just a normalization, because in general the IMF is defined except for a global constant.
 
 Using the same notation we can calculate $Z_\mathrm{SN}$ as
 
@@ -1178,7 +1207,7 @@ $\begin{equation}
     M = \int_{m_\mathrm{low}}^{m_\mathrm{high}} m \, \phi(m) \, \mathrm{d}m \, ,
 \end{equation}$
 
-which allows to normalize $\phi(m)$ for the population of mass $M$, within the range $[m_\mathrm{low}, m_\mathrm{high}]$.
+which allows to normalize $\phi(m)$ for a population of mass $M$, within the range $[m_\mathrm{low}, m_\mathrm{high}]$.
 
 There are many models for $\phi(m)$, but one of the simplest is the power law
 
@@ -1380,7 +1409,7 @@ let
 		yticklabelsize=25,
 	)
 
-	metalicities = exp10.(range(-1, 0.5, 50))
+	metalicities = exp10.(range(-1, 0.2, 50))
 	R(Zs) = recycled_fractions(Zs * Zsun)[1]
 
 	lines!(ax, metalicities, R; linewidth=3)
@@ -1399,14 +1428,14 @@ let
 	ax = Axis(
 		f[1,1], 
 		xlabel=L"Z \, / \, Z_\odot", 
-		ylabel=L"Zsn",
+		ylabel=L"Z_\mathrm{SN}",
 		xlabelsize=32,
 		ylabelsize=32,
 		xticklabelsize=25,
 		yticklabelsize=25,
 	)
 
-	metalicities = exp10.(range(-1, 0.5, 50))
+	metalicities = exp10.(range(-1, 0.2, 50))
     Zsn(Zs) = recycled_fractions(Zs * Zsun)[2]
 
 	lines!(ax, metalicities, Zsn; linewidth=3)
@@ -1546,13 +1575,13 @@ end;
 
 function stiffness_coefficient(
 	ic::Vector{Float64},
-	base_parms::NTuple{3,Float64},
+	base_params::NTuple{3,Float64},
 )::Float64
 
 	# Construct the parameters for the ODEs
-	ρ      = base_parms[1]  # Density [cm⁻³]
-	Z      = base_parms[2]  # Metallicity [dimensionless]
-	it     = base_parms[3]  # Integration time [Myr]
+	ρ      = base_params[1]  # Density [cm⁻³]
+	Z      = base_params[2]  # Metallicity [dimensionless]
+	it     = base_params[3]  # Integration time [Myr]
 	ηd, ηi = photodissociation_efficiency(it, Z)
 	R, _   = recycled_fractions(Z)
 		
@@ -1668,7 +1697,7 @@ DataFrames = "~1.5.0"
 DataFramesMeta = "~0.14.0"
 DifferentialEquations = "~7.7.0"
 Interpolations = "~0.14.7"
-PlutoUI = "~0.7.50"
+PlutoUI = "~0.7.51"
 QuadGK = "~2.8.1"
 Symbolics = "~5.3.1"
 TikzPictures = "~3.4.2"
@@ -1686,7 +1715,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "9fa7ab136d1758479978b4d76a7c780b32e0fd2d"
+project_hash = "51ab616bee4ebf96d3573d1601596d0aa927abb4"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Random", "RandomExtensions", "SparseArrays", "Test"]
@@ -1849,15 +1878,15 @@ version = "0.5.0"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "c6d890a52d2c4d55d326439580c3b8d0875a77d9"
+git-tree-sha1 = "e30f2f4e20f7f186dc36529910beaedc60cfa644"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.15.7"
+version = "1.16.0"
 
 [[deps.ChangesOfVariables]]
-deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
-git-tree-sha1 = "485193efd2176b88e6622a39a246f8c5b600e74e"
+deps = ["LinearAlgebra", "Test"]
+git-tree-sha1 = "f84967c4497e0e1955f9a582c232b02847c5f589"
 uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
-version = "0.1.6"
+version = "0.1.7"
 
 [[deps.CloseOpenIntervals]]
 deps = ["Static", "StaticArrayInterface"]
@@ -1929,9 +1958,9 @@ version = "0.1.3"
 
 [[deps.ConstructionBase]]
 deps = ["LinearAlgebra"]
-git-tree-sha1 = "89a9db8d28102b094992472d333674bd1a83ce2a"
+git-tree-sha1 = "738fec4d684a9a6ee9598a8bfee305b26831f28c"
 uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
-version = "1.5.1"
+version = "1.5.2"
 
 [[deps.Contour]]
 git-tree-sha1 = "d05d9e7b7aedff4e5b51a029dced05cfb6125781"
@@ -1999,9 +2028,9 @@ version = "0.4.0"
 
 [[deps.DiffEqBase]]
 deps = ["ArrayInterface", "ChainRulesCore", "DataStructures", "Distributions", "DocStringExtensions", "EnumX", "FastBroadcast", "ForwardDiff", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "Logging", "Markdown", "MuladdMacro", "Parameters", "PreallocationTools", "Printf", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "Setfield", "SparseArrays", "Static", "StaticArraysCore", "Statistics", "Tricks", "TruncatedStacktraces", "ZygoteRules"]
-git-tree-sha1 = "988bbd7283aaee5c34cd3cc09e78e7c45a931c5b"
+git-tree-sha1 = "ed1108bd9a68977d5e0cbd8b2882293337c15f1c"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "6.123.0"
+version = "6.124.0"
 
 [[deps.DiffEqCallbacks]]
 deps = ["DataStructures", "DiffEqBase", "ForwardDiff", "LinearAlgebra", "Markdown", "NLsolve", "Parameters", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArraysCore"]
@@ -2045,9 +2074,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "13027f188d26206b9e7b863036f87d2f2e7d013a"
+git-tree-sha1 = "c2614fa3aafe03d1a44b8e16508d9be718b8095a"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.87"
+version = "0.25.89"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -2154,9 +2183,9 @@ version = "1.2.9"
 
 [[deps.FileIO]]
 deps = ["Pkg", "Requires", "UUIDs"]
-git-tree-sha1 = "7be5f99f7d15578798f338f5433b6c432ea8037b"
+git-tree-sha1 = "299dc33549f68299137e51e6d49a13b5b1da9673"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-version = "1.16.0"
+version = "1.16.1"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -2169,9 +2198,9 @@ version = "0.13.11"
 
 [[deps.FiniteDiff]]
 deps = ["ArrayInterface", "LinearAlgebra", "Requires", "Setfield", "SparseArrays", "StaticArrays"]
-git-tree-sha1 = "03fcb1c42ec905d15b305359603888ec3e65f886"
+git-tree-sha1 = "6604e18a0220650dbbea7854938768f15955dd8e"
 uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
-version = "2.19.0"
+version = "2.20.0"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -2256,9 +2285,9 @@ version = "1.3.0"
 
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "GeoInterface", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
-git-tree-sha1 = "303202358e38d2b01ba46844b92e48a3c238fd9e"
+git-tree-sha1 = "659140c9375afa2f685e37c1a0b9c9a60ef56b40"
 uuid = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
-version = "0.4.6"
+version = "0.4.7"
 
 [[deps.Gettext_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "XML2_jll"]
@@ -2435,9 +2464,9 @@ version = "0.7.4"
 
 [[deps.InverseFunctions]]
 deps = ["Test"]
-git-tree-sha1 = "49510dfcb407e572524ba94aeae2fced1f3feb0f"
+git-tree-sha1 = "6667aadd1cdee2c6cd068128b3d226ebc4fb0c67"
 uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
-version = "0.1.8"
+version = "0.1.9"
 
 [[deps.InvertedIndices]]
 git-tree-sha1 = "0dc7b50b8d436461be01300fd8cd45aa0274b038"
@@ -2509,9 +2538,9 @@ version = "0.4.0"
 
 [[deps.KernelDensity]]
 deps = ["Distributions", "DocStringExtensions", "FFTW", "Interpolations", "StatsBase"]
-git-tree-sha1 = "4a9513ad756e712177bd342ba6c022b515ed8d76"
+git-tree-sha1 = "90442c50e202a5cdf21a7899c66b240fdef14035"
 uuid = "5ab0869b-81aa-558d-bb23-cbf5423bbe9b"
-version = "0.6.6"
+version = "0.6.7"
 
 [[deps.Krylov]]
 deps = ["LinearAlgebra", "Printf", "SparseArrays"]
@@ -2688,10 +2717,10 @@ version = "0.3.23"
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[deps.LoopVectorization]]
-deps = ["ArrayInterface", "ArrayInterfaceCore", "CPUSummary", "ChainRulesCore", "CloseOpenIntervals", "DocStringExtensions", "ForwardDiff", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "SIMDTypes", "SLEEFPirates", "SnoopPrecompile", "SpecialFunctions", "Static", "StaticArrayInterface", "ThreadingUtilities", "UnPack", "VectorizationBase"]
-git-tree-sha1 = "defbfba8ddbccdc8ca3edb4a96a6d6fd3cd33ebd"
+deps = ["ArrayInterface", "ArrayInterfaceCore", "CPUSummary", "ChainRulesCore", "CloseOpenIntervals", "DocStringExtensions", "ForwardDiff", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "PrecompileTools", "SIMDTypes", "SLEEFPirates", "SpecialFunctions", "Static", "StaticArrayInterface", "ThreadingUtilities", "UnPack", "VectorizationBase"]
+git-tree-sha1 = "e7ce3cdc520da8135e73d7cb303e0617a19f582b"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
-version = "0.12.157"
+version = "0.12.158"
 
 [[deps.MIMEs]]
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
@@ -2790,9 +2819,9 @@ version = "0.4.7"
 
 [[deps.MutableArithmetics]]
 deps = ["LinearAlgebra", "SparseArrays", "Test"]
-git-tree-sha1 = "3295d296288ab1a0a2528feb424b854418acff57"
+git-tree-sha1 = "964cb1a7069723727025ae295408747a0b36a854"
 uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
-version = "1.2.3"
+version = "1.3.0"
 
 [[deps.NLSolversBase]]
 deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
@@ -2903,10 +2932,10 @@ uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 version = "1.6.0"
 
 [[deps.OrdinaryDiffEq]]
-deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "IfElse", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLNLSolve", "SimpleNonlinearSolve", "SimpleUnPack", "SnoopPrecompile", "SparseArrays", "SparseDiffTools", "StaticArrayInterface", "StaticArrays", "TruncatedStacktraces"]
-git-tree-sha1 = "b639e192c0422c849aeda7240382375961d0cb4b"
+deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "IfElse", "LineSearches", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLNLSolve", "SimpleNonlinearSolve", "SimpleUnPack", "SparseArrays", "SparseDiffTools", "StaticArrayInterface", "StaticArrays", "TruncatedStacktraces"]
+git-tree-sha1 = "47fc5cf4174a7d45fa541669abc5405d9ef6b8df"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.50.0"
+version = "6.51.1"
 
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -2980,9 +3009,9 @@ version = "1.3.5"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "5bb5129fdd62a2bbbe17c2756932259acf467386"
+git-tree-sha1 = "b478a748be27bd2f2c73a7690da219d0844db305"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.50"
+version = "0.7.51"
 
 [[deps.PoissonRandom]]
 deps = ["Random"]
@@ -3033,21 +3062,21 @@ version = "0.4.12"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
-git-tree-sha1 = "2e47054ffe7d0a8872e977c0d09eb4b3d162ebde"
+git-tree-sha1 = "259e206946c293698122f63e2b513a7c99a244e8"
 uuid = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
-version = "1.0.2"
+version = "1.1.1"
 
 [[deps.Preferences]]
 deps = ["TOML"]
-git-tree-sha1 = "47e5f437cc0e7ef2ce8406ce1e7e24d44915f88d"
+git-tree-sha1 = "7eb1686b4f04b82f96ed7a4ea5890a4f0c7a09f1"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
-version = "1.3.0"
+version = "1.4.0"
 
 [[deps.PrettyTables]]
 deps = ["Crayons", "Formatting", "LaTeXStrings", "Markdown", "Reexport", "StringManipulation", "Tables"]
-git-tree-sha1 = "548793c7859e28ef026dba514752275ee871169f"
+git-tree-sha1 = "213579618ec1f42dea7dd637a42785a608b1ea9c"
 uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
-version = "2.2.3"
+version = "2.2.4"
 
 [[deps.Primes]]
 deps = ["IntegerMathUtils"]
@@ -3127,16 +3156,16 @@ uuid = "c84ed2f1-dad5-54f0-aa8e-dbefe2724439"
 version = "0.4.4"
 
 [[deps.RecipesBase]]
-deps = ["SnoopPrecompile"]
-git-tree-sha1 = "261dddd3b862bd2c940cf6ca4d1c8fe593e457c8"
+deps = ["PrecompileTools"]
+git-tree-sha1 = "5c3d09cc4f31f5fc6af001c250bf1278733100ff"
 uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
-version = "1.3.3"
+version = "1.3.4"
 
 [[deps.RecursiveArrayTools]]
 deps = ["Adapt", "ArrayInterface", "DocStringExtensions", "GPUArraysCore", "IteratorInterfaceExtensions", "LinearAlgebra", "RecipesBase", "Requires", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables"]
-git-tree-sha1 = "140cddd2c457e4ebb0cdc7c2fd14a7fbfbdf206e"
+git-tree-sha1 = "68078e9fa9130a6a768815c48002d0921a232c11"
 uuid = "731186ca-8d62-57ce-b412-fbd966d074cd"
-version = "2.38.3"
+version = "2.38.4"
 
 [[deps.RecursiveFactorization]]
 deps = ["LinearAlgebra", "LoopVectorization", "Polyester", "SnoopPrecompile", "StrideArraysCore", "TriangularSolve"]
@@ -3181,9 +3210,9 @@ version = "0.4.0+0"
 
 [[deps.RuntimeGeneratedFunctions]]
 deps = ["ExprTools", "SHA", "Serialization"]
-git-tree-sha1 = "f139e81a81e6c29c40f1971c9e5309b09c03f2c3"
+git-tree-sha1 = "d7d9ebe28062161c1e314ed643097b0c6fe657d9"
 uuid = "7e49a35a-f44a-4d26-94aa-eba1b4ca6b47"
-version = "0.5.6"
+version = "0.5.7"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
@@ -3220,15 +3249,15 @@ version = "1.91.7"
 
 [[deps.SciMLNLSolve]]
 deps = ["DiffEqBase", "LineSearches", "NLsolve", "Reexport", "SciMLBase"]
-git-tree-sha1 = "2e1606c282fae6bd9aed4f159695774a44b9c75f"
+git-tree-sha1 = "a8eb97c56cac50c21096582afb2a0110784dc36e"
 uuid = "e9a6253c-8580-4d32-9898-8661bb511710"
-version = "0.1.4"
+version = "0.1.6"
 
 [[deps.SciMLOperators]]
 deps = ["ArrayInterface", "DocStringExtensions", "Lazy", "LinearAlgebra", "Setfield", "SparseArrays", "StaticArraysCore", "Tricks"]
-git-tree-sha1 = "e61e48ef909375203092a6e83508c8416df55a83"
+git-tree-sha1 = "5950ad7bec86ba22e4861db61d031625a26a9ec3"
 uuid = "c0aeaf25-5076-4817-a8d5-81caf7dfa961"
-version = "0.2.0"
+version = "0.2.3"
 
 [[deps.Scratch]]
 deps = ["Dates"]
@@ -3353,9 +3382,9 @@ version = "1.4.0"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
-git-tree-sha1 = "fd9a77cfd87116a27b2121c1988045f428b35a36"
+git-tree-sha1 = "c262c8e978048c2b095be1672c9bee55b4619521"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.5.22"
+version = "1.5.24"
 
 [[deps.StaticArraysCore]]
 git-tree-sha1 = "6b7ba252635a5eff6a0b0664a41ee140a1c9e72a"
@@ -3386,9 +3415,9 @@ version = "1.3.0"
 
 [[deps.SteadyStateDiffEq]]
 deps = ["DiffEqBase", "DiffEqCallbacks", "LinearAlgebra", "NLsolve", "Reexport", "SciMLBase"]
-git-tree-sha1 = "04a7d0bb1c824857ba0bb0c17bc5950dccbfdd5d"
+git-tree-sha1 = "564451a262696334a3bab19108a99dd90d5a22c8"
 uuid = "9672c7b4-1e72-59bd-8a11-6ac3964bc41f"
-version = "1.14.0"
+version = "1.15.0"
 
 [[deps.StochasticDiffEq]]
 deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DiffEqNoiseProcess", "DocStringExtensions", "FillArrays", "FiniteDiff", "ForwardDiff", "JumpProcesses", "LevyArea", "LinearAlgebra", "Logging", "MuladdMacro", "NLsolve", "OrdinaryDiffEq", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
@@ -3423,10 +3452,10 @@ uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
 version = "5.10.1+0"
 
 [[deps.Sundials]]
-deps = ["CEnum", "DataStructures", "DiffEqBase", "Libdl", "LinearAlgebra", "Logging", "Reexport", "SciMLBase", "SnoopPrecompile", "SparseArrays", "Sundials_jll"]
-git-tree-sha1 = "a4e8491c163d74fb92905c6443e59558f5e609a4"
+deps = ["CEnum", "DataStructures", "DiffEqBase", "Libdl", "LinearAlgebra", "Logging", "PrecompileTools", "Reexport", "SciMLBase", "SparseArrays", "Sundials_jll"]
+git-tree-sha1 = "ace8080f882c5181d61c8dbb749ac9aa72a49bd0"
 uuid = "c3572dad-4567-51f8-b174-8c6c989267f4"
-version = "4.16.0"
+version = "4.17.0"
 
 [[deps.Sundials_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "OpenBLAS_jll", "Pkg", "SuiteSparse_jll"]
@@ -3516,9 +3545,9 @@ version = "0.5.23"
 
 [[deps.TranscodingStreams]]
 deps = ["Random", "Test"]
-git-tree-sha1 = "0b829474fed270a4b0ab07117dce9b9a2fa7581a"
+git-tree-sha1 = "9a6ae7ed916312b41236fcef7e0af564ef934769"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.9.12"
+version = "0.9.13"
 
 [[deps.Trapz]]
 git-tree-sha1 = "79eb0ed763084a3e7de81fe1838379ac6a23b6a0"
@@ -3778,10 +3807,12 @@ version = "3.5.0+0"
 # ╟─8eb6540d-f5b0-45e6-883c-0cc213e67e45
 # ╟─a842b24e-8d26-41ab-9de3-91632aede893
 # ╟─64787011-b5b8-42be-b6e4-37ebc5138b3e
+# ╟─b2b23d48-9c3d-44d3-9106-745eecc9b561
 # ╟─14c7f574-0623-4254-b8f7-97984d32351c
-# ╟─43eafb0f-08a8-4e53-9017-50b97ac48a52
 # ╟─047bbd39-9cf9-4bd7-b38e-16aa505b0b08
 # ╟─35e194f5-20dc-4391-b761-3696fe0bc117
+# ╟─c843a9e7-c0e1-42c1-bace-c866f777232f
+# ╟─43eafb0f-08a8-4e53-9017-50b97ac48a52
 # ╟─70078b44-4d66-49b9-930e-74261df8be78
 # ╟─2fe0dc4c-da44-4fc8-bef8-1fa615a0fe4a
 # ╟─744a9591-c7f1-496e-9bb4-47df2c8937dd
@@ -3792,11 +3823,10 @@ version = "3.5.0+0"
 # ╟─534a1049-8de5-4b07-abec-c5a3456627c0
 # ╠═86b692f1-0268-40f3-b4a2-d54c9828346d
 # ╟─eaf272c7-4162-4a9a-92e3-9835c6158394
+# ╟─dc6fd12b-c821-4e20-a896-25c8aab9df94
 # ╟─ac553b12-4857-4cc1-8ea2-fe9e8863b429
 # ╠═cf488d0e-3294-45b2-b40c-fa18062c97d2
 # ╠═bc67cf22-4caa-497d-aae9-e5d1191468e2
-# ╟─dc6fd12b-c821-4e20-a896-25c8aab9df94
-# ╟─eeb0d759-67c3-4341-8cfb-f8f582fc3f7c
 # ╟─1d27ec35-65ca-4c94-9e8d-54d1c11e759f
 # ╠═68732d91-805a-4663-9166-f8483213a8d2
 # ╠═27281e53-e519-4ad0-af5d-59fb0e208534
