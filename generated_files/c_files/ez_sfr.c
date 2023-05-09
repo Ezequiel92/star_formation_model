@@ -4,7 +4,7 @@
  * \copyright   and contributing authors.
  *
  * \file        src/ez_sfr/ez_sfr.c
- * \date        03/2023
+ * \date        05/2023
  * \author      Ezequiel Lozano
  * \brief       Compute the star formation rate for a given gas cell.
  * \details     This file contains the routines to compute the star formation rate, according to our
@@ -336,18 +336,13 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
   double eta_i = p[3];
   double R     = p[4];
 
-  double i_f = fmax(0.0, y[0]);
-  double a_f = fmax(0.0, y[1]);
-  double m_f = fmax(0.0, y[2]);
-  double s_f = fmax(0.0, y[3]);
-
   /* Compute auxiliary equations */
-  double tau_R           = ODE_CR / (i_f * rho_C);
-  double tau_C           = ODE_CC / ((a_f + m_f) * rho_C * (Z + ZEFF));
-  double tau_S           = ODE_CS / sqrt((1 - s_f) * rho_C);
-  double recombination   = i_f / tau_R;
-  double cloud_formation = a_f / tau_C;
-  double sfr             = (AW * a_f + MW * m_f) / tau_S;
+  double tau_R           = ODE_CR / (y[0] * rho_C);
+  double tau_C           = ODE_CC / ((y[1] + y[2]) * rho_C * (Z + ZEFF));
+  double tau_S           = ODE_CS / sqrt((1 - y[3]) * rho_C);
+  double recombination   = y[0] / tau_R;
+  double cloud_formation = y[1] / tau_C;
+  double sfr             = (AW * y[1] + MW * y[2]) / tau_S;
 
   /* Evaluate the ODE system */
   f[0] = -recombination + (eta_i + R) * sfr;
@@ -401,34 +396,29 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
   gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 4, 4);
   gsl_matrix *m            = &dfdy_mat.matrix;
 
-  double i_f = fmax(0.0, y[0]);
-  double a_f = fmax(0.0, y[1]);
-  double m_f = fmax(0.0, y[2]);
-  double s_f = fmax(0.0, y[3]);
+  double aux_var = sqrt((1.0 - y[3]) * rho_C);
 
-  double aux_var = sqrt((1.0 - s_f) * rho_C);
-
-  gsl_matrix_set(m, 0, 0, -16.346836800000002 * i_f * rho_C);
+  gsl_matrix_set(m, 0, 0, -16.346836800000002 * y[0] * rho_C);
   gsl_matrix_set(m, 0, 1, 0);
   gsl_matrix_set(m, 0, 2, 0.0003885752566316025 * (eta_i + R) * aux_var);
-  gsl_matrix_set(m, 0, 3, (-0.0003885752566316025 * (eta_i + R) * m_f * rho_C) / (2 * aux_var));
+  gsl_matrix_set(m, 0, 3, (-0.0003885752566316025 * (eta_i + R) * y[2] * rho_C) / (2 * aux_var));
 
-  gsl_matrix_set(m, 1, 0, 16.346836800000002 * i_f * rho_C);
+  gsl_matrix_set(m, 1, 0, 16.346836800000002 * y[0] * rho_C);
   gsl_matrix_set(m, 1, 1,
-                 0.29818204724409453 * (-a_f - m_f) * (1.27e-5 + Z) * rho_C - 0.29818204724409453 * (1.27e-5 + Z) * a_f * rho_C);
-  gsl_matrix_set(m, 1, 2, 0.0003885752566316025 * (-eta_i + eta_d) * aux_var - 0.29818204724409453 * (1.27e-5 + Z) * a_f * rho_C);
-  gsl_matrix_set(m, 1, 3, (-0.0003885752566316025 * (-eta_i + eta_d) * m_f * rho_C) / (2 * aux_var));
+                 0.29818204724409453 * (-y[1] - y[2]) * (1.27e-5 + Z) * rho_C - 0.29818204724409453 * (1.27e-5 + Z) * y[1] * rho_C);
+  gsl_matrix_set(m, 1, 2, 0.0003885752566316025 * (-eta_i + eta_d) * aux_var - 0.29818204724409453 * (1.27e-5 + Z) * y[1] * rho_C);
+  gsl_matrix_set(m, 1, 3, (-0.0003885752566316025 * (-eta_i + eta_d) * y[2] * rho_C) / (2 * aux_var));
 
   gsl_matrix_set(m, 2, 0, 0);
   gsl_matrix_set(m, 2, 1,
-                 0.29818204724409453 * (a_f + m_f) * (1.27e-5 + Z) * rho_C + 0.29818204724409453 * (1.27e-5 + Z) * a_f * rho_C);
-  gsl_matrix_set(m, 2, 2, 0.0003885752566316025 * (-1 - eta_d) * aux_var + 0.29818204724409453 * (1.27e-5 + Z) * a_f * rho_C);
-  gsl_matrix_set(m, 2, 3, (-0.0003885752566316025 * (-1 - eta_d) * m_f * rho_C) / (2 * aux_var));
+                 0.29818204724409453 * (y[1] + y[2]) * (1.27e-5 + Z) * rho_C + 0.29818204724409453 * (1.27e-5 + Z) * y[1] * rho_C);
+  gsl_matrix_set(m, 2, 2, 0.0003885752566316025 * (-1 - eta_d) * aux_var + 0.29818204724409453 * (1.27e-5 + Z) * y[1] * rho_C);
+  gsl_matrix_set(m, 2, 3, (-0.0003885752566316025 * (-1 - eta_d) * y[2] * rho_C) / (2 * aux_var));
 
   gsl_matrix_set(m, 3, 0, 0);
   gsl_matrix_set(m, 3, 1, 0);
   gsl_matrix_set(m, 3, 2, 0.0003885752566316025 * (1 - R) * aux_var);
-  gsl_matrix_set(m, 3, 3, (-0.0003885752566316025 * (1 - R) * m_f * rho_C) / (2 * aux_var));
+  gsl_matrix_set(m, 3, 3, (-0.0003885752566316025 * (1 - R) * y[2] * rho_C) / (2 * aux_var));
 
   dfdt[0] = 0;
   dfdt[1] = 0;
@@ -469,17 +459,56 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
 #endif /* #ifdef TESTING */
 {
   /* Initial conditions */
-  fractions[0] = ic[0];
-  fractions[1] = ic[1];
-  fractions[2] = ic[2];
-  fractions[3] = ic[3];
-  double t0    = 0.0;
+  double i_f = ic[0];
+  double a_f = ic[1];
+  double m_f = ic[2];
+  double s_f = ic[3];
+
+  /* Check that none of the input is too negative */
+  if(i_f < -1e-9 || a_f < -1e-9 || m_f < -1e-9 || s_f < -1e-9)
+    {
+      terminate("Error: Unbalanced equations: \nif = %.9lf, af = %.9lf, mf = %.9lf, sf = %.9lf", i_f, a_f, m_f, s_f);
+    }
+
+  /* Set to 0 the ones negative by numerical error */
+  i_f = fmax(0.0, i_f);
+  a_f = fmax(0.0, a_f);
+  m_f = fmax(0.0, m_f);
+  s_f = fmax(0.0, s_f);
+
+  /* Renormalize IC */
+  double total = i_f + a_f + m_f + s_f;
+  fractions[0] = i_f / total;
+  fractions[1] = a_f / total;
+  fractions[2] = m_f / total;
+  fractions[3] = s_f / total;
+
+  double t0 = 0.0;
 
   gsl_odeiv2_system sys     = {sf_ode, jacobian, N_EQU, parameters};
-  gsl_odeiv2_driver *driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_rk4imp, it * 1e-3, 1e-6, 0.0);
+  gsl_odeiv2_driver *driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_msbdf, it * 1e-3, 1e-8, 0.0);
 
   gsl_odeiv2_driver_apply(driver, &t0, it, fractions);
   gsl_odeiv2_driver_free(driver);
+
+  /* Check that none of the output is too negative */
+  if(fractions[0] < -1e-9 || fractions[1] < -1e-9 || fractions[2] < -1e-9 || fractions[3] < -1e-9)
+    {
+      terminate("Error: Unbalanced equations: \nif = %.9lf, af = %.9lf, mf = %.9lf, sf = %.9lf", i_f, a_f, m_f, s_f);
+    }
+
+  /* Set to 0 the ones negative by numerical error */
+  fractions[0] = fmax(0.0, fractions[0]);
+  fractions[1] = fmax(0.0, fractions[1]);
+  fractions[2] = fmax(0.0, fractions[2]);
+  fractions[3] = fmax(0.0, fractions[3]);
+
+  /* Renormalize IC */
+  double total = fractions[0] + fractions[1] + fractions[2] + fractions[3];
+  fractions[0] /= total;
+  fractions[1] /= total;
+  fractions[2] /= total;
+  fractions[3] /= total;
 }
 
 #ifndef TESTING
@@ -595,29 +624,33 @@ double rate_of_star_formation(const int index)
    * Compute the initial conditions
    *************************************************************************************************/
 
-  /* Ionized gas mass fraction [dimensionless] */
-  double i_f = 0.0;
-  get_ionized_fraction(index, &i_f);
+  double i_f, a_f, m_f, s_f;
+
   if(!isnan(SphP[index].ODE_fractions[0]) && delta_time < SphP[index].tau_S)
     {
+      /* Ionized gas mass fraction [dimensionless] */
       i_f = SphP[index].ODE_fractions[0];
-    }
-
-  /* Atomic gas mass fraction [dimensionless] */
-  double a_f = 1.0 - i_f;
-  if(!isnan(SphP[index].ODE_fractions[1]) && delta_time < SphP[index].tau_S)
-    {
+      /* Atomic gas mass fraction [dimensionless] */
       a_f = SphP[index].ODE_fractions[1];
-    }
-
-  /* Molecular gas mass fraction [dimensionless] */
-  double m_f = 0.0;
-  if(!isnan(SphP[index].ODE_fractions[2]) && delta_time < SphP[index].tau_S)
-    {
+      /* Molecular gas mass fraction [dimensionless] */
       m_f = SphP[index].ODE_fractions[2];
+      /* Stellar mass fraction [dimensionless] */
+      s_f = SphP[index].ODE_fractions[3];
+    }
+  else
+    {
+      /* Ionized gas mass fraction [dimensionless] */
+      i_f = 0.0;
+      get_ionized_fraction(index, &i_f);
+      /* Atomic gas mass fraction [dimensionless] */
+      a_f = 1.0 - i_f;
+      /* Molecular gas mass fraction [dimensionless] */
+      m_f = 0.0;
+      /* Stellar mass fraction [dimensionless] */
+      s_f = 0.0;
     }
 
-  const double ic[] = {i_f, a_f, m_f, fmax(0.0, 1.0 - i_f - a_f - m_f)};
+  const double ic[] = {i_f, a_f, m_f, s_f};
 
   /*************************************************************************************************
    * Integrate the ODEs
@@ -626,7 +659,7 @@ double rate_of_star_formation(const int index)
   double fractions[4] = {0.0};
   integrate_ode(ic, parameters, integration_time, fractions);
 
-  /* Store the time scale of parameter star formation (τS) */
+  /* Store the star formation time scale (τS) */
   SphP[index].tau_S = ODE_CS / sqrt((1 - fractions[3]) * rhoC);
 
   /* Store the results after solving the ODEs */

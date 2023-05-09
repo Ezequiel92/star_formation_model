@@ -22,7 +22,7 @@ static char *R_TABLE_PATH     = "../code/src/ez_sfr/tables/R_Zsn.txt";
 #define N_EQU 4 /* Number of equations */
 #define ODE_CS 2.5735041e+03  /* [Myr * cm^(-3/2)] */
 #define ODE_CR 1.2187726e-01  /* [Myr * cm^(-3)] */
-#define ODE_CC 3.3536560e+00  /* [Myr * cm^(-3)] */
+#define ODE_CC 5.7491245e+00  /* [Myr * cm^(-3)] */
 #define ZEFF 1.2700e-05  /* 1e-3 Zₒ */
 #define AW 0.00  /* Weight of the atomic fraction in the computation of the SFR */         
 #define MW 1.00  /* Weight of the molecular fraction in the computation of the SFR */
