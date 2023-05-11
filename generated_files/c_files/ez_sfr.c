@@ -301,12 +301,12 @@ static double interpolate2D(double x, double y, const void *table)
  *
  *  Evaluate the four ODEs of the model, using the following variables:
  *
- *  Ionized gas fraction:    if(t) = ρi(t) / ρC --> y[0]
- *  Atomic gas fraction:     af(t) = ρa(t) / ρC --> y[1]
- *  Molecular gas fraction:  mf(t) = ρm(t) / ρC --> y[2]
- *  Stellar fraction:        sf(t) = ρs(t) / ρC --> y[3]
+ *  Ionized gas fraction:    fi(t) = Mi(t) / MC --> y[0]
+ *  Atomic gas fraction:     fa(t) = Ma(t) / MC --> y[1]
+ *  Molecular gas fraction:  fm(t) = Mm(t) / MC --> y[2]
+ *  Stellar fraction:        fs(t) = Ms(t) / MC --> y[3]
  *
- *  where ρC = ρi(t) + ρa(t) + ρm(t) + ρs(t) is the total density of the gas cell,
+ *  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) is the total density of the gas cell,
  *  and each equation has units of Myr^(-1).
  *
  *  \param[in] t Unused variable to comply with the `gsl_odeiv2_driver_alloc_y_new()` API.
@@ -338,8 +338,8 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
 
   /* Compute auxiliary equations */
   double tau_R           = ODE_CR / (y[0] * rho_C);
-  double tau_C           = ODE_CC / ((y[1] + y[2]) * rho_C * (Z + ZEFF));
-  double tau_S           = ODE_CS / sqrt((1 - y[3]) * rho_C);
+  double tau_C           = ODE_CC / (rho_C * (Z + ZEFF) * (y[1] / XA + y[2] / XM));
+  double tau_S           = ODE_CS / sqrt((y[1] / XA + y[2] / XM) * rho_C);
   double recombination   = y[0] / tau_R;
   double cloud_formation = y[1] / tau_C;
   double sfr             = (AW * y[1] + MW * y[2]) / tau_S;
@@ -357,12 +357,12 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
  *
  *  Evaluate the Jacobian matrix of the model, using the following variables:
  *
- *  Ionized gas fraction:    if(t) = ρi(t) / ρC --> y[0]
- *  Atomic gas fraction:     af(t) = ρa(t) / ρC --> y[1]
- *  Molecular gas fraction:  mf(t) = ρm(t) / ρC --> y[2]
- *  Stellar fraction:        sf(t) = ρs(t) / ρC --> y[3]
+ *  Ionized gas fraction:    fi(t) = Mi(t) / MC --> y[0]
+ *  Atomic gas fraction:     fa(t) = Ma(t) / MC --> y[1]
+ *  Molecular gas fraction:  fm(t) = Mm(t) / MC --> y[2]
+ *  Stellar fraction:        fs(t) = Ms(t) / MC --> y[3]
  *
- *  where ρC = ρi(t) + ρa(t) + ρm(t) + ρs(t) is the total density of the gas cell,
+ *  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) is the total density of the gas cell,
  *  and each equation has units of Myr^(-1).
  *
  *  \param[in] t Unused variable to comply with the `gsl_odeiv2_driver_alloc_y_new()` API.
@@ -396,29 +396,38 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
   gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 4, 4);
   gsl_matrix *m            = &dfdy_mat.matrix;
 
-  double aux_var = sqrt((1.0 - y[3]) * rho_C);
+  double aux_var = sqrt((1e2 * y[1] + 1e5 * y[2]) * rho_C);
 
-  gsl_matrix_set(m, 0, 0, -16.346836800000002 * y[0] * rho_C);
-  gsl_matrix_set(m, 0, 1, 0);
-  gsl_matrix_set(m, 0, 2, 0.0003885752566316025 * (eta_i + R) * aux_var);
-  gsl_matrix_set(m, 0, 3, (-0.0003885752566316025 * (eta_i + R) * y[2] * rho_C) / (2 * aux_var));
+  gsl_matrix_set(m, 0, 0, -0.16409952000000003 * y[0] * rho_C);
+  gsl_matrix_set(m, 0, 1, (0.03885752566316025 * (eta_i + R) * y[2] * rho_C) / (2 * aux_var));
+  gsl_matrix_set(m, 0, 2,
+                 (38.857525663160246 * (eta_i + R) * y[2] * rho_C) / (2 * aux_var) + 0.0003885752566316025 * (eta_i + R) * aux_var);
+  gsl_matrix_set(m, 0, 3, 0);
 
-  gsl_matrix_set(m, 1, 0, 16.346836800000002 * y[0] * rho_C);
+  gsl_matrix_set(m, 1, 0, 0.16409952000000003 * y[0] * rho_C);
   gsl_matrix_set(m, 1, 1,
-                 0.29818204724409453 * (-y[1] - y[2]) * (1.27e-5 + Z) * rho_C - 0.29818204724409453 * (1.27e-5 + Z) * y[1] * rho_C);
-  gsl_matrix_set(m, 1, 2, 0.0003885752566316025 * (-eta_i + eta_d) * aux_var - 0.29818204724409453 * (1.27e-5 + Z) * y[1] * rho_C);
-  gsl_matrix_set(m, 1, 3, (-0.0003885752566316025 * (-eta_i + eta_d) * y[2] * rho_C) / (2 * aux_var));
+                 (0.03885752566316025 * (-eta_i + eta_d) * y[2] * rho_C) / (2 * aux_var) -
+                     0.017393952755905513 * (1.27e-5 + Z) * y[1] * rho_C +
+                     0.00017393952755905513 * (-100.0 * y[1] - 99999.99999999999 * y[2]) * (1.27e-5 + Z) * rho_C);
+  gsl_matrix_set(m, 1, 2,
+                 (38.857525663160246 * (-eta_i + eta_d) * y[2] * rho_C) / (2 * aux_var) +
+                     0.0003885752566316025 * (-eta_i + eta_d) * aux_var - 17.39395275590551 * (1.27e-5 + Z) * y[1] * rho_C);
+  gsl_matrix_set(m, 1, 3, 0);
 
   gsl_matrix_set(m, 2, 0, 0);
   gsl_matrix_set(m, 2, 1,
-                 0.29818204724409453 * (y[1] + y[2]) * (1.27e-5 + Z) * rho_C + 0.29818204724409453 * (1.27e-5 + Z) * y[1] * rho_C);
-  gsl_matrix_set(m, 2, 2, 0.0003885752566316025 * (-1 - eta_d) * aux_var + 0.29818204724409453 * (1.27e-5 + Z) * y[1] * rho_C);
-  gsl_matrix_set(m, 2, 3, (-0.0003885752566316025 * (-1 - eta_d) * y[2] * rho_C) / (2 * aux_var));
+                 (0.03885752566316025 * (-1 - eta_d) * y[2] * rho_C) / (2 * aux_var) +
+                     0.00017393952755905513 * (100.0 * y[1] + 99999.99999999999 * y[2]) * (1.27e-5 + Z) * rho_C +
+                     0.017393952755905513 * (1.27e-5 + Z) * y[1] * rho_C);
+  gsl_matrix_set(m, 2, 2,
+                 (38.857525663160246 * (-1 - eta_d) * y[2] * rho_C) / (2 * aux_var) + 0.0003885752566316025 * (-1 - eta_d) * aux_var +
+                     17.39395275590551 * (1.27e-5 + Z) * y[1] * rho_C);
+  gsl_matrix_set(m, 2, 3, 0);
 
   gsl_matrix_set(m, 3, 0, 0);
-  gsl_matrix_set(m, 3, 1, 0);
-  gsl_matrix_set(m, 3, 2, 0.0003885752566316025 * (1 - R) * aux_var);
-  gsl_matrix_set(m, 3, 3, (-0.0003885752566316025 * (1 - R) * y[2] * rho_C) / (2 * aux_var));
+  gsl_matrix_set(m, 3, 1, (0.03885752566316025 * (1 - R) * y[2] * rho_C) / (2 * aux_var));
+  gsl_matrix_set(m, 3, 2, (38.857525663160246 * (1 - R) * y[2] * rho_C) / (2 * aux_var) + 0.0003885752566316025 * (1 - R) * aux_var);
+  gsl_matrix_set(m, 3, 3, 0);
 
   dfdt[0] = 0;
   dfdt[1] = 0;
@@ -432,10 +441,10 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
  *
  * ICs:
  *
- * i0: Ionized gas fraction   [dimensionless]
- * a0: Atomic gas fraction    [dimensionless]
- * m0: Molecular gas fraction [dimensionless]
- * s0: Stellar fraction       [dimensionless]
+ * fi: Ionized gas fraction   [dimensionless]
+ * fa: Atomic gas fraction    [dimensionless]
+ * fm: Molecular gas fraction [dimensionless]
+ * fs: Stellar fraction       [dimensionless]
  *
  * Parameters
  *
@@ -459,43 +468,52 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
 #endif /* #ifdef TESTING */
 {
   /* Initial conditions */
-  double i_f = ic[0];
-  double a_f = ic[1];
-  double m_f = ic[2];
-  double s_f = ic[3];
+  double fi = ic[0];
+  double fa = ic[1];
+  double fm = ic[2];
+  double fs = ic[3];
 
+#ifndef TESTING
   /* Check that none of the input is too negative */
-  if(i_f < -1e-9 || a_f < -1e-9 || m_f < -1e-9 || s_f < -1e-9)
+  if(fi < -1e-9 || fa < -1e-9 || fm < -1e-9 || fs < -1e-9)
     {
-      terminate("Error: Unbalanced equations: \nif = %.9lf, af = %.9lf, mf = %.9lf, sf = %.9lf", i_f, a_f, m_f, s_f);
+      terminate("Error: Unbalanced equations: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf", fi, fa, fm, fs);
     }
+#endif /* #ifndef TESTING */
 
   /* Set to 0 the ones negative by numerical error */
-  i_f = fmax(0.0, i_f);
-  a_f = fmax(0.0, a_f);
-  m_f = fmax(0.0, m_f);
-  s_f = fmax(0.0, s_f);
+  fi = fmax(0.0, fi);
+  fa = fmax(0.0, fa);
+  fm = fmax(0.0, fm);
+  fs = fmax(0.0, fs);
 
   /* Renormalize IC */
-  double total = i_f + a_f + m_f + s_f;
-  fractions[0] = i_f / total;
-  fractions[1] = a_f / total;
-  fractions[2] = m_f / total;
-  fractions[3] = s_f / total;
+  double total = fi + fa + fm + fs;
+  fractions[0] = fi / total;
+  fractions[1] = fa / total;
+  fractions[2] = fm / total;
+  fractions[3] = fs / total;
 
   double t0 = 0.0;
 
   gsl_odeiv2_system sys     = {sf_ode, jacobian, N_EQU, parameters};
   gsl_odeiv2_driver *driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_msbdf, it * 1e-3, 1e-8, 0.0);
 
-  gsl_odeiv2_driver_apply(driver, &t0, it, fractions);
+  int status = gsl_odeiv2_driver_apply(driver, &t0, it, fractions);
   gsl_odeiv2_driver_free(driver);
+
+#ifndef TESTING
+  if(status != GSL_SUCCESS)
+    {
+      terminate("GSL error: Could not integrate, status = %d\n", status);
+    }
 
   /* Check that none of the output is too negative */
   if(fractions[0] < -1e-9 || fractions[1] < -1e-9 || fractions[2] < -1e-9 || fractions[3] < -1e-9)
     {
-      terminate("Error: Unbalanced equations: \nif = %.9lf, af = %.9lf, mf = %.9lf, sf = %.9lf", i_f, a_f, m_f, s_f);
+      terminate("Error: Unbalanced equations: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf", fi, fa, fm, fs);
     }
+#endif /* #ifndef TESTING */
 
   /* Set to 0 the ones negative by numerical error */
   fractions[0] = fmax(0.0, fractions[0]);
@@ -504,7 +522,7 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
   fractions[3] = fmax(0.0, fractions[3]);
 
   /* Renormalize IC */
-  double total = fractions[0] + fractions[1] + fractions[2] + fractions[3];
+  total = fractions[0] + fractions[1] + fractions[2] + fractions[3];
   fractions[0] /= total;
   fractions[1] /= total;
   fractions[2] /= total;
@@ -624,33 +642,33 @@ double rate_of_star_formation(const int index)
    * Compute the initial conditions
    *************************************************************************************************/
 
-  double i_f, a_f, m_f, s_f;
+  double fi, fa, fm, fs;
 
   if(!isnan(SphP[index].ODE_fractions[0]) && delta_time < SphP[index].tau_S)
     {
       /* Ionized gas mass fraction [dimensionless] */
-      i_f = SphP[index].ODE_fractions[0];
+      fi = SphP[index].ODE_fractions[0];
       /* Atomic gas mass fraction [dimensionless] */
-      a_f = SphP[index].ODE_fractions[1];
+      fa = SphP[index].ODE_fractions[1];
       /* Molecular gas mass fraction [dimensionless] */
-      m_f = SphP[index].ODE_fractions[2];
+      fm = SphP[index].ODE_fractions[2];
       /* Stellar mass fraction [dimensionless] */
-      s_f = SphP[index].ODE_fractions[3];
+      fs = SphP[index].ODE_fractions[3];
     }
   else
     {
       /* Ionized gas mass fraction [dimensionless] */
-      i_f = 0.0;
-      get_ionized_fraction(index, &i_f);
+      fi = 0.0;
+      get_ionized_fraction(index, &fi);
       /* Atomic gas mass fraction [dimensionless] */
-      a_f = 1.0 - i_f;
+      fa = 1.0 - fi;
       /* Molecular gas mass fraction [dimensionless] */
-      m_f = 0.0;
+      fm = 0.0;
       /* Stellar mass fraction [dimensionless] */
-      s_f = 0.0;
+      fs = 0.0;
     }
 
-  const double ic[] = {i_f, a_f, m_f, s_f};
+  const double ic[] = {fi, fa, fm, fs};
 
   /*************************************************************************************************
    * Integrate the ODEs
