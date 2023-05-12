@@ -591,7 +591,7 @@ $\begin{align}
     &= \alpha_H(T) \, f_i^{\,2} \, \frac{\rho_C}{m_p} \, \frac{x_a}{x_i^{\,2}}  \, .
 \end{align}$
 
-We can readily find fits for $\alpha_H(T)$ in the literature ([Seaton1959](https://doi.org/10.1093/mnras/119.2.81), [Black1981](https://doi.org/10.1093/mnras/197.3.553), [Verner1996](https://doi.org/10.1086/192284) and [Osterbrock2006](http://www.worldcat.org/oclc/60611705)), in particular if we take $T = 10^4 \, \mathrm{K}$ for the ionized phase, and ignore transitions to the ground state we get
+We can readily find fits for $\alpha_H(T)$ in the literature ([Seaton1959](https://doi.org/10.1093/mnras/119.2.81), [Black1981](https://doi.org/10.1093/mnras/197.3.553), [Verner1996](https://doi.org/10.1086/192284) and [Osterbrock2006](http://www.worldcat.org/oclc/60611705)), in particular if we take $T = 10^4 \, \mathrm{K}$ for the ionized phase, and use case B recombination (assuming an optically thick cloud [Nebrin2023](https://doi.org/10.48550/arXiv.2305.05764)), we get
 
 $\begin{align}
     \alpha_H(10^4 \, \mathrm{K}) = \alpha_H = 2.6 \times 10^{-13} \, \mathrm{cm}^3 \, \mathrm{s}^{-1} \, .
