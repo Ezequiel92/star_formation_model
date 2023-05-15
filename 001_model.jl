@@ -362,7 +362,7 @@ TikzPicture(
 	\begin{aligned}
 		\dv{}{t}f_i(t) &= - \textcolor{d_pink}{\frac{f_i(t)}{\tau_R(t)}} + \textcolor{d_blue}{\eta_\text{ion} \, \psi(t)} + \textcolor{d_yellow}{R \, \psi(t)} \, , \\
 		\dv{}{t}f_a(t) &= \textcolor{d_pink}{\frac{f_i(t)}{\tau_R(t)}} - \textcolor{d_blue}{\eta_\text{ion} \, \psi(t)} - \textcolor{d_orange}{\frac{f_a(t)}{\tau_C(t)}} + \textcolor{d_green}{\eta_\text{diss} \, \psi(t)} \, , \\
-		\dv{}{t}f_a(t) &= \textcolor{d_orange}{\frac{f_a(t)}{\tau_C(t)}} - \textcolor{d_green}{\eta_\text{diss} \, \psi(t)} - \textcolor{red}{\psi} \, , \\
+		\dv{}{t}f_m(t) &= \textcolor{d_orange}{\frac{f_a(t)}{\tau_C(t)}} - \textcolor{d_green}{\eta_\text{diss} \, \psi(t)} - \textcolor{red}{\psi} \, , \\
 		\dv{}{t}f_s(t) &= \textcolor{red}{\psi(t)} - \textcolor{d_yellow}{R \, \psi(t)} \, ,
 	\end{aligned}}$
 	};
@@ -600,13 +600,13 @@ $\begin{align}
 So, we finally write
 
 $\begin{equation}
-    \frac{d}{dt} f_a \biggr\rvert_\mathrm{recomb.} = \alpha_H \, f_i^{\,2} \, \frac{\rho_C}{m_p} \, \frac{x_a}{x_i^{\,2}} = \frac{i_f}{\tau_R} \, , 
+    \frac{d}{dt} f_a \biggr\rvert_\mathrm{recomb.} = \alpha_H \, f_i^{\,2} \, \frac{\rho_C}{m_p} \, \frac{x_a}{x_i^{\,2}} = \frac{f_i}{\tau_R} \, , 
 \end{equation}$
 
 where we defined the time scale
 
 $\begin{equation}
-    \tau_R = \frac{m_p \, x_i^{\,2}}{\alpha_H \, i_f \, \rho_C \, x_a} = \frac{C_R}{i_f \, \rho_C} \, , 
+    \tau_R = \frac{m_p \, x_i^{\,2}}{\alpha_H \, f_i \, \rho_C \, x_a} = \frac{C_R}{f_i \, \rho_C} \, , 
 \end{equation}$
 
 with the constant
@@ -659,9 +659,6 @@ let
 	f
 end
   ╠═╡ =#
-
-# ╔═╡ de5d0742-12cf-4cc0-8bd4-b7e2de29df46
-
 
 # ╔═╡ 4a7eb24b-0874-49a3-9b08-4ffb6a7f0ce7
 # ╠═╡ skip_as_script = true
@@ -3881,7 +3878,6 @@ version = "3.5.0+0"
 # ╠═00030fd8-a9db-4903-b2ed-21a64db30588
 # ╠═d4f91aa3-183a-4abf-8f7a-7a05d4333e3a
 # ╟─7e824ce1-1f82-48cc-a3c4-1acfba0e2100
-# ╠═de5d0742-12cf-4cc0-8bd4-b7e2de29df46
 # ╟─4a7eb24b-0874-49a3-9b08-4ffb6a7f0ce7
 # ╠═f2a6676f-457a-476a-9ce7-c336aa9bf47f
 # ╠═1734df7f-1309-4ebd-a021-5f75f0bb78b2
