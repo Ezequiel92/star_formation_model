@@ -47,17 +47,18 @@ In [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) it is first develope
 
 | Reference     | Code | 
 |:-------------:|:----:| 
-| [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Gnedin2011](https://doi.org/10.1088/0004-637X/728/2/88) | [ART](https://doi.org/10.1086/313015) | 
-| [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) | [GASOLINE](https://doi.org/10.1016/j.newast.2003.08.004) |
-| [Tomassetti2014](https://doi.org/10.1093/mnras/stu2273) | [RAMSES](https://doi.org/10.1051/0004-6361:20011817) | 
-| [Baczynski2015](https://doi.org/10.1093/mnras/stv1906) | [FLASH4](https://doi.org/10.1086/317361) | 
-| [Richings2016](https://doi.org/10.1093/mnras/stw327) | [GADGET3](https://doi.org/10.1111/j.1365-2966.2005.09655.x) | 
-| [Hu2016](https://doi.org/10.1093/mnras/stw544) | [GADGET3](https://doi.org/10.1111/j.1365-2966.2005.09655.x) | 
-| [Katz2017](https://doi.org/10.1093/mnras/stx608) | [RAMSES-RT](https://doi.org/10.1093/mnras/stt1722) | 
-| [Pallottini2017](https://doi.org/10.1093/mnras/stx608) | [RAMSES](	https://doi.org/10.1051/0004-6361:20011817) | 
-| [Lupi2017](https://doi.org/10.1093/mnras/stx2874) | [GASOLINE2](https://doi.org/10.1093/mnras/stx1643) | 
-| [Capelo2018](https://doi.org/10.1093/mnras/stx3355) | [GIZMO](https://doi.org/10.1093/mnras/stv195) | 
-| [Nickerson2018](https://doi.org/10.1093/mnras/sty1556) and [Nickerson2019](https://doi.org/10.1093/mnras/stz048) | [RAMSES-RT](https://doi.org/10.1093/mnras/stt1722) | 
+| [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Gnedin2011](https://doi.org/10.1088/0004-637X/728/2/88) | $\texttt{ART}$ [Kravtsov1997](https://doi.org/10.1086/313015) | 
+| [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) | $\texttt{GASOLINE}$ ([Wadsley2004](https://doi.org/10.1016/j.newast.2003.08.004)) |
+| [Tomassetti2014](https://doi.org/10.1093/mnras/stu2273) | $\texttt{RAMSES}$ [Teyssier2001](https://doi.org/10.1051/0004-6361:20011817) | 
+| [Baczynski2015](https://doi.org/10.1093/mnras/stv1906) | $\texttt{FLASH4}$ [Fryxell2000](https://doi.org/10.1086/317361) | 
+| [Richings2016](https://doi.org/10.1093/mnras/stw327) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) | 
+| [Hu2016](https://doi.org/10.1093/mnras/stw544) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) | 
+| [Katz2017](https://doi.org/10.1093/mnras/stx608) | $\texttt{RAMSES-RT}$ [Rosdahl2013](https://doi.org/10.1093/mnras/stt1722) | 
+| [Pallottini2017](https://doi.org/10.1093/mnras/stx608) | $\texttt{RAMSES}$ [Teyssier2001](https://doi.org/10.1051/0004-6361:20011817) | 
+| [Lupi2017](https://doi.org/10.1093/mnras/stx2874) | $\texttt{GASOLINE2}$ [Wadsley2017](https://doi.org/10.1093/mnras/stx1643) | 
+| [Capelo2018](https://doi.org/10.1093/mnras/stx3355) | $\texttt{GIZMO}$ [Hopkins2015](https://doi.org/10.1093/mnras/stv195) | 
+| [Nickerson2018](https://doi.org/10.1093/mnras/sty1556) and [Nickerson2019](https://doi.org/10.1093/mnras/stz048) | $\texttt{RAMSES-RT}$ [Rosdahl2013](https://doi.org/10.1093/mnras/stt1722) | 
+| [Sillero2021](https://doi.org/10.1093/mnras/stab1015) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) |
 
 As an alternative to the computationally expensive radiative transfer process, semi analytical models (SAM) for the multiphase structure of the interstellar medium (MP ISM) have been develop. Broadly, there are two ways to model the MP ISM, one is based on the physical properties of the gas (hot and cold phases), and the other on its chemical composition (hydrogen phases). 
 
@@ -3868,7 +3869,7 @@ version = "3.5.0+0"
 # ╟─08df960b-fd82-43ba-a9dc-bf5e83af587e
 # ╟─cbd51460-8ef0-49eb-8219-14986d8421e4
 # ╟─5814a7b3-8420-4a57-a2a2-d8c59db29a99
-# ╟─8eb6540d-f5b0-45e6-883c-0cc213e67e45
+# ╠═8eb6540d-f5b0-45e6-883c-0cc213e67e45
 # ╟─a842b24e-8d26-41ab-9de3-91632aede893
 # ╠═dadc3e3a-ebe7-4f13-a03b-ab988094321a
 # ╟─64787011-b5b8-42be-b6e4-37ebc5138b3e
