@@ -1627,13 +1627,13 @@ end;
 
 # ╔═╡ 806db782-1734-4112-ab7b-84e03f4c342d
 ######################################################################################
-# Compute the stiffness coefficient
+# Compute the stiffness_ratio
 # 
 # ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
 # base_parms: Parameters, (ρ, Z, it)
 ######################################################################################
 
-function stiffness_coefficient(
+function stiffness_ratio(
 	ic::Vector{Float64},
 	base_params::NTuple{3,Float64},
 )::Float64
@@ -1662,7 +1662,7 @@ end;
 # ╔═╡ 1743b6dc-0a4e-4a02-90fe-3bc47833421a
 # ╠═╡ skip_as_script = true
 #=╠═╡
-stiffness_coefficient(
+stiffness_ratio(
 	[0.8, 0.2, 0.0, 0.0], # Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
 	(1000.0, 0.01, 6.0),  # Parameters for the ODEs, (ρ, Z, it) 
 )
@@ -2139,9 +2139,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "5eeb2bd01e5065090ad591a205d8cad432ae6cb6"
+git-tree-sha1 = "aa8ae1e8e8d4b5ef38a8fbc028fc75f3c5cad73d"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.93"
+version = "0.25.94"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -2332,9 +2332,9 @@ uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
 [[deps.GPUArraysCore]]
 deps = ["Adapt"]
-git-tree-sha1 = "1cd7f0af1aa58abc02ea1d872953a97359cb87fa"
+git-tree-sha1 = "2d6ca471a6c7b536127afccfa7564b5b39227fe0"
 uuid = "46192b85-c4d5-4398-a991-12ede77f4527"
-version = "0.1.4"
+version = "0.1.5"
 
 [[deps.GenericSchur]]
 deps = ["LinearAlgebra", "Printf"]
@@ -3296,9 +3296,9 @@ version = "0.1.0"
 
 [[deps.SLEEFPirates]]
 deps = ["IfElse", "Static", "VectorizationBase"]
-git-tree-sha1 = "cda0aece8080e992f6370491b08ef3909d1c04e7"
+git-tree-sha1 = "4b8586aece42bee682399c4c4aee95446aa5cd19"
 uuid = "476501e8-09a2-5ece-8869-fb82de89a1fa"
-version = "0.6.38"
+version = "0.6.39"
 
 [[deps.ScanByte]]
 deps = ["Libdl", "SIMD"]
@@ -3308,9 +3308,9 @@ version = "0.3.3"
 
 [[deps.SciMLBase]]
 deps = ["ADTypes", "ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables", "TruncatedStacktraces"]
-git-tree-sha1 = "49ab908a8e1fd40e6b7c143eceeb6f24c28ebe16"
+git-tree-sha1 = "75552338dda481baeb9b9e171f73ecd0171e8f34"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "1.92.1"
+version = "1.92.2"
 
 [[deps.SciMLNLSolve]]
 deps = ["DiffEqBase", "LineSearches", "NLsolve", "Reexport", "SciMLBase"]
@@ -3320,9 +3320,9 @@ version = "0.1.6"
 
 [[deps.SciMLOperators]]
 deps = ["ArrayInterface", "DocStringExtensions", "Lazy", "LinearAlgebra", "Setfield", "SparseArrays", "StaticArraysCore", "Tricks"]
-git-tree-sha1 = "90163ebc767cba9f126ea00aeef1d75ed74fe7b0"
+git-tree-sha1 = "d9f0f6ce9bb899a657c4d218a846533910e9dea9"
 uuid = "c0aeaf25-5076-4817-a8d5-81caf7dfa961"
-version = "0.2.8"
+version = "0.2.9"
 
 [[deps.Scratch]]
 deps = ["Dates"]
@@ -3869,7 +3869,7 @@ version = "3.5.0+0"
 # ╟─08df960b-fd82-43ba-a9dc-bf5e83af587e
 # ╟─cbd51460-8ef0-49eb-8219-14986d8421e4
 # ╟─5814a7b3-8420-4a57-a2a2-d8c59db29a99
-# ╠═8eb6540d-f5b0-45e6-883c-0cc213e67e45
+# ╟─8eb6540d-f5b0-45e6-883c-0cc213e67e45
 # ╟─a842b24e-8d26-41ab-9de3-91632aede893
 # ╠═dadc3e3a-ebe7-4f13-a03b-ab988094321a
 # ╟─64787011-b5b8-42be-b6e4-37ebc5138b3e
