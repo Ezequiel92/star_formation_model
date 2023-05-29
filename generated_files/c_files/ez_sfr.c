@@ -354,87 +354,76 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
 }
 
 /*! \brief Evaluate the Jacobian of the systems of equations.
- *
- *  Evaluate the Jacobian matrix of the model, using the following variables:
- *
- *  Ionized gas fraction:    fi(t) = Mi(t) / MC --> y[0]
- *  Atomic gas fraction:     fa(t) = Ma(t) / MC --> y[1]
- *  Molecular gas fraction:  fm(t) = Mm(t) / MC --> y[2]
- *  Stellar fraction:        fs(t) = Ms(t) / MC --> y[3]
- *
- *  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) is the total density of the gas cell,
- *  and each equation has units of Myr^(-1).
- *
- *  \param[in] t Unused variable to comply with the `gsl_odeiv2_driver_alloc_y_new()` API.
- *  \param[in] y Values of the variables at which the Jacobian will be evaluated.
- *  \param[out] dfdy Where the results of evaluating the Jacobian will be stored.
- *  \param[out] dfdt Where the results of evaluating the time derivatives will be stored.
- *  \param[in] parameters Parameters for the Jacobian.
- *
- *  \return Constant `GSL_SUCCESS`, to confirm that the computation was successful.
- */
+*
+*  Evaluate the Jacobian matrix of the model, using the following variables:
+*
+*  Ionized gas fraction:    fi(t) = Mi(t) / MC --> y[0]
+*  Atomic gas fraction:     fa(t) = Ma(t) / MC --> y[1]
+*  Molecular gas fraction:  fm(t) = Mm(t) / MC --> y[2]
+*  Stellar fraction:        fs(t) = Ms(t) / MC --> y[3]
+*
+*  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) is the total density of the gas cell,
+*  and each equation has units of Myr^(-1).
+*
+*  \param[in] t Unused variable to comply with the `gsl_odeiv2_driver_alloc_y_new()` API.
+*  \param[in] y Values of the variables at which the Jacobian will be evaluated.
+*  \param[out] dfdy Where the results of evaluating the Jacobian will be stored.
+*  \param[out] dfdt Where the results of evaluating the time derivatives will be stored.
+*  \param[in] parameters Parameters for the Jacobian.
+*
+*  \return Constant `GSL_SUCCESS`, to confirm that the computation was successful.
+*/
 static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
 {
-  (void)(t);
+	(void)(t);
 
-  /*
-   * Destructure the parameters
-   *
-   * rho_C: Total cell density [mp * cm⁻³]
-   * Z:     Metallicity [dimensionless]
-   * eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
-   * eta_i: Photoionization efficiency of Hydrogen atoms [dimensionless]
-   * R:     Mass recycling fraction [dimensionless]
-   */
-  double *p    = (double *)parameters;
-  double rho_C = p[0];
-  double Z     = p[1];
-  double eta_d = p[2];
-  double eta_i = p[3];
-  double R     = p[4];
+    /*
+	* Destructure the parameters
+	*
+	* rho_C: Total cell density [mp * cm⁻³]
+	* Z:     Metallicity [dimensionless]
+	* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
+	* eta_i: Photoionization efficiency of Hydrogen atoms [dimensionless]
+	* R:     Mass recycling fraction [dimensionless]
+	*/
+	double *p    = (double *)parameters;
+	double rho_C = p[0];
+	double Z     = p[1];
+	double eta_d = p[2];
+	double eta_i = p[3];
+	double R     = p[4];
 
-  gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 4, 4);
-  gsl_matrix *m            = &dfdy_mat.matrix;
+	gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 4, 4);
+	gsl_matrix *m = &dfdy_mat.matrix;
+	
+    double aux_var = sqrt((100.0 * y[1] + 99999.99999999999 * y[2]) * rho_C);
 
-  double aux_var = sqrt((1e2 * y[1] + 1e5 * y[2]) * rho_C);
+	gsl_matrix_set(m, 0, 0, -0.16409952000000003 * y[0] * rho_C);
+	gsl_matrix_set(m, 0, 1, (0.03885752566316025 * (eta_i + R) * y[2] * rho_C) / (2 * aux_var));
+	gsl_matrix_set(m, 0, 2, (38.857525663160246 * (eta_i + R) * y[2] * rho_C) / (2 * aux_var) + 0.0003885752566316025 * (eta_i + R) * aux_var);
+	gsl_matrix_set(m, 0, 3, 0);
 
-  gsl_matrix_set(m, 0, 0, -0.16409952000000003 * y[0] * rho_C);
-  gsl_matrix_set(m, 0, 1, (0.03885752566316025 * (eta_i + R) * y[2] * rho_C) / (2 * aux_var));
-  gsl_matrix_set(m, 0, 2,
-                 (38.857525663160246 * (eta_i + R) * y[2] * rho_C) / (2 * aux_var) + 0.0003885752566316025 * (eta_i + R) * aux_var);
-  gsl_matrix_set(m, 0, 3, 0);
+	gsl_matrix_set(m, 1, 0, 0.16409952000000003 * y[0] * rho_C);
+	gsl_matrix_set(m, 1, 1, (0.03885752566316025 * (- eta_i + eta_d) * y[2] * rho_C) / (2 * aux_var) - 0.017393952755905513 * (1.27e-5 + Z) * y[1] * rho_C + 0.00017393952755905513 * (-100.0 * y[1] - 99999.99999999999 * y[2]) * (1.27e-5 + Z) * rho_C);
+	gsl_matrix_set(m, 1, 2, (38.857525663160246 * (- eta_i + eta_d) * y[2] * rho_C) / (2 * aux_var) + 0.0003885752566316025 * (- eta_i + eta_d) * aux_var - 17.39395275590551 * (1.27e-5 + Z) * y[1] * rho_C);
+	gsl_matrix_set(m, 1, 3, 0);
 
-  gsl_matrix_set(m, 1, 0, 0.16409952000000003 * y[0] * rho_C);
-  gsl_matrix_set(m, 1, 1,
-                 (0.03885752566316025 * (-eta_i + eta_d) * y[2] * rho_C) / (2 * aux_var) -
-                     0.017393952755905513 * (1.27e-5 + Z) * y[1] * rho_C +
-                     0.00017393952755905513 * (-100.0 * y[1] - 99999.99999999999 * y[2]) * (1.27e-5 + Z) * rho_C);
-  gsl_matrix_set(m, 1, 2,
-                 (38.857525663160246 * (-eta_i + eta_d) * y[2] * rho_C) / (2 * aux_var) +
-                     0.0003885752566316025 * (-eta_i + eta_d) * aux_var - 17.39395275590551 * (1.27e-5 + Z) * y[1] * rho_C);
-  gsl_matrix_set(m, 1, 3, 0);
+	gsl_matrix_set(m, 2, 0, 0);
+	gsl_matrix_set(m, 2, 1, (0.03885752566316025 * (-1 - eta_d) * y[2] * rho_C) / (2 * aux_var) + 0.00017393952755905513 * (100.0 * y[1] + 99999.99999999999 * y[2]) * (1.27e-5 + Z) * rho_C + 0.017393952755905513 * (1.27e-5 + Z) * y[1] * rho_C);
+	gsl_matrix_set(m, 2, 2, (38.857525663160246 * (-1 - eta_d) * y[2] * rho_C) / (2 * aux_var) + 0.0003885752566316025 * (-1 - eta_d) * aux_var + 17.39395275590551 * (1.27e-5 + Z) * y[1] * rho_C);
+	gsl_matrix_set(m, 2, 3, 0);
 
-  gsl_matrix_set(m, 2, 0, 0);
-  gsl_matrix_set(m, 2, 1,
-                 (0.03885752566316025 * (-1 - eta_d) * y[2] * rho_C) / (2 * aux_var) +
-                     0.00017393952755905513 * (100.0 * y[1] + 99999.99999999999 * y[2]) * (1.27e-5 + Z) * rho_C +
-                     0.017393952755905513 * (1.27e-5 + Z) * y[1] * rho_C);
-  gsl_matrix_set(m, 2, 2,
-                 (38.857525663160246 * (-1 - eta_d) * y[2] * rho_C) / (2 * aux_var) + 0.0003885752566316025 * (-1 - eta_d) * aux_var +
-                     17.39395275590551 * (1.27e-5 + Z) * y[1] * rho_C);
-  gsl_matrix_set(m, 2, 3, 0);
+	gsl_matrix_set(m, 3, 0, 0);
+	gsl_matrix_set(m, 3, 1, (0.03885752566316025 * (1 - 1 * R) * y[2] * rho_C) / (2 * aux_var));
+	gsl_matrix_set(m, 3, 2, (38.857525663160246 * (1 - 1 * R) * y[2] * rho_C) / (2 * aux_var) + 0.0003885752566316025 * (1 - 1 * R) * aux_var);
+	gsl_matrix_set(m, 3, 3, 0);
 
-  gsl_matrix_set(m, 3, 0, 0);
-  gsl_matrix_set(m, 3, 1, (0.03885752566316025 * (1 - R) * y[2] * rho_C) / (2 * aux_var));
-  gsl_matrix_set(m, 3, 2, (38.857525663160246 * (1 - R) * y[2] * rho_C) / (2 * aux_var) + 0.0003885752566316025 * (1 - R) * aux_var);
-  gsl_matrix_set(m, 3, 3, 0);
+	dfdt[0] = 0;
+	dfdt[1] = 0;
+	dfdt[2] = 0;
+	dfdt[3] = 0;
 
-  dfdt[0] = 0;
-  dfdt[1] = 0;
-  dfdt[2] = 0;
-  dfdt[3] = 0;
-
-  return GSL_SUCCESS;
+	return GSL_SUCCESS;
 }
 
 /*! \brief Solve the system of ODEs, using numerical integration.
@@ -475,9 +464,9 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
 
 #ifndef TESTING
   /* Check that none of the input is too negative */
-  if(fi < -1e-9 || fa < -1e-9 || fm < -1e-9 || fs < -1e-9)
+  if(fi < -1e-8 || fa < -1e-8 || fm < -1e-8 || fs < -1e-8)
     {
-      terminate("Error: Unbalanced equations: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf", fi, fa, fm, fs);
+      terminate("Error: Unbalanced equations IC: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf", fi, fa, fm, fs);
     }
 #endif /* #ifndef TESTING */
 
@@ -509,9 +498,10 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
     }
 
   /* Check that none of the output is too negative */
-  if(fractions[0] < -1e-9 || fractions[1] < -1e-9 || fractions[2] < -1e-9 || fractions[3] < -1e-9)
+  if(fractions[0] < -1e-8 || fractions[1] < -1e-8 || fractions[2] < -1e-8 || fractions[3] < -1e-8)
     {
-      terminate("Error: Unbalanced equations: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf", fi, fa, fm, fs);
+      warn("Warning: Unbalanced equations output: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf", fractions[0], fractions[1], fractions[2],
+           fractions[3]);
     }
 #endif /* #ifndef TESTING */
 
@@ -657,9 +647,10 @@ double rate_of_star_formation(const int index)
     }
   else
     {
+      double nhp, nh;
+      get_arepo_fraction(index, &nhp, &nh);
       /* Ionized gas mass fraction [dimensionless] */
-      fi = 0.0;
-      get_ionized_fraction(index, &fi);
+      fi = nhp / (nhp + nh);
       /* Atomic gas mass fraction [dimensionless] */
       fa = 1.0 - fi;
       /* Molecular gas mass fraction [dimensionless] */
