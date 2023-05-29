@@ -136,6 +136,156 @@ end;
 write_header_file(joinpath(C_FILES, "ez_sfr.h"))
   ╠═╡ =#
 
+# ╔═╡ 3a07b532-3228-42ff-96c3-87074e00f54f
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"## Jacobian"
+  ╠═╡ =#
+
+# ╔═╡ c7ff341d-0e9e-4e70-b10d-646a590740e8
+# ╠═╡ skip_as_script = true
+#=╠═╡
+######################################################################################
+# Write the Jacobian to the ez_sfr.c file in `path`
+######################################################################################
+
+function write_jacobian(path::String)::Nothing
+
+	# Boilerplate
+	head = """
+	\n*
+	*  Evaluate the Jacobian matrix of the model, using the following variables:
+	*
+	*  Ionized gas fraction:    fi(t) = Mi(t) / MC --> y[0]
+	*  Atomic gas fraction:     fa(t) = Ma(t) / MC --> y[1]
+	*  Molecular gas fraction:  fm(t) = Mm(t) / MC --> y[2]
+	*  Stellar fraction:        fs(t) = Ms(t) / MC --> y[3]
+	*
+	*  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) is the total density of the gas cell,
+	*  and each equation has units of Myr^(-1).
+	*
+	*  \\param[in] t Unused variable to comply with the `gsl_odeiv2_driver_alloc_y_new()` API.
+	*  \\param[in] y Values of the variables at which the Jacobian will be evaluated.
+	*  \\param[out] dfdy Where the results of evaluating the Jacobian will be stored.
+	*  \\param[out] dfdt Where the results of evaluating the time derivatives will be stored.
+	*  \\param[in] parameters Parameters for the Jacobian.
+	*
+	*  \\return Constant `GSL_SUCCESS`, to confirm that the computation was successful.
+	*/
+	static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
+	{
+		(void)(t);
+	
+	    /*
+		* Destructure the parameters
+		*
+		* rho_C: Total cell density [mp * cm⁻³]
+		* Z:     Metallicity [dimensionless]
+		* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
+		* eta_i: Photoionization efficiency of Hydrogen atoms [dimensionless]
+		* R:     Mass recycling fraction [dimensionless]
+		*/
+		double *p    = (double *)parameters;
+		double rho_C = p[0];
+		double Z     = p[1];
+		double eta_d = p[2];
+		double eta_i = p[3];
+		double R     = p[4];
+
+		gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, $(MODEL.N_EQU), $(MODEL.N_EQU));
+		gsl_matrix *m = &dfdy_mat.matrix;
+		
+	    double aux_var = AUX_VAR;
+	
+	"""
+
+	tail = """
+		dfdt[0] = 0;
+		dfdt[1] = 0;
+		dfdt[2] = 0;
+		dfdt[3] = 0;
+
+		return GSL_SUCCESS;
+	"""
+	
+	# Create C version of the jacobian
+	@variables S_t S_ic[1:MODEL.N_EQU] S_parameters[1:MODEL.N_PAR]
+    S_dydt = Vector{Num}(undef, MODEL.N_EQU)
+    MODEL.system!(S_dydt, S_ic, S_parameters, S_t)
+
+	# Compute the Jacobian symbolically
+    jac = Symbolics.jacobian(S_dydt, S_ic)
+
+	# Regex patterns
+	aux_var_pattern = r"sqrt\((.*?)rho_C\)"
+	block_pattern = r"(?<=\{\n  )(.*?)(?=\n\}\n)"
+	jacobian_patern = r"(?<=Evaluate the Jacobian of the systems of equations.)((?s:.)*?)(?=\})"
+
+	matrix = ""
+	@inbounds for i in 1:MODEL.N_EQU
+		
+		@inbounds for j in 1:MODEL.N_EQU
+			
+			# Transform the symbolic expresions into C functions
+			c_function = build_function(
+				jac[i, j], 
+				S_ic, 
+				S_parameters, 
+				S_t; 
+				target=Symbolics.CTarget(),
+			)
+			
+			# Replacements for correct formatting
+			matrix *= replace(
+				 match(block_pattern, c_function).match,
+				"du[0] =" => "\tgsl_matrix_set(m, $(i-1), $(j-1),",
+				 ";"       => ");\n",
+			)	
+			
+		end
+
+		matrix = replace(
+			matrix,
+			"RHS1"    => "y",
+			"RHS2[0]" => "rho_C",
+ 			"RHS2[1]" => "Z",
+  			"RHS2[2]" => "eta_d",
+  			"RHS2[3]" => "eta_i",
+			"RHS2[4]" => "R",
+			"+ -"     => "- ",		
+			"-1 * "  => "- ",
+			"- 1 * "  => "- ",
+		) * "\n"
+		
+	end
+
+	jacobian_string = head * matrix * tail
+
+	aux_var_str = match(aux_var_pattern, jacobian_string).match
+	jacobian_string = replace(
+		jacobian_string, 
+		aux_var_pattern => "aux_var",
+		"AUX_VAR" => aux_var_str,
+	)
+
+	file_with_jacobian = replace(
+		read(path, String), 
+		jacobian_patern => jacobian_string,
+	)
+		
+	write(path, file_with_jacobian) 
+
+	return nothing
+	
+end;
+  ╠═╡ =#
+
+# ╔═╡ 80811347-25bb-4b79-87cd-47fcf790f8aa
+# ╠═╡ skip_as_script = true
+#=╠═╡
+write_jacobian(joinpath(C_FILES, "ez_sfr.c"))
+  ╠═╡ =#
+
 # ╔═╡ eb684c4a-27d2-4647-b0c6-7046ff53bfc2
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -171,7 +321,7 @@ compile_libraries(C_FILES)
 # ╔═╡ 88fa5d62-09ab-4cb6-b1ad-24fb3d9dd97a
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"## GSL ODE solver"
+md"### GSL ODE solver"
   ╠═╡ =#
 
 # ╔═╡ 92d26dbf-0e57-4daa-8333-e3c4ee7d631e
@@ -253,128 +403,6 @@ function integrate_with_c(
 	return integration
 		
 end;
-
-# ╔═╡ 3a07b532-3228-42ff-96c3-87074e00f54f
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"## Jacobian"
-  ╠═╡ =#
-
-# ╔═╡ c7ff341d-0e9e-4e70-b10d-646a590740e8
-# ╠═╡ skip_as_script = true
-#=╠═╡
-######################################################################################
-# Write the Jacobian to `path`
-######################################################################################
-
-function write_jacobian(path::Union{String,Nothing})#::Union{String,Nothing}
-
-	# Boilerplate
-	jacobian_string = """
-	static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
-	{
-		(void)(t);
-	
-	    /*
-		* Destructure the parameters
-		*
-		* rho_C: Total cell density [mp * cm⁻³]
-		* Z:     Metallicity [dimensionless]
-		* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
-		* eta_i: Photoionization efficiency of Hydrogen atoms [dimensionless]
-		* R:     Mass recycling fraction [dimensionless]
-		*/
-		double *p    = (double *)parameters;
-		double rho_C = p[0];
-		double Z     = p[1];
-		double eta_d = p[2];
-		double eta_i = p[3];
-		double R     = p[4];
-
-		gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, $(MODEL.N_EQU), $(MODEL.N_EQU));
-		gsl_matrix *m = &dfdy_mat.matrix;
-		
-	    double aux_var = sqrt((1e2 * y[1] + 1e5 * y[2]) * rho_C);
-	
-	"""
-
-	tail = """
-		dfdt[0] = 0;
-		dfdt[1] = 0;
-		dfdt[2] = 0;
-		dfdt[3] = 0;
-
-		return GSL_SUCCESS;
-	}
-	"""
-
-	# Create C version of the jacobian
-	@variables S_t S_ic[1:MODEL.N_EQU] S_parameters[1:MODEL.N_PAR]
-    S_dydt = Vector{Num}(undef, MODEL.N_EQU)
-    MODEL.system!(S_dydt, S_ic, S_parameters, S_t)
-
-	# Compute the Jacobian symbolically
-    jac = Symbolics.jacobian(S_dydt, S_ic)
-
-	@inbounds for i in 1:MODEL.N_EQU
-		
-		@inbounds for j in 1:MODEL.N_EQU
-
-			# Transform the symbolic expresions into C functions
-			c_function = build_function(
-				jac[i, j], 
-				S_ic, 
-				S_parameters, 
-				S_t; 
-				target=Symbolics.CTarget(),
-			)
-
-			# Replacements for correct formatting
-			 c_function = replace(
-				match(r"(?<=\{\n  )(.*?)(?=\n\}\n)", c_function).match,
-				"du[0] =" => "\tgsl_matrix_set(m, $(i-1), $(j-1),",
-				";"       => ");\n",
-				"RHS1"    => "y",
-				"RHS2[0]" => "rho_C",
- 				"RHS2[1]" => "Z",
-  				"RHS2[2]" => "eta_d",
-  				"RHS2[3]" => "eta_i",
-				"RHS2[4]" => "R",
-				"+ -"     => "- ",				
-			)	
-			jacobian_string *= replace(
-				c_function,
-				"sqrt((100.0 * y[1] + 99999.99999999999 * y[2]) * rho_C)" => "aux_var",
-				"-1 * "                        => "- ",
-				"- 1 * "                        => "- ",
-			)
-			
-		end
-
-		jacobian_string *= "\n"
-		
-	end
-
-	if isnothing(path)
-		return jacobian_string * tail
-	else
-		mkpath(dirname(path))
-
-		open(path, "w") do file
-			write(file, jacobian_string * tail)
-		end
-
-		return nothing
-	end
-
-end;
-  ╠═╡ =#
-
-# ╔═╡ 80811347-25bb-4b79-87cd-47fcf790f8aa
-# ╠═╡ skip_as_script = true
-#=╠═╡
-write_jacobian(joinpath(C_FILES, "jacobian.c"))
-  ╠═╡ =#
 
 # ╔═╡ ea16756b-ed09-4823-a812-450ab696fdcd
 # ╠═╡ skip_as_script = true
@@ -570,10 +598,10 @@ uuid = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
 version = "0.1.3"
 
 [[deps.AbstractAlgebra]]
-deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Random", "RandomExtensions", "SparseArrays", "Test"]
-git-tree-sha1 = "3ee5c58774f4487a5bf2bb05e39d91ff5022b4cc"
+deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Preferences", "Random", "RandomExtensions", "SparseArrays", "Test"]
+git-tree-sha1 = "46ce93813f3df5bae04f8d2fd6319fa5bf1829c4"
 uuid = "c3fe647b-3220-5bb0-a1ea-a7954cac585d"
-version = "0.29.4"
+version = "0.30.4"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -932,9 +960,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "5eeb2bd01e5065090ad591a205d8cad432ae6cb6"
+git-tree-sha1 = "c72970914c8a21b36bbc244e9df0ed1834a0360b"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.93"
+version = "0.25.95"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -1125,9 +1153,9 @@ uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
 [[deps.GPUArraysCore]]
 deps = ["Adapt"]
-git-tree-sha1 = "1cd7f0af1aa58abc02ea1d872953a97359cb87fa"
+git-tree-sha1 = "2d6ca471a6c7b536127afccfa7564b5b39227fe0"
 uuid = "46192b85-c4d5-4398-a991-12ede77f4527"
-version = "0.1.4"
+version = "0.1.5"
 
 [[deps.GenericSchur]]
 deps = ["LinearAlgebra", "Printf"]
@@ -1190,9 +1218,9 @@ version = "1.0.2"
 
 [[deps.Groebner]]
 deps = ["AbstractAlgebra", "Combinatorics", "Logging", "MultivariatePolynomials", "Primes", "Random", "SnoopPrecompile"]
-git-tree-sha1 = "b6c3e9e1eb8dcc6fd9bc68fe08dcc7ab22710de6"
+git-tree-sha1 = "06022d793870e05b9cb34046125539f43d289f51"
 uuid = "0b43b601-686d-58a3-8a1c-6623616c7cd4"
-version = "0.3.4"
+version = "0.3.5"
 
 [[deps.GroupsCore]]
 deps = ["Markdown", "Random"]
@@ -2119,9 +2147,9 @@ version = "0.1.0"
 
 [[deps.SLEEFPirates]]
 deps = ["IfElse", "Static", "VectorizationBase"]
-git-tree-sha1 = "cda0aece8080e992f6370491b08ef3909d1c04e7"
+git-tree-sha1 = "4b8586aece42bee682399c4c4aee95446aa5cd19"
 uuid = "476501e8-09a2-5ece-8869-fb82de89a1fa"
-version = "0.6.38"
+version = "0.6.39"
 
 [[deps.ScanByte]]
 deps = ["Libdl", "SIMD"]
@@ -2143,9 +2171,9 @@ version = "0.1.6"
 
 [[deps.SciMLOperators]]
 deps = ["ArrayInterface", "DocStringExtensions", "Lazy", "LinearAlgebra", "Setfield", "SparseArrays", "StaticArraysCore", "Tricks"]
-git-tree-sha1 = "90163ebc767cba9f126ea00aeef1d75ed74fe7b0"
+git-tree-sha1 = "d9f0f6ce9bb899a657c4d218a846533910e9dea9"
 uuid = "c0aeaf25-5076-4817-a8d5-81caf7dfa961"
-version = "0.2.8"
+version = "0.2.9"
 
 [[deps.Scratch]]
 deps = ["Dates"]
@@ -2699,14 +2727,14 @@ version = "3.5.0+0"
 # ╟─fbbd7e06-f29a-4e9d-bd6d-6ec04ef4f1b4
 # ╠═2c60d70d-e859-4725-9876-5ead45b2715b
 # ╠═9098e046-de8e-4ded-8a53-4d3546496c10
+# ╟─3a07b532-3228-42ff-96c3-87074e00f54f
+# ╠═c7ff341d-0e9e-4e70-b10d-646a590740e8
+# ╠═80811347-25bb-4b79-87cd-47fcf790f8aa
 # ╟─eb684c4a-27d2-4647-b0c6-7046ff53bfc2
 # ╠═0b2e8dec-353e-4211-8753-1cb9e076cc14
 # ╠═36155f8d-809e-4408-b32d-fc4aed82f95a
 # ╟─88fa5d62-09ab-4cb6-b1ad-24fb3d9dd97a
 # ╠═92d26dbf-0e57-4daa-8333-e3c4ee7d631e
-# ╟─3a07b532-3228-42ff-96c3-87074e00f54f
-# ╠═c7ff341d-0e9e-4e70-b10d-646a590740e8
-# ╠═80811347-25bb-4b79-87cd-47fcf790f8aa
 # ╟─ea16756b-ed09-4823-a812-450ab696fdcd
 # ╟─781381fc-9bf0-4b4b-8d5a-98202a7a5d73
 # ╠═76d88e08-1373-464e-95d9-047336429a1a
