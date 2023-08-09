@@ -20,7 +20,6 @@
  *                static void integrate_ode(const double *ic, double *parameters, double it, double *fractions)
  *                static double compute_sfr(const int index)
  *                double rate_of_star_formation(const int index)
- *                double molecular_fraction(const int index)
  *
  * \par Major modifications and contributions:
  *
@@ -42,7 +41,7 @@
 #include "../proto.h"
 #endif /* #ifdef TESTING */
 
-#if defined(EZ_SFR) || defined(EZ_MOL_FRAC)
+#ifdef EZ_SFR
 
 /*! \brief Loads a text file into memory, as a C array.
  *
@@ -682,150 +681,6 @@ double rate_of_star_formation(const int index)
   return compute_sfr(index);
 }
 
-/*! \brief Compute the molecular_fraction.
- *
- *  Compute the molecular fraction solving a set of ODEs.
- *
- *  \param[in] index Index of the gas cell in question.
- *
- *  \return The molecular fraction.
- */
-double molecular_fraction(const int index)
-{
-  /* Check for cases when the SFR should be 0, to shortcut the computation */
-  if(!P[index].TimeBinHydro)
-    {
-      return 0.0;
-    }
-  if(All.ComovingIntegrationOn && SphP[index].Density < All.OverDensThresh)
-    {
-      return 0.0;
-    }
-  if(!All.ComovingIntegrationOn && SphP[index].Density * All.cf_a3inv < All.PhysDensThresh)
-    {
-      return 0.0;
-    }
-
-  /*************************************************************************************************
-   * Compute the time parameters
-   *************************************************************************************************/
-
-  /* Current time [Myr] */
-  double current_time = All.Time * T_MYR;
-
-  /* Delta time [Myr] */
-  double delta_time = 0.0;
-  if(!isnan(SphP[index].current_time))
-    {
-      delta_time = current_time - SphP[index].current_time;
-      if(delta_time == 0.0)
-        {
-          return compute_sfr(index);
-        }
-    }
-
-  /* Integration time [Myr] */
-  double integration_time = (((integertime)1) << P[index].TimeBinHydro) * All.Timebase_interval;
-  if(integration_time <= 0.0)
-    {
-      return 0.0;
-    }
-  integration_time *= T_MYR * All.cf_atime / All.cf_time_hubble_a;
-
-  /* Accumulated integration time [Myr] */
-  double accu_integration_time = integration_time;
-  if(!isnan(SphP[index].accu_integration_time) && delta_time < SphP[index].tau_S)
-    {
-      accu_integration_time += SphP[index].accu_integration_time;
-    }
-
-  /* Store the integration time parameters */
-  SphP[index].current_time          = current_time;
-  SphP[index].delta_time            = delta_time;
-  SphP[index].integration_time      = integration_time;
-  SphP[index].accu_integration_time = accu_integration_time;
-
-  /*************************************************************************************************
-   * Compute the parameters for the ODEs
-   *************************************************************************************************/
-
-  /* Cell density [cm⁻³] */
-  double rhoC = SphP[index].Density * RHO_COSMO;
-
-  /* Metallicity [dimensionless] */
-  double Z = (SphP[index].Metallicity > 0.0) ? SphP[index].Metallicity : 0.0;
-
-  /* Photodissociation efficiency [dimensionless] */
-  double eta_d = interpolate2D(accu_integration_time, Z, All.ETA_D_TABLE_DATA);
-
-  /* Photoionization efficiency [dimensionless] */
-  double eta_i = interpolate2D(accu_integration_time, Z, All.ETA_I_TABLE_DATA);
-
-  /* Mass recycling fraction [dimensionless] */
-  double R = interpolate1D(Z, All.R_TABLE_DATA);
-
-  double parameters[] = {rhoC, Z, eta_d, eta_i, R};
-
-  /* Store the parameters */
-  SphP[index].parameter_rhoC  = rhoC;
-  SphP[index].parameter_Z     = Z;
-  SphP[index].parameter_eta_d = eta_d;
-  SphP[index].parameter_eta_i = eta_i;
-  SphP[index].parameter_R     = R;
-
-  /*************************************************************************************************
-   * Compute the initial conditions
-   *************************************************************************************************/
-
-  double fi, fa, fm, fs;
-
-  if(!isnan(SphP[index].ODE_fractions[0]) && delta_time < SphP[index].tau_S)
-    {
-      /* Ionized gas mass fraction [dimensionless] */
-      fi = SphP[index].ODE_fractions[0];
-      /* Atomic gas mass fraction [dimensionless] */
-      fa = SphP[index].ODE_fractions[1];
-      /* Molecular gas mass fraction [dimensionless] */
-      fm = SphP[index].ODE_fractions[2];
-      /* Stellar mass fraction [dimensionless] */
-      fs = SphP[index].ODE_fractions[3];
-    }
-  else
-    {
-      double nhp, nh;
-      get_arepo_fraction(index, &nhp, &nh);
-      /* Ionized gas mass fraction [dimensionless] */
-      fi = nhp / (nhp + nh);
-      /* Atomic gas mass fraction [dimensionless] */
-      fa = 1.0 - fi;
-      /* Molecular gas mass fraction [dimensionless] */
-      fm = 0.0;
-      /* Stellar mass fraction [dimensionless] */
-      fs = 0.0;
-    }
-
-  const double ic[] = {fi, fa, fm, fs};
-
-  /*************************************************************************************************
-   * Integrate the ODEs
-   *************************************************************************************************/
-
-  double fractions[4] = {0.0};
-  integrate_ode(ic, parameters, integration_time, fractions);
-
-  /* Store the star formation time scale (τS) */
-  SphP[index].tau_S = ODE_CS / sqrt((1 - fractions[3]) * rhoC);
-
-  /* Store the results after solving the ODEs */
-  for(size_t i = 0; i < N_EQU; ++i)
-    {
-      SphP[index].ODE_fractions[i] = fractions[i];
-    }
-
-  /* Return the molecular fraction */
-  return SphP[index].ODE_fractions[2];
-}
-
 #endif /* #ifndef TESTING */
 
-#endif /* #if defined(EZ_SFR) || defined(EZ_MOL_FRAC) */
+#endif /* #ifdef EZ_SFR */
