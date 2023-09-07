@@ -8,7 +8,7 @@ using InteractiveUtils
 using Measurements, Libdl, Printf, PlutoLinks, Statistics
 
 # ╔═╡ bcf78560-f2c5-11ec-0dc5-23205a5b9b22
-using CairoMakie, ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
+using CairoMakie, ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
 
 # ╔═╡ 52591e54-3b84-4d6e-9e33-72b5e9f431f1
 # ╠═╡ skip_as_script = true
@@ -241,6 +241,7 @@ PlutoLinks = "0ff47ea0-7a50-410d-8455-4348d5de0420"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 TikzPictures = "37f6aa50-8035-52d0-81c2-5a1d08754b2d"
@@ -260,6 +261,7 @@ Measurements = "~2.9.0"
 PlutoLinks = "~0.1.6"
 PlutoUI = "~0.7.49"
 QuadGK = "~2.8.2"
+SpecialFunctions = "~2.3.1"
 Symbolics = "~5.5.0"
 TikzPictures = "~3.5.0"
 Trapz = "~2.0.3"
@@ -273,7 +275,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "d4255445c588e11279c104db308a5dc5f74f31dd"
+project_hash = "59ec3f83abc5c5ca36fe180cfea4ef17623e0d94"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "a4c8e0f8c09d4aa708289c1a5fc23e2d1970017a"

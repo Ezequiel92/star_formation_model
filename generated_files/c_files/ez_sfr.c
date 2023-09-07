@@ -4,7 +4,7 @@
  * \copyright   and contributing authors.
  *
  * \file        src/ez_sfr/ez_sfr.c
- * \date        05/2023
+ * \date        09/2023
  * \author      Ezequiel Lozano
  * \brief       Compute the star formation rate for a given gas cell.
  * \details     This file contains the routines to compute the star formation rate, according to our
@@ -466,50 +466,73 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
   /* Check that none of the input is too negative */
   if(fi < -1e-8 || fa < -1e-8 || fm < -1e-8 || fs < -1e-8)
     {
-      terminate("Error: Unbalanced equations IC: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf", fi, fa, fm, fs);
+      terminate("Error: Unbalanced equations. IC: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf", fi, fa, fm, fs);
     }
 #endif /* #ifndef TESTING */
 
   /* Set to 0 the ones negative by numerical error */
-  fi = fmax(0.0, fi);
-  fa = fmax(0.0, fa);
-  fm = fmax(0.0, fm);
-  fs = fmax(0.0, fs);
-
-  /* Renormalize IC */
+  fi           = fmax(0.0, fi);
+  fa           = fmax(0.0, fa);
+  fm           = fmax(0.0, fm);
+  fs           = fmax(0.0, fs);
   double total = fi + fa + fm + fs;
-  fractions[0] = fi / total;
-  fractions[1] = fa / total;
-  fractions[2] = fm / total;
-  fractions[3] = fs / total;
 
-  double t0 = 0.0;
+  /* Initialize integration variables */
+  double t0  = 0.0;
+  double i_f = 0.0;
+  double a_f = 0.0;
+  double m_f = 0.0;
+  double s_f = 0.0;
+
+  /* Save mean cell density */
+  double rhoC = parameters[0];
 
   gsl_odeiv2_system sys     = {sf_ode, jacobian, N_EQU, parameters};
   gsl_odeiv2_driver *driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_msbdf, it * 1e-3, 1e-8, 0.0);
 
-  int status = gsl_odeiv2_driver_apply(driver, &t0, it, fractions);
+  for(size_t i = 0; i < DIVISIONS; ++i)
+    {
+      fractions[0] = fi / total;
+      fractions[1] = fa / total;
+      fractions[2] = fm / total;
+      fractions[3] = fs / total;
+
+      parameters[0] = rhoC * F_RHO[i];
+
+      gsl_odeiv2_driver_reset(driver);
+      int status = gsl_odeiv2_driver_apply(driver, &t0, it, fractions);
+
+      i_f += fractions[0] * PDF[i];
+      a_f += fractions[1] * PDF[i];
+      m_f += fractions[2] * PDF[i];
+      s_f += fractions[3] * PDF[i];
+
+      t0 = 0.0;
+
+#ifndef TESTING
+      if(status != GSL_SUCCESS)
+        {
+          terminate("GSL error: Could not integrate, status = %d\n", status);
+        }
+
+#endif /* #ifndef TESTING */
+    }
+
   gsl_odeiv2_driver_free(driver);
 
 #ifndef TESTING
-  if(status != GSL_SUCCESS)
-    {
-      terminate("GSL error: Could not integrate, status = %d\n", status);
-    }
-
   /* Check that none of the output is too negative */
-  if(fractions[0] < -1e-8 || fractions[1] < -1e-8 || fractions[2] < -1e-8 || fractions[3] < -1e-8)
+  if(i_f < -1e-8 || a_f < -1e-8 || m_f < -1e-8 || s_f < -1e-8)
     {
-      warn("Warning: Unbalanced equations output: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf", fractions[0], fractions[1], fractions[2],
-           fractions[3]);
+      warn("Warning: Unbalanced equations output: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf", i_f, a_f, m_f, s_f);
     }
 #endif /* #ifndef TESTING */
 
   /* Set to 0 the ones negative by numerical error */
-  fractions[0] = fmax(0.0, fractions[0]);
-  fractions[1] = fmax(0.0, fractions[1]);
-  fractions[2] = fmax(0.0, fractions[2]);
-  fractions[3] = fmax(0.0, fractions[3]);
+  fractions[0] = fmax(0.0, i_f);
+  fractions[1] = fmax(0.0, a_f);
+  fractions[2] = fmax(0.0, m_f);
+  fractions[3] = fmax(0.0, s_f);
 
   /* Renormalize IC */
   total = fractions[0] + fractions[1] + fractions[2] + fractions[3];

@@ -8,7 +8,7 @@ using InteractiveUtils
 using Printf, PlutoLinks, Libdl
 
 # ╔═╡ bcf78560-f2c5-11ec-0dc5-23205a5b9b22
-using CairoMakie, ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
+using CairoMakie, ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
 
 # ╔═╡ f16048d6-37f0-4b4c-9ac7-8a1df1471f26
 # ╠═╡ skip_as_script = true
@@ -114,6 +114,57 @@ typedef struct DataTable
 	int n_rows;    // Number of rows in the table
 	int n_cols;    // Number of columns in the table
 } data_table;
+
+#ifdef RHO_PDF
+
+/*
+ * Density PDF according to Burkhart (2018)
+ * https://doi.org/10.3847/1538-4357/aad002
+ *
+ * We used the following parameters (all dimensionless):
+ *
+ * divisions = $(MODEL.PDF_PARAMS.divisions)
+ * range of ln(rho/rho_0) = $(MODEL.PDF_PARAMS.deviation)
+ * α (power law slope) = $(MODEL.PDF_PARAMS.α)
+ * b (turbulent forcing parameter) = $(MODEL.PDF_PARAMS.b)
+ * Ms (mach number) = $(MODEL.PDF_PARAMS.Ms)
+ */
+
+#define DIVISIONS $(MODEL.PDF_PARAMS.divisions)
+
+/* Integrated PDF of the interstellar gas density */
+static const double PDF[] = {
+$(
+	[
+		"\t$(@sprintf("%.10f", MODEL.MASS_FRAC[i])),\n" for 
+		i in 1:MODEL.PDF_PARAMS.divisions
+	]...
+)
+};
+
+/* Density factor: ρ = ρ₀ * F_RHO */
+static const double F_RHO[] = {
+$(
+	[
+		"\t$(@sprintf("%.10f", MODEL.F_POINTS[i])),\n" for
+		i in 1:MODEL.PDF_PARAMS.divisions
+	]...
+)
+};
+
+#else /* #ifdef RHO_PDF */
+
+#define DIVISIONS 1
+
+static const double PDF[] = {
+    1.0,
+};
+
+static const double F_RHO[] = {
+    1.0,
+};
+
+#endif /* #ifdef RHO_PDF */
 	
 void *read_ftable(const char *file_path, const int n_rows, const int n_cols);
 double rate_of_star_formation(const int index);
@@ -569,6 +620,7 @@ PlutoLinks = "0ff47ea0-7a50-410d-8455-4348d5de0420"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 TikzPictures = "37f6aa50-8035-52d0-81c2-5a1d08754b2d"
 Trapz = "592b5752-818d-11e9-1e9a-2b8ca4a44cd1"
@@ -586,6 +638,7 @@ Interpolations = "~0.14.7"
 PlutoLinks = "~0.1.6"
 PlutoUI = "~0.7.51"
 QuadGK = "~2.8.1"
+SpecialFunctions = "~2.3.1"
 Symbolics = "~5.5.0"
 TikzPictures = "~3.5.0"
 Trapz = "~2.0.3"
@@ -599,7 +652,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "f148efc81f94c45f8f2a085c128ffa286d92f9fd"
+project_hash = "7daad7b8549dd1d0db21a2e099a9ccbd8f9445ec"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "a4c8e0f8c09d4aa708289c1a5fc23e2d1970017a"
