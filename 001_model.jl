@@ -5,7 +5,7 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ b03ee99c-27f4-47df-bba5-2ea3dabdb45d
-using CairoMakie, ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
+using CairoMakie, ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
 
 # ╔═╡ 08df960b-fd82-43ba-a9dc-bf5e83af587e
 # ╠═╡ skip_as_script = true
@@ -1730,6 +1730,131 @@ ode_function = ODEFunction{true}(
 	tgrad=(dt, ic, p, t) -> nothing,
 );
 
+# ╔═╡ ff37c5e7-bb7e-4e3a-a16c-b8b7c4072528
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"## Density PDF"
+  ╠═╡ =#
+
+# ╔═╡ ccfafe47-841a-4c8a-b609-de34b453f7ee
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"### Parameters"
+  ╠═╡ =#
+
+# ╔═╡ 5e402cd6-ebcb-4641-8ce8-2f7c6c37a5ea
+Base.@kwdef struct PDF_params
+    # Density PDF function
+    func::Function
+    # Power law slope
+    α::Float64
+    # Dimensionless turbulent forcing parameter
+    b::Float64
+    # Mach number
+    Ms::Float64
+    # (min, max) values for s = ln(ρ/ρ₀)
+    deviation::NTuple{2,Float64}
+    # Number of division of the density PDF
+    divisions::Int64
+end;
+
+# ╔═╡ e3a6d4ab-fb1c-4fa7-b4ca-50552b720ab5
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"### Mass fractions"
+  ╠═╡ =#
+
+# ╔═╡ 0c4fb275-240f-4689-857c-fb30120af9a5
+######################################################################################
+# Compute the density PDF mass fractions
+#
+# params:  Parameters for the density PDF
+# log_var: Selects which variable will be used and how the function will be divided
+#   log_var == true:  s = ln(ρ/ρ₀) and logarithmic divisions
+#   log_var == false: f = ρ/ρ₀ and linear divisions
+######################################################################################
+
+function mass_fraction(params::PDF_params, log_var::Bool)::NTuple{2,Vector{Float64}}
+    
+	if params.divisions == 1
+        return [1], [log_var ? 0 : 1.0]
+    end
+
+    # Select which variable will be used and how the function will be divided
+    # log_var == true: s = ln(ρ/ρ₀) and logarithmic divisions
+    # log_var == false: f = ρ/ρ₀ and linear divisions
+    dev = log_var ? params.deviation : exp.(params.deviation)
+
+    # Compute the step in the range of the variable s = ln(ρ/ρ₀) or f = ρ/ρ₀
+    step = (dev[2] - dev[1]) / params.divisions
+
+    # Compute the range of values of s = ln(ρ/ρ₀) or f = ρ/ρ₀
+    points = [dev[1] + step * (i - 0.5) for i in 1:(params.divisions)]
+
+    # Compute the fractions of mass within each division
+    mass_f = [
+        quadgk(
+            x -> params.func(x, params),
+            log_var ? point - (step / 2) : log(point - (step / 2)),
+            log_var ? point + (step / 2) : log(point + (step / 2)),
+            order=10,
+            atol=10e-10,
+        )[1] for point in points
+    ]
+
+    return (mass_f ./ sum(mass_f)), points
+	
+end;
+
+# ╔═╡ e050e2e9-30c1-4dc1-a57b-4f86821e3965
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"### Density PDF by Burkhart (2018)"
+  ╠═╡ =#
+
+# ╔═╡ d8be4069-e589-495f-a6d8-0b1fcc048dd2
+######################################################################################
+# Density PDF acording to Burkhart (2018)
+# https://doi.org/10.3847/1538-4357/aad002
+######################################################################################
+
+function pBurkhart2018(s::Float64, params::PDF_params)::Float64
+
+    b = params.b
+    Ms = params.Ms
+    α = params.α
+
+    σs2 = log(1 + b^2 * Ms^2)
+    s0 = -0.5 * σs2
+    st = (α - 0.5) * σs2
+    C = exp((α - 1) * 0.5 * α * σs2) / sqrt(2π * σs2)
+    N = 1 / ((C * exp(-α * st)) / α + 0.5 + 0.5 * erf((2 * st + σs2) / sqrt(8 * σs2)))
+
+    if s < st
+        return (N / sqrt(2π * σs2)) * exp(-((s - s0)^2) / (2 * σs2))
+    else
+        return N * C * exp(-α * s)
+    end
+
+end;
+
+# ╔═╡ 16b56ce2-6b02-4d53-a7a7-7cd7f96f26c5
+begin
+    const PDF_PARAMS = PDF_params(
+		func = pBurkhart2018,      # Density PDF function 
+		α = 2.0,                   # Power law slope
+		b = 0.5,                   # Dimensionless turbulent forcing parameter
+		Ms = 10.0,                 # Mach number
+		deviation = (-6, 6),       # (min, max) values for s = log(ρ/ρ₀)
+		divisions = 20,            # Number of division of the density PDF
+	)
+
+    # Pre computation of the default mass fractions 
+    # for each division of the density PDF
+    const (MASS_FRAC, S_POINTS) = mass_fraction(PDF_PARAMS, true)
+    const F_POINTS = exp.(S_POINTS)
+end;
+
 # ╔═╡ 4607856c-7472-4131-a2ee-29f7150f5cb4
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1795,6 +1920,7 @@ Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 TikzPictures = "37f6aa50-8035-52d0-81c2-5a1d08754b2d"
 Trapz = "592b5752-818d-11e9-1e9a-2b8ca4a44cd1"
@@ -1811,6 +1937,7 @@ DifferentialEquations = "~7.9.1"
 Interpolations = "~0.14.7"
 PlutoUI = "~0.7.51"
 QuadGK = "~2.8.1"
+SpecialFunctions = "~2.3.1"
 Symbolics = "~5.5.0"
 TikzPictures = "~3.5.0"
 Trapz = "~2.0.3"
@@ -1827,7 +1954,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "8b495521fa07503c8b676138ca872b3896e1908a"
+project_hash = "39f98418ec73f4ef53e2d3468957ae1608b3c072"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "a4c8e0f8c09d4aa708289c1a5fc23e2d1970017a"
@@ -4390,6 +4517,14 @@ version = "3.5.0+0"
 # ╠═69b8d934-c031-413b-9c86-3fbd64be5a4a
 # ╟─35ac9289-ba53-453f-9d9e-ef3499949a98
 # ╠═64e7e6aa-4265-4de2-a9c6-474d125b45cc
+# ╟─ff37c5e7-bb7e-4e3a-a16c-b8b7c4072528
+# ╟─ccfafe47-841a-4c8a-b609-de34b453f7ee
+# ╠═5e402cd6-ebcb-4641-8ce8-2f7c6c37a5ea
+# ╟─e3a6d4ab-fb1c-4fa7-b4ca-50552b720ab5
+# ╠═0c4fb275-240f-4689-857c-fb30120af9a5
+# ╟─e050e2e9-30c1-4dc1-a57b-4f86821e3965
+# ╠═d8be4069-e589-495f-a6d8-0b1fcc048dd2
+# ╠═16b56ce2-6b02-4d53-a7a7-7cd7f96f26c5
 # ╟─4607856c-7472-4131-a2ee-29f7150f5cb4
 # ╠═bbb7263a-91e4-4a23-9e5f-416b6b7fcf6e
 # ╟─00000000-0000-0000-0000-000000000001
