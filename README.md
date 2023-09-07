@@ -12,13 +12,13 @@
 
 Implementation in [Julia](https://julialang.org) and C of our star formation model.
 
-The goal of the models is to improve the realism of the star formation rate (SFR) in [Arepo](https://arepo-code.org/) simulations.
+The goal of the model is to improve the star formation history (SFH) in cosmological simulations of Milky Way like galaxies, using [Arepo](https://arepo-code.org/).
 
 The notebooks in this repo, can be view as static HTML files [here](https://ezequiel92.github.io/star_formation_model/),
 
 - `001_model.jl`: Description of the model.
-- `002_codegen.jl`: Tables and C code generation.
-- `003_testing.jl`: Tests and error computation.
+- `002_codegen.jl`: Generation of C code.
+- `003_testing.jl`: Tests and error calculations.
 - `004_analysis.jl`: Benchmarks.
 
 ## ⚠️ Warning
