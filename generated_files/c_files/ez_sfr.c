@@ -396,25 +396,25 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 	gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 4, 4);
 	gsl_matrix *m = &dfdy_mat.matrix;
 	
-    double aux_var = sqrt((99.99999999999999 * y[1] + 99999.99999999999 * y[2]) * rho_C);
+    double aux_var = sqrt((100.0 * y[1] + 99999.99999999999 * y[2]) * rho_C);
 
 	gsl_matrix_set(m, 0, 0, -0.16409952000000003 * y[0] * rho_C);
-	gsl_matrix_set(m, 0, 1, (1.9428762831580124 * y[2] * rho_C * (eta_i + R)) / (2 * aux_var));
+	gsl_matrix_set(m, 0, 1, (1.9428762831580126 * y[2] * rho_C * (eta_i + R)) / (2 * aux_var));
 	gsl_matrix_set(m, 0, 2, (1942.8762831580123 * y[2] * rho_C * (eta_i + R)) / (2 * aux_var) + 0.019428762831580126 * (eta_i + R) * aux_var);
 	gsl_matrix_set(m, 0, 3, 0);
 
 	gsl_matrix_set(m, 1, 0, 0.16409952000000003 * y[0] * rho_C);
-	gsl_matrix_set(m, 1, 1, (1.9428762831580124 * y[2] * rho_C * (eta_d - eta_i)) / (2 * aux_var) - 0.01739395275590551 * y[1] * rho_C * (1.27e-5 + Z) + 0.0001739395275590551 * (-99.99999999999999 * y[1] - 99999.99999999999 * y[2]) * rho_C * (1.27e-5 + Z));
+	gsl_matrix_set(m, 1, 1, (1.9428762831580126 * y[2] * rho_C * (eta_d - eta_i)) / (2 * aux_var) + 0.00017393952755905513 * (-100.0 * y[1] - 99999.99999999999 * y[2]) * rho_C * (1.27e-5 + Z) - 0.017393952755905513 * y[1] * rho_C * (1.27e-5 + Z));
 	gsl_matrix_set(m, 1, 2, (1942.8762831580123 * y[2] * rho_C * (eta_d - eta_i)) / (2 * aux_var) + 0.019428762831580126 * (eta_d - eta_i) * aux_var - 17.39395275590551 * y[1] * rho_C * (1.27e-5 + Z));
 	gsl_matrix_set(m, 1, 3, 0);
 
 	gsl_matrix_set(m, 2, 0, 0);
-	gsl_matrix_set(m, 2, 1, (-1.9428762831580124 * y[2] * rho_C * (1 + eta_d)) / (2 * aux_var) + 0.0001739395275590551 * (99.99999999999999 * y[1] + 99999.99999999999 * y[2]) * rho_C * (1.27e-5 + Z) + 0.01739395275590551 * y[1] * rho_C * (1.27e-5 + Z));
+	gsl_matrix_set(m, 2, 1, (-1.9428762831580126 * y[2] * rho_C * (1 + eta_d)) / (2 * aux_var) + 0.017393952755905513 * y[1] * rho_C * (1.27e-5 + Z) + 0.00017393952755905513 * (100.0 * y[1] + 99999.99999999999 * y[2]) * rho_C * (1.27e-5 + Z));
 	gsl_matrix_set(m, 2, 2, (-1942.8762831580123 * y[2] * rho_C * (1 + eta_d)) / (2 * aux_var) - 0.019428762831580126 * (1 + eta_d) * aux_var + 17.39395275590551 * y[1] * rho_C * (1.27e-5 + Z));
 	gsl_matrix_set(m, 2, 3, 0);
 
 	gsl_matrix_set(m, 3, 0, 0);
-	gsl_matrix_set(m, 3, 1, (1.9428762831580124 * y[2] * rho_C * (1 - 1 * R)) / (2 * aux_var));
+	gsl_matrix_set(m, 3, 1, (1.9428762831580126 * y[2] * rho_C * (1 - 1 * R)) / (2 * aux_var));
 	gsl_matrix_set(m, 3, 2, (1942.8762831580123 * y[2] * rho_C * (1 - 1 * R)) / (2 * aux_var) + 0.019428762831580126 * (1 - 1 * R) * aux_var);
 	gsl_matrix_set(m, 3, 3, 0);
 

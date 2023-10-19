@@ -5,7 +5,7 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ b03ee99c-27f4-47df-bba5-2ea3dabdb45d
-using CairoMakie, ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
+using CairoMakie, ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PGFPlotsX, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
 
 # ╔═╡ 08df960b-fd82-43ba-a9dc-bf5e83af587e
 # ╠═╡ skip_as_script = true
@@ -154,8 +154,8 @@ We will use the $x_j$ as adjustable parameter, within the order of the table abo
 # ╔═╡ dadc3e3a-ebe7-4f13-a03b-ab988094321a
 begin
 	const xi = 1.0
-	const xa = 10^-2
-	const xm = 10^-5
+	const xa = 1.0e-2
+	const xm = 1.0e-5
 end;
 
 # ╔═╡ 64787011-b5b8-42be-b6e4-37ebc5138b3e
@@ -177,7 +177,7 @@ The following diagram shows the physical processes of the model by name,
 # ╔═╡ 14c7f574-0623-4254-b8f7-97984d32351c
 # ╠═╡ skip_as_script = true
 #=╠═╡
-TikzPicture(
+TikzPictures.TikzPicture(
 	L"""
 		\node[box, white] (stars) {Stars};
 		\node[box, white, text width=2em, above=2cm of stars] (atom) {HI};
@@ -309,7 +309,7 @@ The following diagram shows the mathematical expressions for the processes of th
 # ╔═╡ 43eafb0f-08a8-4e53-9017-50b97ac48a52
 # ╠═╡ skip_as_script = true
 #=╠═╡
-TikzPicture(
+TikzPictures.TikzPicture(
 	L"""
 		\node[box, white] (stars) at (180:2cm) {Stars};
 		\node[box, white, text width=2em] (atom) at (0:2cm) {HI};
@@ -373,7 +373,7 @@ From all the above, we can write the following system of four ODEs,
 # ╔═╡ 2fe0dc4c-da44-4fc8-bef8-1fa615a0fe4a
 # ╠═╡ skip_as_script = true
 #=╠═╡
-TikzPicture(
+TikzPictures.TikzPicture(
 	L"""
 	\node[white] {
   	${\boldmath
@@ -524,7 +524,7 @@ $\begin{equation}
     \tau_S =  \frac{t_\text{ff}}{\epsilon_\text{ff}} \, ,
 \end{equation}$
 
-where $\epsilon_\text{ff}$ is the star formation efficiency, (in the literature is of $\mathcal{O}(\epsilon_\text{ff}) \approx 0.01$ [Krumholz2006](https://doi.org/10.1086/509101), [Krumholz2014](https://doi.org/10.1016/j.physrep.2014.02.001)), and $t_\text{ff}$ is the free-fall time, which is the time for a pressure-free, spherical cloud to collapse to a point owing to its self-gravity.
+where $\epsilon_\text{ff}$ is the star formation efficiency, (in the literature is often used $\epsilon_\text{ff} \approx 0.01$ [Krumholz2007](https://doi.org/10.1086/509101), [Krumholz2014](https://doi.org/10.1016/j.physrep.2014.02.001)), and $t_\text{ff}$ is the free-fall time, which is the time for a pressure-free spherical cloud to collapse into a point due to its self-gravity.
 
 The free-fall time can be written as
 
@@ -534,7 +534,7 @@ $\begin{equation}
 
 where $\rho_g$ is the density of the gas cloud.
 
-There is a lot of uncertainty for the parameter $\epsilon_\text{ff}$ ([Lee2016](https://doi.org/10.3847/1538-4357/833/2/229) and [Utomo2018](https://doi.org/10.3847/2041-8213/aacf8f)). We will use $\epsilon_\text{ff} = 0.02$, in relative agreement with [Kennicutt1998](https://doi.org/10.1086/305588) and [Evans2014](https://doi.org/10.1088/0004-637X/782/2/114). We note though that this parameter has been shown to have little influence on the global properties of simulated galaxies ([Li2018](https://doi.org/10.3847/1538-4357/aac9b8) and [Brown2022](https://doi.org/10.1093/mnras/stac1164)).
+There is a lot of uncertainty for the parameter $\epsilon_\text{ff}$ ([Lee2016](https://doi.org/10.3847/1538-4357/833/2/229) and [Utomo2018](https://doi.org/10.3847/2041-8213/aacf8f)). We will use $\epsilon_\text{ff} = 1.0$, given that we already consider how efficient star formation is when using only molecular hydrogen to form stars. We note though, that this parameter has been shown to have little influence on the global properties of simulated galaxies ([Li2018](https://doi.org/10.3847/1538-4357/aac9b8) and [Brown2022](https://doi.org/10.1093/mnras/stac1164)).
 
 With all the previous definitions, we have 
 
@@ -544,10 +544,10 @@ $\begin{equation}
 where
 
 $\begin{equation}
-    C_S = \frac{1}{\epsilon_\text{ff}} \, \sqrt{\frac{3\pi}{32 \, G}} \, .
+    C_S = \sqrt{\frac{3\pi}{32 \, G}} \, .
 \end{equation}$
 
-Given that $\rho_g$ is the density of an individual cold gas cloud, which is unresolved, we use the fact that $\rho_g \gg \rho_C$, to make the choice 
+Given that $\rho_g$ is the density of an individual cold gas cloud, which is unresolved within a cell, we use the fact that $\rho_g \gg \rho_C$, to make the choice
 
 $\begin{align}
     \rho_g &= \rho_m + \rho_a = \rho_C \, \left( \frac{f_m}{x_m} + \frac{f_a}{x_a} \right) .
@@ -572,9 +572,9 @@ let
 	set_theme!(theme_black())
 	
 	f = Figure()
-	ax = Axis(
+	ax = CairoMakie.Axis(
 		f[1,1], 
-		xlabel=L"ρ_C \, / \, \mathrm{%$l_u^{-3}}", 
+		xlabel=L"\rho_C \, / \, \mathrm{%$l_u^{-3}}", 
 		ylabel=L"\tau_S \, / \, \mathrm{%$t_u}",
 		title=L"f_a + f_m = 0.7",
 		xlabelsize=32,
@@ -596,6 +596,32 @@ let
 	axislegend(; position=:rt, labelsize=25)
 
 	f
+end
+  ╠═╡ =#
+
+# ╔═╡ 9a24d3ac-a238-4eef-afc0-00fa7ef51475
+# ╠═╡ skip_as_script = true
+#=╠═╡
+let
+	ρC = exp10.(range(-1, 5, 30))
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"\rho_C \, / \, \mathrm{%$l_u^{-3}}",
+	        ylabel=L"\tau_S \, / \, \mathrm{%$t_u}",
+	        xmode="log",
+	        ymode="log",
+			cycle_list_name="color list",
+			"no marks",
+			"thick",
+	    },
+	)
+
+	for fa in range(0.1, 0.5, 3)
+		push!(ax, PGFPlotsX.Plot(Coordinates(ρC, τS.(fa, 0.7 - fa, ρC))))
+		push!(ax, PGFPlotsX.LegendEntry(L"f_a = %$(fa)"))
+	end
+
+	pgfsave("generated_files/plots/tau_S_vs_density.pdf", ax)
 end
   ╠═╡ =#
 
@@ -621,7 +647,7 @@ $\begin{align}
     &= \alpha_H(T) \, f_i^{\,2} \, \frac{\rho_C}{m_p} \, \frac{x_a}{x_i^{\,2}}  \, .
 \end{align}$
 
-We can readily find fits for $\alpha_H(T)$ in the literature ([Seaton1959](https://doi.org/10.1093/mnras/119.2.81), [Black1981](https://doi.org/10.1093/mnras/197.3.553), [Verner1996](https://doi.org/10.1086/192284) and [Osterbrock2006](http://www.worldcat.org/oclc/60611705)), in particular if we take $T = 10^4 \, \mathrm{K}$ for the ionized phase, and use case B recombination (assuming an optically thick cloud [Nebrin2023](https://doi.org/10.48550/arXiv.2305.05764)), we get
+We can readily find fits for $\alpha_H(T)$ in the literature ([Seaton1959](https://doi.org/10.1093/mnras/119.2.81), [Black1981](https://doi.org/10.1093/mnras/197.3.553), [Verner1996](https://doi.org/10.1086/192284) and [Osterbrock2006](http://www.worldcat.org/oclc/60611705)), in particular if we take $T = 10^4 \, \mathrm{K}$ for the ionized phase, and use case B recombination (assuming an optically thick cloud [Nebrin2023](https://doi.org/10.3847/2515-5172/acd37a)), we get
 
 $\begin{align}
     \alpha_H(10^4 \, \mathrm{K}) = \alpha_H = 2.6 \times 10^{-13} \, \mathrm{cm}^3 \, \mathrm{s}^{-1} \, .
@@ -664,9 +690,9 @@ let
 	set_theme!(theme_black())
 	
 	f = Figure()
-	ax = Axis(
+	ax = CairoMakie.Axis(
 		f[1,1], 
-		xlabel=L"ρ_C \, / \, \mathrm{%$l_u^{-3}}", 
+		xlabel=L"\rho_C \, / \, \mathrm{%$l_u^{-3}}", 
 		ylabel=L"\tau_R \, / \, \mathrm{%$t_u}",
 		xlabelsize=32,
 		ylabelsize=32,
@@ -687,6 +713,32 @@ let
 	axislegend(; position=:rt, labelsize=28)
 
 	f
+end
+  ╠═╡ =#
+
+# ╔═╡ f2cc8e6f-737c-42e3-bb81-42c50d62cf78
+# ╠═╡ skip_as_script = true
+#=╠═╡
+let
+	ρC = exp10.(range(-1, 5, 30))
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"\rho_C \, / \, \mathrm{%$l_u^{-3}}",
+	        ylabel=L"\tau_R \, / \, \mathrm{%$t_u}",
+	        xmode="log",
+	        ymode="log",
+			cycle_list_name="color list",
+			"no marks",
+			"thick",
+	    },
+	)
+
+	for fi in range(0.1, 0.9, 5)
+		push!(ax, PGFPlotsX.Plot(Coordinates(ρC, τR.(fi, ρC))))
+		push!(ax, PGFPlotsX.LegendEntry(L"f_i = %$(fi)"))
+	end
+
+	pgfsave("generated_files/plots/tau_R_vs_density.pdf", ax)
 end
   ╠═╡ =#
 
@@ -723,7 +775,7 @@ $\begin{equation}
     \tau_C := \frac{m_p \, x_a}{2 \, R_d \, \rho_C \, x_m \left( \frac{f_a}{x_a} + \frac{f_m}{x_m} \right)} \, .
 \end{equation}$
 
-A table with a list of values for $R_d$ is presented below. We note that more than one value of $R_d$, and its dependance with other parameters may be discussed within each reference, in the table we reflect the fiducial value used by each author
+A table with a list of values for $R_d$ is presented below. We note that more than one value of $R_d$, and its dependence with other parameters may be discussed within each reference, in the table we reflect the fiducial value used by each author
 
 | $R_d \,\, [10^{-17} \, \mathrm{cm^3 \, s^{-1}}]$ | Reference |
 |:-----:|:--------------------------------------------------:|
@@ -776,9 +828,9 @@ For the solar metallicity we find several values in the literature
 | $0.0134$ | [Asplund2009](https://doi.org/10.1146/annurev.astro.46.060407.145222) |
 | $0.0141$ | [Lodders2009](https://doi.org/10.1007/978-3-540-88055-4_34)           |
 | $0.0127$ | Arepo                                                                 |
-| $0.0196$ | [Steiger2016](https://doi.org/10.3847/0004-637X/816/1/13)             |
+| $0.0196$ | [Steiger2015](https://doi.org/10.3847/0004-637X/816/1/13)             |
 
-To keep it consistent with the Arepo codebase, we will use $Z_\odot = 0.0127$, noting that is only $35\%$ off the largest value in the list ([Steiger2016](https://doi.org/10.3847/0004-637X/816/1/13)), which is not significant for such a simple model with many other uncertainties.
+To keep it consistent with the Arepo codebase, we will use $Z_\odot = 0.0127$, noting that is only $35\%$ off the largest value in the list ([Steiger2015](https://doi.org/10.3847/0004-637X/816/1/13)), which is not significant for such a simple model with many other uncertainties.
 """
   ╠═╡ =#
 
@@ -802,11 +854,11 @@ let
 	set_theme!(theme_black())
 	
 	f = Figure()
-	ax = Axis(
+	ax = CairoMakie.Axis(
 		f[1,1], 
-		xlabel=L"ρ_C \, / \, \mathrm{%$l_u^{-3}}", 
+		xlabel=L"\rho_C \, / \, \mathrm{%$l_u^{-3}}", 
 		ylabel=L"\tau_C \, / \, \mathrm{%$t_u}",
-		title=L"f_a + f_m = 0.5",
+		title=L"f_a = 0.6 and f_m = 0.1",
 		xlabelsize=32,
 		ylabelsize=32,
 		titlesize=35,
@@ -818,14 +870,40 @@ let
 
 	ρC = exp10.(range(-1, 5, 30))
 
-	for Zs in range(0, 2, 5)
+	for Zs in range(0, 1.5, 4)
 		label = L"Z \, / \, Z_\odot = %$(Zs)"
-		lines!(ax, ρC, ρ -> τC(0.0, 0.5, ρ, Zs * Zsun); linewidth=3, label)
+		lines!(ax, ρC, ρ -> τC(0.6, 0.1, ρ, Zs * Zsun); linewidth=3, label)
 	end
 
 	axislegend(; position=:rt, labelsize=28)
 
 	f
+end
+  ╠═╡ =#
+
+# ╔═╡ 7ad23ea4-9887-4de5-8a5c-c37ebef736b8
+# ╠═╡ skip_as_script = true
+#=╠═╡
+let
+	ρC = exp10.(range(-1, 5, 30))
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"\rho_C \, / \, \mathrm{%$l_u^{-3}}",
+	        ylabel=L"\tau_C \, / \, \mathrm{%$t_u}",
+	        xmode="log",
+	        ymode="log",
+			cycle_list_name="color list",
+			"no marks",
+			"thick",
+	    },
+	)
+
+	for Zs in range(0, 1.5, 4)
+		push!(ax, PGFPlotsX.Plot(Coordinates(ρC, τC.(0.6, 0.1, ρC, Zs * Zsun))))
+		push!(ax, PGFPlotsX.LegendEntry(L"Z \, / \, Z_\odot = %$(Zs)"))
+	end
+
+	pgfsave("generated_files/plots/tau_C_vs_density.pdf", ax)
 end
   ╠═╡ =#
 
@@ -1099,7 +1177,7 @@ let
 	set_theme!(theme_black())
 	
 	f = Figure()
-	ax = Axis(
+	ax = CairoMakie.Axis(
 		f[1,1], 
 		xlabel=L"\mathrm{stellar \,\, age \, / \, Myr}", 
 		ylabel=L"\eta_d",
@@ -1112,10 +1190,10 @@ let
 		xscale=log10,
 	)
 
-	ages = exp10.(range(-1, 3, 30))
+	ages = exp10.(range(-1, 3, 100))
 	ηd(age, Zs) = photodissociation_efficiency(age, Zs * Zsun)[1]
 
-	for Zs in range(0, 2, 5)
+	for Zs in range(0, 1.5, 4)
 		label = L"Z \, / \, Z_\odot = %$(Zs)"
 		lines!(ax, ages, x -> ηd(x, Zs); linewidth=3, label)
 	end
@@ -1126,6 +1204,34 @@ let
 end
   ╠═╡ =#
 
+# ╔═╡ 303da7a3-e574-4f7e-9acc-83ed83a09f69
+# ╠═╡ skip_as_script = true
+#=╠═╡
+let
+	ages = exp10.(range(-1, 3, 100))
+	ηd(age, Zs) = photodissociation_efficiency(age, Zs * Zsun)[1]
+	
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"\mathrm{stellar \,\, age \, / \, Myr}",
+	        ylabel=L"\eta_d",
+	        xmode="log",
+			cycle_list_name="color list",
+			"no marks",
+			"thick",
+			legend_style={at = Coordinate(0.75, 0.4), anchor = "north"},
+	    },
+	)
+
+	for Zs in range(0, 1.5, 4)
+		push!(ax, PGFPlotsX.Plot(Coordinates(ages, ηd.(ages, Zs))))
+		push!(ax, PGFPlotsX.LegendEntry(L"Z \, / \, Z_\odot = %$(Zs)"))
+	end
+
+	pgfsave("generated_files/plots/eta_diss_vs_stellar_age.pdf", ax)
+end
+  ╠═╡ =#
+
 # ╔═╡ 994f97fb-1c30-4825-9b29-35fe4ade8fb3
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1133,7 +1239,7 @@ let
 	set_theme!(theme_black())
 		
 	f = Figure()
-	ax = Axis(
+	ax = CairoMakie.Axis(
 		f[1,1], 
 		xlabel=L"\mathrm{stellar \,\, age \, / \, Myr}", 
 		ylabel=L"\eta_i",
@@ -1146,10 +1252,10 @@ let
 		xscale=log10,
 	)
 
-	ages = exp10.(range(-1, 3, 30))
+	ages = exp10.(range(-1, 3, 100))
 	ηi(age, Zs) = photodissociation_efficiency(age, Zs * Zsun)[2] 
 
-	for Zs in range(0, 2, 5)
+	for Zs in range(0, 1.5, 4)
 		label = L"Z \, / \, Z_\odot = %$(Zs)"
 		lines!(ax, ages, x -> ηi(x, Zs); linewidth=3, label)
 	end
@@ -1157,6 +1263,34 @@ let
 	axislegend(ax; position=:rb, labelsize=25)
 
 	f
+end
+  ╠═╡ =#
+
+# ╔═╡ 493e649f-58ce-4b90-9b61-f9f8a6146ed9
+# ╠═╡ skip_as_script = true
+#=╠═╡
+let
+	ages = exp10.(range(-1, 3, 100))
+	ηi(age, Zs) = photodissociation_efficiency(age, Zs * Zsun)[2] 
+	
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"\mathrm{stellar \,\, age \, / \, Myr}",
+	        ylabel=L"\eta_i",
+	        xmode="log",
+			cycle_list_name="color list",
+			"no marks",
+			"thick",
+			legend_style={at = Coordinate(0.75, 0.4), anchor = "north"},
+	    },
+	)
+
+	for Zs in range(0, 1.5, 4)
+		push!(ax, PGFPlotsX.Plot(Coordinates(ages, ηi.(ages, Zs))))
+		push!(ax, PGFPlotsX.LegendEntry(L"Z \, / \, Z_\odot = %$(Zs)"))
+	end
+
+	pgfsave("generated_files/plots/eta_ion_vs_stellar_age.pdf", ax)
 end
   ╠═╡ =#
 
@@ -1471,7 +1605,7 @@ let
 	set_theme!(theme_black())
 	
 	f = Figure()
-	ax = Axis(
+	ax = CairoMakie.Axis(
 		f[1,1], 
 		xlabel=L"Z \, / \, Z_\odot", 
 		ylabel=L"R",
@@ -1481,12 +1615,34 @@ let
 		yticklabelsize=25,
 	)
 
-	metalicities = exp10.(range(-1, 0.2, 50))
+	metalicities = exp10.(range(-1, 0.2, 100))
 	R(Zs) = recycled_fractions(Zs * Zsun)[1]
 
 	lines!(ax, metalicities, R; linewidth=3)
 
 	f
+end
+  ╠═╡ =#
+
+# ╔═╡ bb4ee2dc-c069-415e-bac5-0130950f3941
+# ╠═╡ skip_as_script = true
+#=╠═╡
+let
+	metalicities = exp10.(range(-1, 0.2, 100))
+	R(Zs) = recycled_fractions(Zs * Zsun)[1] 
+	
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"Z \, / \, Z_\odot",
+	        ylabel=L"R",
+			"no marks",
+			"thick",
+	    },
+	)
+
+	push!(ax, PGFPlotsX.Plot(Coordinates(metalicities, R.(metalicities))))
+
+	pgfsave("generated_files/plots/R_vs_metalicity.pdf", ax)
 end
   ╠═╡ =#
 
@@ -1497,7 +1653,7 @@ let
 	set_theme!(theme_black())
 	
 	f = Figure()
-	ax = Axis(
+	ax = CairoMakie.Axis(
 		f[1,1], 
 		xlabel=L"Z \, / \, Z_\odot", 
 		ylabel=L"Z_\mathrm{SN}",
@@ -1507,12 +1663,34 @@ let
 		yticklabelsize=25,
 	)
 
-	metalicities = exp10.(range(-1, 0.2, 50))
+	metalicities = exp10.(range(-1, 0.2, 100))
     Zsn(Zs) = recycled_fractions(Zs * Zsun)[2]
 
 	lines!(ax, metalicities, Zsn; linewidth=3)
 
 	f
+end
+  ╠═╡ =#
+
+# ╔═╡ 57ea5e31-d156-4df5-bb77-0bc01b3559af
+# ╠═╡ skip_as_script = true
+#=╠═╡
+let
+	metalicities = exp10.(range(-1, 0.2, 100))
+    Zsn(Zs) = recycled_fractions(Zs * Zsun)[2]
+	
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"Z \, / \, Z_\odot",
+	        ylabel=L"Z_\mathrm{SN}",
+			"no marks",
+			"thick",
+	    },
+	)
+
+	push!(ax, PGFPlotsX.Plot(Coordinates(metalicities, Zsn.(metalicities))))
+
+	pgfsave("generated_files/plots/Zsn_vs_metalicity.pdf", ax)
 end
   ╠═╡ =#
 
@@ -1907,6 +2085,227 @@ function integrate_model(
 	
 end;
 
+# ╔═╡ f27edc09-6cc7-4446-b417-672daf30bc8f
+# function integrate_with_julia(; phase::String="stellar")::Function
+
+#     # Index in the ODE solution
+#     idx = phase_name_to_index[phase]
+
+#     function integration(
+# 		ic::Vector{Float64},
+# 		base_params::Vector{Float64}, 
+# 		it::Float64,
+# 	)::Float64
+#         solution = integrate_model(ic, base_params, (0.0, it))
+#         return solution[end][idx]
+#     end
+
+#     return integration
+	
+# end;
+
+# ╔═╡ e65aef30-bf57-4d7d-b878-276ea6c0ef4a
+# ╠═╡ skip_as_script = true
+#=╠═╡
+let
+	ic          = [0.15, 0.85, 0.0, 0.0]
+	ρC_list     = exp10.(range(-1, 5, 100))
+	base_params = [[ρC, 0.01 * Zsun] for ρC in ρC_list]
+	it          = 10.0
+	
+	# Star fraction
+	idx = phase_name_to_index["stellar"]
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
+	        ylabel=L"\mathrm{M_s / M_{C}}",
+	        xmode="log",
+			ymode="log",
+			cycle_list_name="color list",
+			"no marks",
+			"thick",
+	    },
+	)
+
+	s_f = [
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		base_param in base_params
+	]
+	push!(ax, PGFPlotsX.Plot(Coordinates(ρC_list, s_f)))
+
+	pgfsave("generated_files/plots/star_fraction_vs_density.pdf", ax)
+
+	# Molecular fraction
+	idx         = phase_name_to_index["molecular"]
+	
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
+	        ylabel=L"\mathrm{M_m / M_{C}}",
+	        xmode="log",
+			ymode="log",
+			cycle_list_name="color list",
+			"no marks",
+			"thick",
+	    },
+	)
+
+	m_f = [
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		base_param in base_params
+	]
+	push!(ax, PGFPlotsX.Plot(Coordinates(ρC_list, m_f)))
+
+	pgfsave("generated_files/plots/molecular_fraction_vs_density.pdf", ax)
+
+	# Atomic fraction
+	idx = phase_name_to_index["atomic"]
+	
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
+	        ylabel=L"\mathrm{M_a / M_{C}}",
+	        xmode="log",
+			ymode="log",
+			cycle_list_name="color list",
+			"no marks",
+			"thick",
+	    },
+	)
+
+	a_f = [
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		base_param in base_params
+	]
+	push!(ax, PGFPlotsX.Plot(Coordinates(ρC_list, a_f)))
+
+	pgfsave("generated_files/plots/atomic_fraction_vs_density.pdf", ax)
+
+	# Ionized fraction
+	idx = phase_name_to_index["ionized"]
+	
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
+	        ylabel=L"\mathrm{M_i / M_{C}}",
+	        xmode="log",
+			ymode="log",
+			cycle_list_name="color list",
+			"no marks",
+			"thick",
+	    },
+	)
+
+	i_f = [
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		base_param in base_params
+	]
+	push!(ax, PGFPlotsX.Plot(Coordinates(ρC_list, i_f)))
+
+	pgfsave("generated_files/plots/ionized_fraction_vs_density.pdf", ax)
+end
+  ╠═╡ =#
+
+# ╔═╡ 729bb0e3-3d60-4ac6-803e-2568a6970d44
+# ╠═╡ skip_as_script = true
+#=╠═╡
+let
+	ic          = [0.5, 0.5, 0.0, 0.0]
+	Z_list      = exp10.(range(-2, 0.0, 100))
+	base_params = [[1.0e2, Z * Zsun] for Z in Z_list]
+	it          = 10.0
+
+    # Star fraction
+	idx = phase_name_to_index["stellar"]
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"Z \, / \, Z_\odot",
+	        ylabel=L"\mathrm{M_s / M_{C}}",
+	        xmode="log",
+			ymode="log",
+			cycle_list_name="color list",
+			"no marks",
+			"thick",
+	    },
+	)
+
+	s_f = [
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		base_param in base_params
+	]
+	push!(ax, PGFPlotsX.Plot(Coordinates(Z_list, s_f)))
+
+	pgfsave("generated_files/plots/star_fraction_vs_metalicity.pdf", ax)
+
+	# Molecular fraction
+	idx = phase_name_to_index["molecular"]
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"Z \, / \, Z_\odot",
+	        ylabel=L"\mathrm{M_m / M_{C}}",
+	        xmode="log",
+			ymode="log",
+			cycle_list_name="color list",
+			"no marks",
+			"thick",
+	    },
+	)
+
+	m_f = [
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		base_param in base_params
+	]
+	push!(ax, PGFPlotsX.Plot(Coordinates(Z_list, m_f)))
+
+	pgfsave("generated_files/plots/molecular_fraction_vs_metalicity.pdf", ax)
+
+	# Atomic fraction
+	idx = phase_name_to_index["atomic"]
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"Z \, / \, Z_\odot",
+	        ylabel=L"\mathrm{M_a / M_{C}}",
+	        xmode="log",
+			ymode="log",
+			cycle_list_name="color list",
+			"no marks",
+			"thick",
+	    },
+	)
+
+	a_f = [
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		base_param in base_params
+	]
+	push!(ax, PGFPlotsX.Plot(Coordinates(Z_list, a_f)))
+
+	pgfsave("generated_files/plots/atomic_fraction_vs_metalicity.pdf", ax)
+
+	# Ionized fraction
+	idx = phase_name_to_index["ionized"]
+	@pgf ax = PGFPlotsX.Axis(
+	    {
+	        xlabel=L"Z \, / \, Z_\odot",
+	        ylabel=L"\mathrm{M_i / M_{C}}",
+	        xmode="log",
+			ymode="log",
+			cycle_list_name="color list",
+			"no marks",
+			"thick",
+	    },
+	)
+
+	i_f = [
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		base_param in base_params
+	]
+	push!(ax, PGFPlotsX.Plot(Coordinates(Z_list, i_f)))
+
+	pgfsave("generated_files/plots/ionized_fraction_vs_metalicity.pdf", ax)
+
+end
+  ╠═╡ =#
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -1918,6 +2317,7 @@ DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
@@ -1935,6 +2335,7 @@ DataFramesMeta = "~0.14.0"
 DelimitedFiles = "~1.9.1"
 DifferentialEquations = "~7.10.0"
 Interpolations = "~0.14.7"
+PGFPlotsX = "~1.6.0"
 PlutoUI = "~0.7.51"
 QuadGK = "~2.8.1"
 SpecialFunctions = "~2.3.1"
@@ -1954,7 +2355,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "3e026d515ad09779fb6b9971de9bd25f64d337ac"
+project_hash = "d2ff0a6d63bcbc08c350a1c268b5e083af62af80"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "5d2e21d7b0d8c22f67483ef95ebdc39c0e6b6003"
@@ -1963,9 +2364,9 @@ version = "0.2.4"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Preferences", "Random", "RandomExtensions", "SparseArrays", "Test"]
-git-tree-sha1 = "86eed254467cb8ae3fb524e46f9c14e916cc568d"
+git-tree-sha1 = "c3c29bf6363b3ac3e421dc8b2ba8e33bdacbd245"
 uuid = "c3fe647b-3220-5bb0-a1ea-a7954cac585d"
-version = "0.32.3"
+version = "0.32.5"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -2010,6 +2411,11 @@ git-tree-sha1 = "e81c509d2c8e49592413bfb0bb3b08150056c79d"
 uuid = "27a7e980-b3e6-11e9-2bcd-0b925532e340"
 version = "0.4.1"
 
+[[deps.ArgCheck]]
+git-tree-sha1 = "a3a402a35a2f7e0b87828ccabbd5ebfbebe356b4"
+uuid = "dce04be8-c92d-5529-be00-80e4d2c0e197"
+version = "2.3.0"
+
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 version = "1.1.1"
@@ -2050,9 +2456,9 @@ version = "0.1.29"
 
 [[deps.ArrayLayouts]]
 deps = ["FillArrays", "LinearAlgebra"]
-git-tree-sha1 = "0d61921af2799487b80453a44abb57db7a0c1381"
+git-tree-sha1 = "9a731850434825d183af39c6e6cd0a1c32dd7e20"
 uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
-version = "1.4.1"
+version = "1.4.2"
 weakdeps = ["SparseArrays"]
 
     [deps.ArrayLayouts.extensions]
@@ -2149,9 +2555,9 @@ version = "1.0.5"
 
 [[deps.CairoMakie]]
 deps = ["Base64", "Cairo", "Colors", "FFTW", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "Makie", "PrecompileTools", "SHA"]
-git-tree-sha1 = "6f2fa27e8609b72e97e36ede7e6aa981d8c7c98d"
+git-tree-sha1 = "74384dc4aba2b377e22703e849154252930c434d"
 uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-version = "0.10.10"
+version = "0.10.11"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -2171,10 +2577,14 @@ uuid = "8be319e6-bccf-4806-a6f7-6fae938471bc"
 version = "0.5.0"
 
 [[deps.ChainRulesCore]]
-deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "e30f2f4e20f7f186dc36529910beaedc60cfa644"
+deps = ["Compat", "LinearAlgebra"]
+git-tree-sha1 = "e0af648f0692ec1691b5d094b8724ba1346281cf"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.16.0"
+version = "1.18.0"
+weakdeps = ["SparseArrays"]
+
+    [deps.ChainRulesCore.extensions]
+    ChainRulesCoreSparseArraysExt = "SparseArrays"
 
 [[deps.ChaosTools]]
 deps = ["Combinatorics", "DSP", "Distances", "Distributions", "DynamicalSystemsBase", "IntervalRootFinding", "LinearAlgebra", "LombScargle", "Neighborhood", "Optim", "ProgressMeter", "Random", "Reexport", "Roots", "SpecialFunctions", "Statistics", "StatsBase"]
@@ -2324,6 +2734,12 @@ version = "1.0.0"
 deps = ["Printf"]
 uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 
+[[deps.DefaultApplication]]
+deps = ["InteractiveUtils"]
+git-tree-sha1 = "c0dfa5a35710a193d83f03124356eef3386688fc"
+uuid = "3f0dd361-4fe0-5fc6-8523-80b14ec94d85"
+version = "1.1.0"
+
 [[deps.DelaunayTriangulation]]
 deps = ["DataStructures", "EnumX", "ExactPredicates", "Random", "SimpleGraphs"]
 git-tree-sha1 = "bea7984f7e09aeb28a3b071c420a0186cb4fabad"
@@ -2332,9 +2748,9 @@ version = "0.8.8"
 
 [[deps.DelayDiffEq]]
 deps = ["ArrayInterface", "DataStructures", "DiffEqBase", "LinearAlgebra", "Logging", "OrdinaryDiffEq", "Printf", "RecursiveArrayTools", "Reexport", "SciMLBase", "SimpleNonlinearSolve", "SimpleUnPack"]
-git-tree-sha1 = "92f9967824241fe37d02e6dd76afb73b562a3fcf"
+git-tree-sha1 = "df712c77bb43b37ea966feb72cb2e92d51a3face"
 uuid = "bcd4f6db-9728-5f36-b5f7-82caef46ccdb"
-version = "5.43.0"
+version = "5.43.1"
 
 [[deps.DelimitedFiles]]
 deps = ["Mmap"]
@@ -2372,9 +2788,9 @@ version = "6.130.0"
 
 [[deps.DiffEqCallbacks]]
 deps = ["DataStructures", "DiffEqBase", "ForwardDiff", "Functors", "LinearAlgebra", "Markdown", "NLsolve", "Parameters", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArraysCore"]
-git-tree-sha1 = "acc53f895588767cbb296d3d8581ebd203524a2e"
+git-tree-sha1 = "6cb07ea2557f425a5464ab1bd21c50464368c1a2"
 uuid = "459566f4-90b8-5000-8ac3-15dfb0a30def"
-version = "2.33.0"
+version = "2.33.1"
 weakdeps = ["OrdinaryDiffEq", "Sundials"]
 
 [[deps.DiffEqNoiseProcess]]
@@ -2409,12 +2825,13 @@ version = "7.10.0"
 
 [[deps.Distances]]
 deps = ["LinearAlgebra", "Statistics", "StatsAPI"]
-git-tree-sha1 = "b6def76ffad15143924a2199f72a5cd883a2e8a9"
+git-tree-sha1 = "5225c965635d8c21168e32a12954675e7bea1151"
 uuid = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
-version = "0.10.9"
-weakdeps = ["SparseArrays"]
+version = "0.10.10"
+weakdeps = ["ChainRulesCore", "SparseArrays"]
 
     [deps.Distances.extensions]
+    DistancesChainRulesCoreExt = "ChainRulesCore"
     DistancesSparseArraysExt = "SparseArrays"
 
 [[deps.Distributed]]
@@ -2466,9 +2883,9 @@ version = "0.5.3"
 
 [[deps.DynamicalSystemsBase]]
 deps = ["ForwardDiff", "LinearAlgebra", "OrdinaryDiffEq", "Reexport", "Roots", "SciMLBase", "SparseArrays", "StateSpaceSets", "Statistics"]
-git-tree-sha1 = "52a39e80627713a1d30fedee20f795c64b75aa71"
+git-tree-sha1 = "d851ee90e5a051da7c9ec8a9072ac093ea150b5e"
 uuid = "6e36e845-645a-534a-86f2-f5d4aa5a06b4"
-version = "3.3.1"
+version = "3.4.1"
 
 [[deps.EarCut_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -2483,9 +2900,9 @@ version = "1.0.4"
 
 [[deps.EnzymeCore]]
 deps = ["Adapt"]
-git-tree-sha1 = "1091d4bbc2f2f7840a65fc0496c782b955dd82fb"
+git-tree-sha1 = "d8701002a745c450c03b890f10d53636d1a8a7ea"
 uuid = "f151be2c-9106-41f4-ab19-57ee4f262869"
-version = "0.6.0"
+version = "0.6.2"
 
 [[deps.ErrorfreeArithmetic]]
 git-tree-sha1 = "d6863c556f1142a061532e79f611aa46be201686"
@@ -2516,9 +2933,9 @@ uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
 version = "0.1.10"
 
 [[deps.Extents]]
-git-tree-sha1 = "5e1e4c53fa39afe63a7d356e30452249365fba99"
+git-tree-sha1 = "2140cd04483da90b2da7f99b2add0750504fc39c"
 uuid = "411431e0-e8b7-467b-b5e0-f676ba4f2910"
-version = "0.1.1"
+version = "0.1.2"
 
 [[deps.FFMPEG_jll]]
 deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Pkg", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
@@ -2540,9 +2957,9 @@ version = "3.3.10+0"
 
 [[deps.FastBroadcast]]
 deps = ["ArrayInterface", "LinearAlgebra", "Polyester", "Static", "StaticArrayInterface", "StrideArraysCore"]
-git-tree-sha1 = "aa9925a229d45fe3018715238956766fa21804d1"
+git-tree-sha1 = "9d77cb1caf03e67514ba60bcfc47c6e131b1950c"
 uuid = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
-version = "0.2.6"
+version = "0.2.7"
 
 [[deps.FastClosures]]
 git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
@@ -2572,9 +2989,9 @@ uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
 [[deps.FillArrays]]
 deps = ["LinearAlgebra", "Random"]
-git-tree-sha1 = "a20eaa3ad64254c61eeb5f230d9306e937405434"
+git-tree-sha1 = "35f0c0f345bff2c6d636f95fdb136323b5a796ef"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "1.6.1"
+version = "1.7.0"
 weakdeps = ["SparseArrays", "Statistics"]
 
     [deps.FillArrays.extensions]
@@ -2684,9 +3101,9 @@ version = "0.5.3"
 
 [[deps.GeoInterface]]
 deps = ["Extents"]
-git-tree-sha1 = "bb198ff907228523f3dee1070ceee63b9359b6ab"
+git-tree-sha1 = "d53480c0793b13341c40199190f92c611aa2e93c"
 uuid = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
-version = "1.3.1"
+version = "1.3.2"
 
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "Extents", "GeoInterface", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
@@ -2720,9 +3137,9 @@ version = "1.3.14+0"
 
 [[deps.Graphs]]
 deps = ["ArnoldiMethod", "Compat", "DataStructures", "Distributed", "Inflate", "LinearAlgebra", "Random", "SharedArrays", "SimpleTraits", "SparseArrays", "Statistics"]
-git-tree-sha1 = "1cf1d7dcb4bc32d7b4a5add4232db3750c27ecb4"
+git-tree-sha1 = "899050ace26649433ef1af25bc17a815b3db52b7"
 uuid = "86223c79-3864-5bf0-83f7-82e725a168b6"
-version = "1.8.0"
+version = "1.9.0"
 
 [[deps.GridLayoutBase]]
 deps = ["GeometryBasics", "InteractiveUtils", "Observables"]
@@ -2842,9 +3259,9 @@ uuid = "9b13fd28-a010-5f03-acff-a1bbcff69959"
 version = "1.0.0"
 
 [[deps.Inflate]]
-git-tree-sha1 = "5cd07aab533df5170988219191dfad0519391428"
+git-tree-sha1 = "ea8031dea4aff6bd41f1df8f2fdfb25b33626381"
 uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
-version = "0.1.3"
+version = "0.1.4"
 
 [[deps.InlineStrings]]
 deps = ["Parsers"]
@@ -3141,10 +3558,10 @@ uuid = "9b3f67b0-2d00-526e-9884-9e4938f8fb88"
 version = "0.1.12"
 
 [[deps.LinearSolve]]
-deps = ["ArrayInterface", "ConcreteStructs", "DocStringExtensions", "EnumX", "EnzymeCore", "FastLapackInterface", "GPUArraysCore", "InteractiveUtils", "KLU", "Krylov", "Libdl", "LinearAlgebra", "PrecompileTools", "Preferences", "RecursiveFactorization", "Reexport", "Requires", "SciMLBase", "SciMLOperators", "Setfield", "SparseArrays", "Sparspak", "SuiteSparse", "UnPack"]
-git-tree-sha1 = "ba01f7a97d3d8bd711b2c00a8a68c887d8a85c9d"
+deps = ["ArrayInterface", "ConcreteStructs", "DocStringExtensions", "EnumX", "EnzymeCore", "FastLapackInterface", "GPUArraysCore", "InteractiveUtils", "KLU", "Krylov", "Libdl", "LinearAlgebra", "MKL_jll", "PrecompileTools", "Preferences", "RecursiveFactorization", "Reexport", "Requires", "SciMLBase", "SciMLOperators", "Setfield", "SparseArrays", "Sparspak", "SuiteSparse", "UnPack"]
+git-tree-sha1 = "9f27ba34f5821a0495efb09ea3a465c31326495a"
 uuid = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
-version = "2.8.1"
+version = "2.10.0"
 
     [deps.LinearSolve.extensions]
     LinearSolveBlockDiagonalsExt = "BlockDiagonals"
@@ -3154,7 +3571,6 @@ version = "2.8.1"
     LinearSolveIterativeSolversExt = "IterativeSolvers"
     LinearSolveKernelAbstractionsExt = "KernelAbstractions"
     LinearSolveKrylovKitExt = "KrylovKit"
-    LinearSolveMKLExt = "MKL_jll"
     LinearSolveMetalExt = "Metal"
     LinearSolvePardisoExt = "Pardiso"
 
@@ -3166,7 +3582,6 @@ version = "2.8.1"
     IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
     KernelAbstractions = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
     KrylovKit = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
-    MKL_jll = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
     Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
     Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2"
 
@@ -3231,15 +3646,15 @@ version = "0.5.11"
 
 [[deps.Makie]]
 deps = ["Animations", "Base64", "CRC32c", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "DelaunayTriangulation", "Distributions", "DocStringExtensions", "Downloads", "FFMPEG_jll", "FileIO", "FixedPointNumbers", "Formatting", "FreeType", "FreeTypeAbstraction", "GeometryBasics", "GridLayoutBase", "ImageIO", "InteractiveUtils", "IntervalSets", "Isoband", "KernelDensity", "LaTeXStrings", "LinearAlgebra", "MacroTools", "MakieCore", "Markdown", "Match", "MathTeXEngine", "Observables", "OffsetArrays", "Packing", "PlotUtils", "PolygonOps", "PrecompileTools", "Printf", "REPL", "Random", "RelocatableFolders", "Setfield", "ShaderAbstractions", "Showoff", "SignedDistanceFields", "SparseArrays", "StableHashTraits", "Statistics", "StatsBase", "StatsFuns", "StructArrays", "TriplotBase", "UnicodeFun"]
-git-tree-sha1 = "cf10f4b9d09da50f124ab7bcb530e57f700328f0"
+git-tree-sha1 = "1d16d20279a145119899b4205258332f0fbeaa94"
 uuid = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-version = "0.19.10"
+version = "0.19.11"
 
 [[deps.MakieCore]]
-deps = ["Observables"]
-git-tree-sha1 = "17d51182db2667962bc7e1d18b74881d0d0adbe6"
+deps = ["Observables", "REPL"]
+git-tree-sha1 = "a94bf3fef9c690a2a4ac1d09d86a59ab89c7f8e4"
 uuid = "20f20a25-4f0e-4fdf-b5d1-57303727442b"
-version = "0.6.7"
+version = "0.6.8"
 
 [[deps.ManualMemory]]
 git-tree-sha1 = "bcaef4fc7a0cfe2cba636d84cda54b5e4e4ca3cd"
@@ -3440,9 +3855,9 @@ version = "0.5.5+0"
 
 [[deps.Optim]]
 deps = ["Compat", "FillArrays", "ForwardDiff", "LineSearches", "LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "PositiveFactorizations", "Printf", "SparseArrays", "StatsBase"]
-git-tree-sha1 = "963b004d15216f8129f6c0f7d187efa136570be0"
+git-tree-sha1 = "01f85d9269b13fedc61e63cc72ee2213565f7a72"
 uuid = "429524aa-4258-5aef-a3af-852621145aeb"
-version = "1.7.7"
+version = "1.7.8"
 
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -3457,9 +3872,9 @@ version = "1.6.2"
 
 [[deps.OrdinaryDiffEq]]
 deps = ["ADTypes", "Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "IfElse", "InteractiveUtils", "LineSearches", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLNLSolve", "SciMLOperators", "SimpleNonlinearSolve", "SimpleUnPack", "SparseArrays", "SparseDiffTools", "StaticArrayInterface", "StaticArrays", "TruncatedStacktraces"]
-git-tree-sha1 = "ede6c2334cb30bc83a450b282c10d0ae82fc122e"
+git-tree-sha1 = "def999a7447854f0e9ca9fdda235e04a65916b76"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.56.0"
+version = "6.58.0"
 
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -3468,15 +3883,28 @@ version = "10.42.0+0"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "bf6085e8bd7735e68c210c6e5d81f9a6fe192060"
+git-tree-sha1 = "66b2fcd977db5329aa35cac121e5b94dd6472198"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.11.19"
+version = "0.11.28"
+
+[[deps.PGFPlotsX]]
+deps = ["ArgCheck", "Dates", "DefaultApplication", "DocStringExtensions", "MacroTools", "OrderedCollections", "Parameters", "Requires", "Tables"]
+git-tree-sha1 = "3e7a0345b9f37da2cd770a5d47bb5cb6e62c7a81"
+uuid = "8314cec4-20b6-5062-9cdb-752b83310925"
+version = "1.6.0"
+weakdeps = ["Colors", "Contour", "Measurements", "StatsBase"]
+
+    [deps.PGFPlotsX.extensions]
+    ColorsExt = "Colors"
+    ContourExt = "Contour"
+    MeasurementsExt = "Measurements"
+    StatsBaseExt = "StatsBase"
 
 [[deps.PNGFiles]]
 deps = ["Base64", "CEnum", "ImageCore", "IndirectArrays", "OffsetArrays", "libpng_jll"]
-git-tree-sha1 = "9b02b27ac477cad98114584ff964e3052f656a0f"
+git-tree-sha1 = "5ded86ccaf0647349231ed6c0822c10886d4a1ee"
 uuid = "f57f5aa1-a3ce-4bc8-8ab9-96f992907883"
-version = "0.4.0"
+version = "0.4.1"
 
 [[deps.PackageExtensionCompat]]
 git-tree-sha1 = "fb28e33b8a95c4cee25ce296c817d89cc2e53518"
@@ -3557,9 +3985,9 @@ version = "0.4.4"
 
 [[deps.Polyester]]
 deps = ["ArrayInterface", "BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "ManualMemory", "PolyesterWeave", "Requires", "Static", "StaticArrayInterface", "StrideArraysCore", "ThreadingUtilities"]
-git-tree-sha1 = "d4c9ebdc6528a4aaf7cfcf43b482e927267b400d"
+git-tree-sha1 = "398f91235beaac50445557c937ecb0145d171842"
 uuid = "f517fe37-dbe3-4b94-8317-1923a5111588"
-version = "0.7.6"
+version = "0.7.8"
 
 [[deps.PolyesterWeave]]
 deps = ["BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "Static", "ThreadingUtilities"]
@@ -3628,9 +4056,9 @@ version = "1.4.1"
 
 [[deps.PrettyTables]]
 deps = ["Crayons", "LaTeXStrings", "Markdown", "Printf", "Reexport", "StringManipulation", "Tables"]
-git-tree-sha1 = "ee094908d720185ddbdc58dbe0c1cbe35453ec7a"
+git-tree-sha1 = "6842ce83a836fbbc0cfeca0b5a4de1a4dcbdb8d1"
 uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
-version = "2.2.7"
+version = "2.2.8"
 
 [[deps.Primes]]
 deps = ["IntegerMathUtils"]
@@ -3676,9 +4104,9 @@ version = "1.6.1"
 
 [[deps.RandomExtensions]]
 deps = ["Random", "SparseArrays"]
-git-tree-sha1 = "062986376ce6d394b23d5d90f01d81426113a3c9"
+git-tree-sha1 = "b8a399e95663485820000f26b6a43c794e166a49"
 uuid = "fb686558-2515-59ef-acaa-46db3789a887"
-version = "0.4.3"
+version = "0.4.4"
 
 [[deps.RandomNumbers]]
 deps = ["Random", "Requires"]
@@ -3738,9 +4166,9 @@ version = "1.2.2"
 
 [[deps.RelocatableFolders]]
 deps = ["SHA", "Scratch"]
-git-tree-sha1 = "90bc7a7c96410424509e4263e277e43250c05691"
+git-tree-sha1 = "ffdaf70d81cf6ff22c2b6e733c900c3321cab864"
 uuid = "05181044-ff0b-4ac5-8273-598c1e38db00"
-version = "1.0.0"
+version = "1.0.1"
 
 [[deps.Requires]]
 deps = ["UUIDs"]
@@ -3774,19 +4202,21 @@ version = "0.4.0+0"
 
 [[deps.Roots]]
 deps = ["ChainRulesCore", "CommonSolve", "Printf", "Setfield"]
-git-tree-sha1 = "ff42754a57bb0d6dcfe302fd0d4272853190421f"
+git-tree-sha1 = "06b5ac80ff1b88bd82df92c1c1875eea3954cd6e"
 uuid = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
-version = "2.0.19"
+version = "2.0.20"
 
     [deps.Roots.extensions]
     RootsForwardDiffExt = "ForwardDiff"
     RootsIntervalRootFindingExt = "IntervalRootFinding"
     RootsSymPyExt = "SymPy"
+    RootsSymPyPythonCallExt = "SymPyPythonCall"
 
     [deps.Roots.weakdeps]
     ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
     IntervalRootFinding = "d2bf35a9-74e0-55ec-b149-d360ff49b807"
     SymPy = "24249f21-da20-56a4-8eb1-6a02cf4ae2e6"
+    SymPyPythonCall = "bc8888f7-b21e-4b7c-a06a-5d9c9496438c"
 
 [[deps.RoundingEmulator]]
 git-tree-sha1 = "40b9edad2e5287e05bd413a38f61a8ff55b9557b"
@@ -3900,9 +4330,9 @@ version = "0.8.4"
 
 [[deps.SimpleNonlinearSolve]]
 deps = ["ArrayInterface", "DiffEqBase", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "PackageExtensionCompat", "PrecompileTools", "Reexport", "SciMLBase", "StaticArraysCore"]
-git-tree-sha1 = "4d53b83af904049c493daaf2a225bcae994a3c59"
+git-tree-sha1 = "e308d089f5d0e733a017b61784c5813e672f760d"
 uuid = "727e6d20-b764-4bd8-a329-72de5adea6c7"
-version = "0.1.20"
+version = "0.1.22"
 
     [deps.SimpleNonlinearSolve.extensions]
     SimpleNonlinearSolveNNlibExt = "NNlib"
@@ -3956,19 +4386,19 @@ uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[deps.SortingAlgorithms]]
 deps = ["DataStructures"]
-git-tree-sha1 = "c60ec5c62180f27efea3ba2908480f8055e17cee"
+git-tree-sha1 = "5165dfb9fd131cf0c6957a3a7605dede376e7b63"
 uuid = "a2af1166-a08f-5f64-846c-94a0d3cef48c"
-version = "1.1.1"
+version = "1.2.0"
 
 [[deps.SparseArrays]]
 deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.SparseDiffTools]]
-deps = ["ADTypes", "Adapt", "ArrayInterface", "Compat", "DataStructures", "FiniteDiff", "ForwardDiff", "Graphs", "LinearAlgebra", "PackageExtensionCompat", "Reexport", "SciMLOperators", "Setfield", "SparseArrays", "StaticArrayInterface", "StaticArrays", "Tricks", "UnPack", "VertexSafeGraphs"]
-git-tree-sha1 = "42d131931906bf4f0af97a7113c8456d0a8aff9d"
+deps = ["ADTypes", "Adapt", "ArrayInterface", "Compat", "DataStructures", "FiniteDiff", "ForwardDiff", "Graphs", "LinearAlgebra", "PackageExtensionCompat", "Random", "Reexport", "SciMLOperators", "Setfield", "SparseArrays", "StaticArrayInterface", "StaticArrays", "Tricks", "UnPack", "VertexSafeGraphs"]
+git-tree-sha1 = "336fd944a1bbb8873bfa8171387608ca93317d68"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
-version = "2.6.0"
+version = "2.8.0"
 
     [deps.SparseDiffTools.extensions]
     SparseDiffToolsEnzymeExt = "Enzyme"
@@ -4033,9 +4463,9 @@ weakdeps = ["OffsetArrays", "StaticArrays"]
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore"]
-git-tree-sha1 = "d5fb407ec3179063214bc6277712928ba78459e2"
+git-tree-sha1 = "0adf069a2a490c47273727e029371b31d44b72b2"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.6.4"
+version = "1.6.5"
 weakdeps = ["Statistics"]
 
     [deps.StaticArrays.extensions]
@@ -4059,9 +4489,9 @@ version = "1.7.0"
 
 [[deps.StatsBase]]
 deps = ["DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
-git-tree-sha1 = "1d77abd07f617c4868c33d4f5b9e1dbb2643c9cf"
+git-tree-sha1 = "d1bf48bfcc554a3761a133fe3a9bb01488e06916"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.34.2"
+version = "0.33.21"
 
 [[deps.StatsFuns]]
 deps = ["HypergeometricFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
@@ -4192,9 +4622,9 @@ version = "0.5.2"
 
 [[deps.TiffImages]]
 deps = ["ColorTypes", "DataStructures", "DocStringExtensions", "FileIO", "FixedPointNumbers", "IndirectArrays", "Inflate", "Mmap", "OffsetArrays", "PkgVersion", "ProgressMeter", "UUIDs"]
-git-tree-sha1 = "b7dc44cb005a7ef743b8fe98970afef003efdce7"
+git-tree-sha1 = "34cc045dd0aaa59b8bbe86c644679bc57f1d5bd0"
 uuid = "731e570b-9d59-4bfa-96dc-6df516fadf69"
-version = "0.6.6"
+version = "0.6.8"
 
 [[deps.TikzPictures]]
 deps = ["LaTeXStrings", "Poppler_jll", "Requires", "tectonic_jll"]
@@ -4232,9 +4662,9 @@ uuid = "d5829a12-d9aa-46ab-831f-fb7c9ab06edf"
 version = "0.1.19"
 
 [[deps.Tricks]]
-git-tree-sha1 = "aadb748be58b492045b4f56166b5188aa63ce549"
+git-tree-sha1 = "eae1bb484cd63b36999ee58be2de6c178105112f"
 uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
-version = "0.1.7"
+version = "0.1.8"
 
 [[deps.TriplotBase]]
 git-tree-sha1 = "4d4ed7f294cda19382ff7de4c137d24d16adc89b"
@@ -4253,9 +4683,9 @@ uuid = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
 version = "1.4.3"
 
 [[deps.URIs]]
-git-tree-sha1 = "b7a5e99f24892b6824a954199a45e9ffcc1c70f0"
+git-tree-sha1 = "67db6cc7b3821e19ebe75791a9dd19c9b1188f2b"
 uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
-version = "1.5.0"
+version = "1.5.1"
 
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
@@ -4319,9 +4749,9 @@ version = "0.5.5"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Zlib_jll"]
-git-tree-sha1 = "04a51d15436a572301b5abbb9d099713327e9fc4"
+git-tree-sha1 = "24b81b59bd35b3c42ab84fa589086e19be919916"
 uuid = "02c8fc9c-b97f-50b9-bbe4-9be30ff0a78a"
-version = "2.10.4+0"
+version = "2.11.5+0"
 
 [[deps.XSLT_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgcrypt_jll", "Libgpg_error_jll", "Libiconv_jll", "Pkg", "XML2_jll", "Zlib_jll"]
@@ -4507,14 +4937,17 @@ version = "3.5.0+0"
 # ╠═68732d91-805a-4663-9166-f8483213a8d2
 # ╠═27281e53-e519-4ad0-af5d-59fb0e208534
 # ╟─327fd38a-5ff6-4ac4-8d29-694272d9d46f
+# ╠═9a24d3ac-a238-4eef-afc0-00fa7ef51475
 # ╟─897909e2-dcad-4ef6-9161-fd3654160dba
 # ╠═00030fd8-a9db-4903-b2ed-21a64db30588
 # ╠═d4f91aa3-183a-4abf-8f7a-7a05d4333e3a
 # ╟─7e824ce1-1f82-48cc-a3c4-1acfba0e2100
+# ╠═f2cc8e6f-737c-42e3-bb81-42c50d62cf78
 # ╟─4a7eb24b-0874-49a3-9b08-4ffb6a7f0ce7
 # ╠═f2a6676f-457a-476a-9ce7-c336aa9bf47f
 # ╠═1734df7f-1309-4ebd-a021-5f75f0bb78b2
-# ╟─4f7de8a3-7f59-4a7b-8980-53390e52e0d1
+# ╠═4f7de8a3-7f59-4a7b-8980-53390e52e0d1
+# ╠═7ad23ea4-9887-4de5-8a5c-c37ebef736b8
 # ╟─3767c7f9-a0bc-467a-a20a-5e5a266111c7
 # ╟─f65d84cd-ab5f-4270-98ba-568792d1fec1
 # ╟─34faac11-85a2-44dc-bd8d-1a71656fccf4
@@ -4525,7 +4958,9 @@ version = "3.5.0+0"
 # ╠═3e637368-6bdb-4d22-9a4a-df23c6682c2f
 # ╠═ef65a096-cc2a-4ce6-a06b-8671c99ca777
 # ╟─a0294888-90cf-4e5b-a4b8-ce2c63bdae7a
+# ╠═303da7a3-e574-4f7e-9acc-83ed83a09f69
 # ╟─994f97fb-1c30-4825-9b29-35fe4ade8fb3
+# ╠═493e649f-58ce-4b90-9b61-f9f8a6146ed9
 # ╟─533b3cd0-c1f6-4ecd-b196-4ed35bf77135
 # ╟─be85ba3b-5439-4cf3-bb14-d24d61a283c3
 # ╟─b3a260b6-eb31-43a0-9fd6-60a507984319
@@ -4533,7 +4968,9 @@ version = "3.5.0+0"
 # ╠═7cbf5573-032e-4ddd-9575-f387a577c93e
 # ╠═1b044783-0f5f-4321-abda-35e5b7ae67c4
 # ╟─1d0a66d0-5791-4dc9-a5d4-7882b0e91767
+# ╠═bb4ee2dc-c069-415e-bac5-0130950f3941
 # ╟─041916ac-4cb0-4630-a227-043fae52264d
+# ╠═57ea5e31-d156-4df5-bb77-0bc01b3559af
 # ╟─9666bdc8-cbc0-4757-9bd8-a76477c252eb
 # ╟─ca9a233b-d3ca-4a76-a3d8-f29884ac9484
 # ╠═d8bee772-3979-42cd-9e38-8df0925b4e6b
@@ -4555,5 +4992,8 @@ version = "3.5.0+0"
 # ╠═16b56ce2-6b02-4d53-a7a7-7cd7f96f26c5
 # ╟─4607856c-7472-4131-a2ee-29f7150f5cb4
 # ╠═bbb7263a-91e4-4a23-9e5f-416b6b7fcf6e
+# ╠═f27edc09-6cc7-4446-b417-672daf30bc8f
+# ╠═e65aef30-bf57-4d7d-b878-276ea6c0ef4a
+# ╠═729bb0e3-3d60-4ac6-803e-2568a6970d44
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
