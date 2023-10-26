@@ -23,17 +23,17 @@ static char *R_TABLE_PATH     = "../code/src/ez_sfr/tables/R_Zsn.txt";
 
 /* ϵff  = 1.0000 (stellar formation efficiency) */
 /* Zsun = 0.0127 (solar metallicity) */
-/* Cρ   = 1.0000 (clumping factor) */
+/* Cρ   = 100.0000 (clumping factor) */
 	
 #define N_EQU 4 /* Number of equations */
 #define ODE_CS 5.1470081e+01  /* [Myr * cm^(-3/2)] */
-#define ODE_CR 1.2187726e+01  /* [Myr * cm^(-3)] */
-#define ODE_CC 5.7491245e+03  /* [Myr * cm^(-3)] */
+#define ODE_CR 1.2187726e-01  /* [Myr * cm^(-3)] */
+#define ODE_CC 5.7491245e-02  /* [Myr * cm^(-3)] */
 #define ZEFF 1.2700e-05  /* 1e-3 Zₒ */
 #define AW 0.00  /* Weight of the atomic fraction in the computation of the SFR */         
 #define MW 1.00  /* Weight of the molecular fraction in the computation of the SFR */
-#define XA 1.00e-02  /* Atomic volume fraction */
-#define XM 1.00e-05  /* Molecular volume fraction */
+#define XA 1.00e+00  /* Atomic volume fraction */
+#define XM 1.00e+00  /* Molecular volume fraction */
 	
 typedef struct DataTable
 {
