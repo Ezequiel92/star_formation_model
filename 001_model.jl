@@ -25,12 +25,11 @@ md"# Star formation model"
 md"""
 ## Motivation
 
-The star formation rate (SFR) is a key characteristic of galaxies. In the context of the standard cosmological model ($\Lambda$CDM), the SFR is determined by a combination of various processes that take place over the course of a galaxy's lifetime, such as gas cooling, star formation, chemical enrichment, and feedback from supernovae and galactic nuclei. These processes are influenced by factors like mergers, interactions, and mass accretion, which affect the amount and properties of the gas from which stars form. The density of a gas cloud is believed to be the most important factor in determining its star formation rate, although the details of this process are not yet fully understood. Observationally, the total gas density is found to be correlated to the star formation rate ([Kennicutt1998](https://doi.org/10.1086/305588)), and this correlation is even stronger when considering the molecular gas ([Wong2002](https://doi.org/10.1086/339287), [Bigiel2008](https://doi.org/10.1088/0004-6256/136/6/2846)). The underlying reason is the intrinsic relation between molecular gas mass and SFR, which can be found at resolved scales ([Baker2021](https://doi.org/10.1093/mnras/stab3672)) and at integrated (i.e. galaxy wide) scales across redshifts ([Baker2022](https://doi.org/10.1093/mnras/stac3413)).
+The star formation rate (SFR) is a key characteristic of galaxies. In the context of the standard cosmological model ($\Lambda$CDM), the SFR is given by a combination of processes that take place over the course of a galaxy's lifetime, such as gas cooling, star formation, chemical enrichment, and feedback from supernovae and galactic nuclei. These processes are influenced by factors like mergers, interactions, and mass accretion, which affect the amount and properties of the gas from which stars form. The density of a gas cloud is believed to be the most important factor in determining its star formation rate, although the details of this process are not yet fully understood. Observationally, the total gas density is found to be correlated to the star formation rate ([Kennicutt1998](https://doi.org/10.1086/305588)), and this correlation is even stronger with molecular gas ([Wong2002](https://doi.org/10.1086/339287), [Bigiel2008](https://doi.org/10.1088/0004-6256/136/6/2846)). The underlying reason is the intrinsic relation between molecular gas mass and SFR, which can be found at resolved scales ([Baker2021](https://doi.org/10.1093/mnras/stab3672)) and at integrated (i.e. galaxy-wide) scales across redshifts ([Baker2022](https://doi.org/10.1093/mnras/stac3413)).
 
-As the formation of dark matter halos and galaxies is highly non-linear, numerical simulations have become the preferred tool to investigate how galaxies form and evolve from early times up to the present.
-This type of simulations naturally includes mergers/interactions and continuous gas accretion, processes that may influence the SFR.  However, there are still significant uncertainties in the modelling of the evolution of the baryonic component, since the physical processes that affect baryons – such as star formation, feedback, and chemical enrichment – take place at scales that are too small to be resolved directly. As a result, these processes are introduced using sub-grid physics, which involves several adjustable parameters that are not always independent of one another or constrained observationally. This can lead to inconsistencies in the predictions of different models ([Scannapieco2012](https://doi.org/10.1111/j.1365-2966.2012.20993.x), [Zhu2016](https://doi.org/10.3847/0004-637X/831/1/52), [Naab2017](https://doi.org/10.1146/annurev-astro-081913-040019)).
+Because the formation of dark matter halos and galaxies is highly non-linear, numerical simulations have become the preferred tool to investigate how galaxies form and evolve from early times up to the present. This type of simulation naturally includes mergers/interactions and continuous gas accretion. However, there are still significant uncertainties in the modeling of the baryonic component, since the physical processes that affect baryons – such as star formation, feedback, and chemical enrichment – take place at scales that are too small to be resolved directly. As a result, these processes are introduced using sub-grid physics, which involves several adjustable parameters that are not always independent of one another or constrained by observations. This can lead to inconsistencies in the predictions of different models ([Scannapieco2012](https://doi.org/10.1111/j.1365-2966.2012.20993.x), [Zhu2016](https://doi.org/10.3847/0004-637X/831/1/52), [Naab2017](https://doi.org/10.1146/annurev-astro-081913-040019)).
 
-Because of its importance in galaxy formation, it is critical for simulations to accurately describe the star formation process at the scales that can be resolved, as well as the associated feedback effects.
+Because of its importance in galaxy formation, it is critical for simulations to accurately describe the star formation process at the scales that can be resolved and the associated feedback effects.
 """
   ╠═╡ =#
 
@@ -41,34 +40,34 @@ md"""
 
 ## Previous work 
 
-As the precision of $\mathrm{H_2}$ measurements increases, so too must the sophistication of simulations that model its formation and evolution. Many simulations use an equilibrium model to define the of $\mathrm{H_2}$ content, which assumes that the chemistry in each volume element is in a state of equilibrium determined by purely local variables ([Krumholz2008](https://doi.org/10.1086/592490), [McKee2010](https://doi.org/10.1088/0004-637X/709/1/308), [Krumholz2011](https://doi.org/10.1088/0004-637X/729/1/36), and [Krumholz2013](https://doi.org/10.1093/mnras/stt1780)). However, this assumption is not always valid, as the formation and destruction of of $\mathrm{H_2}$ can be influenced by a variety of factors, including temperature, density, and the presence of UV radiation. 
-
-In [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) it is first developed a non-equilibrium chemical network for molecular hydrogen. This network uses rate equations to track the formation and destruction of of $\mathrm{H_2}$ in each volume element, taking into account a variety of factors that can influence its abundance. In the last decade several non-equilibrium models have been develop and implemented in hydrodynamical simulations. In general, they use radiative transfer, at varying levels of detail, to model the radiation field, which in conjunction with a chemical network (a set of ODEs) evolve the abundance of molecular hydrogen and other species of hydrogen and helium. A summary table of previous work can be seen below 
-
-| Reference     | Code | 
-|:-------------:|:----:| 
-| [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Gnedin2011](https://doi.org/10.1088/0004-637X/728/2/88) | $\texttt{ART}$ ([Kravtsov1997](https://doi.org/10.1086/313015)) | 
-| [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) | $\texttt{GASOLINE}$ ([Wadsley2004](https://doi.org/10.1016/j.newast.2003.08.004)) |
-| [Tomassetti2014](https://doi.org/10.1093/mnras/stu2273) | $\texttt{RAMSES}$ ([Teyssier2001](https://doi.org/10.1051/0004-6361:20011817)) | 
-| [Baczynski2015](https://doi.org/10.1093/mnras/stv1906) | $\texttt{FLASH4}$ ([Fryxell2000](https://doi.org/10.1086/317361)) | 
-| [Richings2016](https://doi.org/10.1093/mnras/stw327) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) | 
-| [Hu2016](https://doi.org/10.1093/mnras/stw544) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) | 
-| [Katz2017](https://doi.org/10.1093/mnras/stx608) | $\texttt{RAMSES-RT}$ ([Rosdahl2013](https://doi.org/10.1093/mnras/stt1722)) | 
-| [Pallottini2017](https://doi.org/10.1093/mnras/stx608) | $\texttt{RAMSES}$ ([Teyssier2001](https://doi.org/10.1051/0004-6361:20011817)) | 
-| [Lupi2017](https://doi.org/10.1093/mnras/stx2874) | $\texttt{GASOLINE2}$ ([Wadsley2017](https://doi.org/10.1093/mnras/stx1643)) | 
-| [Capelo2018](https://doi.org/10.1093/mnras/stx3355) | $\texttt{GIZMO}$ ([Hopkins2015](https://doi.org/10.1093/mnras/stv195)) | 
-| [Nickerson2018](https://doi.org/10.1093/mnras/sty1556) and [Nickerson2019](https://doi.org/10.1093/mnras/stz048) | $\texttt{RAMSES-RT}$ ([Rosdahl2013](https://doi.org/10.1093/mnras/stt1722)) | 
-| [Sillero2021](https://doi.org/10.1093/mnras/stab1015) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) |
-
-As an alternative to the computationally expensive radiative transfer process, semi analytical models (SAM) for the multiphase structure of the interstellar medium (MP ISM) have been develop. Broadly, there are two ways to model the MP ISM, one is based on the physical properties of the gas (hot and cold phases), and the other on its chemical composition (hydrogen phases). 
-
-The former was pioneer by [Field1969](https://doi.org/10.1086/180324) (see [Cowie1977](https://doi.org/10.1086/154911), [McKee1977a](https://doi.org/10.1086/155350), and for a review [Cox2005](https://doi.org/10.1146/annurev.astro.43.072103.150615)), within the context of pure SAMs. The model develops by [McKee1977b](https://doi.org/10.1086/155667) was first incorporated into numerical simulation of galaxy formation by [Yepes1997](https://doi.org/10.1093/mnras/284.1.235) (Eulerian) and [Hultman1999](https://ui.adsabs.harvard.edu/abs/1999A%26A...347..769H) (Lagrangian). These works were later extended by [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), adding galactic winds driven by star formation as a form of feedback.  
-
-[Monaco2004](https://doi.org/10.1111/j.1365-2966.2004.07916.x) developed a SAM in a similar vein to [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), providing the theoretical foundation for MUPPI (MUlti-Phase Particle Integrator) ([Murante2010](https://doi.org/10.1111/j.1365-2966.2010.16567.x)), a sub-resolution MP ISM model that adds stellar feedback to $\texttt{GADGET2}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)). MUPPI separates a gas particle in a hot and cold phase if a set of conditions for its density and temperature are match. It then evolves those components, plus a stellar phase and an energy term (energy of the hot gas) using a set of four ODEs.  
-
-Based on [Ferrini1992](https://doi.org/10.1086/171066) and later work, [Mollá2015](https://doi.org/10.1111/j.1365-2966.2005.08782.x) develop a SAM to follow the metal component in galaxies. These chemical evolution models (CEMs) where subsequently improve and extended in [Mollá2015](https://doi.org/10.1093/mnras/stv1102), [Mollá2016](https://doi.org/10.1093/mnras/stw1723), [Mollá2017](https://doi.org/10.1093/mnras/stx419) and [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635). The latter, tracking the molecular, atomic and ionized phases of hydrogen, plus dust and stars.  
-
-We will use a sub-resolution SAM, following closely the one developed by [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) but implemented within the hydrodynamical code $\texttt{Arepo}$ ([Springel2010](https://doi.org/10.1111/j.1365-2966.2009.15715.x)), the same way MUPPI is into $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)).
+As the precision of $\mathrm{H_2}$ measurements increases, so too must the sophistication of simulations that model its formation and evolution. Many simulations use an equilibrium model to define the $\mathrm{H_2}$ content, which assumes that the chemistry in each volume element is in a state of equilibrium given only by local variables ([Krumholz2008](https://doi.org/10.1086/592490), [McKee2010](https://doi.org/10.1088/0004-637X/709/1/308), [Krumholz2011](https://doi.org/10.1088/0004-637X/729/1/36), and [Krumholz2013](https://doi.org/10.1093/mnras/stt1780)). However, this assumption is not always valid; as the formation and destruction of $\mathrm{H_2}$ can be influenced by a variety of factors, including temperature, density, and the presence of UV radiation.
+  
+In [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) it is described, for the first time, a non-equilibrium chemical network for molecular hydrogen. This network uses rate equations to track the formation and destruction of $\mathrm{H_2}$ in each volume element, considering a variety of factors that can influence its abundance. In the last decade, several non-equilibrium models have been developed and implemented in hydrodynamical simulations. In general, they use radiative transfer to model the radiation field, which, in conjunction with a chemical network (a set of ODEs), evolves the abundance of molecular hydrogen and other species of hydrogen and helium. A summary table of previous work can be seen below  
+  
+| Reference     | Code |  
+|:-------------:|:----:|  
+| [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Gnedin2011](https://doi.org/10.1088/0004-637X/728/2/88) | $\texttt{ART}$ ([Kravtsov1997](https://doi.org/10.1086/313015)) |  
+| [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) | $\texttt{GASOLINE}$ ([Wadsley2004](https://doi.org/10.1016/j.newast.2003.08.004)) | 
+| [Tomassetti2014](https://doi.org/10.1093/mnras/stu2273) | $\texttt{RAMSES}$ ([Teyssier2001](https://doi.org/10.1051/0004-6361:20011817)) |  
+| [Baczynski2015](https://doi.org/10.1093/mnras/stv1906) | $\texttt{FLASH4}$ ([Fryxell2000](https://doi.org/10.1086/317361)) |  
+| [Richings2016](https://doi.org/10.1093/mnras/stw327) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) |  
+| [Hu2016](https://doi.org/10.1093/mnras/stw544) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) |  
+| [Katz2017](https://doi.org/10.1093/mnras/stx608) | $\texttt{RAMSES-RT}$ ([Rosdahl2013](https://doi.org/10.1093/mnras/stt1722)) |  
+| [Pallottini2017](https://doi.org/10.1093/mnras/stx608) | $\texttt{RAMSES}$ ([Teyssier2001](https://doi.org/10.1051/0004-6361:20011817)) |  
+| [Lupi2017](https://doi.org/10.1093/mnras/stx2874) | $\texttt{GASOLINE2}$ ([Wadsley2017](https://doi.org/10.1093/mnras/stx1643)) |  
+| [Capelo2018](https://doi.org/10.1093/mnras/stx3355) | $\texttt{GIZMO}$ ([Hopkins2015](https://doi.org/10.1093/mnras/stv195)) |  
+| [Nickerson2018](https://doi.org/10.1093/mnras/sty1556) and [Nickerson2019](https://doi.org/10.1093/mnras/stz048) | $\texttt{RAMSES-RT}$ ([Rosdahl2013](https://doi.org/10.1093/mnras/stt1722)) |  
+| [Sillero2021](https://doi.org/10.1093/mnras/stab1015) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) | 
+  
+As an alternative to the computationally expensive radiative transfer process, semi-analytical models (SAM) have been developed for the multiphase structure of the interstellar medium (MP ISM). Broadly, there are two ways to model the MP ISM, one considers on the physical properties of the gas (hot and cold phases), and the other on its chemical composition (hydrogen phases).  
+  
+The former was pioneer by [Field1969](https://doi.org/10.1086/180324) (see [Cowie1977](https://doi.org/10.1086/154911), [McKee1977a](https://doi.org/10.1086/155350), and for a review [Cox2005](https://doi.org/10.1146/annurev.astro.43.072103.150615)), within the context of pure SAMs. The model developed by [McKee1977b](https://doi.org/10.1086/155667) was first incorporated into numerical simulation of galaxy formation by [Yepes1997](https://doi.org/10.1093/mnras/284.1.235) (Eulerian simulations) and [Hultman1999](https://ui.adsabs.harvard.edu/abs/1999A%26A...347..769H) (Lagrangian simulations). These works were later extended by [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), adding galactic winds driven by star formation as a form of feedback.   
+  
+[Monaco2004](https://doi.org/10.1111/j.1365-2966.2004.07916.x) developed a SAM in a similar vein to [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), providing the theoretical foundation for MUPPI (MUlti-Phase Particle Integrator) ([Murante2010](https://doi.org/10.1111/j.1365-2966.2010.16567.x)), a sub-resolution MP ISM model that adds stellar feedback to $\texttt{GADGET2}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)). MUPPI separates a gas particle in a hot and cold phase if a set of conditions for its density and temperature are met. It then evolves those components, plus a stellar phase and an energy term (energy of the hot gas), using a set of four ODEs.   
+  
+Based on [Ferrini1992](https://doi.org/10.1086/171066) and later work, [Mollá2015](https://doi.org/10.1111/j.1365-2966.2005.08782.x) developed a SAM to follow the metallicity in galaxies. These chemical evolution models (CEMs) were subsequently improved and extended in [Mollá2015](https://doi.org/10.1093/mnras/stv1102), [Mollá2016](https://doi.org/10.1093/mnras/stw1723), [Mollá2017](https://doi.org/10.1093/mnras/stx419) and [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635). The latter tracks five components: the molecular, atomic, and ionized phases of hydrogen; plus dust and stars.   
+  
+We will use a sub-resolution SAM, following closely the one developed by [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) but implemented within the hydrodynamical code $\texttt{Arepo}$ ([Springel2010](https://doi.org/10.1111/j.1365-2966.2009.15715.x)), like the way MUPPI is integrated with $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)). 
 """
   ╠═╡ =#
 
@@ -78,23 +77,23 @@ We will use a sub-resolution SAM, following closely the one developed by [Millá
 md"""
 ## Phases and notation
 
-We will model the interstellar medium (ISM) as a multi-phase structure made up of four components. Three of which are different states of hydrogen: ionized gas with a temperature of $\sim \! 10^4 \, \mathrm{K}$, atomic gas with a temperature of $\sim \! 100 \, \mathrm{K}$, and molecular gas with a temperature of $\sim \! 10 \, \mathrm{K}$. The final component is the stars.
+We will model the interstellar medium as a multi-phase structure made up of four components. Three are the different states of hydrogen: ionized gas with a temperature of $\sim \! 10^4 \, \mathrm{K}$, atomic gas with a temperature of $\sim \! 100 \, \mathrm{K}$, and molecular gas with a temperature of $\sim \! 10 \, \mathrm{K}$. The final component is the stars.
 
-For every reaction that transfers mass between the phases, we will consider only the dominant channel. So, even though the gas is mostly made up of hydrogen and helium, only the hydrogen reactions are incorporated into the model. The processes involved are the photoionization of atoms, the recombination of electrons with ions, the conversion of atomic hydrogen into molecular hydrogen; and the destruction of the latter owing to the photodissociation caused by ultraviolet (UV) light from the young stellar population. In addition, we consider the formation of ionized gas by supernovas, and the influence of the molecular gas on the SFR.
+For every reaction that transfers mass between the phases, we will only use the dominant channel. So, even though the gas is mostly made up of hydrogen and helium, only the hydrogen reactions are incorporated into the model. The processes involved are the photoionization of atoms, the recombination of electrons with ions, the conversion of atomic hydrogen into molecular hydrogen, and the destruction of the latter through photodissociation caused by ultraviolet (UV) light. In addition, we consider the formation of ionized gas by supernovas and the influence of the molecular gas on the SFR.
 
 We characterized each phase by its mass fraction with respect to the total mass of the cell,
 
 |||
 |:-------------:|:--------------------:|
-| Ionized gas   | $f_i(t) ≔ M_i / M_C$ |
-| Atomic gas    | $f_a(t) ≔ M_a / M_C$ |
-| Molecular gas | $f_m(t) ≔ M_m / M_C$ |
-| Stars         | $f_s(t) ≔ M_s / M_C$ |
+| Ionized gas   | $f_i(t) := M_i / M_C$ |
+| Atomic gas    | $f_a(t) := M_a / M_C$ |
+| Molecular gas | $f_m(t) := M_m / M_C$ |
+| Stars         | $f_s(t) := M_s / M_C$ |
 
-where $M_i$, $M_a$, $M_m$, $M_s$ are the corresponding masses, and
+where $M_i$, $M_a$, $M_m$, $M_s$ are the corresponding masses and
 
 $\begin{equation}
-    M_C(t) ≔ M_i(t) + M_a(t) + M_m(t) + M_s(t) \, ,
+    M_C(t) := M_i(t) + M_a(t) + M_m(t) + M_s(t) \, ,
 \end{equation}$
 
 is the total cell mass.
@@ -127,9 +126,9 @@ $\begin{equation}
     \rho_j := \frac{M_j}{V_j} = \frac{M_j}{M_C} \, \frac{M_C}{V_j} = f_j \,  \frac{M_C}{x_j \, V_C} = f_j \, \frac{\rho_C}{x_j} \, , 
 \end{equation}$
 
- So, using these relations we can write any differential equation for the quantities $M_j$, $\rho_j$, and $n_j$ as an equation for $f_j$.
+So, using these relations we can write any differential equation for the quantities $M_j$, $\rho_j$, and $n_j$ as an equation for $f_j$.
 
-In our model, we have done only two hypotheses until now, first that the ISM is only made up of the components already mentioned, and second, that $V_j$ is a constant. 
+In our model, we have done only two hypotheses until now; first that the ISM is only made up of the four components already mentioned, and second, that $V_j$ and $x_j$ are constants. 
 
 Using the values in [Ferrière2001](https://doi.org/10.1103/RevModPhys.73.1031) for the Milky Way,
 
@@ -139,7 +138,7 @@ Using the values in [Ferrière2001](https://doi.org/10.1103/RevModPhys.73.1031) 
 | Atomic gas    | $20 - 50$                 | $\gtrsim 6.0$                     |
 | Ionized gas   | $0.2 - 0.5$               | $\gtrsim 1.6$                     |
  
-we estimate, in order of magnitude, the following values, 
+we can estimate the volume fractions by order of magnitude,
 
 |||
 |:-----:|:--------------:|
@@ -147,7 +146,7 @@ we estimate, in order of magnitude, the following values,
 | $x_a$ | $\sim 10^{-2}$    |
 | $x_m$ | $\sim 10^{-5}$ |
 
-We will use the $x_j$ as adjustable parameter, within the order of the table above.
+We will use the $x_j$ as adjustable parameters.
 """
   ╠═╡ =#
 
@@ -163,14 +162,6 @@ end;
 #=╠═╡
 md"""
 ## Physical relationships
-"""
-  ╠═╡ =#
-
-# ╔═╡ b2b23d48-9c3d-44d3-9106-745eecc9b561
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"""
-The following diagram shows the physical processes of the model by name,
 """
   ╠═╡ =#
 
@@ -232,6 +223,14 @@ TikzPictures.TikzPicture(
 )
   ╠═╡ =#
 
+# ╔═╡ b2b23d48-9c3d-44d3-9106-745eecc9b561
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+Physical processes of the model by name.
+"""
+  ╠═╡ =#
+
 # ╔═╡ 047bbd39-9cf9-4bd7-b38e-16aa505b0b08
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -252,7 +251,7 @@ $\begin{equation}
 
 ### Ionized gas
 
-The ionized component growths through the ionization of atomic gas, and from the remnants of supernova explosions. 
+The ionized component grows through the ionization of atomic gas and from the remnants of supernova explosions. 
 
 The former is assumed to come mainly from the radiation of newborn stars, so it is given by
 
@@ -260,7 +259,7 @@ $\begin{equation}
 	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_i(t)\right|_{\text{ion.}} = \eta_\text{ion} \, \psi(t) \, ,
 \end{equation}$
 
-where $\eta_\text{ion}$ is the ionized mass rate per unit of created stellar mass. All the physics of the ionization process are summarized in the parameter $\eta_\text{ion}$.
+where $\eta_\text{ion}$ is the ionized mass rate per unit of created stellar mass. All the physics of the ionization process are summarized in this parameter.
 
 The latter, under the instantaneous recycling hypothesis, can be written as 
 
@@ -268,11 +267,11 @@ $\begin{equation}
 	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_i(t)\right|_{\text{recyc.}} = R \, \psi(t) \, ,
 \end{equation}$
 
-where $R$ is the mass fraction of a stellar population that is returned to the ISM, where we assumed that all the returned mass is in the form of ionized gas. Ignoring the metal enrichment is a good approximation that does not alter the results.
+where $R$ is the mass fraction of a stellar population that is returned to the ISM, where we assumed that all the returned mass is in the form of ionized gas. Ignoring the metal enrichment is a good approximation that does not alter significantly the results.
 
 ### Atomic gas
 
-The atomic component accumulates mass through the dissociation of hydrogen molecules, and the recombination of the ionized gas with free electrons.
+The atomic component grows through the dissociation of hydrogen molecules and the recombination of the ionized gas with free electrons.
 
 The former, as with the ionized gas, is given by
 
@@ -282,7 +281,7 @@ $\begin{equation}
 
 where $\eta_\text{diss}$ is the disassociated mass rate per unit of created stellar mass.
 
-The latter, will depend on the mass of ionized gas present, and the time scale of recombination ($\tau_R$), so is given by 
+The latter will depend on the mass of ionized gas present and the time scale of recombination ($\tau_R$), so it is given by 
 
 $\begin{equation}
 	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_a(t)\right|_{\text{recon.}} = \frac{f_i(t)}{\tau_R(t)} \, .
@@ -290,19 +289,11 @@ $\begin{equation}
 
 ### Molecular gas
 
-The molecular component gains mass mainly by the condensation of hydrogen atoms in the surface of dust grains. This process depends on the mass of atomic gas, and the characteristic time scale of condensation ($\tau_C$). We are condensing all the dust physics into the single time parameter,
+The molecular component gains mass mainly by the condensation of hydrogen atoms on the surface of dust grains. This process depends on the mass of atomic gas and the characteristic time scale of condensation ($\tau_C$). We are condensing all the dust physics into this time parameter,
 
 $\begin{equation}
 	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_m(t)\right|_{\text{cond.}} = \frac{f_a(t)}{\tau_C(t)} \, ,
 \end{equation}$
-"""
-  ╠═╡ =#
-
-# ╔═╡ c843a9e7-c0e1-42c1-bace-c866f777232f
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"""
-The following diagram shows the mathematical expressions for the processes of the model,
 """
   ╠═╡ =#
 
@@ -362,11 +353,19 @@ TikzPictures.TikzPicture(
 )
   ╠═╡ =#
 
+# ╔═╡ c843a9e7-c0e1-42c1-bace-c866f777232f
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+Physical processes of the model as mathematical expressions.
+"""
+  ╠═╡ =#
+
 # ╔═╡ 70078b44-4d66-49b9-930e-74261df8be78
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-From all the above, we can write the following system of four ODEs,
+From all the above, we can write the system of four ODEs,
 """
   ╠═╡ =#
 
@@ -411,28 +410,34 @@ $\begin{equation}
 """
   ╠═╡ =#
 
+# ╔═╡ 34b04cf3-dabe-4364-8124-c5f3f351edb2
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"## ODE coefficients"
+  ╠═╡ =#
+
 # ╔═╡ af69ab25-0f06-4837-ac35-acbe38a4ffb1
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"## Stiffness coefficient"
+md"### Stiffness coefficient"
   ╠═╡ =#
 
 # ╔═╡ 57ade87f-f93c-4b43-a737-a1b44f8af4fc
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"The model, for a typical set of initial conditions, is very stiff (stiffness coefficient >> 1)."
+md"The model, for a typical set of initial conditions, is very stiff (stiffness ratio >> 1)."
   ╠═╡ =#
 
 # ╔═╡ 7e3183ae-b409-457a-8e35-4dc87894c580
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"## Lyapunov spectrum"
+md"### Lyapunov spectrum"
   ╠═╡ =#
 
 # ╔═╡ 408721dd-bd85-47b4-a75c-6e3c188f5d64
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"The model, for a typical set of initial conditions, is not chaotic (max(lyapunov exponent) < 0)."
+md"The model, for a typical set of initial conditions, is not chaotic (maximum lyapunov exponent < 0). But, we note that with a higher density the system can turn chaotic (maximum lyapunov exponent > 0)."
   ╠═╡ =#
 
 # ╔═╡ 534a1049-8de5-4b07-abec-c5a3456627c0
@@ -441,9 +446,9 @@ md"The model, for a typical set of initial conditions, is not chaotic (max(lyapu
 md"""
 ## Units
 
-We have the freedom to choose three independent units for this model. Time, mass and length. This choice is reflected in the constants $C_S$, $C_R$, and $C_C$.
+We have the freedom to choose three independent units in this model. Time, mass, and length. The choice is reflected in the constants $C_S$, $C_R$, and $C_C$.
 
-Following the standard in astronomy and astrophysics, we choose $\mathrm{[T] = Myr}$, $\mathrm{[M] = mp}$ and $\mathrm{[L] = cm}$, where $\mathrm{mp}$ is the proton mass.
+Following the standard in astronomy and astrophysics, we will use $\mathrm{[T] = Myr}$, $\mathrm{[M] = mp}$ and $\mathrm{[L] = cm}$, where $\mathrm{mp}$ is the proton mass.
 """
   ╠═╡ =#
 
@@ -466,9 +471,9 @@ md"""
 
 *  $\tau_C$: Time scale of molecular gas formation from atomic gas, generally called condensation (or cloud formation) time.
 
-*  $\eta_d$: Rate of molecular gas dissociation by stars, per unit of created stellar mass.
+*  $\eta_d$: Rate of molecular gas dissociation by stars per unit of created stellar mass.
 
-*  $\eta_i$: Rate of atomic gas ionization by stars, per unit of created stellar mass.
+*  $\eta_i$: Rate of atomic gas ionization by stars per unit of created stellar mass.
 
 *  $R$: Mass of ionized gas produced per unit of created stellar mass.
 
@@ -490,14 +495,14 @@ md"""
 
 For the star formation we will use the notation and definition commonly used in the field (for a review see [McKee2007](https://doi.org/10.1146/annurev.astro.45.051806.110602), [Krumholz2014](https://doi.org/10.1016/j.physrep.2014.02.001), and [Krumholz2019](https://doi.org/10.1146/annurev-astro-091918-104430)). 
 
-In particular we will follow [Krumholz2005](https://doi.org/10.1086/431734), but taking into account the strong correlation between molecular hydrogen and star formation ([Bigiel2008](https://doi.org/10.1088/0004-6256/136/6/2846), [Bigiel2010](https://doi.org/10.1088/0004-6256/140/5/1194), [Wong2002](https://doi.org/10.1086/339287), [Robertson2008](https://doi.org/10.1086/587796), [Halle2013](https://doi.org/10.1051/0004-6361/201220952), [Thompson2013](https://doi.org/10.1088/0004-637x/780/2/145)). So, we end up with the simple model
+In particular, we will follow [Krumholz2005](https://doi.org/10.1086/431734), but taking into account the strong correlation between molecular hydrogen and star formation ([Bigiel2008](https://doi.org/10.1088/0004-6256/136/6/2846), [Bigiel2010](https://doi.org/10.1088/0004-6256/140/5/1194), [Wong2002](https://doi.org/10.1086/339287), [Robertson2008](https://doi.org/10.1086/587796), [Halle2013](https://doi.org/10.1051/0004-6361/201220952), [Thompson2013](https://doi.org/10.1088/0004-637x/780/2/145)). So, we end up with the simple model
 
 $\begin{equation}
 	\mathrm{SFR} := \frac{\mathrm{d}}{\mathrm{d}t} M_s = \frac{M_m}{\tau_S}
 \end{equation}$
-where $M_m$ is the molecular mass, and $\tau_S$ is the characteristic timescale for star formation (defined by this very relation).
+where $M_m$ is the molecular mass and $\tau_S$ is the characteristic timescale for star formation (defined by this very relation).
 
-Given that the equations are written for the dimensionless fractions, the SFR enters as
+Given that we want the equations for the dimensionless fraction; the SFR enters as follows, 
 
 $\begin{equation}
 	\psi := \frac{\mathrm{SFR}}{M_C} = \frac{f_m}{\tau_S} \, .
@@ -518,13 +523,13 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-Following [Krumholz2005](https://doi.org/10.1086/431734), we write the characteristic timescale for star formation, as
+Following [Krumholz2005](https://doi.org/10.1086/431734), we write the characteristic timescale for star formation as
 
 $\begin{equation}
     \tau_S =  \frac{t_\text{ff}}{\epsilon_\text{ff}} \, ,
 \end{equation}$
 
-where $\epsilon_\text{ff}$ is the star formation efficiency, (in the literature is often used $\epsilon_\text{ff} \approx 0.01$ [Krumholz2007](https://doi.org/10.1086/509101), [Krumholz2014](https://doi.org/10.1016/j.physrep.2014.02.001)), and $t_\text{ff}$ is the free-fall time, which is the time for a pressure-free spherical cloud to collapse into a point due to its self-gravity.
+where $\epsilon_\text{ff}$ is the star formation efficiency, (in the literature is often used $\epsilon_\text{ff} \approx 0.01$ [Krumholz2007](https://doi.org/10.1086/509101), [Krumholz2014](https://doi.org/10.1016/j.physrep.2014.02.001)), and $t_\text{ff}$ is the free-fall time which is the time for a pressure-free spherical cloud to collapse into a point due to its self-gravity.
 
 The free-fall time can be written as
 
@@ -534,7 +539,7 @@ $\begin{equation}
 
 where $\rho_g$ is the density of the gas cloud.
 
-There is a lot of uncertainty for the parameter $\epsilon_\text{ff}$ ([Lee2016](https://doi.org/10.3847/1538-4357/833/2/229) and [Utomo2018](https://doi.org/10.3847/2041-8213/aacf8f)). We will use $\epsilon_\text{ff} = 1.0$, given that we already consider how efficient star formation is when using only molecular hydrogen to form stars. We note though, that this parameter has been shown to have little influence on the global properties of simulated galaxies ([Li2018](https://doi.org/10.3847/1538-4357/aac9b8) and [Brown2022](https://doi.org/10.1093/mnras/stac1164)).
+There is a lot of uncertainty for the parameter $\epsilon_\text{ff}$ ([Lee2016](https://doi.org/10.3847/1538-4357/833/2/229) and [Utomo2018](https://doi.org/10.3847/2041-8213/aacf8f)). We will use $\epsilon_\text{ff} = 1.0$ because we already consider the efficiency of star formation as only molecular hydrogen is used to form stars. We note though, that this parameter has been shown to have little influence on the global properties of simulated galaxies ([Li2018](https://doi.org/10.3847/1538-4357/aac9b8) and [Brown2022](https://doi.org/10.1093/mnras/stac1164)).
 
 With all the previous definitions, we have 
 
@@ -547,7 +552,7 @@ $\begin{equation}
     C_S = \sqrt{\frac{3\pi}{32 \, G}} \, .
 \end{equation}$
 
-Given that $\rho_g$ is the density of an individual cold gas cloud, which is unresolved within a cell, we use the fact that $\rho_g \gg \rho_C$, to make the choice
+Given that $\rho_g$ is the density of an individual cold gas cloud, which is unresolved within a cell, we use the fact that in general $\rho_g \gg \rho_C$, to write
 
 $\begin{align}
     \rho_g &= \rho_m + \rho_a = \rho_C \, \left( \frac{f_m}{x_m} + \frac{f_a}{x_a} \right) .
@@ -563,7 +568,7 @@ begin
 end
 
 # ╔═╡ 27281e53-e519-4ad0-af5d-59fb0e208534
-τS(fa, fm, ρC) = cs / sqrt((fa / xa + fm / xm) * ρC);
+τS(fa, fm, ρC) = cs / sqrt(ρC * (fm / xm + fa / xa));
 
 # ╔═╡ 327fd38a-5ff6-4ac4-8d29-694272d9d46f
 # ╠═╡ skip_as_script = true
@@ -631,35 +636,35 @@ end
 md"""
 ### Recombination
 
-The rate of recombination for hydrogen atoms can be written as ([Osterbrock2006](http://www.worldcat.org/oclc/60611705), [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) and [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635))
+The rate of recombination for hydrogen atoms can be written as ([Osterbrock2006](http://www.worldcat.org/oclc/60611705), [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), and [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635))
 
 $\begin{equation}
-    \frac{d}{dt} n_{HI} \biggr\rvert_\mathrm{recomb.} = \alpha_H(T) \, n_e \, n_{HII} \, , 
+    \frac{d}{dt} n_a \biggr\rvert_\mathrm{recomb.} = \alpha_H(T) \, n_e \, n_i \, , 
 \end{equation}$
 
-where $\alpha_H(T)$ is the recombination coefficient, $n_e$ is the electron number density, and $n_{HII}$ is the ionized hydrogen number density. We note that, by mass balance and within our model, $n_e = n_{HII}$.
+where $\alpha_H(T)$ is the recombination coefficient, $n_e$ is the electron number density, and $n_i$ is the ionized hydrogen number density. We note that, by mass balance and within our model, $n_e = n_i$.
 
-Using the conversion factor already mentioned we can write
+Using the conversion factor already mentioned, we can write
 
 $\begin{align}
-    \frac{d}{dt} f_a \biggr\rvert_\mathrm{recomb.} &= \frac{x_a \, m_p}{\rho_C} \, \alpha_H(T) \, n_e \, n_{HII} \\
+    \frac{d}{dt} f_a \biggr\rvert_\mathrm{recomb.} &= \frac{x_a \, m_p}{\rho_C} \, \alpha_H(T) \, n_e \, n_i \\
 	&= \frac{x_a \, m_p}{\rho_C} \, \alpha_H(T) \, f_i \, \frac{\rho_C}{x_i \, m_p} \, f_i \, \frac{\rho_C}{x_i \, m_p} \\
     &= \alpha_H(T) \, f_i^{\,2} \, \frac{\rho_C}{m_p} \, \frac{x_a}{x_i^{\,2}}  \, .
 \end{align}$
 
-We can readily find fits for $\alpha_H(T)$ in the literature ([Seaton1959](https://doi.org/10.1093/mnras/119.2.81), [Black1981](https://doi.org/10.1093/mnras/197.3.553), [Verner1996](https://doi.org/10.1086/192284) and [Osterbrock2006](http://www.worldcat.org/oclc/60611705)), in particular if we take $T = 10^4 \, \mathrm{K}$ for the ionized phase, and use case B recombination (assuming an optically thick cloud [Nebrin2023](https://doi.org/10.3847/2515-5172/acd37a)), we get
+We can readily find fits for $\alpha_H(T)$ in the literature ([Seaton1959](https://doi.org/10.1093/mnras/119.2.81), [Black1981](https://doi.org/10.1093/mnras/197.3.553), [Verner1996](https://doi.org/10.1086/192284), and [Osterbrock2006](http://www.worldcat.org/oclc/60611705)). In particular, if we take $T = 10^4 \, \mathrm{K}$ for the ionized phase and use case B recombination (assuming an optically thick cloud [Nebrin2023](https://doi.org/10.3847/2515-5172/acd37a)), we get
 
 $\begin{align}
     \alpha_H(10^4 \, \mathrm{K}) = \alpha_H = 2.6 \times 10^{-13} \, \mathrm{cm}^3 \, \mathrm{s}^{-1} \, .
 \end{align}$
 
-So, we finally write
+So, we can write
 
 $\begin{equation}
     \frac{d}{dt} f_a \biggr\rvert_\mathrm{recomb.} = \alpha_H \, f_i^{\,2} \, \frac{\rho_C}{m_p} \, \frac{x_a}{x_i^{\,2}} = \frac{f_i}{\tau_R} \, , 
 \end{equation}$
 
-where we defined the time scale
+where the time scale $\tau_R$ is
 
 $\begin{equation}
     \tau_R = \frac{m_p \, x_i^{\,2}}{\alpha_H \, f_i \, \rho_C \, x_a} = \frac{C_R}{f_i \, \rho_C} \, , 
@@ -751,31 +756,31 @@ md"""
 From at least [Hollenbach1971a](https://doi.org/10.1086/150754) and [Hollenbach1971b](https://doi.org/10.1086/150755), we know that the rate of molecular hydrogen formation due to the condensation of atomic gas in the surface of dust grains is
 
 $\begin{equation}
-    \frac{d}{dt} n_{H_2} \biggr\rvert_\mathrm{cond.} = R_d \, n_H \, n_{HI}  \, , 
+    \frac{d}{dt} n_m \biggr\rvert_\mathrm{cond.} = R_d \, n_H \, n_a  \, , 
 \end{equation}$
 
-where $R_d$ is the dust grain $H_2$ formation rate coefficient, $n_H$ is the hydrogen nucleus number density, and $n_{HI}$ is the atomic hydrogen number density.
+where $R_d$ is the formation rate coefficient of $H_2$ on dust grain, $n_H$ is the hydrogen nucleus number density, and $n_a$ is the atomic hydrogen number density.
 
-In the literature, $n_H$ is generally defined as $n_H = n_{HI} + 2 \, n_{H_2}$, given that most studies consider small regions (compare to hydrodynamical simulations) dominated by cold gas ($T \sim 100\,\mathrm{K}$), the only relevant phases are the atomic and molecular gas. Given that we consider not only atomic and molecular gas, we should use $n_H = n_{HI} + 2\, n_{H_2} + n_{HII}$, but considering that the difference is small (in comparison with other uncertainties to be discussed), and that the experimental values are measure with $n_H$ as $n_{HI} + 2\, n_{H_2}$, we will stick with that definition. With this choice, we are assuming that within our cell there is a phase separation, where the star formation cloud consists of mainly cold atomic and molecular gas, even though our hydrodynamical simulations don't resolve within a cell. 
+In the literature, $n_H$ is generally defined as $n_H = n_a + 2 \, n_m$, because most studies consider small regions (compared to hydrodynamical simulations) dominated by cold gas ($T \sim 100 \, \mathrm{K}$) where the only relevant phases are the atomic and molecular gas. In contrast, we consider atomic, molecular, and ionized gas, so we should be using $n_H = n_a + 2\, n_m + n_i$. But, considering that the difference is small (in comparison with other uncertainties) and that the experimental values are measured with $n_H$ as $n_a + 2\, n_m$, we will stick with that definition. With this choice, we are assuming that within our cell there is a phase separation where the star formation cloud consists of mainly cold atomic and molecular gas. 
 
-We also note that the expression for $\frac{d}{dt} n_{H_2}$ is only used in equilibrium equations in most of the early works ([Hollenbach1971a](https://doi.org/10.1086/150754), [Hollenbach1971b](https://doi.org/10.1086/150755), [Jura1974](https://doi.org/10.1086/152975), [Jura1975](https://doi.org/10.1086/153545), [Black1987](https://doi.org/10.1086/165740), [Sternberg1988](https://doi.org/10.1086/166664), [Goldshmidt1995](https://doi.org/10.1086/175168)), while first appearing in an actual differential equation that does not assume equilibrium in [Draine1996](https://doi.org/10.1086/177689).
+We also note that the expression for $\frac{d}{dt} n_m$ is only used in equilibrium equations in most of the early works ([Hollenbach1971a](https://doi.org/10.1086/150754), [Hollenbach1971b](https://doi.org/10.1086/150755), [Jura1974](https://doi.org/10.1086/152975), [Jura1975](https://doi.org/10.1086/153545), [Black1987](https://doi.org/10.1086/165740), [Sternberg1988](https://doi.org/10.1086/166664), and [Goldshmidt1995](https://doi.org/10.1086/175168)), while first appearing in an actual differential equation that does not assume equilibrium in [Draine1996](https://doi.org/10.1086/177689).
 
 Using the conversion factor already mentioned we can write
 
 $\begin{align}
-    \frac{d}{dt} f_m \biggr\rvert_\mathrm{cond.} &= \frac{2 \, m_p \, x_m}{\rho_C} \, R_d \, \left(n_{HI} + 2\, n_{H_2}\right) \, n_{HI} \\
+    \frac{d}{dt} f_m \biggr\rvert_\mathrm{cond.} &= \frac{2 \, m_p \, x_m}{\rho_C} \, R_d \, \left(n_a + 2\, n_m\right) \, n_a \\
 	&= \frac{2 \, m_p \, x_m}{\rho_C} \, R_d \left( f_a \, \frac{\rho_C}{m_p \, x_a} + 2 \, f_m \, \frac{\rho_C}{2 \, m_p \, x_m} \right) \, f_a \, \frac{\rho_C}{m_p \, x_a} \\ 
 	&= 2 \, R_d \left( \frac{f_a}{x_a} + \frac{f_m}{x_m} \right) \, f_a \, \frac{\rho_C}{m_p} \, \frac{x_m}{x_a} \\
 	&= \frac{f_a}{\tau_C} \, , 
 \end{align}$
 
-where we defined the time scale
+where the time scale $\tau_C$ is
 
 $\begin{equation}
-    \tau_C := \frac{m_p \, x_a}{2 \, R_d \, \rho_C \, x_m \left( \frac{f_a}{x_a} + \frac{f_m}{x_m} \right)} \, .
+    \tau_C := \frac{m_p \, x_a}{2 \, R_d \, \rho_C \, x_m \left( \dfrac{f_a}{x_a} + \dfrac{f_m}{x_m} \right)} \, .
 \end{equation}$
 
-A table with a list of values for $R_d$ is presented below. We note that more than one value of $R_d$, and its dependence with other parameters may be discussed within each reference, in the table we reflect the fiducial value used by each author
+A table with several values for $R_d$ is presented below. We note that more than one value for $R_d$ and its dependence on other parameters may be discussed within each reference. In the table, we reflect the fiducial value used by each author
 
 | $R_d \,\, [10^{-17} \, \mathrm{cm^3 \, s^{-1}}]$ | Reference |
 |:-----:|:--------------------------------------------------:|
@@ -787,12 +792,14 @@ A table with a list of values for $R_d$ is presented below. We note that more th
 | $6$   | [Draine1996](https://doi.org/10.1086/177689)       |
 | $3.5$ | [Wolfire2008](https://doi.org/10.1086/587688)      |
 
-Theoretical and experimental work has shown that $R_d \propto T^{1/2}$ ([Black1987](https://doi.org/10.1086/165740)), and $R_d \propto n_\mathrm{dust}$ ([Hollenbach1971b](https://doi.org/10.1086/150755)). Assuming the simplest dust model $n_\mathrm{dust} \propto Z$ we have $R_d \propto T^{1/2} \, Z$ ([Pelupessy2006](https://doi.org/10.1086/504366) and [Wolfire2008](https://doi.org/10.1086/587688)).
+Theoretical and experimental work has shown that $R_d \propto T^{1/2}$ ([Black1987](https://doi.org/10.1086/165740)) and $R_d \propto n_\mathrm{dust}$ ([Hollenbach1971b](https://doi.org/10.1086/150755)). Assuming the simplest dust model $n_\mathrm{dust} \propto Z$; we have $R_d \propto T^{1/2} \, Z$ ([Pelupessy2006](https://doi.org/10.1086/504366) and [Wolfire2008](https://doi.org/10.1086/587688)).
 
-Following previous prescriptions ([Pelupessy2006](https://doi.org/10.1086/504366), [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), [Mollá2017](https://doi.org/10.1093/mnras/stx419), [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635)), we will only scale $R_d$ with the metallicity, using $\sim 100\,\mathrm{K}$ for the temperature of the cold neutral gas. Our reference value for $Z_\odot$ is ([Wolfire2008](https://doi.org/10.1086/587688))
+Following previous prescriptions ([Pelupessy2006](https://doi.org/10.1086/504366), [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), [Mollá2017](https://doi.org/10.1093/mnras/stx419), [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635)) we will only scale $R_d$ with the metallicity; using $\sim 100\,\mathrm{K}$ for the temperature of the cold neutral gas. 
+
+Our reference value for $Z_\odot$ is ([Wolfire2008](https://doi.org/10.1086/587688))
 
 $\begin{equation}
-    R_\odot := R_d(Z = Z_\odot) = 3.5 \times 10^{-17}\mathrm{cm^3 \, s^{-1}} \, .
+    R_\odot := R_d(Z = Z_\odot) = 3.5 \times 10^{-17}\mathrm{cm^3 \, s^{-1}} \, ,
 \end{equation}$
 
 so, we have 
@@ -801,15 +808,15 @@ $\begin{equation}
     R_d = Z \, \frac{R_\odot}{Z_\odot} \, .
 \end{equation}$
 
-We note that the exact value of $R_\odot$ within $1 \, \mathrm{dex}$ does not affect significantly the results. We will use an adjustable global factor, as was done with the clumping factor $C_\rho$ in [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), to account for all the uncertainties.
+The exact value of $R_\odot$ within $1 \, \mathrm{dex}$ does not affect significantly the results. We will use an adjustable global factor, as was done with the clumping factor $C_\rho$ in [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), to account for all the uncertainties.
 
-The fact that the final expression for $R_d$ would give $0$ when $Z = 0$, is a problem two-fold. First, $\tau_C$ would diverge, and second, it shows the incorrect hypothesis that the only conversion channel for $\mathrm{HI} \rightarrow \mathrm{H_2}$ is the condensation on the surface of dust grains. To solve this problems we do the replacement $Z \rightarrow Z + Z_\mathrm{eff}$, with $Z_\mathrm{eff} = 10^{-3} \, Z_\odot$, which eliminates the divergence and takes into account the molecular formation that occurs below $10^{-3} \, Z_\odot$ ([Glover2007](https://doi.org/10.1086/519445)).
+The fact that the final expression for $R_d$ would give $0$ when $Z = 0$ is problematic because $\tau_C$ would diverge. The problem originates in the incorrect assumption that the only conversion channel for $\mathrm{HI} \rightarrow \mathrm{H_2}$ is the condensation on the surface of dust grains. To solve this we do the replacement $Z \rightarrow Z + Z_\mathrm{eff}$ with $Z_\mathrm{eff} = 10^{-3} \, Z_\odot$; which eliminates the divergence and takes into account the molecular formation that occurs below $10^{-3} \, Z_\odot$ ([Glover2007](https://doi.org/10.1086/519445)).
 
 So, we finally have 
 
 $\begin{align}
-    \tau_C &= \frac{m_p \, x_a \, Z_\odot}{2 \, R_\odot \, C_\rho \, (Z + Z_\mathrm{eff}) \, \rho_C \, x_m \left( \frac{f_a}{x_a} + \frac{f_m}{x_m} \right)} \\
-	&= \frac{C_C}{(Z + Z_\mathrm{eff}) \, \rho_C \left( \frac{f_a}{x_a} + \frac{f_m}{x_m} \right)} \, , 
+    \tau_C &= \frac{m_p \, x_a \, Z_\odot}{2 \, R_\odot \, C_\rho \, (Z + Z_\mathrm{eff}) \, \rho_C \, x_m \left( \dfrac{f_a}{x_a} + \dfrac{f_m}{x_m} \right)} \\
+	&= \frac{C_C}{(Z + Z_\mathrm{eff}) \, \rho_C \left( \dfrac{f_a}{x_a} + \dfrac{f_m}{x_m} \right)} \, , 
 \end{align}$
 
 where
@@ -818,7 +825,7 @@ $\begin{equation}
 	C_C = \frac{m_p \, x_a \, Z_\odot}{2 \, R_\odot \, C_\rho \, x_m} \, .
 \end{equation}$
 
-For the solar metallicity we find several values in the literature
+For the solar metallicity, we find several values in the literature
 
 | $Z_\odot$ | Reference                                                            |
 |:--------:|:---------------------------------------------------------------------:|
@@ -830,7 +837,7 @@ For the solar metallicity we find several values in the literature
 | $0.0127$ | Arepo                                                                 |
 | $0.0196$ | [Steiger2015](https://doi.org/10.3847/0004-637X/816/1/13)             |
 
-To keep it consistent with the Arepo codebase, we will use $Z_\odot = 0.0127$, noting that is only $35\%$ off the largest value in the list ([Steiger2015](https://doi.org/10.3847/0004-637X/816/1/13)), which is not significant for such a simple model with many other uncertainties.
+To keep it consistent with the Arepo codebase, we will use $Z_\odot = 0.0127$, noting that is only $35\%$ off the largest value in the list ([Steiger2015](https://doi.org/10.3847/0004-637X/816/1/13)).
 """
   ╠═╡ =#
 
@@ -913,7 +920,7 @@ end
 md"""
 ## Photodissociation efficiency
 
-We define the disassociated mass rate per unit of created stellar mass, as 
+We define the disassociated mass rate per unit of created stellar mass as 
 
 $\begin{equation}
     \eta_d = \frac{\dot{M}_d}{\mathrm{SFR}}  \, , 
@@ -925,16 +932,16 @@ $\begin{equation}
     \eta_i = \frac{\dot{M}_i}{SFR}  \, .
 \end{equation}$
 
-The mass rates, $\dot{M}_d$ and $\dot{M}_i$, can be computed from the photon production rate, in the corresponding energy range,
+The mass rates, $\dot{M}_d$ and $\dot{M}_i$, can be computed from the photon production rate in the corresponding energy range,
 
 $\begin{align}
     \dot{M}_d &= \dot{N}_i \, f_d \, , \\
     \dot{M}_i &= \dot{N}_d \, f_i \, ,
 \end{align}$
 
-where $\dot{N}_d$ is the number of photodissociating photons produced per unit time (in the Lyman–Werner band, $912\,\mathrm{Å}$ to $1107\,\mathrm{Å}$), $\dot{N}_i$ the number of ionizing photons produced per unit time (between $0$ and $912\,Å$), and $f_d$ and $f_i$ are the unit conversion factors (proton mass into solar mass). The $f$ factors allow us to consider that the reaction may not be $100\%$ efficient too.
+where $\dot{N}_d$ is the number of photodissociating photons produced per unit time (in the Lyman–Werner band, $912\,\mathrm{Å}$ to $1107\,\mathrm{Å}$), $\dot{N}_i$ the number of ionizing photons produced per unit time (between $0$ and $912\,Å$), and $f_d$ and $f_i$ are the unit conversion factors (proton mass into solar mass). The factors $f_d$ and $f_i$ allow us to consider that the reaction may not be $100\%$ efficient too.
 
-For the ionization reaction, each photon will produce one proton, and we assume $100\%$ efficiency.
+For the ionization reaction, each photon will produce one proton and we assume $100\%$ efficiency.
 """
   ╠═╡ =#
 
@@ -945,7 +952,7 @@ const f_i = ustrip(1.0u"mp" |> u"Msun")
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-For the molecular dissociation reaction, we have to consider the numerical factor given by [Draine1996](https://doi.org/10.1086/177689), where it is shown that dust grains may absorb up to $\sim \! 60$ percent of the photons capable of dissociating Hydrogen molecules, and a large fraction of the remaining photons excite different rotational and vibrational states, reducing their dissociation probability to $\sim \! 15$ percent, so we end up with an efficiency factor of $0.4 \times 0.15 = 0.06$.
+For the molecular dissociation reaction, we will consider the numerical factor given by [Draine1996](https://doi.org/10.1086/177689). It is shown that dust grains may absorb up to $\sim \! 60$ percent of the photons capable of dissociating hydrogen molecules and a large fraction of the remaining photons excite different rotational and vibrational states, reducing their dissociation probability to $\sim \! 15$ percent. So, we end up with an efficiency factor of $0.4 \times 0.15 = 0.06$.
 $f_\mathrm{d}$ has an extra factor of two because each photon contributes with two protons (from the dissociated molecule) to the atomic gas.
 """
   ╠═╡ =#
@@ -957,7 +964,7 @@ const f_d = 0.4 * 0.15 * 2.0 * ustrip(1.0u"mp" |> u"Msun")
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-The number of photons can be computed from $Q(t', Z)$, which is defined as the number of photons produced by a stellar population of one solar mass, of age $t'$ and metallicity $Z$, per unit time. So, we have the relation
+The number of photons can be computed from $Q(t', Z)$ which is defined as the number of photons produced by a stellar population of one solar mass, of age $t'$, and metallicity $Z$, per unit of time. So, we have the relation
 
 $\begin{equation}
     \dot{N}(t) = \int_0^t \mathrm{SFR}(t - t') \, Q(t', Z(t - t')) \mathrm{d}t' \, ,
@@ -982,11 +989,11 @@ $\begin{equation}
     Q(t', Z) = \int_{\lambda_1}^{\lambda_2} \frac{L_\lambda(t', Z)}{E_\lambda} \mathrm{d}\lambda = \int_{\lambda_1}^{\lambda_2} \frac{\lambda \, L_\lambda(t', Z)}{h \, c} \mathrm{d}\lambda \, ,
 \end{equation}$
 
-where $L_\lambda(t', Z)$ is the luminosity per unit of wavelength of a stellar population of one solar mass, age $t'$ and metallicity $Z$, and $E_\lambda = \lambda / (h \, c)$ is the energy of a photon of wavelength $\lambda$. So, integrating between the wavelength of interest, we get the number of photons produced per unit time for a stellar population of the given characteristics.
+where $L_\lambda(t', Z)$ is the luminosity per unit of wavelength of a stellar population of one solar mass, age $t'$, and metallicity $Z$; and $E_\lambda = \lambda / (h \, c)$ is the energy of a photon of wavelength $\lambda$. So, integrating between the wavelength of interest, we get the number of photons produced per unit of time for a stellar population of the given characteristics.
 
-The luminosity will not only depend on the age and metallicity of the population, but on the IMF (initial mass function) too, so in principle for each IMF, $t'$ and $Z$ we have a function of luminosity versus $\lambda$.
+The luminosity will not only depend on the age and metallicity of the population, but on the IMF (initial mass function) too, so in principle for each IMF, $t'$, and $Z$ we have a function of luminosity versus $\lambda$.
 
-Using the values from PopStar by [Mollá2009](https://doi.org/10.1111/j.1365-2966.2009.15160.x) we compute a table of $Q$ for six IMFs ([Salpeter1955](https://doi.org/10.1086/145971) in two mass ranges, $0.85\,\mathrm{M}_\odot$ to $120\,\mathrm{M}_\odot$ and $0.15\,\mathrm{M}_\odot$ to $100\,\mathrm{M}_\odot$, [Kroupa2001](https://doi.org/10.1046/j.1365-8711.2001.04022.x), [Ferrini1990](https://ui.adsabs.harvard.edu/abs/1990A%26A...231..391F) and [Chabrier2003](https://doi.org/10.1086/374879)), six metallicities (0.0001, 0.0004, 0.004, 0.008, 0.02, 0.05) and for ages between $0.1\,\mathrm{Myr}$ and $15\,\mathrm{Gyr}$.
+Using the values from PopStar by [Mollá2009](https://doi.org/10.1111/j.1365-2966.2009.15160.x) we compute a table of $Q$ for six IMFs ([Salpeter1955](https://doi.org/10.1086/145971) in two mass ranges: $0.85\,\mathrm{M}_\odot$ to $120\,\mathrm{M}_\odot$ and $0.15\,\mathrm{M}_\odot$ to $100\,\mathrm{M}_\odot$, [Kroupa2001](https://doi.org/10.1046/j.1365-8711.2001.04022.x), [Ferrini1990](https://ui.adsabs.harvard.edu/abs/1990A%26A...231..391F), and [Chabrier2003](https://doi.org/10.1086/374879)), six metallicities (0.0001, 0.0004, 0.004, 0.008, 0.02, and 0.05) and for ages between $0.1\,\mathrm{Myr}$, and $15\,\mathrm{Gyr}$.
 """
   ╠═╡ =#
 
@@ -1113,7 +1120,7 @@ end
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-In what follows we will use the IMF of [Chabrier2003](https://doi.org/10.1086/374879)
+In what follows we will use the IMF by [Chabrier2003](https://doi.org/10.1086/374879)
 """
   ╠═╡ =#
 
@@ -1135,7 +1142,7 @@ end;
 	
 function photodissociation_efficiency(age::Float64, Z::Float64)::NTuple{2,Float64}
 
-	# Allocate memory for the ηs
+	# Allocate memory for ηd and ηi
 	ηd = Matrix{Float64}(undef, length(Q_ages), length(Q_metals))
 	ηi = Matrix{Float64}(undef, length(Q_ages), length(Q_metals))
 		
@@ -1300,11 +1307,11 @@ end
 md"""
 ## Mass recycling
 
-There are two mass recycling parameters, $R$ which is defined as the mass fraction of a stellar population that is returned to the ISM under the instantaneous recycling hypothesis (stars under certain mass live forever, and stars above that mass die instantly), and $Z_\mathrm{SN}$ which is the fraction of the returned gas that is composed of metals (the rest is assumed to be ionized gas). 
+There are two mass recycling parameters: $R$ which is defined as the mass fraction of a stellar population that is returned to the ISM under the instantaneous recycling hypothesis (stars under a certain mass live forever and stars above that mass die instantly), and $Z_\mathrm{SN}$ which is the fraction of the returned gas that is composed of metals (the rest is assumed to be ionized gas). 
 
-Notice that the instantaneous recycling hypothesis can be avoided by considering the lifetimes of the stars (using empirical relations) as it is done in [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) (sections 2.2.2 and 2.2.3). This would effectively make $R$ time dependent (the integrals below would have to be computed at each evaluation of the equations) increasing significantly the computational cost, so we avoid this and assume a constant $R$ during the ODE integration time scales.
+Notice that the instantaneous recycling hypothesis can be avoided by considering the lifetimes of the stars (using empirical relations) as it is done in [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) (sections 2.2.2 and 2.2.3). This would effectively make $R$ time-dependent (the integrals below would have to be computed at each evaluation of the equations) increasing significantly the computational cost, so we avoid this and assume a constant $R$ during the ODEs integration time scales.
 
-A stellar yield model gives the amount (as a fraction of the stellar mass) of each element that is returned to the ISM by stars with masses between $m$ and $m + \mathrm{d}m$, so they can be used to compute
+A stellar yield model gives the amount (as a fraction of the stellar mass) of each element that is returned to the ISM by stars with masses between $m$ and $m + \mathrm{d}m$, so $R$ can be computed as
 
 $\begin{equation}
 	R = \dfrac{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} (m - m_\mathrm{rem}(m)) \, \phi(m) \mathrm{d}m}{\int_{m_\mathrm{low}}^{m_\mathrm{high}} m \, \phi(m) \mathrm{d}m} \, ,
@@ -1312,7 +1319,7 @@ $\begin{equation}
 
 where $\phi(m)$ is the ISM, $m_\mathrm{low}$ and $m_\mathrm{high}$ are the extremes in the mass range of the ISM, $m_\mathrm{ir}$ is the mass limit for the instantaneous recycling hypothesis, and $m_\mathrm{rem}(m)$ is the remnant stellar mass given by the yield model ([Pipino2014](https://doi.org/10.1093/mnras/stu579) and [Ascasibar2015](https://doi.org/10.1093/mnras/stv098)).
 
-Notice that the denominator in the expression for $R$ is the total mass of the stellar population modeled by $\phi(m)$, so it is just a normalization, because in general the IMF is defined except for a global constant.
+Notice that the denominator in the expression for $R$ is the total mass of the stellar population modeled by $\phi(m)$, so it is just a normalization, which is needed because the IMF is in general defined except for a global constant.
 
 Using the same notation, we can calculate $Z_\mathrm{SN}$ as
 
@@ -1322,14 +1329,14 @@ $\begin{equation}
 
 where $f_Z$ is the fraction of the stellar mass that is returned to the ISM as metals.
 
-Some traditional choices for the masses are $m_\mathrm{ir} = 8 \, M_\odot$, $m_\mathrm{low} = 0.08 \, M_\odot$ (the limit for hydrogen fusion), and $m_\mathrm{high} = 100 \, M_\odot$ (the order of magnitude for the upper limit of validity of the yield models, given the observational limitations).
+Some traditional choices for the masses are $m_\mathrm{ir} = 8 \, M_\odot$, $m_\mathrm{low} = 0.08 \, M_\odot$ (the limit for hydrogen fusion), and $m_\mathrm{high} = 100 \, M_\odot$ (the order of magnitude for the upper limit of validity of the yield models given by the observational limitations).
 
 [Ascasibar2015](https://doi.org/10.1093/mnras/stv098) got $R \approx 0.18$ and $Z_{SN} \approx 0.09$, using the yield model of [Woosley1995](https://doi.org/10.2172/115557) and the IMF of [Kroupa2001](https://doi.org/10.1046/j.1365-8711.2001.04022.x), even though it is not clear which mass limits were used.
 
 The two previous equations were taken from [_Nucleosynthesis and Chemical Evolution of Galaxies_](https://doi.org/10.1017/CBO9780511812170) by Bernard Pagel (eq. 7.24 and 7.26), and [_Chemical Evolution
 of Galaxies_](https://doi.org/10.1007/978-94-010-0967-6) by Francesca Matteucci (eq. 2.74). 
 
-We will consider the following stellar yields models,
+We will consider the following stellar yield models,
 
   -  [Woosley et al. 1995](https://doi.org/10.2172/115557)
   -  [Portinari et al. 1998](https://doi.org/10.48550/arXiv.astro-ph/9711337)
@@ -1339,11 +1346,11 @@ We will consider the following stellar yields models,
   -  [Limongi et al. 2012](https://doi.org/10.1088/0067-0049/199/2/38)
 
 compiled by [Mollá2015](https://doi.org/10.1093/mnras/stv1102), which are summarized in the following table, where
-  - `model`: Stellar yield model
-  - `s_Z`: Metallicity of the stellar population modeled by the IMF
-  - `s_m`: Stellar mass
-  - `m_rem`: Remnant mass, after stellar death
-  - `zf_rem`: Fraction of the stellar mass ejected as metals to the ISM
+  - `model`: Stellar yield model.
+  - `s_Z`: Metallicity of the stellar population modeled by the IMF.
+  - `s_m`: Stellar mass.
+  - `m_rem`: Remnant mass after stellar death.
+  - `zf_rem`: Fraction of the stellar mass ejected as metals to the ISM.
 """
   ╠═╡ =#
 
@@ -1407,7 +1414,7 @@ end
 md"""
 ### Initial mass functions (IMF)
 
-The initial mass function $\phi(m)$ gives the number of stars between masses $m$ and $m + \mathrm{d}m$, for a given population of total mass $M$, following the relation
+The initial mass function $\phi(m)$ gives the number of stars between masses $m$ and $m + \mathrm{d}m$. For a given population of mass $M$, we have
 
 $\begin{equation}            
     M = \int_{m_\mathrm{low}}^{m_\mathrm{high}} m \, \phi(m) \, \mathrm{d}m \, ,
@@ -1423,7 +1430,7 @@ $\begin{equation}
 
 where it is assumed that $[m] = M_\odot$, and $A$ is the normalization constant.
 
-The following implementations don't have a specific choice for normalization (when posible $A = 1$), so they must be multiplied by the correct constant if one wants a given value of $M$.
+The following implementations don't have a specific choice for normalization (when possible $A = 1$), so they must be multiplied by the correct constant if one wants a given value of $M$.
 """
   ╠═╡ =#
 
@@ -1591,7 +1598,7 @@ function recycled_fractions(Z::Float64)::NTuple{2,Float64}
 		Zsns[i] = Zsn_int / R_int
 	end
 
-	R_vs_Z = linear_interpolation(sy_metals, Rs, extrapolation_bc=Flat())
+	R_vs_Z   = linear_interpolation(sy_metals, Rs, extrapolation_bc=Flat())
 	Zsn_vs_Z = linear_interpolation(sy_metals, Zsns, extrapolation_bc=Flat())
 
 	return R_vs_Z(Z), Zsn_vs_Z(Z)
@@ -1711,7 +1718,7 @@ begin
 	const N_EQU = 4  # Number of equations
 	const N_PAR = 5  # Number of parameters
 	
-	# Index in the ODE solution for each phase
+	# Index of each phase in the ODE solution  matrix
 	const phase_name_to_index = Dict( 
 		"ionized"   => 1, 
 		"atomic"    => 2, 
@@ -1745,8 +1752,8 @@ function system!(dydt, ic, parameters, t)
 	#
 	# ρC: Total cell density                                 [mp * cm⁻³]
 	# Z:  Metallicity                                        [dimensionless]
-	# ηd: Photodissociation efficiency of Hydrogen molecules [dimensionless]
-	# ηi: Photoionization efficiency of Hydrogen atoms       [dimensionless]
+	# ηd: Photodissociation efficiency of hydrogen molecules [dimensionless]
+	# ηi: Photoionization efficiency of hydrogen atoms       [dimensionless]
 	# R:  Mass recycling fraction                            [dimensionless]
     ρC, Z, ηd, ηi, R = parameters
   
@@ -1768,7 +1775,7 @@ end;
 # Compute the Lyapunov spectrum
 # 
 # ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
-# base_parms: Parameters, (ρ, Z, it)
+# base_parms: Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr])
 ######################################################################################
 
 function lyapunov(
@@ -1786,7 +1793,7 @@ function lyapunov(
 	parameters = [ρ, Z, ηd, ηi, R]
 	ds = CoupledODEs(system!, ic, parameters)
 	
-	# Lyapunov spectrum
+	# Compute the Lyapunov spectrum
 	return lyapunovspectrum(ds, 100)
 	
 end;
@@ -1795,8 +1802,17 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 lyapunov(
-	[0.2, 0.8, 0.0, 0.0], # Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
-	(1.0, 0.01, 10.0),    # Parameters for the ODEs, (ρ, Z, it) 
+	[0.8, 0.2, 0.0, 0.0],      # Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
+	(100.0, 0.5*Zsun, 10.0),  # Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr])
+)
+  ╠═╡ =#
+
+# ╔═╡ d0ecada4-13d1-4977-b66e-d992a1adae15
+# ╠═╡ skip_as_script = true
+#=╠═╡
+lyapunov(
+	[0.8, 0.2, 0.0, 0.0],      # Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
+	(1000.0, 0.5*Zsun, 10.0),  # Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr])
 )
   ╠═╡ =#
 
@@ -1831,7 +1847,7 @@ const JACOBIAN_FUNCTION = construct_jacobian(system!);
 ######################################################################################
 # Evaluate the Jacobian
 #
-# J:          Matrix to save the results, it has to have size N_EQU × N_EQU
+# J:          Matrix to save the results, it must have size N_EQU × N_EQU
 # ic:         Initial condition, [fi(0), fa(0), fm(0), fs(0)]
 # parameters: Parameters for the ODEs, [ρ, Z, ηd, ηi, R]
 # t:          Unused variable to comply with with the DifferentialEquations.jl API
@@ -1854,10 +1870,10 @@ end;
 
 # ╔═╡ 806db782-1734-4112-ab7b-84e03f4c342d
 ######################################################################################
-# Compute the stiffness_ratio
+# Compute the stiffness ratio
 # 
 # ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
-# base_parms: Parameters, (ρ, Z, it)
+# base_parms: Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr])
 ######################################################################################
 
 function stiffness_ratio(
@@ -1875,13 +1891,13 @@ function stiffness_ratio(
 	parameters = [ρ, Z, ηd, ηi, R]
 	J = Matrix{Float64}(undef, N_EQU, N_EQU)
 	
-	# Compute the Jacobian and save it in J
+	# Compute the Jacobian and store it in J
 	jacobian!(J, ic, parameters)
 	
 	# Get the norm of the real part of the non-zero eigenvalues
 	eigen_values = filter(x -> x > eps(typeof(x)), eigvals(J) .|> real .|> abs)
 	
-	# Stiffness coefficient
+	# Compute the stiffness ratio
 	return maximum(eigen_values) / minimum(eigen_values)
 	
 end;
@@ -1890,8 +1906,8 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 stiffness_ratio(
-	[0.8, 0.2, 0.0, 0.0], # Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
-	(1000.0, 0.01, 6.0),  # Parameters for the ODEs, (ρ, Z, it) 
+	[0.8, 0.2, 0.0, 0.0],      # Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
+	(100.0, 0.5*Zsun, 10.0),  # Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr])
 )
   ╠═╡ =#
 
@@ -1932,7 +1948,7 @@ Base.@kwdef struct PDF_params
     Ms::Float64
     # (min, max) values for s = ln(ρ/ρ₀)
     deviation::NTuple{2,Float64}
-    # Number of division of the density PDF
+    # Number of divisions for the discretization of the density PDF
     divisions::Int64
 end;
 
@@ -2024,7 +2040,8 @@ begin
 		b = 0.5,                   # Dimensionless turbulent forcing parameter
 		Ms = 10.0,                 # Mach number
 		deviation = (-6, 6),       # (min, max) values for s = log(ρ/ρ₀)
-		divisions = 20,            # Number of division of the density PDF
+		divisions = 20,            # Number of divisions for the discretization 
+								   # of the density PDF
 	)
 
     # Pre computation of the default mass fractions 
@@ -2085,24 +2102,11 @@ function integrate_model(
 	
 end;
 
-# ╔═╡ f27edc09-6cc7-4446-b417-672daf30bc8f
-# function integrate_with_julia(; phase::String="stellar")::Function
-
-#     # Index in the ODE solution
-#     idx = phase_name_to_index[phase]
-
-#     function integration(
-# 		ic::Vector{Float64},
-# 		base_params::Vector{Float64}, 
-# 		it::Float64,
-# 	)::Float64
-#         solution = integrate_model(ic, base_params, (0.0, it))
-#         return solution[end][idx]
-#     end
-
-#     return integration
-	
-# end;
+# ╔═╡ 0cac7dbf-31bb-459b-9291-8092cfb49354
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"## Plots"
+  ╠═╡ =#
 
 # ╔═╡ e65aef30-bf57-4d7d-b878-276ea6c0ef4a
 # ╠═╡ skip_as_script = true
@@ -4904,15 +4908,16 @@ version = "3.5.0+0"
 # ╟─a842b24e-8d26-41ab-9de3-91632aede893
 # ╠═dadc3e3a-ebe7-4f13-a03b-ab988094321a
 # ╟─64787011-b5b8-42be-b6e4-37ebc5138b3e
-# ╟─b2b23d48-9c3d-44d3-9106-745eecc9b561
 # ╟─14c7f574-0623-4254-b8f7-97984d32351c
+# ╟─b2b23d48-9c3d-44d3-9106-745eecc9b561
 # ╟─047bbd39-9cf9-4bd7-b38e-16aa505b0b08
 # ╟─35e194f5-20dc-4391-b761-3696fe0bc117
-# ╟─c843a9e7-c0e1-42c1-bace-c866f777232f
 # ╟─43eafb0f-08a8-4e53-9017-50b97ac48a52
+# ╟─c843a9e7-c0e1-42c1-bace-c866f777232f
 # ╟─70078b44-4d66-49b9-930e-74261df8be78
 # ╟─2fe0dc4c-da44-4fc8-bef8-1fa615a0fe4a
 # ╟─744a9591-c7f1-496e-9bb4-47df2c8937dd
+# ╟─34b04cf3-dabe-4364-8124-c5f3f351edb2
 # ╟─af69ab25-0f06-4837-ac35-acbe38a4ffb1
 # ╠═806db782-1734-4112-ab7b-84e03f4c342d
 # ╠═1743b6dc-0a4e-4a02-90fe-3bc47833421a
@@ -4920,6 +4925,7 @@ version = "3.5.0+0"
 # ╟─7e3183ae-b409-457a-8e35-4dc87894c580
 # ╠═d5446d26-4b59-46fa-a1f0-8374d5e05194
 # ╠═7a744b2e-56ee-4162-a23d-dca9d0657608
+# ╠═d0ecada4-13d1-4977-b66e-d992a1adae15
 # ╟─408721dd-bd85-47b4-a75c-6e3c188f5d64
 # ╟─534a1049-8de5-4b07-abec-c5a3456627c0
 # ╠═86b692f1-0268-40f3-b4a2-d54c9828346d
@@ -4987,7 +4993,7 @@ version = "3.5.0+0"
 # ╠═16b56ce2-6b02-4d53-a7a7-7cd7f96f26c5
 # ╟─4607856c-7472-4131-a2ee-29f7150f5cb4
 # ╠═bbb7263a-91e4-4a23-9e5f-416b6b7fcf6e
-# ╠═f27edc09-6cc7-4446-b417-672daf30bc8f
+# ╟─0cac7dbf-31bb-459b-9291-8092cfb49354
 # ╠═e65aef30-bf57-4d7d-b878-276ea6c0ef4a
 # ╠═729bb0e3-3d60-4ac6-803e-2568a6970d44
 # ╟─00000000-0000-0000-0000-000000000001
