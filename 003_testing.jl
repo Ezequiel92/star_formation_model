@@ -44,14 +44,14 @@ md"## Constants"
 begin
 	# Ranges:
 	#
-	# fi: Ionized gas fraction (Mᵢ / MC) [dimensionless]
-    # ρC: Total cell density [mp * cm⁻³]
-    # Z:  Metallicity [dimensionless]
-    # it: Integration time in Myr
-    const fi_r  = (0.4, 1.0)    # Linear range
-    const ρC_lr = (-0.1, 3.0)   # Log range
-	const Z_lr  = (-3.0, -1.0)  # Log range
-	const it_r  = (0.5, 10.0)   # Linear range
+	# fi:     Ionized gas fraction (Mᵢ / MC) [dimensionless]
+    # ρ_cell: Total cell density [mp * cm⁻³]
+    # Z:      Metallicity [dimensionless]
+    # it:     Integration time in Myr
+    const fi_r      = (0.4, 1.0)    # Linear range
+    const ρ_cell_lr = (-0.1, 3.0)   # Log range
+	const Z_lr      = (-3.0, -1.0)  # Log range
+	const it_r      = (0.5, 10.0)   # Linear range
 
     # Random points to compute the errors
     const N_ERR  = 2000
@@ -61,10 +61,10 @@ begin
 		rand(N_ERR) .* (range[2] - range[1]) .+ range[1]
 	end
 
-    rand_fi = rand_list(fi_r)
-    rand_ρC = rand_list(ρC_lr)
-    rand_Z  = rand_list(Z_lr)
-    rand_it = rand_list(it_r)
+    rand_fi     = rand_list(fi_r)
+    rand_ρ_cell = rand_list(ρ_cell_lr)
+    rand_Z      = rand_list(Z_lr)
+    rand_it     = rand_list(it_r)
 end;
 
 # ╔═╡ 4f738a76-771b-406f-9d1e-270596aed027
@@ -91,8 +91,8 @@ md"## C function"
 #
 #   base_param::Vector{Float64}
 #
-#     rho_C: Total cell density [mp * cm⁻³]
-#     Z:     Metallicity [dimensionless]
+#     ρ_cell: Total cell density [mp * cm⁻³]
+#     Z:      Metallicity [dimensionless]
 #
 #   it::Float64
 #
@@ -105,9 +105,9 @@ function integrate_with_c(; phase::String="stellar")::Function
     library = Libdl.dlopen(CODEGEN.lib_path)
 
 	func = CODEGEN.integrate_with_c(
-		CODEGEN.ETA_D_TABLE, 
-		CODEGEN.ETA_I_TABLE, 
-		CODEGEN.R_TABLE, 
+		CODEGEN.ETA_D_TABLE,
+		CODEGEN.ETA_I_TABLE,
+		CODEGEN.R_TABLE,
 		library,
 	)
 
@@ -157,7 +157,7 @@ function integrate_with_julia(; phase::String="stellar")::Function
 
     function integration(
 		ic::Vector{Float64},
-		base_params::Vector{Float64}, 
+		base_params::Vector{Float64},
 		it::Float64,
 	)::Float64
         solution = MODEL.integrate_model(ic, base_params, (0.0, it))
@@ -165,7 +165,7 @@ function integrate_with_julia(; phase::String="stellar")::Function
     end
 
     return integration
-	
+
 end;
 
 # ╔═╡ 9988970a-d794-42ec-b151-27d46a75d0bd
@@ -191,31 +191,31 @@ function test_integration(; phase::String="stellar")::Nothing
     error = Vector{Float64}(undef, N_ERR)
 
     @inbounds for i in 1:N_ERR
-		fi = rand_fi[i]
-    	ρC = exp10(rand_ρC[i])
-    	Z  = exp10(rand_Z[i]) * MODEL.Zsun
-    	it = rand_it[i]
-		
+		fi     = rand_fi[i]
+    	ρ_cell = exp10(rand_ρ_cell[i])
+    	Z      = exp10(rand_Z[i]) * MODEL.Zsun
+    	it     = rand_it[i]
+
 		ic = [fi, 1.0 - fi, 0.0, 0.0]
-		base_parms = [ρC, Z]
+		base_parms = [ρ_cell, Z]
 
 		result_j = try integr_func_j(ic, base_parms, it) catch; NaN end
 	    result_c = integr_func_c(ic, base_parms, it)
-	
+
 	    diff[i]  = abs(result_c - result_j)
 	    error[i] = diff[i] / result_j
     end
 
 	# Ignore miscalculations
     filter!(x -> (!isnan(x) && !isinf(x)), error)
-	
+
 	# Report results
 	println("Valid computations:  $(length(error)) (of $(N_ERR))")
     println("Maximum error:       $(@sprintf("%.2e", maximum(error) * 100)) %")
     println("Relative error:      $((mean(error) ± std(error)) * 100Unitful.percent)")
 
     return nothing
-	
+
 end;
   ╠═╡ =#
 
@@ -881,9 +881,9 @@ version = "3.3.10+0"
 
 [[deps.FastBroadcast]]
 deps = ["ArrayInterface", "LinearAlgebra", "Polyester", "Static", "StaticArrayInterface", "StrideArraysCore"]
-git-tree-sha1 = "9d77cb1caf03e67514ba60bcfc47c6e131b1950c"
+git-tree-sha1 = "a6e756a880fc419c8b41592010aebe6a5ce09136"
 uuid = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
-version = "0.2.7"
+version = "0.2.8"
 
 [[deps.FastClosures]]
 git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
@@ -1816,9 +1816,9 @@ version = "10.42.0+0"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "66b2fcd977db5329aa35cac121e5b94dd6472198"
+git-tree-sha1 = "f6f85a2edb9c356b829934ad3caed2ad0ebbfc99"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.11.28"
+version = "0.11.29"
 
 [[deps.PGFPlotsX]]
 deps = ["ArgCheck", "Dates", "DefaultApplication", "DocStringExtensions", "MacroTools", "OrderedCollections", "Parameters", "Requires", "Tables"]
@@ -1871,9 +1871,9 @@ version = "0.12.3"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
-git-tree-sha1 = "716e24b21538abc91f6205fd1d8363f39b442851"
+git-tree-sha1 = "a935806434c9d4c506ba941871b327b96d41f2bf"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.7.2"
+version = "2.8.0"
 
 [[deps.Permutations]]
 deps = ["Combinatorics", "LinearAlgebra", "Random"]
@@ -2007,9 +2007,9 @@ version = "2.2.8"
 
 [[deps.Primes]]
 deps = ["IntegerMathUtils"]
-git-tree-sha1 = "4c9f306e5d6603ae203c2000dd460d81a5251489"
+git-tree-sha1 = "1d05623b5952aed1307bf8b43bec8b8d1ef94b6e"
 uuid = "27ebfcd6-29c5-5fa9-bf4b-fb8fc14df3ae"
-version = "0.5.4"
+version = "0.5.5"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -2100,9 +2100,9 @@ version = "2.38.10"
 
 [[deps.RecursiveFactorization]]
 deps = ["LinearAlgebra", "LoopVectorization", "Polyester", "PrecompileTools", "StrideArraysCore", "TriangularSolve"]
-git-tree-sha1 = "2b6d4a40339aa02655b1743f4cd7c03109f520c1"
+git-tree-sha1 = "8bc86c78c7d8e2a5fe559e3721c0f9c9e303b2ed"
 uuid = "f2c3362d-daeb-58d1-803e-2bc74f2840b4"
-version = "0.2.20"
+version = "0.2.21"
 
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
@@ -2129,9 +2129,9 @@ version = "1.1.1"
 
 [[deps.Revise]]
 deps = ["CodeTracking", "Distributed", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "Pkg", "REPL", "Requires", "UUIDs", "Unicode"]
-git-tree-sha1 = "ba168f8fc36bf83c8d0573d464b7aab0f8a81623"
+git-tree-sha1 = "62fbfbbed77a20e9390c4f02219cb3b11d21708d"
 uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "3.5.7"
+version = "3.5.8"
 
 [[deps.RingLists]]
 deps = ["Random"]
@@ -2472,9 +2472,9 @@ version = "6.62.0"
 
 [[deps.StrideArraysCore]]
 deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "ManualMemory", "SIMDTypes", "Static", "StaticArrayInterface", "ThreadingUtilities"]
-git-tree-sha1 = "f02eb61eb5c97b48c153861c72fbbfdddc607e06"
+git-tree-sha1 = "e7dd250422df290cee14960c1ee144b44ac3dd77"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
-version = "0.4.17"
+version = "0.5.1"
 
 [[deps.StringManipulation]]
 deps = ["PrecompileTools"]

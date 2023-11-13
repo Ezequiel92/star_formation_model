@@ -32,7 +32,7 @@ md"### Load model"
 begin
     const TESTING = @ingredients("./003_testing.jl")
 	const CODEGEN = TESTING.CODEGEN
-    const MODEL = CODEGEN.MODEL
+    const MODEL   = CODEGEN.MODEL
 end;
 
 # ╔═╡ 57d75cb0-7cac-4b65-91a0-2706c3700718
@@ -43,7 +43,7 @@ md"## Constants"
 
 # ╔═╡ e7ac4c6e-ad33-4ce1-a47f-c955502d4ba4
 begin
-	
+
 	# ODE solver methods
 	const methods = [
 		(nothing,        "default"),
@@ -65,17 +65,17 @@ begin
     # Aliases:
 	#
 	# fi: Ionized gas fraction (Mᵢ / MC) [dimensionless]
-    # ρC: Total cell density [mp * cm⁻³]
+    # ρ_cell: Total cell density [mp * cm⁻³]
     # Z:  Metallicity [dimensionless]
     # it: Integration time in Myr
-    const fi_r  = TESTING.fi_r 
-    const ρC_lr = TESTING.ρC_lr
+    const fi_r  = TESTING.fi_r
+    const ρ_cell_lr = TESTING.ρ_cell_lr
 	const Z_lr  = TESTING.Z_lr
 	const it_r  = TESTING.it_r
 
 	# Ranges
 	function make_range(r::NTuple{2,Float64}, N::Int64, log::Bool)::Vector{Float64}
-		
+
 		list = collect(range(r[1], r[2], N))
 
 		if log
@@ -83,19 +83,19 @@ begin
 		else
 			return list
 		end
-		
+
 	end
 	fi_list = make_range(fi_r, 100, false)[1:99]
-	ρC_list = make_range(ρC_lr, 100, true)[1:99]
+	ρ_cell_list = make_range(ρ_cell_lr, 100, true)[1:99]
 	Z_list  = make_range(Z_lr, 100, true) .* MODEL.Zsun
 	it_list = make_range(it_r, 100, false)[1:99]
-	
+
 	# Reference value
 	const ref_fi = fi_list[50]
-	const ref_ρC = ρC_list[90]
+	const ref_ρ_cell = ρ_cell_list[90]
 	const ref_Z  = Z_list[90]
 	const ref_it = it_list[90]
-	
+
 end;
 
 # ╔═╡ 4eb7c215-0596-4761-b973-a8fe97b37c39
@@ -114,28 +114,28 @@ md"## Ionized fraction"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-	
+
 	integration_function = TESTING.integrate_with_julia()
 
 	ics         = [[fi, 1.0 - fi, 0.0, 0.0] for fi in fi_list]
-	base_params = [ref_ρC, ref_Z]
+	base_params = [ref_ρ_cell, ref_Z]
 	it          = ref_it
 
 	sf = [
-		try integration_function(ic, base_params, it) catch; NaN end for 
+		try integration_function(ic, base_params, it) catch; NaN end for
 		ic in ics
 	]
 	stellar_fraction = sf .* exp10(7) .- 620.0
 
     set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
+		f[1,1],
 		xlabel=L"\mathrm{ionized \,\, fraction}",
         ylabel=L"\mathrm{stellar \,\, fraction} \, \times \, 10^7 - 620",
 		title=@sprintf(
-			"ρC = %.1f cm⁻³   Z = %.2f   it = %.2f Myr", ref_ρC, ref_Z, ref_it,
+			"ρ_cell = %.1f cm⁻³   Z = %.2f   it = %.2f Myr", ref_ρ_cell, ref_Z, ref_it,
 		),
 		titlesize=30,
 		xlabelsize=32,
@@ -147,7 +147,7 @@ let
     lines!(ax, fi_list, stellar_fraction, linewidth=3)
 
     f
-	
+
 end
   ╠═╡ =#
 
@@ -161,24 +161,24 @@ md"## Density"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-	
+
 	integration_function = TESTING.integrate_with_julia()
 
 	ic          = [ref_fi, 1.0 - ref_fi, 0.0, 0.0]
-	base_params = [[ρC, ref_Z] for ρC in ρC_list]
+	base_params = [[ρ_cell, ref_Z] for ρ_cell in ρ_cell_list]
 	it          = ref_it
 
 	sf = [
-		try integration_function(ic, base_param, it) catch; NaN end for 
+		try integration_function(ic, base_param, it) catch; NaN end for
 		base_param in base_params
 	] .* 10^5
 
     set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
-		xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
+		f[1,1],
+		xlabel=L"\rho_\mathrm{cell} \, / \, \mathrm{cm^{-3}}",
         ylabel=L"\mathrm{stellar \,\, fraction} \, \times \, 10^5",
 		title=@sprintf(
 			"fᵢ = %.2g   Z = %.2f   it = %.2f Myr", ref_fi, ref_Z, ref_it,
@@ -191,10 +191,10 @@ let
 		xscale=log10,
 	)
 
-    lines!(ax, ρC_list, sf, linewidth=3)
+    lines!(ax, ρ_cell_list, sf, linewidth=3)
 
     f
-	
+
 end
   ╠═╡ =#
 
@@ -208,27 +208,27 @@ md"## Metallicity"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-	
+
 	integration_function = TESTING.integrate_with_julia()
 
 	ic          = [ref_fi, 1.0 - ref_fi, 0.0, 0.0]
-	base_params = [[ref_ρC, Z] for Z in Z_list]
+	base_params = [[ref_ρ_cell, Z] for Z in Z_list]
 	it          = ref_it
 
 	sf = [
-		try integration_function(ic, base_param, it) catch; NaN end for 
+		try integration_function(ic, base_param, it) catch; NaN end for
 		base_param in base_params
 	] .* 10^5
 
     set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
+		f[1,1],
 		xlabel=L"Z",
         ylabel=L"\mathrm{stellar \,\, fraction} \, \times \, 10^7",
 		title=@sprintf(
-			"fᵢ = %.2g   ρC = %.1f cm⁻³   it = %.2f Myr", ref_fi, ref_ρC, ref_it,
+			"fᵢ = %.2g   ρ_cell = %.1f cm⁻³   it = %.2f Myr", ref_fi, ref_ρ_cell, ref_it,
 		),
 		titlesize=30,
 		xlabelsize=32,
@@ -241,7 +241,7 @@ let
     lines!(ax, Z_list, sf, linewidth=3)
 
     f
-	
+
 end
   ╠═╡ =#
 
@@ -255,27 +255,27 @@ md"## Integration time"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-	
+
 	integration_function = TESTING.integrate_with_julia()
 
 	ic = [ref_fi, 1.0 - ref_fi, 0.0, 0.0]
-	base_params = [ref_ρC, ref_Z]
+	base_params = [ref_ρ_cell, ref_Z]
 	its = it_list
 
 	sf = [
-		try integration_function(ic, base_params, it) catch; NaN end for 
+		try integration_function(ic, base_params, it) catch; NaN end for
 		it in its
 	] .* 10^5
 
     set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
+		f[1,1],
 		xlabel=L"\mathrm{integration \,\, time \, / \, Myr}",
         ylabel=L"\mathrm{stellar \,\, fraction} \, \times \, 10^7",
 		title=@sprintf(
-			"fᵢ = %.2g   ρC = %.1f cm⁻³   Z = %.2f", ref_fi, ref_ρC, ref_Z,
+			"fᵢ = %.2g   ρ_cell = %.1f cm⁻³   Z = %.2f", ref_fi, ref_ρ_cell, ref_Z,
 		),
 		titlesize=30,
 		xlabelsize=32,
@@ -287,7 +287,7 @@ let
     lines!(ax, it_list, sf, linewidth=3)
 
     f
-	
+
 end
   ╠═╡ =#
 
@@ -309,11 +309,11 @@ function benchmark_solve(method::Tuple)::Nothing
 
 	args = (method[1],)
 	name = method[2]
-	
+
 	benchmark = try
 		@timed MODEL.integrate_model(
 		    [ref_fi, 1.0 - ref_fi, 0.0, 0.0],
-			[ref_ρC, ref_Z],
+			[ref_ρ_cell, ref_Z],
 			(0.0, ref_it);
 		    args,
 		)[end][MODEL.phase_name_to_index["stellar"]]
@@ -324,7 +324,7 @@ function benchmark_solve(method::Tuple)::Nothing
 	m_str = "Method: $(name)"
 	padding = 20 - length(m_str)
 	print(m_str * " "^padding * "  -  ")
-	
+
 	if isnothing(benchmark)
 		println("Failed.\n")
 	else
@@ -334,7 +334,7 @@ function benchmark_solve(method::Tuple)::Nothing
 	end
 
 	return nothing
-	
+
 end;
   ╠═╡ =#
 
@@ -352,18 +352,18 @@ function benchmark_csolve()::Nothing
 
 	benchmark = @timed integr_func(
 		[ref_fi, 1.0 - ref_fi, 0.0, 0.0],
-		[ref_ρC, ref_Z],
+		[ref_ρ_cell, ref_Z],
 		ref_it,
 	)
 
 	print("Method: C library     -  ")
-	
+
 	time = @sprintf("%.3g", benchmark.time * exp10(6.0))
 	value = @sprintf("%.3g", benchmark.value)
 	println("Time: $(time) μs  -  Result = $(value).")
 
 	return nothing
-	
+
 end;
   ╠═╡ =#
 
@@ -372,7 +372,7 @@ end;
 #=╠═╡
 begin
 	benchmark_csolve()
-	
+
 	for method in methods
 		println()
 		benchmark_solve(method)
@@ -406,11 +406,11 @@ let
 	]
 
     set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
-		xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
+		f[1,1],
+		xlabel=L"\rho_\mathrm{cell} \, / \, \mathrm{cm^{-3}}",
         ylabel=L"\mathrm{stellar \,\, fraction}",
 		title=@sprintf(
 			"fᵢ = %.2g   Z = %.2f   it = %.2f Myr", ref_fi, ref_Z, ref_it,
@@ -440,7 +440,7 @@ md"# Long evolution"
 begin
 	# Parameters and initial conditions
 	ic          = [ref_fi, 1.0 - ref_fi, 0.0, 0.0]
-	base_params = [ref_ρC, ref_Z]
+	base_params = [ref_ρ_cell, ref_Z]
 	tspan       = (0.0, 10000.0)
 
     # Logarithmic time steps
@@ -450,7 +450,7 @@ begin
     times  = [exp10(t) for t in range(start, stop, points)]
 
 	# Integration
-    fractions = try 
+    fractions = try
 		MODEL.integrate_model(ic, base_params, tspan; times)
 	catch
 		println("ODE integration failed!")
@@ -465,15 +465,15 @@ function long_evolution(phase::String)::Figure
     fraction = getindex.(fractions, MODEL.phase_name_to_index[phase])
 
     set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
+		f[1,1],
 		xlabel=L"t \, / \, \mathrm{Myr}",
         ylabel=L"\mathrm{%$phase \,\, fraction}",
 		title=@sprintf(
-			"fᵢ = %.2g   ρC = %.1f cm⁻³   Z = %.2f   it = %.2f Myr", 
-			ref_fi, ref_ρC, ref_Z, ref_it,
+			"fᵢ = %.2g   ρ_cell = %.1f cm⁻³   Z = %.2f   it = %.2f Myr",
+			ref_fi, ref_ρ_cell, ref_Z, ref_it,
 		),
 		titlesize=28,
 		xlabelsize=32,
@@ -486,7 +486,7 @@ function long_evolution(phase::String)::Figure
     lines!(ax, times, fraction, linewidth=3)
 
     return f
-	
+
 end;
 
 # ╔═╡ 5d42e5fa-a0d5-43c9-936d-1f10c8da7b5b
@@ -547,22 +547,22 @@ md"## Star formation time"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-    τS = MODEL.τS.(
-		getindex.(fractions, MODEL.phase_name_to_index["atomic"]), 
+    τ_star = MODEL.τ_star.(
+		getindex.(fractions, MODEL.phase_name_to_index["atomic"]),
 		getindex.(fractions, MODEL.phase_name_to_index["molecular"]),
-		ref_ρC,
+		ref_ρ_cell,
 	)
 
 	set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
+		f[1,1],
 		xlabel=L"t \, / \, \mathrm{Myr}",
-        ylabel=L"\tau_S \, / \, \mathrm{Myr}",
+        ylabel=L"\tau_\mathrm{star} \, / \, \mathrm{Myr}",
 		title=@sprintf(
-			"fᵢ = %.2g   ρC = %.1f cm⁻³   Z = %.2f   it = %.2f Myr", 
-			ref_fi, ref_ρC, ref_Z, ref_it,
+			"fᵢ = %.2g   ρ_cell = %.1f cm⁻³   Z = %.2f   it = %.2f Myr",
+			ref_fi, ref_ρ_cell, ref_Z, ref_it,
 		),
 		titlesize=28,
 		xlabelsize=32,
@@ -572,7 +572,7 @@ let
 		xscale=log10,
 	)
 
-    lines!(ax, times, τS, linewidth=3)
+    lines!(ax, times, τ_star, linewidth=3)
 
     f
 end
@@ -588,21 +588,21 @@ md"## Recombination time"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-    τR = MODEL.τR.(
-		getindex.(fractions, MODEL.phase_name_to_index["ionized"]), 
-		ref_ρC,
+    τ_rec = MODEL.τ_rec.(
+		getindex.(fractions, MODEL.phase_name_to_index["ionized"]),
+		ref_ρ_cell,
 	)
 
 	set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
+		f[1,1],
 		xlabel=L"t \, / \, \mathrm{Myr}",
-        ylabel=L"\tau_R \, / \, \mathrm{Myr}",
+        ylabel=L"\tau_\mathrm{rec} \, / \, \mathrm{Myr}",
 		title=@sprintf(
-			"fᵢ = %.2g   ρC = %.1f cm⁻³   Z = %.2f   it = %.2f Myr", 
-			ref_fi, ref_ρC, ref_Z, ref_it,
+			"fᵢ = %.2g   ρ_cell = %.1f cm⁻³   Z = %.2f   it = %.2f Myr",
+			ref_fi, ref_ρ_cell, ref_Z, ref_it,
 		),
 		titlesize=28,
 		xlabelsize=32,
@@ -612,7 +612,7 @@ let
 		xscale=log10,
 	)
 
-    lines!(ax, times, τR, linewidth=3)
+    lines!(ax, times, τ_rec, linewidth=3)
 
     f
 end
@@ -628,23 +628,23 @@ md"## Condensation time"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-    τC = MODEL.τC.(
-		getindex.(fractions, MODEL.phase_name_to_index["atomic"]), 
+    τ_cond = MODEL.τ_cond.(
+		getindex.(fractions, MODEL.phase_name_to_index["atomic"]),
 		getindex.(fractions, MODEL.phase_name_to_index["molecular"]),
-		ref_ρC,
+		ref_ρ_cell,
 		ref_Z,
 	)
 
 	set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
+		f[1,1],
 		xlabel=L"t \, / \, \mathrm{Myr}",
-        ylabel=L"\tau_C \, / \, \mathrm{Myr}",
+        ylabel=L"\tau_\mathrm{cond} \, / \, \mathrm{Myr}",
 		title=@sprintf(
-			"fᵢ = %.2g   ρC = %.1f cm⁻³   Z = %.2f   it = %.2f Myr", 
-			ref_fi, ref_ρC, ref_Z, ref_it,
+			"fᵢ = %.2g   ρ_cell = %.1f cm⁻³   Z = %.2f   it = %.2f Myr",
+			ref_fi, ref_ρ_cell, ref_Z, ref_it,
 		),
 		titlesize=28,
 		xlabelsize=32,
@@ -654,7 +654,7 @@ let
 		xscale=log10,
 	)
 
-    lines!(ax, times, τC, linewidth=3)
+    lines!(ax, times, τ_cond, linewidth=3)
 
     f
 end
@@ -1317,9 +1317,9 @@ version = "3.3.10+0"
 
 [[deps.FastBroadcast]]
 deps = ["ArrayInterface", "LinearAlgebra", "Polyester", "Static", "StaticArrayInterface", "StrideArraysCore"]
-git-tree-sha1 = "9d77cb1caf03e67514ba60bcfc47c6e131b1950c"
+git-tree-sha1 = "a6e756a880fc419c8b41592010aebe6a5ce09136"
 uuid = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
-version = "0.2.7"
+version = "0.2.8"
 
 [[deps.FastClosures]]
 git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
@@ -2252,9 +2252,9 @@ version = "10.42.0+0"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "66b2fcd977db5329aa35cac121e5b94dd6472198"
+git-tree-sha1 = "f6f85a2edb9c356b829934ad3caed2ad0ebbfc99"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.11.28"
+version = "0.11.29"
 
 [[deps.PGFPlotsX]]
 deps = ["ArgCheck", "Dates", "DefaultApplication", "DocStringExtensions", "MacroTools", "OrderedCollections", "Parameters", "Requires", "Tables"]
@@ -2307,9 +2307,9 @@ version = "0.12.3"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
-git-tree-sha1 = "716e24b21538abc91f6205fd1d8363f39b442851"
+git-tree-sha1 = "a935806434c9d4c506ba941871b327b96d41f2bf"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.7.2"
+version = "2.8.0"
 
 [[deps.Permutations]]
 deps = ["Combinatorics", "LinearAlgebra", "Random"]
@@ -2443,9 +2443,9 @@ version = "2.2.8"
 
 [[deps.Primes]]
 deps = ["IntegerMathUtils"]
-git-tree-sha1 = "4c9f306e5d6603ae203c2000dd460d81a5251489"
+git-tree-sha1 = "1d05623b5952aed1307bf8b43bec8b8d1ef94b6e"
 uuid = "27ebfcd6-29c5-5fa9-bf4b-fb8fc14df3ae"
-version = "0.5.4"
+version = "0.5.5"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -2536,9 +2536,9 @@ version = "2.38.10"
 
 [[deps.RecursiveFactorization]]
 deps = ["LinearAlgebra", "LoopVectorization", "Polyester", "PrecompileTools", "StrideArraysCore", "TriangularSolve"]
-git-tree-sha1 = "2b6d4a40339aa02655b1743f4cd7c03109f520c1"
+git-tree-sha1 = "8bc86c78c7d8e2a5fe559e3721c0f9c9e303b2ed"
 uuid = "f2c3362d-daeb-58d1-803e-2bc74f2840b4"
-version = "0.2.20"
+version = "0.2.21"
 
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
@@ -2565,9 +2565,9 @@ version = "1.1.1"
 
 [[deps.Revise]]
 deps = ["CodeTracking", "Distributed", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "Pkg", "REPL", "Requires", "UUIDs", "Unicode"]
-git-tree-sha1 = "ba168f8fc36bf83c8d0573d464b7aab0f8a81623"
+git-tree-sha1 = "62fbfbbed77a20e9390c4f02219cb3b11d21708d"
 uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "3.5.7"
+version = "3.5.8"
 
 [[deps.RingLists]]
 deps = ["Random"]
@@ -2908,9 +2908,9 @@ version = "6.62.0"
 
 [[deps.StrideArraysCore]]
 deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "ManualMemory", "SIMDTypes", "Static", "StaticArrayInterface", "ThreadingUtilities"]
-git-tree-sha1 = "f02eb61eb5c97b48c153861c72fbbfdddc607e06"
+git-tree-sha1 = "e7dd250422df290cee14960c1ee144b44ac3dd77"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
-version = "0.4.17"
+version = "0.5.1"
 
 [[deps.StringManipulation]]
 deps = ["PrecompileTools"]

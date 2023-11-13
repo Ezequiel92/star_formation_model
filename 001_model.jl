@@ -36,38 +36,38 @@ Because of its importance in galaxy formation, it is critical for simulations to
 # ╔═╡ 8eb6540d-f5b0-45e6-883c-0cc213e67e45
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md""" 
+md"""
 
-## Previous work 
+## Previous work
 
 As the precision of $\mathrm{H_2}$ measurements increases, so too must the sophistication of simulations that model its formation and evolution. Many simulations use an equilibrium model to define the $\mathrm{H_2}$ content, which assumes that the chemistry in each volume element is in a state of equilibrium given only by local variables ([Krumholz2008](https://doi.org/10.1086/592490), [McKee2010](https://doi.org/10.1088/0004-637X/709/1/308), [Krumholz2011](https://doi.org/10.1088/0004-637X/729/1/36), and [Krumholz2013](https://doi.org/10.1093/mnras/stt1780)). However, this assumption is not always valid; as the formation and destruction of $\mathrm{H_2}$ can be influenced by a variety of factors, including temperature, density, and the presence of UV radiation.
-  
-In [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) it is described, for the first time, a non-equilibrium chemical network for molecular hydrogen. This network uses rate equations to track the formation and destruction of $\mathrm{H_2}$ in each volume element, considering a variety of factors that can influence its abundance. In the last decade, several non-equilibrium models have been developed and implemented in hydrodynamical simulations. In general, they use radiative transfer to model the radiation field, which, in conjunction with a chemical network (a set of ODEs), evolves the abundance of molecular hydrogen and other species of hydrogen and helium. A summary table of previous work can be seen below  
-  
-| Reference     | Code |  
-|:-------------:|:----:|  
-| [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Gnedin2011](https://doi.org/10.1088/0004-637X/728/2/88) | $\texttt{ART}$ ([Kravtsov1997](https://doi.org/10.1086/313015)) |  
-| [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) | $\texttt{GASOLINE}$ ([Wadsley2004](https://doi.org/10.1016/j.newast.2003.08.004)) | 
-| [Tomassetti2014](https://doi.org/10.1093/mnras/stu2273) | $\texttt{RAMSES}$ ([Teyssier2001](https://doi.org/10.1051/0004-6361:20011817)) |  
-| [Baczynski2015](https://doi.org/10.1093/mnras/stv1906) | $\texttt{FLASH4}$ ([Fryxell2000](https://doi.org/10.1086/317361)) |  
-| [Richings2016](https://doi.org/10.1093/mnras/stw327) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) |  
-| [Hu2016](https://doi.org/10.1093/mnras/stw544) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) |  
-| [Katz2017](https://doi.org/10.1093/mnras/stx608) | $\texttt{RAMSES-RT}$ ([Rosdahl2013](https://doi.org/10.1093/mnras/stt1722)) |  
-| [Pallottini2017](https://doi.org/10.1093/mnras/stx608) | $\texttt{RAMSES}$ ([Teyssier2001](https://doi.org/10.1051/0004-6361:20011817)) |  
-| [Lupi2017](https://doi.org/10.1093/mnras/stx2874) | $\texttt{GASOLINE2}$ ([Wadsley2017](https://doi.org/10.1093/mnras/stx1643)) |  
-| [Capelo2018](https://doi.org/10.1093/mnras/stx3355) | $\texttt{GIZMO}$ ([Hopkins2015](https://doi.org/10.1093/mnras/stv195)) |  
-| [Nickerson2018](https://doi.org/10.1093/mnras/sty1556) and [Nickerson2019](https://doi.org/10.1093/mnras/stz048) | $\texttt{RAMSES-RT}$ ([Rosdahl2013](https://doi.org/10.1093/mnras/stt1722)) |  
-| [Sillero2021](https://doi.org/10.1093/mnras/stab1015) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) | 
-  
-As an alternative to the computationally expensive radiative transfer process, semi-analytical models (SAM) have been developed for the multiphase structure of the interstellar medium (MP ISM). Broadly, there are two ways to model the MP ISM, one considers on the physical properties of the gas (hot and cold phases), and the other on its chemical composition (hydrogen phases).  
-  
-The former was pioneer by [Field1969](https://doi.org/10.1086/180324) (see [Cowie1977](https://doi.org/10.1086/154911), [McKee1977a](https://doi.org/10.1086/155350), and for a review [Cox2005](https://doi.org/10.1146/annurev.astro.43.072103.150615)), within the context of pure SAMs. The model developed by [McKee1977b](https://doi.org/10.1086/155667) was first incorporated into numerical simulation of galaxy formation by [Yepes1997](https://doi.org/10.1093/mnras/284.1.235) (Eulerian simulations) and [Hultman1999](https://ui.adsabs.harvard.edu/abs/1999A%26A...347..769H) (Lagrangian simulations). These works were later extended by [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), adding galactic winds driven by star formation as a form of feedback.   
-  
-[Monaco2004](https://doi.org/10.1111/j.1365-2966.2004.07916.x) developed a SAM in a similar vein to [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), providing the theoretical foundation for MUPPI (MUlti-Phase Particle Integrator) ([Murante2010](https://doi.org/10.1111/j.1365-2966.2010.16567.x)), a sub-resolution MP ISM model that adds stellar feedback to $\texttt{GADGET2}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)). MUPPI separates a gas particle in a hot and cold phase if a set of conditions for its density and temperature are met. It then evolves those components, plus a stellar phase and an energy term (energy of the hot gas), using a set of four ODEs.   
-  
-Based on [Ferrini1992](https://doi.org/10.1086/171066) and later work, [Mollá2015](https://doi.org/10.1111/j.1365-2966.2005.08782.x) developed a SAM to follow the metallicity in galaxies. These chemical evolution models (CEMs) were subsequently improved and extended in [Mollá2015](https://doi.org/10.1093/mnras/stv1102), [Mollá2016](https://doi.org/10.1093/mnras/stw1723), [Mollá2017](https://doi.org/10.1093/mnras/stx419) and [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635). The latter tracks five components: the molecular, atomic, and ionized phases of hydrogen; plus dust and stars.   
-  
-We will use a sub-resolution SAM, following closely the one developed by [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) but implemented within the hydrodynamical code $\texttt{Arepo}$ ([Springel2010](https://doi.org/10.1111/j.1365-2966.2009.15715.x)), like the way MUPPI is integrated with $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)). 
+
+In [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) it is described, for the first time, a non-equilibrium chemical network for molecular hydrogen. This network uses rate equations to track the formation and destruction of $\mathrm{H_2}$ in each volume element, considering a variety of factors that can influence its abundance. In the last decade, several non-equilibrium models have been developed and implemented in hydrodynamical simulations. In general, they use radiative transfer to model the radiation field, which, in conjunction with a chemical network (a set of ODEs), evolves the abundance of molecular hydrogen and other species of hydrogen and helium. A summary table of previous work can be seen below
+
+| Reference     | Code |
+|:-------------:|:----:|
+| [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Gnedin2011](https://doi.org/10.1088/0004-637X/728/2/88) | $\texttt{ART}$ ([Kravtsov1997](https://doi.org/10.1086/313015)) |
+| [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) | $\texttt{GASOLINE}$ ([Wadsley2004](https://doi.org/10.1016/j.newast.2003.08.004)) |
+| [Tomassetti2014](https://doi.org/10.1093/mnras/stu2273) | $\texttt{RAMSES}$ ([Teyssier2001](https://doi.org/10.1051/0004-6361:20011817)) |
+| [Baczynski2015](https://doi.org/10.1093/mnras/stv1906) | $\texttt{FLASH4}$ ([Fryxell2000](https://doi.org/10.1086/317361)) |
+| [Richings2016](https://doi.org/10.1093/mnras/stw327) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) |
+| [Hu2016](https://doi.org/10.1093/mnras/stw544) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) |
+| [Katz2017](https://doi.org/10.1093/mnras/stx608) | $\texttt{RAMSES-RT}$ ([Rosdahl2013](https://doi.org/10.1093/mnras/stt1722)) |
+| [Pallottini2017](https://doi.org/10.1093/mnras/stx608) | $\texttt{RAMSES}$ ([Teyssier2001](https://doi.org/10.1051/0004-6361:20011817)) |
+| [Lupi2017](https://doi.org/10.1093/mnras/stx2874) | $\texttt{GASOLINE2}$ ([Wadsley2017](https://doi.org/10.1093/mnras/stx1643)) |
+| [Capelo2018](https://doi.org/10.1093/mnras/stx3355) | $\texttt{GIZMO}$ ([Hopkins2015](https://doi.org/10.1093/mnras/stv195)) |
+| [Nickerson2018](https://doi.org/10.1093/mnras/sty1556) and [Nickerson2019](https://doi.org/10.1093/mnras/stz048) | $\texttt{RAMSES-RT}$ ([Rosdahl2013](https://doi.org/10.1093/mnras/stt1722)) |
+| [Sillero2021](https://doi.org/10.1093/mnras/stab1015) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) |
+
+As an alternative to the computationally expensive radiative transfer process, semi-analytical models (SAM) have been developed for the multiphase structure of the interstellar medium (MP ISM). Broadly, there are two ways to model the MP ISM, one considers on the physical properties of the gas (hot and cold phases), and the other on its chemical composition (hydrogen phases).
+
+The former was pioneer by [Field1969](https://doi.org/10.1086/180324) (see [Cowie1977](https://doi.org/10.1086/154911), [McKee1977a](https://doi.org/10.1086/155350), and for a review [Cox2005](https://doi.org/10.1146/annurev.astro.43.072103.150615)), within the context of pure SAMs. The model developed by [McKee1977b](https://doi.org/10.1086/155667) was first incorporated into numerical simulation of galaxy formation by [Yepes1997](https://doi.org/10.1093/mnras/284.1.235) (Eulerian simulations) and [Hultman1999](https://ui.adsabs.harvard.edu/abs/1999A%26A...347..769H) (Lagrangian simulations). These works were later extended by [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), adding galactic winds driven by star formation as a form of feedback.
+
+[Monaco2004](https://doi.org/10.1111/j.1365-2966.2004.07916.x) developed a SAM in a similar vein to [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x), providing the theoretical foundation for MUPPI (MUlti-Phase Particle Integrator) ([Murante2010](https://doi.org/10.1111/j.1365-2966.2010.16567.x)), a sub-resolution MP ISM model that adds stellar feedback to $\texttt{GADGET2}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)). MUPPI separates a gas particle in a hot and cold phase if a set of conditions for its density and temperature are met. It then evolves those components, plus a stellar phase and an energy term (energy of the hot gas), using a set of four ODEs.
+
+Based on [Ferrini1992](https://doi.org/10.1086/171066) and later work, [Mollá2015](https://doi.org/10.1111/j.1365-2966.2005.08782.x) developed a SAM to follow the metallicity in galaxies. These chemical evolution models (CEMs) were subsequently improved and extended in [Mollá2015](https://doi.org/10.1093/mnras/stv1102), [Mollá2016](https://doi.org/10.1093/mnras/stw1723), [Mollá2017](https://doi.org/10.1093/mnras/stx419) and [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635). The latter tracks five components: the molecular, atomic, and ionized phases of hydrogen; plus dust and stars.
+
+We will use a sub-resolution SAM, following closely the one developed by [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) but implemented within the hydrodynamical code $\texttt{Arepo}$ ([Springel2010](https://doi.org/10.1111/j.1365-2966.2009.15715.x)), like the way MUPPI is integrated with $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)).
 """
   ╠═╡ =#
 
@@ -85,66 +85,73 @@ We characterized each phase by its mass fraction with respect to the total mass 
 
 |||
 |:-------------:|:--------------------:|
-| Ionized gas   | $f_i(t) := M_i / M_C$ |
-| Atomic gas    | $f_a(t) := M_a / M_C$ |
-| Molecular gas | $f_m(t) := M_m / M_C$ |
-| Stars         | $f_s(t) := M_s / M_C$ |
+| Ionized gas   | $f_i(t) := M_i / M_\mathrm{cell}$ |
+| Atomic gas    | $f_a(t) := M_a / M_\mathrm{cell}$ |
+| Molecular gas | $f_m(t) := M_m / M_\mathrm{cell}$ |
+| Stars         | $f_s(t) := M_s / M_\mathrm{cell}$ |
 
 where $M_i$, $M_a$, $M_m$, $M_s$ are the corresponding masses and
 
 $\begin{equation}
-    M_C(t) := M_i(t) + M_a(t) + M_m(t) + M_s(t) \, ,
+    M_\mathrm{cell} := M_i(t) + M_a(t) + M_m(t) + M_s(t) \, ,
 \end{equation}$
 
 is the total cell mass.
 
-Now, we will compute the relation between number densities ($n_j$) and the dimensionless fractions defined above ($f_j := M_j / M_C$).
+Now, we will compute the relation between number densities ($n_j$) and the dimensionless fractions defined above ($f_j := M_j / M_\mathrm{cell}$).
 
 $\begin{equation}
-    n_j := \frac{N_j}{V_j} = \frac{M_j}{m_j} \, \frac{1}{V_j} = \frac{M_j}{M_C} \,  \frac{M_C}{m_j \, V_j} = f_j \, \frac{M_C}{m_j \, x_j \, V_C} = f_j \, \frac{\rho_C}{m_j \, x_j} \, , 
+    n_j := \frac{N_j}{V_j} = \frac{M_j}{m_j} \, \frac{1}{V_j} = \frac{M_j}{M_\mathrm{cell}} \,  \frac{M_\mathrm{cell}}{m_j \, V_j} = f_j \, \frac{M_\mathrm{cell}}{m_j \, x_j \, V_\mathrm{cell}} = f_j \, \frac{\rho_\mathrm{cell}}{m_j \, x_j} \, ,
 \end{equation}$
 
 where the quantities are
 
 |||
 |:--------:|:----------------------------------------------------------:|
-| $V_C$    | Volume of the cell                                         |
-| $M_C$    | Total mass of the cell                                     |
-| $\rho_C$ | Mass density of the cell                                   |
+| $V_\mathrm{cell}$    | Volume of the cell                                         |
+| $M_\mathrm{cell}$    | Total mass of the cell                                     |
+| $\rho_\mathrm{cell}$ | Mass density of the cell                                   |
 | $N_j$    | Number of elements (e.g. atoms) of the $j$ component       |
 | $V_j$    | Total volume of the $j$ component                          |
 | $M_j$    | Total mass of the $j$ component                            |
 | $m_j$    | Mass of a single element (e.g. atoms) of the $j$ component |
-| $f_j$    | $(:= M_j / M_C)$ Mass fraction of the $j$ component        |
-| $x_j$    | $(:= V_j / V_C)$ Volume fraction of the $j$ component      |
+| $f_j$    | $(:= M_j / M_\mathrm{cell})$ Mass fraction of the $j$ component        |
+| $x_j$    | $(:= V_j / V_\mathrm{cell})$ Volume fraction of the $j$ component      |
 
-In the context of our model, $V_C$, $\rho_C$, $M_C$, $m_j$, $V_j$, and $x_j$ are constants.
+In the context of our model, $V_\mathrm{cell}$, $\rho_\mathrm{cell}$, $M_\mathrm{cell}$, $m_j$, $V_j$, and $x_j$ are constants.
 
 In the same way, we can write a relation for the mass density of the $j$ component,
 
 $\begin{equation}
-    \rho_j := \frac{M_j}{V_j} = \frac{M_j}{M_C} \, \frac{M_C}{V_j} = f_j \,  \frac{M_C}{x_j \, V_C} = f_j \, \frac{\rho_C}{x_j} \, , 
+    \rho_j := \frac{M_j}{V_j} = \frac{M_j}{M_\mathrm{cell}} \, \frac{M_\mathrm{cell}}{V_j} = f_j \,  \frac{M_\mathrm{cell}}{x_j \, V_\mathrm{cell}} = f_j \, \frac{\rho_\mathrm{cell}}{x_j} \, ,
 \end{equation}$
 
 So, using these relations we can write any differential equation for the quantities $M_j$, $\rho_j$, and $n_j$ as an equation for $f_j$.
 
-In our model, we have done only two hypotheses until now; first that the ISM is only made up of the four components already mentioned, and second, that $V_j$ and $x_j$ are constants. 
+In our model, we have done only two hypotheses until now; first that the ISM is only made up of the four components already mentioned, and second, that $V_j$ and $x_j$ are constants.
 
-Using the values in [Ferrière2001](https://doi.org/10.1103/RevModPhys.73.1031) for the Milky Way,
+Using the values in Table 1 of [Ferrière2001](https://doi.org/10.1103/RevModPhys.73.1031) for the Milky Way,
 
-| Component     | $n \, [\mathrm{cm^{-3}}]$ | $M \, [10^9 \, \mathrm{M_\odot}]$ |
-|:-------------:|:-------------------------:|:---------------------------------:|
-| Molecular gas | $10^2 - 10^6$             | $\sim 1.3 - 2.5$                  |
-| Atomic gas    | $20 - 50$                 | $\gtrsim 6.0$                     |
-| Ionized gas   | $0.2 - 0.5$               | $\gtrsim 1.6$                     |
- 
-we can estimate the volume fractions by order of magnitude,
+| Component          | $n \, [\mathrm{cm^{-3}}]$ | $M \, [10^9 \, \mathrm{M_\odot}]$ |
+|:------------------:|:-------------------------:|:---------------------------------:|
+| Molecular gas      | $10^2 - 10^6$             | $\sim 1.3 - 2.5$                  |
+| Cold atomic gas    | $20 - 50$                 | $\gtrsim 6.0$                     |
+| Warm ionized gas   | $0.2 - 0.5$               | $\gtrsim 1.6$                     |
+
+the relation from before
+
+$\begin{equation}
+    x_j = \frac{M_j}{m_j \, n_j \, V_j} \, ,
+\end{equation}$
+
+and the fact that the Milky Way volume is $\sim 10^3 \, \mathrm{kpc^3}$. We can estimate the volume fractions by order of magnitude as
 
 |||
 |:-----:|:--------------:|
 | $x_i$ | $\sim 1.0$     |
-| $x_a$ | $\sim 10^{-2}$    |
+| $x_a$ | $\sim 10^{-2}$ |
 | $x_m$ | $\sim 10^{-5}$ |
+
 
 We will use the $x_j$ as adjustable parameters.
 """
@@ -181,7 +188,7 @@ TikzPictures.TikzPicture(
 		(atom) edge [bend left,"\textcolor{d_blue}{ionization}"] (ion)
 		(stars) edge [bend left, "\textcolor{d_yellow}{supernova}"] (ion)
 		(molecule) edge [bend left, "\textcolor{red}{star formation}"] (stars);
-	""", 
+	""",
 	width="55em",
 	preamble = """
 		\\usepackage{chemformula}
@@ -196,7 +203,7 @@ TikzPictures.TikzPicture(
     		box/.style={
         		rectangle,
         		rounded corners,
-        		draw=black, 
+        		draw=black,
         		thick,
         		text width=4em,
         		minimum height=2em,
@@ -206,8 +213,8 @@ TikzPictures.TikzPicture(
 				thick,
 			},
 			every edge quotes/.append style = {
-				font=\\small, 
-				align=center, 
+				font=\\small,
+				align=center,
 				auto,
 			},
 			myrect/.style={
@@ -215,7 +222,7 @@ TikzPictures.TikzPicture(
 				draw,
 				inner sep=0pt,
 				fit=\\#1,
-				thick, 
+				thick,
 				rounded corners,
 			},
 		}
@@ -251,7 +258,7 @@ $\begin{equation}
 
 ### Ionized gas
 
-The ionized component grows through the ionization of atomic gas and from the remnants of supernova explosions. 
+The ionized component grows through the ionization of atomic gas and from the remnants of supernova explosions.
 
 The former is assumed to come mainly from the radiation of newborn stars, so it is given by
 
@@ -261,7 +268,7 @@ $\begin{equation}
 
 where $\eta_\text{ion}$ is the ionized mass rate per unit of created stellar mass. All the physics of the ionization process are summarized in this parameter.
 
-The latter, under the instantaneous recycling hypothesis, can be written as 
+The latter, under the instantaneous recycling hypothesis, can be written as
 
 $\begin{equation}
 	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_i(t)\right|_{\text{recyc.}} = R \, \psi(t) \, ,
@@ -281,18 +288,18 @@ $\begin{equation}
 
 where $\eta_\text{diss}$ is the disassociated mass rate per unit of created stellar mass.
 
-The latter will depend on the mass of ionized gas present and the time scale of recombination ($\tau_R$), so it is given by 
+The latter will depend on the mass of ionized gas present and the time scale of recombination ($\tau_\mathrm{rec}$), so it is given by
 
 $\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_a(t)\right|_{\text{recon.}} = \frac{f_i(t)}{\tau_R(t)} \, .
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_a(t)\right|_{\text{recon.}} = \frac{f_i(t)}{\tau_\mathrm{rec}(t)} \, .
 \end{equation}$
 
 ### Molecular gas
 
-The molecular component gains mass mainly by the condensation of hydrogen atoms on the surface of dust grains. This process depends on the mass of atomic gas and the characteristic time scale of condensation ($\tau_C$). We are condensing all the dust physics into this time parameter,
+The molecular component gains mass mainly by the condensation of hydrogen atoms on the surface of dust grains. This process depends on the mass of atomic gas and the characteristic time scale of condensation ($\tau_\mathrm{cond}$). We are condensing all the dust physics into this time parameter,
 
 $\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_m(t)\right|_{\text{cond.}} = \frac{f_a(t)}{\tau_C(t)} \, ,
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_m(t)\right|_{\text{cond.}} = \frac{f_a(t)}{\tau_\mathrm{cond}(t)} \, ,
 \end{equation}$
 """
   ╠═╡ =#
@@ -307,11 +314,11 @@ TikzPictures.TikzPicture(
 		\node[box, white, text width=2em] (molecule) at (270:2cm) {\ch{H2}};
 		\node[box, white, text width=2em] (ion) at (90:2cm) {HII};
 		\draw[line, white, ->]
-		(ion) edge [bend left, "$\textcolor{d_pink}{\frac{f_i(t)}{\tau_R(t)}} - \textcolor{d_blue}{\eta_\text{ion} \, \psi(t)}$"] (atom)
-		(atom) edge [bend left, "$\textcolor{d_orange}{\frac{f_a(t)}{\tau_C(t)}} - \textcolor{d_green}{\eta_\text{diss} \, \psi(t)}$"] (molecule)
+		(ion) edge [bend left, "$\textcolor{d_pink}{\frac{f_i(t)}{\tau_\mathrm{rec}(t)}} - \textcolor{d_blue}{\eta_\text{ion} \, \psi(t)}$"] (atom)
+		(atom) edge [bend left, "$\textcolor{d_orange}{\frac{f_a(t)}{\tau_\mathrm{cond}(t)}} - \textcolor{d_green}{\eta_\text{diss} \, \psi(t)}$"] (molecule)
 		(stars) edge [bend left, "$\textcolor{d_yellow}{R \, \psi(t)}$"] (ion)
 		(molecule) edge [bend left, "$\textcolor{red}{\psi(t)}$"] (stars);
-	""", 
+	""",
 	width="55em",
 	preamble = """
 		\\usepackage{chemformula}
@@ -326,7 +333,7 @@ TikzPictures.TikzPicture(
     		box/.style={
         		rectangle,
         		rounded corners,
-        		draw=black, 
+        		draw=black,
         		thick,
         		text width=4em,
         		minimum height=2em,
@@ -336,8 +343,8 @@ TikzPictures.TikzPicture(
 				thick,
 			},
 			every edge quotes/.append style = {
-				font=\\small, 
-				align=center, 
+				font=\\small,
+				align=center,
 				auto,
 			},
 			myrect/.style={
@@ -345,7 +352,7 @@ TikzPictures.TikzPicture(
 				draw,
 				inner sep=0pt,
 				fit=\\#1,
-				thick, 
+				thick,
 				rounded corners,
 			},
 		}
@@ -377,13 +384,13 @@ TikzPictures.TikzPicture(
 	\node[white] {
   	${\boldmath
 	\begin{aligned}
-		\dv{}{t}f_i(t) &= - \textcolor{d_pink}{\frac{f_i(t)}{\tau_R(t)}} + \textcolor{d_blue}{\eta_\text{ion} \, \psi(t)} + \textcolor{d_yellow}{R \, \psi(t)} \, , \\
-		\dv{}{t}f_a(t) &= \textcolor{d_pink}{\frac{f_i(t)}{\tau_R(t)}} - \textcolor{d_blue}{\eta_\text{ion} \, \psi(t)} - \textcolor{d_orange}{\frac{f_a(t)}{\tau_C(t)}} + \textcolor{d_green}{\eta_\text{diss} \, \psi(t)} \, , \\
-		\dv{}{t}f_m(t) &= \textcolor{d_orange}{\frac{f_a(t)}{\tau_C(t)}} - \textcolor{d_green}{\eta_\text{diss} \, \psi(t)} - \textcolor{red}{\psi(t)} \, , \\
+		\dv{}{t}f_i(t) &= - \textcolor{d_pink}{\frac{f_i(t)}{\tau_\mathrm{rec}(t)}} + \textcolor{d_blue}{\eta_\text{ion} \, \psi(t)} + \textcolor{d_yellow}{R \, \psi(t)} \, , \\
+		\dv{}{t}f_a(t) &= \textcolor{d_pink}{\frac{f_i(t)}{\tau_\mathrm{rec}(t)}} - \textcolor{d_blue}{\eta_\text{ion} \, \psi(t)} - \textcolor{d_orange}{\frac{f_a(t)}{\tau_\mathrm{cond}(t)}} + \textcolor{d_green}{\eta_\text{diss} \, \psi(t)} \, , \\
+		\dv{}{t}f_m(t) &= \textcolor{d_orange}{\frac{f_a(t)}{\tau_\mathrm{cond}(t)}} - \textcolor{d_green}{\eta_\text{diss} \, \psi(t)} - \textcolor{red}{\psi(t)} \, , \\
 		\dv{}{t}f_s(t) &= \textcolor{red}{\psi(t)} - \textcolor{d_yellow}{R \, \psi(t)} \, ,
 	\end{aligned}}$
 	};
-	""", 
+	""",
 	width="45em",
 	preamble = """
 		\\usepackage{chemformula}
@@ -446,7 +453,7 @@ md"The model, for a typical set of initial conditions, is not chaotic (maximum l
 md"""
 ## Units
 
-We have the freedom to choose three independent units in this model. Time, mass, and length. The choice is reflected in the constants $C_S$, $C_R$, and $C_C$.
+We have the freedom to choose three independent units in this model. Time, mass, and length. The choice is reflected in the constants $C_\mathrm{star}$, $C_\mathrm{rec}$, and $C_\mathrm{cond}$.
 
 Following the standard in astronomy and astrophysics, we will use $\mathrm{[T] = Myr}$, $\mathrm{[M] = mp}$ and $\mathrm{[L] = cm}$, where $\mathrm{mp}$ is the proton mass.
 """
@@ -467,17 +474,17 @@ md"""
 
 *  $\psi(t)$: Star formation rate.
 
-*  $\tau_R$: Time scale of atomic gas formation from ionized gas, generally called recombination time.
+*  $\tau_\mathrm{rec}$: Time scale of atomic gas formation from ionized gas, generally called recombination time.
 
-*  $\tau_C$: Time scale of molecular gas formation from atomic gas, generally called condensation (or cloud formation) time.
+*  $\tau_\mathrm{cond}$: Time scale of molecular gas formation from atomic gas, generally called condensation (or cloud formation) time.
 
-*  $\eta_d$: Rate of molecular gas dissociation by stars per unit of created stellar mass.
+*  $\eta_\mathrm{diss}$: Rate of molecular gas dissociation by stars per unit of created stellar mass.
 
-*  $\eta_i$: Rate of atomic gas ionization by stars per unit of created stellar mass.
+*  $\eta_\mathrm{ion}$: Rate of atomic gas ionization by stars per unit of created stellar mass.
 
 *  $R$: Mass of ionized gas produced per unit of created stellar mass.
 
-*  $Z_{SN}$: Mass of metals produced per unit of ionized gas created during the stellar life cycle.
+*  $Z_\mathrm{sn}$: Mass of metals produced per unit of ionized gas created during the stellar life cycle.
 """
   ╠═╡ =#
 
@@ -493,19 +500,19 @@ md"## Physical processes"
 md"""
 ### Star formation
 
-For the star formation we will use the notation and definition commonly used in the field (for a review see [McKee2007](https://doi.org/10.1146/annurev.astro.45.051806.110602), [Krumholz2014](https://doi.org/10.1016/j.physrep.2014.02.001), and [Krumholz2019](https://doi.org/10.1146/annurev-astro-091918-104430)). 
+For the star formation we will use the notation and definition commonly used in the field (for a review see [McKee2007](https://doi.org/10.1146/annurev.astro.45.051806.110602), [Krumholz2014](https://doi.org/10.1016/j.physrep.2014.02.001), and [Krumholz2019](https://doi.org/10.1146/annurev-astro-091918-104430)).
 
 In particular, we will follow [Krumholz2005](https://doi.org/10.1086/431734), but taking into account the strong correlation between molecular hydrogen and star formation ([Bigiel2008](https://doi.org/10.1088/0004-6256/136/6/2846), [Bigiel2010](https://doi.org/10.1088/0004-6256/140/5/1194), [Wong2002](https://doi.org/10.1086/339287), [Robertson2008](https://doi.org/10.1086/587796), [Halle2013](https://doi.org/10.1051/0004-6361/201220952), [Thompson2013](https://doi.org/10.1088/0004-637x/780/2/145)). So, we end up with the simple model
 
 $\begin{equation}
-	\mathrm{SFR} := \frac{\mathrm{d}}{\mathrm{d}t} M_s = \frac{M_m}{\tau_S}
+	\mathrm{SFR} := \frac{\mathrm{d}}{\mathrm{d}t} M_s = \frac{M_m}{\tau_\mathrm{star}}
 \end{equation}$
-where $M_m$ is the molecular mass and $\tau_S$ is the characteristic timescale for star formation (defined by this very relation).
+where $M_m$ is the molecular mass and $\tau_\mathrm{star}$ is the characteristic timescale for star formation (defined by this very relation).
 
-Given that we want the equations for the dimensionless fraction; the SFR enters as follows, 
+Given that we want the equations for the dimensionless fraction; the SFR enters as follows,
 
 $\begin{equation}
-	\psi := \frac{\mathrm{SFR}}{M_C} = \frac{f_m}{\tau_S} \, .
+	\psi := \frac{\mathrm{SFR}}{M_\mathrm{cell}} = \frac{f_m}{\tau_\mathrm{star}} \, .
 \end{equation}$
 """
   ╠═╡ =#
@@ -517,7 +524,7 @@ begin
 end;
 
 # ╔═╡ bc67cf22-4caa-497d-aae9-e5d1191468e2
-ψ(fa, fm, τS) = (AW * fa + MW * fm) / τS;
+ψ(fa, fm, τ_star) = (AW * fa + MW * fm) / τ_star;
 
 # ╔═╡ 1d27ec35-65ca-4c94-9e8d-54d1c11e759f
 # ╠═╡ skip_as_script = true
@@ -526,7 +533,7 @@ md"""
 Following [Krumholz2005](https://doi.org/10.1086/431734), we write the characteristic timescale for star formation as
 
 $\begin{equation}
-    \tau_S =  \frac{t_\text{ff}}{\epsilon_\text{ff}} \, ,
+    \tau_\mathrm{star} =  \frac{t_\text{ff}}{\epsilon_\text{ff}} \, ,
 \end{equation}$
 
 where $\epsilon_\text{ff}$ is the star formation efficiency, (in the literature is often used $\epsilon_\text{ff} \approx 0.01$ [Krumholz2007](https://doi.org/10.1086/509101), [Krumholz2014](https://doi.org/10.1016/j.physrep.2014.02.001)), and $t_\text{ff}$ is the free-fall time which is the time for a pressure-free spherical cloud to collapse into a point due to its self-gravity.
@@ -541,46 +548,46 @@ where $\rho_g$ is the density of the gas cloud.
 
 There is a lot of uncertainty for the parameter $\epsilon_\text{ff}$ ([Lee2016](https://doi.org/10.3847/1538-4357/833/2/229) and [Utomo2018](https://doi.org/10.3847/2041-8213/aacf8f)). We will use $\epsilon_\text{ff} = 1.0$ because we already consider the efficiency of star formation as only molecular hydrogen is used to form stars. We note though, that this parameter has been shown to have little influence on the global properties of simulated galaxies ([Li2018](https://doi.org/10.3847/1538-4357/aac9b8) and [Brown2022](https://doi.org/10.1093/mnras/stac1164)).
 
-With all the previous definitions, we have 
+With all the previous definitions, we have
 
 $\begin{equation}
-    \tau_S = \frac{C_S}{\sqrt{\rho_g}} \, ,
+    \tau_\mathrm{star} = \frac{C_\mathrm{star}}{\sqrt{\rho_g}} \, ,
 \end{equation}$
 where
 
 $\begin{equation}
-    C_S = \sqrt{\frac{3\pi}{32 \, G}} \, .
+    C_\mathrm{star} = \sqrt{\frac{3\pi}{32 \, G}} \, .
 \end{equation}$
 
-Given that $\rho_g$ is the density of an individual cold gas cloud, which is unresolved within a cell, we use the fact that in general $\rho_g \gg \rho_C$, to write
+Given that $\rho_g$ is the density of an individual cold gas cloud, which is unresolved within a cell, we use the fact that in general $\rho_g \gg \rho_\mathrm{cell}$, to write
 
 $\begin{align}
-    \rho_g &= \rho_m + \rho_a = \rho_C \, \left( \frac{f_m}{x_m} + \frac{f_a}{x_a} \right) .
+    \rho_g &= \rho_m + \rho_a = \rho_\mathrm{cell} \, \left( \frac{f_m}{x_m} + \frac{f_a}{x_a} \right) .
 \end{align}$
 """
   ╠═╡ =#
 
 # ╔═╡ 68732d91-805a-4663-9166-f8483213a8d2
 begin
-    const ϵff = 1.0
-	const CS  = sqrt(3π / 32u"G") / ϵff
-	const cs  = ustrip(t_u * l_u^-(3/2), CS / sqrt(m_u))
+    const ϵff     = 1.0
+	const C_star  = sqrt(3π / 32u"G") / ϵff
+	const c_star  = ustrip(t_u * l_u^-(3/2), C_star / sqrt(m_u))
 end
 
 # ╔═╡ 27281e53-e519-4ad0-af5d-59fb0e208534
-τS(fa, fm, ρC) = cs / sqrt(ρC * (fm / xm + fa / xa));
+τ_star(fa, fm, ρ_cell) = c_star / sqrt(ρ_cell * (fm / xm + fa / xa));
 
 # ╔═╡ 327fd38a-5ff6-4ac4-8d29-694272d9d46f
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
 	set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
-		xlabel=L"\rho_C \, / \, \mathrm{%$l_u^{-3}}", 
-		ylabel=L"\tau_S \, / \, \mathrm{%$t_u}",
+		f[1,1],
+		xlabel=L"\rho_\mathrm{cell} \, / \, \mathrm{%$l_u^{-3}}",
+		ylabel=L"\tau_\mathrm{star} \, / \, \mathrm{%$t_u}",
 		title=L"f_a + f_m = 0.7",
 		xlabelsize=32,
 		ylabelsize=32,
@@ -591,11 +598,11 @@ let
 		yscale=log10,
 	)
 
-	ρC = exp10.(range(-1, 5, 30))
+	ρ_cell = exp10.(range(-1, 5, 30))
 
 	for fa in range(0.1, 0.5, 3)
 		label = L"f_a = %$(fa)"
-		lines!(ax, ρC, ρ -> τS(fa, 0.7 - fa, ρ); linewidth=3, label)
+		lines!(ax, ρ_cell, ρ -> τ_star(fa, 0.7 - fa, ρ); linewidth=3, label)
 	end
 
 	axislegend(; position=:rt, labelsize=25)
@@ -608,11 +615,11 @@ end
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-	ρC = exp10.(range(-1, 5, 30))
+	ρ_cell = exp10.(range(-1, 5, 30))
 	@pgf ax = PGFPlotsX.Axis(
 	    {
-	        xlabel=L"\rho_C \, / \, \mathrm{%$l_u^{-3}}",
-	        ylabel=L"\tau_S \, / \, \mathrm{%$t_u}",
+	        xlabel=L"\rho_\mathrm{cell} \, / \, \mathrm{%$l_u^{-3}}",
+	        ylabel=L"\tau_\mathrm{star} \, / \, \mathrm{%$t_u}",
 	        xmode="log",
 	        ymode="log",
 			cycle_list_name="color list",
@@ -622,13 +629,13 @@ let
 	)
 
 	for fa in range(0.1, 0.5, 3)
-		push!(ax, PGFPlotsX.Plot(Coordinates(ρC, τS.(fa, 0.7 - fa, ρC))))
+		push!(ax, PGFPlotsX.Plot(Coordinates(ρ_cell, τ_star.(fa, 0.7 - fa, ρ_cell))))
 		push!(ax, PGFPlotsX.LegendEntry(L"f_a = %$(fa)"))
 	end
 
 	mkpath("generated_files/plots")
 
-	pgfsave("generated_files/plots/tau_S_vs_density.pdf", ax)
+	pgfsave("generated_files/plots/tau_star-vs-density.pdf", ax)
 end
   ╠═╡ =#
 
@@ -641,7 +648,7 @@ md"""
 The rate of recombination for hydrogen atoms can be written as ([Osterbrock2006](http://www.worldcat.org/oclc/60611705), [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), and [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635))
 
 $\begin{equation}
-    \frac{d}{dt} n_a \biggr\rvert_\mathrm{recomb.} = \alpha_H(T) \, n_e \, n_i \, , 
+    \frac{d}{dt} n_a \biggr\rvert_\mathrm{recomb.} = \alpha_H(T) \, n_e \, n_i \, ,
 \end{equation}$
 
 where $\alpha_H(T)$ is the recombination coefficient, $n_e$ is the electron number density, and $n_i$ is the ionized hydrogen number density. We note that, by mass balance and within our model, $n_e = n_i$.
@@ -649,9 +656,9 @@ where $\alpha_H(T)$ is the recombination coefficient, $n_e$ is the electron numb
 Using the conversion factor already mentioned, we can write
 
 $\begin{align}
-    \frac{d}{dt} f_a \biggr\rvert_\mathrm{recomb.} &= \frac{x_a \, m_p}{\rho_C} \, \alpha_H(T) \, n_e \, n_i \\
-	&= \frac{x_a \, m_p}{\rho_C} \, \alpha_H(T) \, f_i \, \frac{\rho_C}{x_i \, m_p} \, f_i \, \frac{\rho_C}{x_i \, m_p} \\
-    &= \alpha_H(T) \, f_i^{\,2} \, \frac{\rho_C}{m_p} \, \frac{x_a}{x_i^{\,2}}  \, .
+    \frac{d}{dt} f_a \biggr\rvert_\mathrm{recomb.} &= \frac{x_a \, m_p}{\rho_\mathrm{cell}} \, \alpha_H(T) \, n_e \, n_i \\
+	&= \frac{x_a \, m_p}{\rho_\mathrm{cell}} \, \alpha_H(T) \, f_i \, \frac{\rho_\mathrm{cell}}{x_i \, m_p} \, f_i \, \frac{\rho_\mathrm{cell}}{x_i \, m_p} \\
+    &= \alpha_H(T) \, f_i^{\,2} \, \frac{\rho_\mathrm{cell}}{m_p} \, \frac{x_a}{x_i^{\,2}}  \, .
 \end{align}$
 
 We can readily find fits for $\alpha_H(T)$ in the literature ([Seaton1959](https://doi.org/10.1093/mnras/119.2.81), [Black1981](https://doi.org/10.1093/mnras/197.3.553), [Verner1996](https://doi.org/10.1086/192284), and [Osterbrock2006](http://www.worldcat.org/oclc/60611705)). In particular, if we take $T = 10^4 \, \mathrm{K}$ for the ionized phase and use case B recombination (assuming an optically thick cloud [Nebrin2023](https://doi.org/10.3847/2515-5172/acd37a)), we get
@@ -663,44 +670,44 @@ $\begin{align}
 So, we can write
 
 $\begin{equation}
-    \frac{d}{dt} f_a \biggr\rvert_\mathrm{recomb.} = \alpha_H \, f_i^{\,2} \, \frac{\rho_C}{m_p} \, \frac{x_a}{x_i^{\,2}} = \frac{f_i}{\tau_R} \, , 
+    \frac{d}{dt} f_a \biggr\rvert_\mathrm{recomb.} = \alpha_H \, f_i^{\,2} \, \frac{\rho_\mathrm{cell}}{m_p} \, \frac{x_a}{x_i^{\,2}} = \frac{f_i}{\tau_\mathrm{rec}} \, ,
 \end{equation}$
 
-where the time scale $\tau_R$ is
+where the time scale $\tau_\mathrm{rec}$ is
 
 $\begin{equation}
-    \tau_R = \frac{m_p \, x_i^{\,2}}{\alpha_H \, f_i \, \rho_C \, x_a} = \frac{C_R}{f_i \, \rho_C} \, , 
+    \tau_\mathrm{rec} = \frac{m_p \, x_i^{\,2}}{\alpha_H \, f_i \, \rho_\mathrm{cell} \, x_a} = \frac{C_\mathrm{rec}}{f_i \, \rho_\mathrm{cell}} \, ,
 \end{equation}$
 
 with the constant
 
 $\begin{equation}
-	C_R = \frac{m_p}{\alpha_H} \, \frac{x_i^{\,2}}{x_a} \, .
+	C_\mathrm{rec} = \frac{m_p}{\alpha_H} \, \frac{x_i^{\,2}}{x_a} \, .
 \end{equation}$
 """
   ╠═╡ =#
 
 # ╔═╡ 00030fd8-a9db-4903-b2ed-21a64db30588
 begin
-	const αH = 2.6e-13u"cm^3 * s^-1"
-	const CR = (m_u / αH) * (xi^2 / xa)
-	const cr = ustrip(t_u * l_u^-3, CR / m_u)
+	const αH    = 2.6e-13u"cm^3 * s^-1"
+	const C_rec = (m_u / αH) * (xi^2 / xa)
+	const c_rec = ustrip(t_u * l_u^-3, C_rec / m_u)
 end
 
 # ╔═╡ d4f91aa3-183a-4abf-8f7a-7a05d4333e3a
-τR(fi, ρC) = cr / (fi * ρC);
+τ_rec(fi, ρ_cell) = c_rec / (fi * ρ_cell);
 
 # ╔═╡ 7e824ce1-1f82-48cc-a3c4-1acfba0e2100
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
 	set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
-		xlabel=L"\rho_C \, / \, \mathrm{%$l_u^{-3}}", 
-		ylabel=L"\tau_R \, / \, \mathrm{%$t_u}",
+		f[1,1],
+		xlabel=L"\rho_\mathrm{cell} \, / \, \mathrm{%$l_u^{-3}}",
+		ylabel=L"\tau_\mathrm{rec} \, / \, \mathrm{%$t_u}",
 		xlabelsize=32,
 		ylabelsize=32,
 		titlesize=35,
@@ -710,11 +717,11 @@ let
 		yscale=log10,
 	)
 
-	ρC = exp10.(range(-1, 5, 30))
+	ρ_cell = exp10.(range(-1, 5, 30))
 
 	for fi in range(0.1, 0.9, 5)
 		label = L"f_i = %$(fi)"
-		lines!(ax, ρC, ρ -> τR(fi, ρ); linewidth=3, label)
+		lines!(ax, ρ_cell, ρ -> τ_rec(fi, ρ); linewidth=3, label)
 	end
 
 	axislegend(; position=:rt, labelsize=28)
@@ -727,11 +734,11 @@ end
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-	ρC = exp10.(range(-1, 5, 30))
+	ρ_cell = exp10.(range(-1, 5, 30))
 	@pgf ax = PGFPlotsX.Axis(
 	    {
-	        xlabel=L"\rho_C \, / \, \mathrm{%$l_u^{-3}}",
-	        ylabel=L"\tau_R \, / \, \mathrm{%$t_u}",
+	        xlabel=L"\rho_\mathrm{cell} \, / \, \mathrm{%$l_u^{-3}}",
+	        ylabel=L"\tau_\mathrm{rec} \, / \, \mathrm{%$t_u}",
 	        xmode="log",
 	        ymode="log",
 			cycle_list_name="color list",
@@ -741,13 +748,13 @@ let
 	)
 
 	for fi in range(0.1, 0.9, 5)
-		push!(ax, PGFPlotsX.Plot(Coordinates(ρC, τR.(fi, ρC))))
+		push!(ax, PGFPlotsX.Plot(Coordinates(ρ_cell, τ_rec.(fi, ρ_cell))))
 		push!(ax, PGFPlotsX.LegendEntry(L"f_i = %$(fi)"))
 	end
 
 	mkpath("generated_files/plots")
 
-	pgfsave("generated_files/plots/tau_R_vs_density.pdf", ax)
+	pgfsave("generated_files/plots/tau_rec-vs-density.pdf", ax)
 end
   ╠═╡ =#
 
@@ -760,28 +767,28 @@ md"""
 From at least [Hollenbach1971a](https://doi.org/10.1086/150754) and [Hollenbach1971b](https://doi.org/10.1086/150755), we know that the rate of molecular hydrogen formation due to the condensation of atomic gas in the surface of dust grains is
 
 $\begin{equation}
-    \frac{d}{dt} n_m \biggr\rvert_\mathrm{cond.} = R_d \, n_H \, n_a  \, , 
+    \frac{d}{dt} n_m \biggr\rvert_\mathrm{cond.} = R_d \, n_H \, n_a  \, ,
 \end{equation}$
 
 where $R_d$ is the formation rate coefficient of $H_2$ on dust grain, $n_H$ is the hydrogen nucleus number density, and $n_a$ is the atomic hydrogen number density.
 
-In the literature, $n_H$ is generally defined as $n_H = n_a + 2 \, n_m$, because most studies consider small regions (compared to hydrodynamical simulations) dominated by cold gas ($T \sim 100 \, \mathrm{K}$) where the only relevant phases are the atomic and molecular gas. In contrast, we consider atomic, molecular, and ionized gas, so we should be using $n_H = n_a + 2\, n_m + n_i$. But, considering that the difference is small (in comparison with other uncertainties) and that the experimental values are measured with $n_H$ as $n_a + 2\, n_m$, we will stick with that definition. With this choice, we are assuming that within our cell there is a phase separation where the star formation cloud consists of mainly cold atomic and molecular gas. 
+In the literature, $n_H$ is generally defined as $n_H = n_a + 2 \, n_m$, because most studies consider small regions (compared to hydrodynamical simulations) dominated by cold gas ($T \sim 100 \, \mathrm{K}$) where the only relevant phases are the atomic and molecular gas. In contrast, we consider atomic, molecular, and ionized gas, so we should be using $n_H = n_a + 2\, n_m + n_i$. But, considering that the difference is small (in comparison with other uncertainties) and that the experimental values are measured with $n_H$ as $n_a + 2\, n_m$, we will stick with that definition. With this choice, we are assuming that within our cell there is a phase separation where the star formation cloud consists of mainly cold atomic and molecular gas.
 
 We also note that the expression for $\frac{d}{dt} n_m$ is only used in equilibrium equations in most of the early works ([Hollenbach1971a](https://doi.org/10.1086/150754), [Hollenbach1971b](https://doi.org/10.1086/150755), [Jura1974](https://doi.org/10.1086/152975), [Jura1975](https://doi.org/10.1086/153545), [Black1987](https://doi.org/10.1086/165740), [Sternberg1988](https://doi.org/10.1086/166664), and [Goldshmidt1995](https://doi.org/10.1086/175168)), while first appearing in an actual differential equation that does not assume equilibrium in [Draine1996](https://doi.org/10.1086/177689).
 
 Using the conversion factor already mentioned we can write
 
 $\begin{align}
-    \frac{d}{dt} f_m \biggr\rvert_\mathrm{cond.} &= \frac{2 \, m_p \, x_m}{\rho_C} \, R_d \, \left(n_a + 2\, n_m\right) \, n_a \\
-	&= \frac{2 \, m_p \, x_m}{\rho_C} \, R_d \left( f_a \, \frac{\rho_C}{m_p \, x_a} + 2 \, f_m \, \frac{\rho_C}{2 \, m_p \, x_m} \right) \, f_a \, \frac{\rho_C}{m_p \, x_a} \\ 
-	&= 2 \, R_d \left( \frac{f_a}{x_a} + \frac{f_m}{x_m} \right) \, f_a \, \frac{\rho_C}{m_p} \, \frac{x_m}{x_a} \\
-	&= \frac{f_a}{\tau_C} \, , 
+    \frac{d}{dt} f_m \biggr\rvert_\mathrm{cond.} &= \frac{2 \, m_p \, x_m}{\rho_\mathrm{cell}} \, R_d \, \left(n_a + 2\, n_m\right) \, n_a \\
+	&= \frac{2 \, m_p \, x_m}{\rho_\mathrm{cell}} \, R_d \left( f_a \, \frac{\rho_\mathrm{cell}}{m_p \, x_a} + 2 \, f_m \, \frac{\rho_\mathrm{cell}}{2 \, m_p \, x_m} \right) \, f_a \, \frac{\rho_\mathrm{cell}}{m_p \, x_a} \\
+	&= 2 \, R_d \left( \frac{f_a}{x_a} + \frac{f_m}{x_m} \right) \, f_a \, \frac{\rho_\mathrm{cell}}{m_p} \, \frac{x_m}{x_a} \\
+	&= \frac{f_a}{\tau_\mathrm{cond}} \, ,
 \end{align}$
 
-where the time scale $\tau_C$ is
+where the time scale $\tau_\mathrm{cond}$ is
 
 $\begin{equation}
-    \tau_C := \frac{m_p \, x_a}{2 \, R_d \, \rho_C \, x_m \left( \dfrac{f_a}{x_a} + \dfrac{f_m}{x_m} \right)} \, .
+    \tau_\mathrm{cond} := \frac{m_p \, x_a}{2 \, R_d \, \rho_\mathrm{cell} \, x_m \left( \dfrac{f_a}{x_a} + \dfrac{f_m}{x_m} \right)} \, .
 \end{equation}$
 
 A table with several values for $R_d$ is presented below. We note that more than one value for $R_d$ and its dependence on other parameters may be discussed within each reference. In the table, we reflect the fiducial value used by each author
@@ -798,7 +805,7 @@ A table with several values for $R_d$ is presented below. We note that more than
 
 Theoretical and experimental work has shown that $R_d \propto T^{1/2}$ ([Black1987](https://doi.org/10.1086/165740)) and $R_d \propto n_\mathrm{dust}$ ([Hollenbach1971b](https://doi.org/10.1086/150755)). Assuming the simplest dust model $n_\mathrm{dust} \propto Z$; we have $R_d \propto T^{1/2} \, Z$ ([Pelupessy2006](https://doi.org/10.1086/504366) and [Wolfire2008](https://doi.org/10.1086/587688)).
 
-Following previous prescriptions ([Pelupessy2006](https://doi.org/10.1086/504366), [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), [Mollá2017](https://doi.org/10.1093/mnras/stx419), [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635)) we will only scale $R_d$ with the metallicity; using $\sim 100\,\mathrm{K}$ for the temperature of the cold neutral gas. 
+Following previous prescriptions ([Pelupessy2006](https://doi.org/10.1086/504366), [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), [Mollá2017](https://doi.org/10.1093/mnras/stx419), [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635)) we will only scale $R_d$ with the metallicity; using $\sim 100\,\mathrm{K}$ for the temperature of the cold neutral gas.
 
 Our reference value for $Z_\odot$ is ([Wolfire2008](https://doi.org/10.1086/587688))
 
@@ -806,7 +813,7 @@ $\begin{equation}
     R_\odot := R_d(Z = Z_\odot) = 3.5 \times 10^{-17}\mathrm{cm^3 \, s^{-1}} \, ,
 \end{equation}$
 
-so, we have 
+so, we have
 
 $\begin{equation}
     R_d = Z \, \frac{R_\odot}{Z_\odot} \, .
@@ -814,19 +821,19 @@ $\begin{equation}
 
 The exact value of $R_\odot$ within $1 \, \mathrm{dex}$ does not affect significantly the results. We will use an adjustable global factor, as was done with the clumping factor $C_\rho$ in [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), to account for all the uncertainties.
 
-The fact that the final expression for $R_d$ would give $0$ when $Z = 0$ is problematic because $\tau_C$ would diverge. The problem originates in the incorrect assumption that the only conversion channel for $\mathrm{HI} \rightarrow \mathrm{H_2}$ is the condensation on the surface of dust grains. To solve this we do the replacement $Z \rightarrow Z + Z_\mathrm{eff}$ with $Z_\mathrm{eff} = 10^{-3} \, Z_\odot$; which eliminates the divergence and takes into account the molecular formation that occurs below $10^{-3} \, Z_\odot$ ([Glover2007](https://doi.org/10.1086/519445)).
+The fact that the final expression for $R_d$ would give $0$ when $Z = 0$ is problematic because $\tau_\mathrm{cond}$ would diverge. The problem originates in the incorrect assumption that the only conversion channel for $\mathrm{HI} \rightarrow \mathrm{H_2}$ is the condensation on the surface of dust grains. To solve this we do the replacement $Z \rightarrow Z + Z_\mathrm{eff}$ with $Z_\mathrm{eff} = 10^{-3} \, Z_\odot$; which eliminates the divergence and takes into account the molecular formation that occurs below $10^{-3} \, Z_\odot$ ([Glover2007](https://doi.org/10.1086/519445)).
 
-So, we finally have 
+So, we finally have
 
 $\begin{align}
-    \tau_C &= \frac{m_p \, x_a \, Z_\odot}{2 \, R_\odot \, C_\rho \, (Z + Z_\mathrm{eff}) \, \rho_C \, x_m \left( \dfrac{f_a}{x_a} + \dfrac{f_m}{x_m} \right)} \\
-	&= \frac{C_C}{(Z + Z_\mathrm{eff}) \, \rho_C \left( \dfrac{f_a}{x_a} + \dfrac{f_m}{x_m} \right)} \, , 
+    \tau_\mathrm{cond} &= \frac{m_p \, x_a \, Z_\odot}{2 \, R_\odot \, C_\rho \, (Z + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \, x_m \left( \dfrac{f_a}{x_a} + \dfrac{f_m}{x_m} \right)} \\
+	&= \frac{C_\mathrm{cond}}{(Z + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \left( \dfrac{f_a}{x_a} + \dfrac{f_m}{x_m} \right)} \, ,
 \end{align}$
 
 where
 
 $\begin{equation}
-	C_C = \frac{m_p \, x_a \, Z_\odot}{2 \, R_\odot \, C_\rho \, x_m} \, .
+	C_\mathrm{cond} = \frac{m_p \, x_a \, Z_\odot}{2 \, R_\odot \, C_\rho \, x_m} \, .
 \end{equation}$
 
 For the solar metallicity, we find several values in the literature
@@ -847,28 +854,28 @@ To keep it consistent with the Arepo codebase, we will use $Z_\odot = 0.0127$, n
 
 # ╔═╡ f2a6676f-457a-476a-9ce7-c336aa9bf47f
 begin
-    const Rsun = 3.5e-17u"cm^3 * s^-1"
-    const Zsun = 0.0127
-	const Zeff = 1e-3 * Zsun
-	const Cρ   = 100.0
-	const CC   = (m_u * xa * Zsun) / (2 * Rsun * Cρ * xm)
-	const cc   = ustrip(t_u * l_u^-3, CC / m_u)
+    const Rsun     = 3.5e-17u"cm^3 * s^-1"
+    const Zsun     = 0.0127
+	const Zeff     = 1e-3 * Zsun
+	const Cρ       = 100.0
+	const C_cond   = (m_u * xa * Zsun) / (2 * Rsun * Cρ * xm)
+	const c_cond   = ustrip(t_u * l_u^-3, C_cond / m_u)
 end
 
 # ╔═╡ 1734df7f-1309-4ebd-a021-5f75f0bb78b2
-τC(fa, fm, ρC, Z) = cc / (ρC * (Z + Zeff) * (fa / xa + fm / xm));
+τ_cond(fa, fm, ρ_cell, Z) = c_cond / (ρ_cell * (Z + Zeff) * (fa / xa + fm / xm));
 
 # ╔═╡ 4f7de8a3-7f59-4a7b-8980-53390e52e0d1
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
 	set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
-		xlabel=L"\rho_C \, / \, \mathrm{%$l_u^{-3}}", 
-		ylabel=L"\tau_C \, / \, \mathrm{%$t_u}",
+		f[1,1],
+		xlabel=L"\rho_\mathrm{cell} \, / \, \mathrm{%$l_u^{-3}}",
+		ylabel=L"\tau_\mathrm{cond} \, / \, \mathrm{%$t_u}",
 		title=L"f_a = 0.6 \,\, \mathrm{and} \,\, f_m = 0.1",
 		xlabelsize=32,
 		ylabelsize=32,
@@ -879,11 +886,11 @@ let
 		yscale=log10,
 	)
 
-	ρC = exp10.(range(-1, 5, 30))
+	ρ_cell = exp10.(range(-1, 5, 30))
 
 	for Zs in range(0, 1.5, 4)
 		label = L"Z \, / \, Z_\odot = %$(Zs)"
-		lines!(ax, ρC, ρ -> τC(0.6, 0.1, ρ, Zs * Zsun); linewidth=3, label)
+		lines!(ax, ρ_cell, ρ -> τ_cond(0.6, 0.1, ρ, Zs * Zsun); linewidth=3, label)
 	end
 
 	axislegend(; position=:rt, labelsize=28)
@@ -896,11 +903,11 @@ end
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-	ρC = exp10.(range(-1, 5, 30))
+	ρ_cell = exp10.(range(-1, 5, 30))
 	@pgf ax = PGFPlotsX.Axis(
 	    {
-	        xlabel=L"\rho_C \, / \, \mathrm{%$l_u^{-3}}",
-	        ylabel=L"\tau_C \, / \, \mathrm{%$t_u}",
+	        xlabel=L"\rho_\mathrm{cell} \, / \, \mathrm{%$l_u^{-3}}",
+	        ylabel=L"\tau_\mathrm{cond} \, / \, \mathrm{%$t_u}",
 	        xmode="log",
 	        ymode="log",
 			cycle_list_name="color list",
@@ -910,13 +917,16 @@ let
 	)
 
 	for Zs in range(0, 1.5, 4)
-		push!(ax, PGFPlotsX.Plot(Coordinates(ρC, τC.(0.6, 0.1, ρC, Zs * Zsun))))
+		push!(
+			ax, 
+			PGFPlotsX.Plot(Coordinates(ρ_cell, τ_cond.(0.6, 0.1, ρ_cell, Zs * Zsun))),
+		)
 		push!(ax, PGFPlotsX.LegendEntry(L"Z \, / \, Z_\odot = %$(Zs)"))
 	end
 
 	mkpath("generated_files/plots")
 
-	pgfsave("generated_files/plots/tau_C_vs_density.pdf", ax)
+	pgfsave("generated_files/plots/tau_cond-vs-density.pdf", ax)
 end
   ╠═╡ =#
 
@@ -926,33 +936,33 @@ end
 md"""
 ## Photodissociation efficiency
 
-We define the disassociated mass rate per unit of created stellar mass as 
+We define the disassociated mass rate per unit of created stellar mass as
 
 $\begin{equation}
-    \eta_d = \frac{\dot{M}_d}{\mathrm{SFR}}  \, , 
+    \eta_\mathrm{diss} = \frac{\dot{M}_\mathrm{diss}}{\mathrm{SFR}}  \, ,
 \end{equation}$
 
 and the ionized mass rate per unit of created stellar mass as
 
 $\begin{equation}
-    \eta_i = \frac{\dot{M}_i}{SFR}  \, .
+    \eta_\mathrm{ion} = \frac{\dot{M}_\mathrm{ion}}{SFR}  \, .
 \end{equation}$
 
-The mass rates, $\dot{M}_d$ and $\dot{M}_i$, can be computed from the photon production rate in the corresponding energy range,
+The mass rates, $\dot{M}_\mathrm{diss}$ and $\dot{M}_\mathrm{ion}$, can be computed from the photon production rate in the corresponding energy range,
 
 $\begin{align}
-    \dot{M}_d &= \dot{N}_i \, f_d \, , \\
-    \dot{M}_i &= \dot{N}_d \, f_i \, ,
+    \dot{M}_\mathrm{diss} &= \dot{N}_\mathrm{ion} \, f_\mathrm{diss} \, , \\
+    \dot{M}_\mathrm{ion} &= \dot{N}_\mathrm{diss} \, f_\mathrm{ion} \, ,
 \end{align}$
 
-where $\dot{N}_d$ is the number of photodissociating photons produced per unit time (in the Lyman–Werner band, $912\,\mathrm{Å}$ to $1107\,\mathrm{Å}$), $\dot{N}_i$ the number of ionizing photons produced per unit time (between $0$ and $912\,Å$), and $f_d$ and $f_i$ are the unit conversion factors (proton mass into solar mass). The factors $f_d$ and $f_i$ allow us to consider that the reaction may not be $100\%$ efficient too.
+where $\dot{N}_\mathrm{diss}$ is the number of photodissociating photons produced per unit time (in the Lyman–Werner band, $912\,\mathrm{Å}$ to $1107\,\mathrm{Å}$), $\dot{N}_\mathrm{ion}$ the number of ionizing photons produced per unit time (between $0$ and $912\,Å$), and $f_\mathrm{diss}$ and $f_\mathrm{ion}$ are the unit conversion factors (proton mass into solar mass). The factors $f_\mathrm{diss}$ and $f_\mathrm{ion}$ allow us to consider that the reaction may not be $100\%$ efficient too.
 
 For the ionization reaction, each photon will produce one proton and we assume $100\%$ efficiency.
 """
   ╠═╡ =#
 
 # ╔═╡ f65d84cd-ab5f-4270-98ba-568792d1fec1
-const f_i = ustrip(1.0u"mp" |> u"Msun")
+const f_ion = ustrip(1.0u"mp" |> u"Msun")
 
 # ╔═╡ 34faac11-85a2-44dc-bd8d-1a71656fccf4
 # ╠═╡ skip_as_script = true
@@ -964,7 +974,7 @@ $f_\mathrm{d}$ has an extra factor of two because each photon contributes with t
   ╠═╡ =#
 
 # ╔═╡ f8b02d00-ff30-480e-b5eb-e150e4678c95
-const f_d = 0.4 * 0.15 * 2.0 * ustrip(1.0u"mp" |> u"Msun")
+const f_diss = 0.4 * 0.15 * 2.0 * ustrip(1.0u"mp" |> u"Msun")
 
 # ╔═╡ 44c88ad8-a8c3-45e3-9a56-be3ce5bf66fa
 # ╠═╡ skip_as_script = true
@@ -983,7 +993,7 @@ $\begin{align}
 	Z(t - t') &\approx Z(t) \, .
 \end{align}$
 
-So, we end up with 
+So, we end up with
 
 $\begin{equation}
     \eta = f \, \frac{\dot{N}}{\mathrm{SFR}} = f \, \int_0^t Q(t', Z) \mathrm{d}t'\, ,
@@ -1006,20 +1016,20 @@ Using the values from PopStar by [Mollá2009](https://doi.org/10.1111/j.1365-296
 # ╔═╡ 448e1dee-4628-4c14-9d6f-dc165b2e826e
 begin
 
-    # Raw luminosity data from 
+    # Raw luminosity data from
     # https://www.fractal-es.com/PopStar/#download (PopStar2009)
     data_folders = readdir("./data/luminosity", join=true)
 
     # Regex patterns to parse the filenames, IMF_mlow_mup_zXXXX_tXXXX
     patterns = [
-        r"(?<=spneb_)(.*?)(?=_z)",  # IMF_mlow_mup 
+        r"(?<=spneb_)(.*?)(?=_z)",  # IMF_mlow_mup
         r".+?(?=_)",                # IMF
         r"(?<=_)(.*?)(?=_)",        # mlow
         r"[^_]+$",                  # mup
         r"(?<=z)(.*?)(?=_)",        # metallicity
         r"(?<=t)(.*)",              # log(age)
     ]
-	
+
     # Wavelength range for the photodissociation of Hydrogen molecules
     λ_range_d = (912.0u"Å", 1107.0u"Å")
 	# Wavelength range for the photoionization of Hydrogen atoms
@@ -1040,15 +1050,15 @@ begin
         Zmet         = getfield.(match.(patterns[5], basename.(files)), :match)
         ages         = getfield.(match.(patterns[6], basename.(files)), :match)
 
-        Qd = Vector{Quantity}(undef, length(files))
-		Qi = Vector{Quantity}(undef, length(files))
+        Q_diss = Vector{Quantity}(undef, length(files))
+		Q_ion  = Vector{Quantity}(undef, length(files))
 
         @inbounds for (i, file) in pairs(files)
-			
+
 			# Load data
             data = readdlm(file)
             df = identity.(DataFrame(data, [:λ, :Ls, :Lneb, :Ltot]))
-			
+
 			# Set units
             # Wavelength
             df[!, 1] = df[!, 1] .* u"Å"
@@ -1061,17 +1071,17 @@ begin
 
             # Spectral energy distribution integration
 			let
-                λ = @subset(df, λ_range_d[1] .< :λ .< λ_range_d[2])
+                λ         = @subset(df, λ_range_d[1] .< :λ .< λ_range_d[2])
                 integrand = λ[!, 1] .* λ[!, 2] ./ (Unitful.h * Unitful.c)
-                Qd[i] = trapz(λ[!, 1], integrand) |> u"s^-1"
+                Q_diss[i] = trapz(λ[!, 1], integrand) |> u"s^-1"
             end
             let
-                λ = @subset(df, λ_range_i[1] .< :λ .< λ_range_i[2])
+                λ         = @subset(df, λ_range_i[1] .< :λ .< λ_range_i[2])
                 integrand = λ[!, 1] .* λ[!, 2] ./ (Unitful.h * Unitful.c)
-                Qi[i] = trapz(λ[!, 1], integrand) |> u"s^-1"
+                Q_ion[i]  = trapz(λ[!, 1], integrand) |> u"s^-1"
             end
-            
-			
+
+
         end
 
         data_in_files[i] = identity.(
@@ -1081,8 +1091,8 @@ begin
                 :mup     => parse.(Float64, mup),   # Max. mass of the IMF
                 :Zmet    => parse.(Float64, "0." .* Zmet),  # Metallicities
                 :log_age => parse.(Float64, ages),          # Stellar ages
-                :Qd      => Qd,  # Number of dissociating photons per unit time
-				:Qi      => Qi,  # Number of dissociating photons per unit time
+                :Q_diss  => Q_diss,  # Number of dissociating photons per unit time
+				:Q_ion   => Q_ion,  # Number of dissociating photons per unit time
             )
         )
     end
@@ -1091,31 +1101,31 @@ begin
 
 	# Separate the computed Q values by IMF
 	Salpeter1955A = @select(
-        @subset(Q_data, :IMF .== "SAL", :mlow .== 0.85), 
+        @subset(Q_data, :IMF .== "SAL", :mlow .== 0.85),
         $(Not([:IMF, :mlow, :mup])),
     )
     Salpeter1955B = @select(
-        @subset(Q_data, :IMF .== "SAL", :mlow .== 0.15), 
+        @subset(Q_data, :IMF .== "SAL", :mlow .== 0.15),
         $(Not([:IMF, :mlow, :mup])),
     )
     Ferrini1990 = @select(
-        @subset(Q_data, :IMF .== "FER"), 
+        @subset(Q_data, :IMF .== "FER"),
         $(Not([:IMF, :mlow, :mup])),
     )
     Kroupa2001 = @select(
-        @subset(Q_data, :IMF .== "KRO"), 
+        @subset(Q_data, :IMF .== "KRO"),
         $(Not([:IMF, :mlow, :mup])),
     )
     Chabrier2003 = @select(
-        @subset(Q_data, :IMF .== "CHA"), 
+        @subset(Q_data, :IMF .== "CHA"),
         $(Not([:IMF, :mlow, :mup])),
     )
 
     Q_by_imf = Dict(
-		"Salpeter1955A" => Salpeter1955A, 
-		"Salpeter1955B" => Salpeter1955B, 
-		"Ferrini1990"   => Ferrini1990, 
-		"Kroupa2001"    => Kroupa2001, 
+		"Salpeter1955A" => Salpeter1955A,
+		"Salpeter1955B" => Salpeter1955B,
+		"Ferrini1990"   => Ferrini1990,
+		"Kroupa2001"    => Kroupa2001,
 		"Chabrier2003"  => Chabrier2003,
 	)
 
@@ -1133,54 +1143,62 @@ In what follows we will use the IMF by [Chabrier2003](https://doi.org/10.1086/37
 # ╔═╡ 3e637368-6bdb-4d22-9a4a-df23c6682c2f
 begin
 	const IMF      = "Chabrier2003"             # Initial mass function
-	const Q_df     = Q_by_imf[IMF] 
+	const Q_df     = Q_by_imf[IMF]
 	const Q_ages   = unique(Q_df[!, :log_age])  # List of stellar ages
     const Q_metals = unique(Q_df[!, :Zmet])     # List of metallicities
 end;
 
 # ╔═╡ ef65a096-cc2a-4ce6-a06b-8671c99ca777
 ##################################################################################
-# Compute ηd and ηi
+# Compute η_diss and η_ion
 #
 # age: Age [Myr]
 # Z:   Metallicity [dimensionless]
 ##################################################################################
-	
+
 function photodissociation_efficiency(age::Float64, Z::Float64)::NTuple{2,Float64}
 
-	# Allocate memory for ηd and ηi
-	ηd = Matrix{Float64}(undef, length(Q_ages), length(Q_metals))
-	ηi = Matrix{Float64}(undef, length(Q_ages), length(Q_metals))
-		
+	# Allocate memory for η_diss and η_ion
+	η_diss = Matrix{Float64}(undef, length(Q_ages), length(Q_metals))
+	η_ion  = Matrix{Float64}(undef, length(Q_ages), length(Q_metals))
+
 	@inbounds for (i, log_age) in pairs(Q_ages)
-			
+
 		@inbounds for (j, Zmet) in pairs(Q_metals)
-				
+
 	        sub_df = @subset(Q_df, :Zmet .== Zmet, :log_age .<= log_age)
-				
-	        # Set the values of the axes, with an extra point, 
+
+	        # Set the values of the axes, with an extra point,
 			# to integrate from age 0 onwards
 	        ages = [0.0, exp10.(sub_df[!, :log_age])...] .* u"yr"
-				
-			qd = sub_df[!, :Qd]
-			Qd = [qd[1], qd...]
-			ηd[i, j] = uconvert(Unitful.NoUnits, trapz(ages, Qd) * f_d)
 
-			qi = sub_df[!, :Qi]
-			Qi = [qi[1], qi...]
-	        ηi[i, j] = uconvert(Unitful.NoUnits, trapz(ages, Qi) * f_i)
-				
+			q_diss       = sub_df[!, :Q_diss]
+			Q_diss       = [q_diss[1], q_diss...]
+			η_diss[i, j] = uconvert(Unitful.NoUnits, trapz(ages, Q_diss) * f_diss)
+
+			q_ion       = sub_df[!, :Q_ion]
+			Q_ion       = [q_ion[1], q_ion...]
+	        η_ion[i, j] = uconvert(Unitful.NoUnits, trapz(ages, Q_ion) * f_ion)
+
 	    end
-					
-	end
-		
-	max_age = log10(age * 10^6)
-		
-	ifunc_ηd = linear_interpolation((Q_ages, Q_metals), ηd, extrapolation_bc=Flat())
-	ifunc_ηi = linear_interpolation((Q_ages, Q_metals), ηi, extrapolation_bc=Flat())
 
-	return ifunc_ηd(max_age, Z), ifunc_ηi(max_age, Z)
-		
+	end
+
+	max_age = log10(age * 10^6)
+
+	ifunc_η_diss = linear_interpolation(
+		(Q_ages, Q_metals),
+		η_diss,
+		extrapolation_bc=Flat(),
+	)
+	ifunc_η_ion = linear_interpolation(
+		(Q_ages, Q_metals),
+		η_ion,
+		extrapolation_bc=Flat(),
+	)
+
+	return ifunc_η_diss(max_age, Z), ifunc_η_ion(max_age, Z)
+
 end;
 
 # ╔═╡ a0294888-90cf-4e5b-a4b8-ce2c63bdae7a
@@ -1188,12 +1206,12 @@ end;
 #=╠═╡
 let
 	set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
-		xlabel=L"\mathrm{stellar \,\, age \, / \, Myr}", 
-		ylabel=L"\eta_d",
+		f[1,1],
+		xlabel=L"\mathrm{stellar \,\, age \, / \, Myr}",
+		ylabel=L"\eta_\mathrm{diss}",
 		title=L"\mathrm{IMF}: \,\, \mathrm{%$IMF}",
 		xlabelsize=32,
 		ylabelsize=32,
@@ -1221,13 +1239,13 @@ end
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-	ages = exp10.(range(-1, 3, 100))
-	ηd(age, Zs) = photodissociation_efficiency(age, Zs * Zsun)[1]
-	
+	ages            = exp10.(range(-1, 3, 100))
+	η_diss(age, Zs) = photodissociation_efficiency(age, Zs * Zsun)[1]
+
 	@pgf ax = PGFPlotsX.Axis(
 	    {
 	        xlabel=L"\mathrm{stellar \,\, age \, / \, Myr}",
-	        ylabel=L"\eta_d",
+	        ylabel=L"\eta_\mathrm{diss}",
 	        xmode="log",
 			cycle_list_name="color list",
 			"no marks",
@@ -1237,13 +1255,13 @@ let
 	)
 
 	for Zs in range(0, 1.5, 4)
-		push!(ax, PGFPlotsX.Plot(Coordinates(ages, ηd.(ages, Zs))))
+		push!(ax, PGFPlotsX.Plot(Coordinates(ages, η_diss.(ages, Zs))))
 		push!(ax, PGFPlotsX.LegendEntry(L"Z \, / \, Z_\odot = %$(Zs)"))
 	end
 
 	mkpath("generated_files/plots")
-	
-	pgfsave("generated_files/plots/eta_diss_vs_stellar_age.pdf", ax)
+
+	pgfsave("generated_files/plots/eta_diss-vs-stellar_age.pdf", ax)
 end
   ╠═╡ =#
 
@@ -1252,12 +1270,12 @@ end
 #=╠═╡
 let
 	set_theme!(theme_black())
-		
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
-		xlabel=L"\mathrm{stellar \,\, age \, / \, Myr}", 
-		ylabel=L"\eta_i",
+		f[1,1],
+		xlabel=L"\mathrm{stellar \,\, age \, / \, Myr}",
+		ylabel=L"\eta_\mathrm{ion}",
 		title=L"\mathrm{IMF}: \,\, \mathrm{%$IMF}",
 		xlabelsize=32,
 		ylabelsize=32,
@@ -1268,11 +1286,11 @@ let
 	)
 
 	ages = exp10.(range(-1, 3, 100))
-	ηi(age, Zs) = photodissociation_efficiency(age, Zs * Zsun)[2] 
+	η_ion(age, Zs) = photodissociation_efficiency(age, Zs * Zsun)[2]
 
 	for Zs in range(0, 1.5, 4)
 		label = L"Z \, / \, Z_\odot = %$(Zs)"
-		lines!(ax, ages, x -> ηi(x, Zs); linewidth=3, label)
+		lines!(ax, ages, x -> η_ion(x, Zs); linewidth=3, label)
 	end
 
 	axislegend(ax; position=:rb, labelsize=25)
@@ -1285,13 +1303,13 @@ end
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-	ages = exp10.(range(-1, 3, 100))
-	ηi(age, Zs) = photodissociation_efficiency(age, Zs * Zsun)[2] 
-	
+	ages           = exp10.(range(-1, 3, 100))
+	η_ion(age, Zs) = photodissociation_efficiency(age, Zs * Zsun)[2]
+
 	@pgf ax = PGFPlotsX.Axis(
 	    {
 	        xlabel=L"\mathrm{stellar \,\, age \, / \, Myr}",
-	        ylabel=L"\eta_i",
+	        ylabel=L"\eta_\mathrm{ion}",
 	        xmode="log",
 			cycle_list_name="color list",
 			"no marks",
@@ -1301,13 +1319,13 @@ let
 	)
 
 	for Zs in range(0, 1.5, 4)
-		push!(ax, PGFPlotsX.Plot(Coordinates(ages, ηi.(ages, Zs))))
+		push!(ax, PGFPlotsX.Plot(Coordinates(ages, η_ion.(ages, Zs))))
 		push!(ax, PGFPlotsX.LegendEntry(L"Z \, / \, Z_\odot = %$(Zs)"))
 	end
 
 	mkpath("generated_files/plots")
 
-	pgfsave("generated_files/plots/eta_ion_vs_stellar_age.pdf", ax)
+	pgfsave("generated_files/plots/eta_ion-vs-stellar_age.pdf", ax)
 end
   ╠═╡ =#
 
@@ -1317,34 +1335,34 @@ end
 md"""
 ## Mass recycling
 
-There are two mass recycling parameters: $R$ which is defined as the mass fraction of a stellar population that is returned to the ISM under the instantaneous recycling hypothesis (stars under a certain mass live forever and stars above that mass die instantly), and $Z_\mathrm{SN}$ which is the fraction of the returned gas that is composed of metals (the rest is assumed to be ionized gas). 
+There are two mass recycling parameters: $R$ which is defined as the mass fraction of a stellar population that is returned to the ISM under the instantaneous recycling hypothesis (stars under a certain mass live forever and stars above that mass die instantly), and $Z_\mathrm{sn}$ which is the fraction of the returned gas that is composed of metals (the rest is assumed to be ionized gas).
 
 Notice that the instantaneous recycling hypothesis can be avoided by considering the lifetimes of the stars (using empirical relations) as it is done in [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) (sections 2.2.2 and 2.2.3). This would effectively make $R$ time-dependent (the integrals below would have to be computed at each evaluation of the equations) increasing significantly the computational cost, so we avoid this and assume a constant $R$ during the ODEs integration time scales.
 
 A stellar yield model gives the amount (as a fraction of the stellar mass) of each element that is returned to the ISM by stars with masses between $m$ and $m + \mathrm{d}m$, so $R$ can be computed as
 
 $\begin{equation}
-	R = \dfrac{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} (m - m_\mathrm{rem}(m)) \, \phi(m) \mathrm{d}m}{\int_{m_\mathrm{low}}^{m_\mathrm{high}} m \, \phi(m) \mathrm{d}m} \, ,
+	R = \dfrac{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} (m - m_\mathrm{rem}(m)) \, \phi(m) \, \mathrm{d}m}{\int_{m_\mathrm{low}}^{m_\mathrm{high}} m \, \phi(m) \, \mathrm{d}m} \, ,
 \end{equation}$
 
 where $\phi(m)$ is the ISM, $m_\mathrm{low}$ and $m_\mathrm{high}$ are the extremes in the mass range of the ISM, $m_\mathrm{ir}$ is the mass limit for the instantaneous recycling hypothesis, and $m_\mathrm{rem}(m)$ is the remnant stellar mass given by the yield model ([Pipino2014](https://doi.org/10.1093/mnras/stu579) and [Ascasibar2015](https://doi.org/10.1093/mnras/stv098)).
 
 Notice that the denominator in the expression for $R$ is the total mass of the stellar population modeled by $\phi(m)$, so it is just a normalization, which is needed because the IMF is in general defined except for a global constant.
 
-Using the same notation, we can calculate $Z_\mathrm{SN}$ as
+Using the same notation, we can calculate $Z_\mathrm{sn}$ as
 
 $\begin{equation}
-	Z_\mathrm{SN} = \dfrac{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} m \, f_Z \, \phi(m) \mathrm{d}m}{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} (m - m_\mathrm{rem}(m)) \, \phi(m) \mathrm{d}m} \, ,
+	Z_\mathrm{sn} = \dfrac{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} m \, f_Z \, \phi(m) \, \mathrm{d}m}{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} (m - m_\mathrm{rem}(m)) \, \phi(m) \, \mathrm{d}m} \, ,
 \end{equation}$
 
 where $f_Z$ is the fraction of the stellar mass that is returned to the ISM as metals.
 
 Some traditional choices for the masses are $m_\mathrm{ir} = 8 \, M_\odot$, $m_\mathrm{low} = 0.08 \, M_\odot$ (the limit for hydrogen fusion), and $m_\mathrm{high} = 100 \, M_\odot$ (the order of magnitude for the upper limit of validity of the yield models given by the observational limitations).
 
-[Ascasibar2015](https://doi.org/10.1093/mnras/stv098) got $R \approx 0.18$ and $Z_{SN} \approx 0.09$, using the yield model of [Woosley1995](https://doi.org/10.2172/115557) and the IMF of [Kroupa2001](https://doi.org/10.1046/j.1365-8711.2001.04022.x), even though it is not clear which mass limits were used.
+[Ascasibar2015](https://doi.org/10.1093/mnras/stv098) got $R \approx 0.18$ and $Z_\mathrm{sn} \approx 0.09$, using the yield model of [Woosley1995](https://doi.org/10.2172/115557) and the IMF of [Kroupa2001](https://doi.org/10.1046/j.1365-8711.2001.04022.x), even though it is not clear which mass limits were used.
 
 The two previous equations were taken from [_Nucleosynthesis and Chemical Evolution of Galaxies_](https://doi.org/10.1017/CBO9780511812170) by Bernard Pagel (eq. 7.24 and 7.26), and [_Chemical Evolution
-of Galaxies_](https://doi.org/10.1007/978-94-010-0967-6) by Francesca Matteucci (eq. 2.74). 
+of Galaxies_](https://doi.org/10.1007/978-94-010-0967-6) by Francesca Matteucci (eq. 2.74).
 
 We will consider the following stellar yield models,
 
@@ -1366,7 +1384,7 @@ compiled by [Mollá2015](https://doi.org/10.1093/mnras/stv1102), which are summa
 
 # ╔═╡ be85ba3b-5439-4cf3-bb14-d24d61a283c3
 begin
-    # Raw stellar yields from 
+    # Raw stellar yields from
     # Mollá et al. 2015 (https://doi.org/10.1093/mnras/stv1102)
     sy_files = readdir("./data/stellar_yields", join=true)
 
@@ -1383,17 +1401,17 @@ begin
         name = uppercase(
             getindex(getproperty(match(regex, basename(file)), :captures), 1),
         )
-        
+
         df[!, 2]  = df[!, 2] .* u"Msun"  # Stellar mass
         df[!, 15] = df[!, 15] .* u"Msun" # Remnant mass
 
         insertcols!(df, 1, :model => fill(name, length(df[!, 1])))
 
-        # See eq. 1 and 2 from 
+        # See eq. 1 and 2 from
 		# Mollá et al. 2015 (https://doi.org/10.1093/mnras/stv1102)
         @transform! df begin
             :zf_rem = (
-                :C12 .+ :O16 .+ :Ne20 .+ :Mg24 .+ :Si28 .+ :S32 .+ :Ca40 .+ :Fe56 
+                :C12 .+ :O16 .+ :Ne20 .+ :Mg24 .+ :Si28 .+ :S32 .+ :Ca40 .+ :Fe56
 				.+ :C13s .+ :N14s .+ (1 .- :m_rem ./ :s_m) .* :s_Z
             )
         end
@@ -1426,7 +1444,7 @@ md"""
 
 The initial mass function $\phi(m)$ gives the number of stars between masses $m$ and $m + \mathrm{d}m$. For a given population of mass $M$, we have
 
-$\begin{equation}            
+$\begin{equation}
     M = \int_{m_\mathrm{low}}^{m_\mathrm{high}} m \, \phi(m) \, \mathrm{d}m \, ,
 \end{equation}$
 
@@ -1434,7 +1452,7 @@ which allows to normalize $\phi(m)$ for a population of mass $M$, within the ran
 
 There are many models for $\phi(m)$, but one of the simplest is the power law
 
-$\begin{equation}            
+$\begin{equation}
     \phi(m) = A \, m^{-\alpha}\, ,
 \end{equation}$
 
@@ -1462,13 +1480,13 @@ begin
 
     # Ferrini et al. 1990 (https://ui.adsabs.harvard.edu/abs/1990A%26A...231..391F)
     # Ferrini et al. 1992 (https://doi.org/10.1086/171066)
-    # From the papers it is not clear the range of validity for this model, but it is 
+    # From the papers it is not clear the range of validity for this model, but it is
     # generally accepted that no model is valid outside 0.072 <= m / M⊙ <= 100
     function ϕFER(m::Real)::Real
         return m^(-0.52) * exp10(-sqrt(0.73 + log10(m) * (1.92 + 2.07 * log10(m))))
     end
 
-    # Kroupa 1993 (https://doi.org/10.1093/mnras/262.3.545)	
+    # Kroupa 1993 (https://doi.org/10.1093/mnras/262.3.545)
     # This model is valid for m / M⊙ >= 0.072
     function ϕKRO_93(m::Real)::Real
         if m < 0.5
@@ -1493,7 +1511,7 @@ begin
     end
 
     # Chabrier 2003 (https://doi.org/10.1086/374879)
-    # This model is valid for m / M⊙ <= 10 
+    # This model is valid for m / M⊙ <= 10
     # (above m = 1 M⊙ uses Salpeter (1955) results)
     function ϕCHA(m::Real)::Real
         if m <= 1
@@ -1580,30 +1598,30 @@ function recycled_fractions(Z::Float64)::NTuple{2,Float64}
 	imf_func = imf_funcs[IMF][2]
 	Rs       = similar(sy_metals)
 	Zsns     = similar(sy_metals)
-	
+
 	norm   = quadgk(m -> m * imf_func(m), m_low, m_high)[1] * u"Msun^2"
     sub_df = @subset(
-		sy_data, 
-		:model .== yield_model_keys[Y_MODEL], 
+		sy_data,
+		:model .== yield_model_keys[Y_MODEL],
 		m_ir .* u"Msun" .< :s_m .< m_high .* u"Msun",
 	)
 
 	@inbounds for (i, Z) in pairs(sy_metals)
 		data = @subset(sub_df, :s_Z .== Z)
-		
+
 		stellar_mass  = data[:, :s_m]
 		remnant_mass  = data[!, :m_rem]
 		remnant_metal = data[!, :zf_rem]
-		
+
 	    R_int = trapz(
-			stellar_mass, 
+			stellar_mass,
 			(stellar_mass .- remnant_mass) .* imf_func.(stellar_mass),
 		)
 	    Zsn_int = trapz(
-			stellar_mass, 
+			stellar_mass,
 			stellar_mass .* remnant_metal .* imf_func.(stellar_mass),
 		)
-		
+
 	    Rs[i]   = R_int / norm
 		Zsns[i] = Zsn_int / R_int
 	end
@@ -1612,7 +1630,7 @@ function recycled_fractions(Z::Float64)::NTuple{2,Float64}
 	Zsn_vs_Z = linear_interpolation(sy_metals, Zsns, extrapolation_bc=Flat())
 
 	return R_vs_Z(Z), Zsn_vs_Z(Z)
-	
+
 end;
 
 # ╔═╡ 1d0a66d0-5791-4dc9-a5d4-7882b0e91767
@@ -1620,11 +1638,11 @@ end;
 #=╠═╡
 let
 	set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
-		xlabel=L"Z \, / \, Z_\odot", 
+		f[1,1],
+		xlabel=L"Z \, / \, Z_\odot",
 		ylabel=L"R",
 		xlabelsize=32,
 		ylabelsize=32,
@@ -1646,8 +1664,8 @@ end
 #=╠═╡
 let
 	metalicities = exp10.(range(-1, 0.2, 100))
-	R(Zs) = recycled_fractions(Zs * Zsun)[1] 
-	
+	R(Zs) = recycled_fractions(Zs * Zsun)[1]
+
 	@pgf ax = PGFPlotsX.Axis(
 	    {
 	        xlabel=L"Z \, / \, Z_\odot",
@@ -1661,7 +1679,7 @@ let
 
 	mkpath("generated_files/plots")
 
-	pgfsave("generated_files/plots/R_vs_metalicity.pdf", ax)
+	pgfsave("generated_files/plots/R-vs-metalicity.pdf", ax)
 end
   ╠═╡ =#
 
@@ -1670,12 +1688,12 @@ end
 #=╠═╡
 let
 	set_theme!(theme_black())
-	
+
 	f = Figure()
 	ax = CairoMakie.Axis(
-		f[1,1], 
-		xlabel=L"Z \, / \, Z_\odot", 
-		ylabel=L"Z_\mathrm{SN}",
+		f[1,1],
+		xlabel=L"Z \, / \, Z_\odot",
+		ylabel=L"Z_\mathrm{sn}",
 		xlabelsize=32,
 		ylabelsize=32,
 		xticklabelsize=25,
@@ -1697,11 +1715,11 @@ end
 let
 	metalicities = exp10.(range(-1, 0.2, 100))
     Zsn(Zs) = recycled_fractions(Zs * Zsun)[2]
-	
+
 	@pgf ax = PGFPlotsX.Axis(
 	    {
 	        xlabel=L"Z \, / \, Z_\odot",
-	        ylabel=L"Z_\mathrm{SN}",
+	        ylabel=L"Z_\mathrm{sn}",
 			"no marks",
 			"thick",
 	    },
@@ -1711,7 +1729,7 @@ let
 
 	mkpath("generated_files/plots")
 
-	pgfsave("generated_files/plots/Zsn_vs_metalicity.pdf", ax)
+	pgfsave("generated_files/plots/Zsn-vs-metalicity.pdf", ax)
 end
   ╠═╡ =#
 
@@ -1731,12 +1749,12 @@ md"## Constants"
 begin
 	const N_EQU = 4  # Number of equations
 	const N_PAR = 5  # Number of parameters
-	
+
 	# Index of each phase in the ODE solution  matrix
-	const phase_name_to_index = Dict( 
-		"ionized"   => 1, 
-		"atomic"    => 2, 
-		"molecular" => 3, 
+	const phase_name_to_index = Dict(
+		"ionized"   => 1,
+		"atomic"    => 2,
+		"molecular" => 3,
 		"stellar"   => 4,
 	)
 end;
@@ -1751,10 +1769,10 @@ md"## Equations"
 ######################################################################################
 # System of ODEs, where each equation has units of time⁻¹, and
 #
-# Ionized gas fraction:    fᵢ(t) = Mᵢ(t) / MC --> y[1]
-# Atomic gas fraction:     fₐ(t) = Mₐ(t) / MC --> y[2]
-# Molecular gas fraction:  fₘ(t) = Mₘ(t) / MC --> y[3]
-# Stellar fraction:        fₛ(t) = Mₛ(t) / MC --> y[4]
+# Ionized gas fraction:    fᵢ(t) = Mᵢ(t) / M_cell --> y[1]
+# Atomic gas fraction:     fₐ(t) = Mₐ(t) / M_cell --> y[2]
+# Molecular gas fraction:  fₘ(t) = Mₘ(t) / M_cell --> y[3]
+# Stellar fraction:        fₛ(t) = Mₛ(t) / M_cell --> y[4]
 ######################################################################################
 
 function system!(dydt, ic, parameters, t)
@@ -1764,30 +1782,30 @@ function system!(dydt, ic, parameters, t)
 
     # Parameters
 	#
-	# ρC: Total cell density                                 [mp * cm⁻³]
-	# Z:  Metallicity                                        [dimensionless]
-	# ηd: Photodissociation efficiency of hydrogen molecules [dimensionless]
-	# ηi: Photoionization efficiency of hydrogen atoms       [dimensionless]
-	# R:  Mass recycling fraction                            [dimensionless]
-    ρC, Z, ηd, ηi, R = parameters
-  
+	# ρ_cell: Total cell density                                 [mp * cm⁻³]
+	# Z:      Metallicity                                        [dimensionless]
+	# η_diss: Photodissociation efficiency of hydrogen molecules [dimensionless]
+	# η_ion:  Photoionization efficiency of hydrogen atoms       [dimensionless]
+	# R:      Mass recycling fraction                            [dimensionless]
+    ρ_cell, Z, η_diss, η_ion, R = parameters
+
     # Auxiliary equations
-	recombination   = fi / τR(fi, ρC)
-    cloud_formation = fa / τC(fa, fm, ρC, Z)
-	sfr             = ψ(fa, fm, τS(fa, fm, ρC))
+	recombination   = fi / τ_rec(fi, ρ_cell)
+    cloud_formation = fa / τ_cond(fa, fm, ρ_cell, Z)
+	sfr             = ψ(fa, fm, τ_star(fa, fm, ρ_cell))
 
     # ODE system
-	dydt[1] = -recombination + (ηi + R) * sfr
-    dydt[2] = -cloud_formation + recombination + (ηd - ηi) * sfr
-    dydt[3] = cloud_formation - (1 + ηd) * sfr
+	dydt[1] = -recombination + (η_ion + R) * sfr
+    dydt[2] = -cloud_formation + recombination + (η_diss - η_ion) * sfr
+    dydt[3] = cloud_formation - (1 + η_diss) * sfr
     dydt[4] = (1 - R) * sfr
-	
+
 end;
 
 # ╔═╡ d5446d26-4b59-46fa-a1f0-8374d5e05194
 ######################################################################################
 # Compute the Lyapunov spectrum
-# 
+#
 # ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
 # base_parms: Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr])
 ######################################################################################
@@ -1798,25 +1816,25 @@ function lyapunov(
 )::Vector{Float64}
 
 	# Construct the parameters for the ODEs
-	ρ      = base_params[1]  # Density [cm⁻³]
-	Z      = base_params[2]  # Metallicity [dimensionless]
-	it     = base_params[3]  # Integration time [Myr]
-	ηd, ηi = photodissociation_efficiency(it, Z)
-	R, _   = recycled_fractions(Z)
-		
-	parameters = [ρ, Z, ηd, ηi, R]
+	ρ             = base_params[1]  # Density [cm⁻³]
+	Z             = base_params[2]  # Metallicity [dimensionless]
+	it            = base_params[3]  # Integration time [Myr]
+	η_diss, η_ion = photodissociation_efficiency(it, Z)
+	R, _          = recycled_fractions(Z)
+
+	parameters = [ρ, Z, η_diss, η_ion, R]
 	ds = CoupledODEs(system!, ic, parameters)
-	
+
 	# Compute the Lyapunov spectrum
 	return lyapunovspectrum(ds, 100)
-	
+
 end;
 
 # ╔═╡ 7a744b2e-56ee-4162-a23d-dca9d0657608
 # ╠═╡ skip_as_script = true
 #=╠═╡
 lyapunov(
-	[0.8, 0.2, 0.0, 0.0],      # Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
+	[0.8, 0.2, 0.0, 0.0],     # Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
 	(100.0, 0.5*Zsun, 10.0),  # Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr])
 )
   ╠═╡ =#
@@ -1838,7 +1856,7 @@ md"## Jacobian"
 
 # ╔═╡ 2620d8a6-030d-4a6f-911c-6552072ff7a1
 function construct_jacobian(system::Function)::Matrix{Function}
-	
+
 	@variables S_t S_ic[1:N_EQU] S_parameters[1:N_PAR]
     S_dydt = Vector{Num}(undef, N_EQU)
     system(S_dydt, S_ic, S_parameters, S_t)
@@ -1851,7 +1869,7 @@ function construct_jacobian(system::Function)::Matrix{Function}
         build_function(jac[i, j], S_ic, S_parameters, S_t, expression=Val{false}) for
         i in 1:N_EQU, j in 1:N_EQU
     ]
-	
+
 end;
 
 # ╔═╡ b76d4669-26dc-48cb-930f-5e40dd40a9f1
@@ -1863,29 +1881,29 @@ const JACOBIAN_FUNCTION = construct_jacobian(system!);
 #
 # J:          Matrix to save the results, it must have size N_EQU × N_EQU
 # ic:         Initial condition, [fi(0), fa(0), fm(0), fs(0)]
-# parameters: Parameters for the ODEs, [ρ, Z, ηd, ηi, R]
+# parameters: Parameters for the ODEs, [ρ, Z, η_diss, η_ion, R]
 # t:          Unused variable to comply with with the DifferentialEquations.jl API
 ######################################################################################
 
 function jacobian!(
-	J::Matrix{Float64}, 
-	ic::Vector{Float64}, 
-	parameters::Vector{Float64}, 
+	J::Matrix{Float64},
+	ic::Vector{Float64},
+	parameters::Vector{Float64},
 	t::Float64=0.0,
 )
-	
+
 	for i in 1:N_EQU
 	    for j in 1:N_EQU
 	        J[i, j] = JACOBIAN_FUNCTION[i, j](ic, parameters, t)
 	    end
 	end
-	    
+
 end;
 
 # ╔═╡ 806db782-1734-4112-ab7b-84e03f4c342d
 ######################################################################################
 # Compute the stiffness ratio
-# 
+#
 # ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
 # base_parms: Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr])
 ######################################################################################
@@ -1896,31 +1914,31 @@ function stiffness_ratio(
 )::Float64
 
 	# Construct the parameters for the ODEs
-	ρ      = base_params[1]  # Density [cm⁻³]
-	Z      = base_params[2]  # Metallicity [dimensionless]
-	it     = base_params[3]  # Integration time [Myr]
-	ηd, ηi = photodissociation_efficiency(it, Z)
-	R, _   = recycled_fractions(Z)
-		
-	parameters = [ρ, Z, ηd, ηi, R]
+	ρ             = base_params[1]  # Density [cm⁻³]
+	Z             = base_params[2]  # Metallicity [dimensionless]
+	it            = base_params[3]  # Integration time [Myr]
+	η_diss, η_ion = photodissociation_efficiency(it, Z)
+	R, _          = recycled_fractions(Z)
+
+	parameters = [ρ, Z, η_diss, η_ion, R]
 	J = Matrix{Float64}(undef, N_EQU, N_EQU)
-	
+
 	# Compute the Jacobian and store it in J
 	jacobian!(J, ic, parameters)
-	
+
 	# Get the norm of the real part of the non-zero eigenvalues
 	eigen_values = filter(x -> x > eps(typeof(x)), eigvals(J) .|> real .|> abs)
-	
+
 	# Compute the stiffness ratio
 	return maximum(eigen_values) / minimum(eigen_values)
-	
+
 end;
 
 # ╔═╡ 1743b6dc-0a4e-4a02-90fe-3bc47833421a
 # ╠═╡ skip_as_script = true
 #=╠═╡
 stiffness_ratio(
-	[0.8, 0.2, 0.0, 0.0],      # Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
+	[0.8, 0.2, 0.0, 0.0],     # Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
 	(100.0, 0.5*Zsun, 10.0),  # Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr])
 )
   ╠═╡ =#
@@ -1933,8 +1951,8 @@ md"## ODE Function"
 
 # ╔═╡ 64e7e6aa-4265-4de2-a9c6-474d125b45cc
 ode_function = ODEFunction{true}(
-	system!; 
-	jac=jacobian!, 
+	system!;
+	jac=jacobian!,
 	tgrad=(dt, ic, p, t) -> nothing,
 );
 
@@ -1983,7 +2001,7 @@ md"### Mass fractions"
 ######################################################################################
 
 function mass_fraction(params::PDF_params, log_var::Bool)::NTuple{2,Vector{Float64}}
-    
+
 	if params.divisions == 1
         return [1], [log_var ? 0 : 1.0]
     end
@@ -2011,7 +2029,7 @@ function mass_fraction(params::PDF_params, log_var::Bool)::NTuple{2,Vector{Float
     ]
 
     return (mass_f ./ sum(mass_f)), points
-	
+
 end;
 
 # ╔═╡ e050e2e9-30c1-4dc1-a57b-4f86821e3965
@@ -2049,16 +2067,16 @@ end;
 # ╔═╡ 16b56ce2-6b02-4d53-a7a7-7cd7f96f26c5
 begin
     const PDF_PARAMS = PDF_params(
-		func = pBurkhart2018,      # Density PDF function 
+		func = pBurkhart2018,      # Density PDF function
 		α = 2.0,                   # Power law slope
 		b = 0.5,                   # Dimensionless turbulent forcing parameter
 		Ms = 10.0,                 # Mach number
 		deviation = (-6, 6),       # (min, max) values for s = log(ρ/ρ₀)
-		divisions = 20,            # Number of divisions for the discretization 
+		divisions = 20,            # Number of divisions for the discretization
 								   # of the density PDF
 	)
 
-    # Pre computation of the default mass fractions 
+    # Pre computation of the default mass fractions
     # for each division of the density PDF
     const (MASS_FRAC, S_POINTS) = mass_fraction(PDF_PARAMS, true)
     const F_POINTS = exp.(S_POINTS)
@@ -2075,7 +2093,7 @@ md"## Integration"
 # Solve the system of ODEs
 #
 # ic:          Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
-# base_params: Parameters for the ODEs, [ρC, Z]
+# base_params: Parameters for the ODEs, [ρ_cell, Z]
 # tspan:       Integration span, (ti, tf) [Myr]
 # times:       Times at which the solution will be returned [Myr]
 # args:        Positional arguments for the solver of DifferentialEquations.jl
@@ -2089,31 +2107,31 @@ function integrate_model(
     times::Vector{Float64}=[tspan[2],],
     args::Tuple=(Rodas4P(),),
     kwargs::NamedTuple=(
-		dense=false, 
-		force_dtmin=true, 
+		dense=false,
+		force_dtmin=true,
 		dtmin=(tspan[2] - tspan[1]) / 1.0e8,
-		reltol=1.0e-10, 
+		reltol=1.0e-10,
 		maxiters=1.0e8,
 		verbose=false,
 	),
 )::Vector{Vector{Float64}}
 
-	ρC     = base_params[1]
-	Z      = base_params[2]
-	ηd, ηi = photodissociation_efficiency(tspan[2], Z)
-	R, _   = recycled_fractions(Z)
-		
-	parameters = [ρC, Z, ηd, ηi, R]
+	ρ_cell        = base_params[1]
+	Z             = base_params[2]
+	η_diss, η_ion = photodissociation_efficiency(tspan[2], Z)
+	R, _          = recycled_fractions(Z)
+
+	parameters = [ρ_cell, Z, η_diss, η_ion, R]
 
     sol = solve(ODEProblem(
-		ode_function, 
-		ic, 
-		tspan, 
+		ode_function,
+		ic,
+		tspan,
 		parameters,
 	), args...; kwargs...)
-		
+
     return sol(times).u
-	
+
 end;
 
 # ╔═╡ 0cac7dbf-31bb-459b-9291-8092cfb49354
@@ -2127,18 +2145,18 @@ md"## Plots"
 #=╠═╡
 let
 	mkpath("generated_files/plots")
-	
+
 	ic          = [0.15, 0.85, 0.0, 0.0]
-	ρC_list     = exp10.(range(-1, 5, 100))
-	base_params = [[ρC, 0.01 * Zsun] for ρC in ρC_list]
+	ρ_cell_list = exp10.(range(-1, 5, 100))
+	base_params = [[ρ_cell, 0.01 * Zsun] for ρ_cell in ρ_cell_list]
 	it          = 10.0
-	
+
 	# Star fraction
 	idx = phase_name_to_index["stellar"]
 	@pgf ax = PGFPlotsX.Axis(
 	    {
-	        xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
-	        ylabel=L"\mathrm{M_s / M_{C}}",
+	        xlabel=L"\rho_\mathrm{cell} \, / \, \mathrm{cm^{-3}}",
+	        ylabel=L"\mathrm{M_s / M_\mathrm{cell}}",
 	        xmode="log",
 			ymode="log",
 			cycle_list_name="color list",
@@ -2148,20 +2166,20 @@ let
 	)
 
 	s_f = [
-		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for
 		base_param in base_params
 	]
-	push!(ax, PGFPlotsX.Plot(Coordinates(ρC_list, s_f)))
+	push!(ax, PGFPlotsX.Plot(Coordinates(ρ_cell_list, s_f)))
 
-	pgfsave("generated_files/plots/star_fraction_vs_density.pdf", ax)
+	pgfsave("generated_files/plots/star_fraction-vs-density.pdf", ax)
 
 	# Molecular fraction
 	idx         = phase_name_to_index["molecular"]
-	
+
 	@pgf ax = PGFPlotsX.Axis(
 	    {
-	        xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
-	        ylabel=L"\mathrm{M_m / M_{C}}",
+	        xlabel=L"\rho_\mathrm{cell} \, / \, \mathrm{cm^{-3}}",
+	        ylabel=L"\mathrm{M_m / M_\mathrm{cell}}",
 	        xmode="log",
 			ymode="log",
 			cycle_list_name="color list",
@@ -2171,20 +2189,20 @@ let
 	)
 
 	m_f = [
-		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for
 		base_param in base_params
 	]
-	push!(ax, PGFPlotsX.Plot(Coordinates(ρC_list, m_f)))
+	push!(ax, PGFPlotsX.Plot(Coordinates(ρ_cell_list, m_f)))
 
-	pgfsave("generated_files/plots/molecular_fraction_vs_density.pdf", ax)
+	pgfsave("generated_files/plots/molecular_fraction-vs-density.pdf", ax)
 
 	# Atomic fraction
 	idx = phase_name_to_index["atomic"]
-	
+
 	@pgf ax = PGFPlotsX.Axis(
 	    {
-	        xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
-	        ylabel=L"\mathrm{M_a / M_{C}}",
+	        xlabel=L"\rho_\mathrm{cell} \, / \, \mathrm{cm^{-3}}",
+	        ylabel=L"\mathrm{M_a / M_\mathrm{cell}}",
 	        xmode="log",
 			ymode="log",
 			cycle_list_name="color list",
@@ -2194,20 +2212,20 @@ let
 	)
 
 	a_f = [
-		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for
 		base_param in base_params
 	]
-	push!(ax, PGFPlotsX.Plot(Coordinates(ρC_list, a_f)))
+	push!(ax, PGFPlotsX.Plot(Coordinates(ρ_cell_list, a_f)))
 
-	pgfsave("generated_files/plots/atomic_fraction_vs_density.pdf", ax)
+	pgfsave("generated_files/plots/atomic_fraction-vs-density.pdf", ax)
 
 	# Ionized fraction
 	idx = phase_name_to_index["ionized"]
-	
+
 	@pgf ax = PGFPlotsX.Axis(
 	    {
-	        xlabel=L"\rho_C \, / \, \mathrm{cm^{-3}}",
-	        ylabel=L"\mathrm{M_i / M_{C}}",
+	        xlabel=L"\rho_\mathrm{cell} \, / \, \mathrm{cm^{-3}}",
+	        ylabel=L"\mathrm{M_i / M_\mathrm{cell}}",
 	        xmode="log",
 			ymode="log",
 			cycle_list_name="color list",
@@ -2217,12 +2235,12 @@ let
 	)
 
 	i_f = [
-		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for
 		base_param in base_params
 	]
-	push!(ax, PGFPlotsX.Plot(Coordinates(ρC_list, i_f)))
+	push!(ax, PGFPlotsX.Plot(Coordinates(ρ_cell_list, i_f)))
 
-	pgfsave("generated_files/plots/ionized_fraction_vs_density.pdf", ax)
+	pgfsave("generated_files/plots/ionized_fraction-vs-density.pdf", ax)
 end
   ╠═╡ =#
 
@@ -2231,7 +2249,7 @@ end
 #=╠═╡
 let
 	mkpath("generated_files/plots")
-	
+
 	ic          = [0.5, 0.5, 0.0, 0.0]
 	Z_list      = exp10.(range(-2, 0.0, 100))
 	base_params = [[1.0e2, Z * Zsun] for Z in Z_list]
@@ -2242,7 +2260,7 @@ let
 	@pgf ax = PGFPlotsX.Axis(
 	    {
 	        xlabel=L"Z \, / \, Z_\odot",
-	        ylabel=L"\mathrm{M_s / M_{C}}",
+	        ylabel=L"\mathrm{M_s / M_\mathrm{cell}}",
 	        xmode="log",
 			ymode="log",
 			cycle_list_name="color list",
@@ -2252,19 +2270,19 @@ let
 	)
 
 	s_f = [
-		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for
 		base_param in base_params
 	]
 	push!(ax, PGFPlotsX.Plot(Coordinates(Z_list, s_f)))
 
-	pgfsave("generated_files/plots/star_fraction_vs_metalicity.pdf", ax)
+	pgfsave("generated_files/plots/star_fraction-vs-metalicity.pdf", ax)
 
 	# Molecular fraction
 	idx = phase_name_to_index["molecular"]
 	@pgf ax = PGFPlotsX.Axis(
 	    {
 	        xlabel=L"Z \, / \, Z_\odot",
-	        ylabel=L"\mathrm{M_m / M_{C}}",
+	        ylabel=L"\mathrm{M_m / M_\mathrm{cell}}",
 	        xmode="log",
 			ymode="log",
 			cycle_list_name="color list",
@@ -2274,19 +2292,19 @@ let
 	)
 
 	m_f = [
-		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for
 		base_param in base_params
 	]
 	push!(ax, PGFPlotsX.Plot(Coordinates(Z_list, m_f)))
 
-	pgfsave("generated_files/plots/molecular_fraction_vs_metalicity.pdf", ax)
+	pgfsave("generated_files/plots/molecular_fraction-vs-metalicity.pdf", ax)
 
 	# Atomic fraction
 	idx = phase_name_to_index["atomic"]
 	@pgf ax = PGFPlotsX.Axis(
 	    {
 	        xlabel=L"Z \, / \, Z_\odot",
-	        ylabel=L"\mathrm{M_a / M_{C}}",
+	        ylabel=L"\mathrm{M_a / M_\mathrm{cell}}",
 	        xmode="log",
 			ymode="log",
 			cycle_list_name="color list",
@@ -2296,19 +2314,19 @@ let
 	)
 
 	a_f = [
-		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for
 		base_param in base_params
 	]
 	push!(ax, PGFPlotsX.Plot(Coordinates(Z_list, a_f)))
 
-	pgfsave("generated_files/plots/atomic_fraction_vs_metalicity.pdf", ax)
+	pgfsave("generated_files/plots/atomic_fraction-vs-metalicity.pdf", ax)
 
 	# Ionized fraction
 	idx = phase_name_to_index["ionized"]
 	@pgf ax = PGFPlotsX.Axis(
 	    {
 	        xlabel=L"Z \, / \, Z_\odot",
-	        ylabel=L"\mathrm{M_i / M_{C}}",
+	        ylabel=L"\mathrm{M_i / M_\mathrm{cell}}",
 	        xmode="log",
 			ymode="log",
 			cycle_list_name="color list",
@@ -2318,12 +2336,12 @@ let
 	)
 
 	i_f = [
-		integrate_model(ic, base_param, (0.0, it))[end][idx] for 
+		integrate_model(ic, base_param, (0.0, it))[end][idx] for
 		base_param in base_params
 	]
 	push!(ax, PGFPlotsX.Plot(Coordinates(Z_list, i_f)))
 
-	pgfsave("generated_files/plots/ionized_fraction_vs_metalicity.pdf", ax)
+	pgfsave("generated_files/plots/ionized_fraction-vs-metalicity.pdf", ax)
 
 end
   ╠═╡ =#
@@ -2975,9 +2993,9 @@ version = "3.3.10+0"
 
 [[deps.FastBroadcast]]
 deps = ["ArrayInterface", "LinearAlgebra", "Polyester", "Static", "StaticArrayInterface", "StrideArraysCore"]
-git-tree-sha1 = "9d77cb1caf03e67514ba60bcfc47c6e131b1950c"
+git-tree-sha1 = "a6e756a880fc419c8b41592010aebe6a5ce09136"
 uuid = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
-version = "0.2.7"
+version = "0.2.8"
 
 [[deps.FastClosures]]
 git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
@@ -3898,9 +3916,9 @@ version = "10.42.0+0"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "66b2fcd977db5329aa35cac121e5b94dd6472198"
+git-tree-sha1 = "f6f85a2edb9c356b829934ad3caed2ad0ebbfc99"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.11.28"
+version = "0.11.29"
 
 [[deps.PGFPlotsX]]
 deps = ["ArgCheck", "Dates", "DefaultApplication", "DocStringExtensions", "MacroTools", "OrderedCollections", "Parameters", "Requires", "Tables"]
@@ -3953,9 +3971,9 @@ version = "0.12.3"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
-git-tree-sha1 = "716e24b21538abc91f6205fd1d8363f39b442851"
+git-tree-sha1 = "a935806434c9d4c506ba941871b327b96d41f2bf"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.7.2"
+version = "2.8.0"
 
 [[deps.Permutations]]
 deps = ["Combinatorics", "LinearAlgebra", "Random"]
@@ -4077,9 +4095,9 @@ version = "2.2.8"
 
 [[deps.Primes]]
 deps = ["IntegerMathUtils"]
-git-tree-sha1 = "4c9f306e5d6603ae203c2000dd460d81a5251489"
+git-tree-sha1 = "1d05623b5952aed1307bf8b43bec8b8d1ef94b6e"
 uuid = "27ebfcd6-29c5-5fa9-bf4b-fb8fc14df3ae"
-version = "0.5.4"
+version = "0.5.5"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -4170,9 +4188,9 @@ version = "2.38.10"
 
 [[deps.RecursiveFactorization]]
 deps = ["LinearAlgebra", "LoopVectorization", "Polyester", "PrecompileTools", "StrideArraysCore", "TriangularSolve"]
-git-tree-sha1 = "2b6d4a40339aa02655b1743f4cd7c03109f520c1"
+git-tree-sha1 = "8bc86c78c7d8e2a5fe559e3721c0f9c9e303b2ed"
 uuid = "f2c3362d-daeb-58d1-803e-2bc74f2840b4"
-version = "0.2.20"
+version = "0.2.21"
 
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
@@ -4536,9 +4554,9 @@ version = "6.62.0"
 
 [[deps.StrideArraysCore]]
 deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "ManualMemory", "SIMDTypes", "Static", "StaticArrayInterface", "ThreadingUtilities"]
-git-tree-sha1 = "f02eb61eb5c97b48c153861c72fbbfdddc607e06"
+git-tree-sha1 = "e7dd250422df290cee14960c1ee144b44ac3dd77"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
-version = "0.4.17"
+version = "0.5.1"
 
 [[deps.StringManipulation]]
 deps = ["PrecompileTools"]
