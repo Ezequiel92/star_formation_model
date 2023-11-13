@@ -395,7 +395,7 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 
 	gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 4, 4);
 	gsl_matrix *m = &dfdy_mat.matrix;
-	
+
     double aux_var = sqrt((y[1] + y[2]) * rho_C);
 
 	gsl_matrix_set(m, 0, 0, -16.409952 * y[0] * rho_C);
@@ -691,7 +691,7 @@ double rate_of_star_formation(const int index)
   double fractions[4] = {0.0};
   integrate_ode(ic, parameters, integration_time, fractions);
 
-  /* Store the star formation time scale (τS) */
+  /* Store the star formation time scale (τ_star) */
   SphP[index].tau_S = ODE_CS / sqrt((1 - fractions[3]) * rhoC);
 
   /* Store the results after solving the ODEs */

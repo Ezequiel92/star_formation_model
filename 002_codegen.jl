@@ -46,7 +46,7 @@ begin
 	const ETA_D_TABLE = joinpath(GEN_FILES, "interpolation_tables/eta_d.txt")
 	const ETA_I_TABLE = joinpath(GEN_FILES, "interpolation_tables/eta_i.txt")
 	const R_TABLE     = joinpath(GEN_FILES, "interpolation_tables/R_Zsn.txt")
-	
+
 	# Paths to the C libraries (DLLs or SOs)
 	@static if Sys.iswindows()
 	    const lib_path = joinpath(C_FILES, "lib.dll")
@@ -73,41 +73,41 @@ function write_header_file(path::Union{String,Nothing})::Union{String,Nothing}
 	header = """
 #ifndef EZ_SFR_H
 #define EZ_SFR_H
-	
+
 /* T [internal_units] * T_MYR = T [Myr] */
 #define T_MYR (All.UnitTime_in_s / All.HubbleParam / SEC_PER_YEAR / 1000000)
 /* RHO [internal_units] * RHO_COSMO = RHO [cm^(-3)] */
 #define RHO_COSMO (All.UnitDensity_in_cgs * All.HubbleParam * All.HubbleParam * All.cf_a3inv / PROTONMASS)
 /* M [internal_units] * M_COSMO = M [Mₒ] */
 #define M_COSMO (All.UnitMass_in_g / SOLAR_MASS)
-		
+
 /* Interpolation tables */
 #define ETA_NROWS $(length(MODEL.Q_ages) + 1)  // Number of rows in the η tables
 #define ETA_NCOLS $(length(MODEL.Q_metals) + 1)  // Number of columns in the η tables
 #define R_NROWS $(length(MODEL.sy_metals))  // Number of rows in the R table
 #define R_NCOLS 3  // Number of columns in the R table
-	
+
 /* Paths */
 static char *ETA_D_TABLE_PATH = "../code/src/ez_sfr/tables/eta_d.txt";
 static char *ETA_I_TABLE_PATH = "../code/src/ez_sfr/tables/eta_i.txt";
 static char *R_TABLE_PATH     = "../code/src/ez_sfr/tables/R_Zsn.txt";
-		
+
 /* ODE constants */
 
 /* ϵff  = $(@sprintf("%.4f", MODEL.ϵff)) (stellar formation efficiency) */
 /* Zsun = $(@sprintf("%.4f", MODEL.Zsun)) (solar metallicity) */
 /* Cρ   = $(@sprintf("%.4f", MODEL.Cρ)) (clumping factor) */
-	
+
 #define N_EQU $(MODEL.N_EQU) /* Number of equations */
-#define ODE_CS $(@sprintf("%.7e", MODEL.cs))  /* [Myr * cm^(-3/2)] */
-#define ODE_CR $(@sprintf("%.7e", MODEL.cr))  /* [Myr * cm^(-3)] */
-#define ODE_CC $(@sprintf("%.7e", MODEL.cc))  /* [Myr * cm^(-3)] */
+#define ODE_CS $(@sprintf("%.7e", MODEL.c_star))  /* [Myr * cm^(-3/2)] */
+#define ODE_CR $(@sprintf("%.7e", MODEL.c_rec))  /* [Myr * cm^(-3)] */
+#define ODE_CC $(@sprintf("%.7e", MODEL.c_cond))  /* [Myr * cm^(-3)] */
 #define ZEFF $(@sprintf("%.4e", MODEL.Zeff))  /* 1e-3 Zₒ */
-#define AW $(@sprintf("%.2f", MODEL.AW))  /* Weight of the atomic fraction in the computation of the SFR */         
+#define AW $(@sprintf("%.2f", MODEL.AW))  /* Weight of the atomic fraction in the computation of the SFR */
 #define MW $(@sprintf("%.2f", MODEL.MW))  /* Weight of the molecular fraction in the computation of the SFR */
 #define XA $(@sprintf("%.2e", MODEL.xa))  /* Atomic volume fraction */
 #define XM $(@sprintf("%.2e", MODEL.xm))  /* Molecular volume fraction */
-	
+
 typedef struct DataTable
 {
 	double *data;  // Values of the table
@@ -136,7 +136,7 @@ typedef struct DataTable
 static const double PDF[] = {
 $(
 	[
-		"\t$(@sprintf("%.10f", MODEL.MASS_FRAC[i])),\n" for 
+		"\t$(@sprintf("%.10f", MODEL.MASS_FRAC[i])),\n" for
 		i in 1:MODEL.PDF_PARAMS.divisions
 	]...
 )
@@ -165,10 +165,10 @@ static const double F_RHO[] = {
 };
 
 #endif /* #ifdef RHO_PDF */
-	
+
 void *read_ftable(const char *file_path, const int n_rows, const int n_cols);
 double rate_of_star_formation(const int index);
-		
+
 #endif /* #ifdef EZ_SFR_H */
 	"""
 
@@ -182,7 +182,7 @@ double rate_of_star_formation(const int index);
 		end
 
 		return nothing
-	end	
+	end
 
 end;
   ╠═╡ =#
@@ -232,7 +232,7 @@ function write_jacobian(path::String)::Nothing
 	static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
 	{
 		(void)(t);
-	
+
 	    /*
 		* Destructure the parameters
 		*
@@ -251,9 +251,9 @@ function write_jacobian(path::String)::Nothing
 
 		gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, $(MODEL.N_EQU), $(MODEL.N_EQU));
 		gsl_matrix *m = &dfdy_mat.matrix;
-		
+
 	    double aux_var = AUX_VAR;
-	
+
 	"""
 
 	tail = """
@@ -264,7 +264,7 @@ function write_jacobian(path::String)::Nothing
 
 		return GSL_SUCCESS;
 	"""
-	
+
 	# Create C version of the jacobian
 	@variables S_t S_ic[1:MODEL.N_EQU] S_parameters[1:MODEL.N_PAR]
     S_dydt = Vector{Num}(undef, MODEL.N_EQU)
@@ -280,25 +280,25 @@ function write_jacobian(path::String)::Nothing
 
 	matrix = ""
 	@inbounds for i in 1:MODEL.N_EQU
-		
+
 		@inbounds for j in 1:MODEL.N_EQU
-			
+
 			# Transform the symbolic expresions into C functions
 			c_function = build_function(
-				jac[i, j], 
-				S_ic, 
-				S_parameters, 
-				S_t; 
+				jac[i, j],
+				S_ic,
+				S_parameters,
+				S_t;
 				target=Symbolics.CTarget(),
 			)
-			
+
 			# Replacements for correct formatting
 			matrix *= replace(
 				 match(block_pattern, c_function).match,
 				"du[0] =" => "\tgsl_matrix_set(m, $(i-1), $(j-1),",
 				 ";"       => ");\n",
-			)	
-			
+			)
+
 		end
 
 		matrix = replace(
@@ -309,31 +309,31 @@ function write_jacobian(path::String)::Nothing
   			"RHS2[2]" => "eta_d",
   			"RHS2[3]" => "eta_i",
 			"RHS2[4]" => "R",
-			"+ -"     => "- ",		
+			"+ -"     => "- ",
 			"-1 * "  => "- ",
 			"- 1 * "  => "- ",
 		) * "\n"
-		
+
 	end
 
 	jacobian_string = head * matrix * tail
 
 	aux_var_str = match(aux_var_pattern, jacobian_string).match
 	jacobian_string = replace(
-		jacobian_string, 
+		jacobian_string,
 		aux_var_pattern => "aux_var",
 		"AUX_VAR" => aux_var_str,
 	)
 
 	file_with_jacobian = replace(
-		read(path, String), 
+		read(path, String),
 		jacobian_patern => jacobian_string,
 	)
-		
-	write(path, file_with_jacobian) 
+
+	write(path, file_with_jacobian)
 
 	return nothing
-	
+
 end;
   ╠═╡ =#
 
@@ -361,7 +361,7 @@ function compile_libraries(path::String)::Nothing
 	opt_cmd = `gcc -Wall -Wno-unused-variable -Wno-unused-function -Wno-unused-result -fpic -shared -Ofast -march=native -mtune=native -flto`
 	in_out_cmd = `$path/ez_sfr.c -o $lib_path`
 	gsl_cmd = `-IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib -lgsl -lgslcblas -lm`
-	
+
 	run(`$opt_cmd -D EZ_SFR -D TESTING $in_out_cmd $gsl_cmd`)
 
 	return nothing
@@ -385,7 +385,7 @@ md"### GSL ODE solver"
 ######################################################################################
 # Integrate the ODEs using GNU scientific library (GSL)
 ######################################################################################
-	
+
 function integrate_with_c(
 	eta_d_table::String,
 	eta_i_table::String,
@@ -417,34 +417,34 @@ function integrate_with_c(
 	# it: Integration time in Myr
 	function integration(
 		ic::Vector{Float64},
-		base_params::Vector{Float64}, 
+		base_params::Vector{Float64},
 		it::Float64,
 	)::Vector{Float64}
-			
+
 		fractions = zeros(Float64, MODEL.N_EQU)
 
-		ρC      = base_params[1]
+		ρ_cell      = base_params[1]
 		Z       = base_params[2]
 		log_age = log10(it * 10^6)
 
 		ηd = @ccall $interpolate2D(
-			log_age::Cdouble, 
-			Z::Cdouble, 
+			log_age::Cdouble,
+			Z::Cdouble,
 			eta_d_table::Cstring,
 		)::Cdouble
-		
-		ηi = @ccall $interpolate2D(
-			log_age::Cdouble, 
-			Z::Cdouble, 
+
+		η_ion = @ccall $interpolate2D(
+			log_age::Cdouble,
+			Z::Cdouble,
 			eta_i_table::Cstring,
 		)::Cdouble
-		
+
 		R = @ccall $interpolate1D(
-			Z::Cdouble, 
+			Z::Cdouble,
 			R_table::Cstring,
 		)::Cdouble
 
-		parameters = [ρC, Z, ηd, ηi, R]
+		parameters = [ρ_cell, Z, ηd, η_ion, R]
 
 		@ccall $integrate_ode(
 		    ic::Ptr{Cdouble},
@@ -452,13 +452,13 @@ function integrate_with_c(
 		    it::Cdouble,
 			fractions::Ptr{Cdouble},
 		)::Cvoid
-	
+
 		return fractions
-			
+
 	end
-	
+
 	return integration
-		
+
 end;
 
 # ╔═╡ ea16756b-ed09-4823-a812-450ab696fdcd
@@ -477,8 +477,8 @@ md"### Photodissociation efficiency"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 ######################################################################################
-# Write tables to interpolate ηd(Z, age) and ηi(Z, age)
-# 
+# Write tables to interpolate ηd(Z, age) and η_ion(Z, age)
+#
 # Each file is named after the corresponding η
 #
 # path: Where to store the resulting files
@@ -487,43 +487,49 @@ md"### Photodissociation efficiency"
 function write_η_tables(path::String)::Nothing
 
 	# Allocate memory for the ηs
-	ηd = Matrix{Float64}(undef, length(MODEL.Q_ages) + 1, length(MODEL.Q_metals) + 1)
-	ηi = Matrix{Float64}(undef, length(MODEL.Q_ages) + 1, length(MODEL.Q_metals) + 1)
+	η_diss = Matrix{Float64}(undef, length(MODEL.Q_ages) + 1, length(MODEL.Q_metals) + 1)
+	η_ion = Matrix{Float64}(undef, length(MODEL.Q_ages) + 1, length(MODEL.Q_metals) + 1)
 
-	ηd[:, 1] .= [0.0, MODEL.Q_ages...]
-	ηi[:, 1] .= [0.0, MODEL.Q_ages...]
-	ηd[1, :] .= [0.0, MODEL.Q_metals...]
-	ηi[1, :] .= [0.0, MODEL.Q_metals...]
-		
+	η_diss[:, 1] .= [0.0, MODEL.Q_ages...]
+	η_ion[:, 1]  .= [0.0, MODEL.Q_ages...]
+	η_diss[1, :] .= [0.0, MODEL.Q_metals...]
+	η_ion[1, :]  .= [0.0, MODEL.Q_metals...]
+
 	@inbounds for (i, log_age) in pairs(MODEL.Q_ages)
-			
+
 		@inbounds for (j, Zmet) in pairs(MODEL.Q_metals)
-					
+
 		    sub_df = @subset(
-				MODEL.Q_by_imf[MODEL.IMF], 
-				:Zmet .== Zmet, 
+				MODEL.Q_by_imf[MODEL.IMF],
+				:Zmet .== Zmet,
 				:log_age .<= log_age,
 			)
-					
-		    # Set the values of the axes, with an extra point, 
+
+		    # Set the values of the axes, with an extra point,
 			# to integrate from age 0 onwards
 		    ages = [0.0, exp10.(sub_df[!, :log_age])...] .* u"yr"
-					
-			qd = sub_df[!, :Qd]
-			Qd = [qd[1], qd...]
-			ηd[i + 1, j + 1] = uconvert(Unitful.NoUnits, trapz(ages, Qd) * MODEL.f_d)
-	
-			qi = sub_df[!, :Qi]
-			Qi = [qi[1], qi...]
-		    ηi[i + 1, j + 1] = uconvert(Unitful.NoUnits, trapz(ages, Qi) * MODEL.f_i)
-					
+
+			q_diss = sub_df[!, :Q_diss]
+			Q_diss = [q_diss[1], q_diss...]
+			η_diss[i + 1, j + 1] = uconvert(
+				Unitful.NoUnits, 
+				trapz(ages, Q_diss) * MODEL.f_diss,
+			)
+
+			q_ion = sub_df[!, :Q_ion]
+			Q_ion = [q_ion[1], q_ion...]
+		    η_ion[i + 1, j + 1] = uconvert(
+				Unitful.NoUnits, 
+				trapz(ages, Q_ion) * MODEL.f_ion,
+			)
+
 		end
-						
+
 	end
 
 	dir = mkpath(path)
-	writedlm(joinpath(dir, "eta_d.txt"), ηd, ' ')
-	writedlm(joinpath(dir, "eta_i.txt"), ηi, ' ')
+	writedlm(joinpath(dir, "eta_d.txt"), η_diss, ' ')
+	writedlm(joinpath(dir, "eta_i.txt"), η_ion, ' ')
 
 	return nothing
 
@@ -554,38 +560,38 @@ md"### Mass recycling"
 ######################################################################################
 
 function write_R_table(path::String)::Nothing
-	
+
 	m_low    = ustrip(u"Msun", MODEL.M_LOW)
 	m_high   = ustrip(u"Msun", MODEL.M_HIGH)
 	m_ir     = ustrip(u"Msun", MODEL.M_IR)
 	imf_func = MODEL.imf_funcs[MODEL.IMF][2]
 	Rs       = similar(MODEL.sy_metals)
 	Zsns     = similar(MODEL.sy_metals)
-	
+
 	norm   = quadgk(m -> m * imf_func(m), m_low, m_high)[1] * u"Msun^2"
     sub_df = @subset(
-		MODEL.sy_data, 
-		:model .== MODEL.yield_model_keys[MODEL.Y_MODEL], 
+		MODEL.sy_data,
+		:model .== MODEL.yield_model_keys[MODEL.Y_MODEL],
 		m_ir .* u"Msun" .< :s_m .< m_high .* u"Msun",
 	)
 
 	@inbounds for (i, Z) in pairs(MODEL.sy_metals)
 		data = @subset(sub_df, :s_Z .== Z)
-		
+
 		stellar_mass  = data[:, :s_m]
 		remnant_mass  = data[!, :m_rem]
 		remnant_metal = data[!, :zf_rem]
-		
+
 	    R_int = trapz(
-			stellar_mass, 
+			stellar_mass,
 			(stellar_mass .- remnant_mass) .* imf_func.(stellar_mass),
 		)
-		
+
 	    Zsn_int = trapz(
-			stellar_mass, 
+			stellar_mass,
 			stellar_mass .* remnant_metal .* imf_func.(stellar_mass),
 		)
-		
+
 	    Rs[i]   = R_int / norm
 		Zsns[i] = Zsn_int / R_int
 	end
@@ -1258,9 +1264,9 @@ version = "3.3.10+0"
 
 [[deps.FastBroadcast]]
 deps = ["ArrayInterface", "LinearAlgebra", "Polyester", "Static", "StaticArrayInterface", "StrideArraysCore"]
-git-tree-sha1 = "9d77cb1caf03e67514ba60bcfc47c6e131b1950c"
+git-tree-sha1 = "a6e756a880fc419c8b41592010aebe6a5ce09136"
 uuid = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
-version = "0.2.7"
+version = "0.2.8"
 
 [[deps.FastClosures]]
 git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
@@ -2193,9 +2199,9 @@ version = "10.42.0+0"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "66b2fcd977db5329aa35cac121e5b94dd6472198"
+git-tree-sha1 = "f6f85a2edb9c356b829934ad3caed2ad0ebbfc99"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.11.28"
+version = "0.11.29"
 
 [[deps.PGFPlotsX]]
 deps = ["ArgCheck", "Dates", "DefaultApplication", "DocStringExtensions", "MacroTools", "OrderedCollections", "Parameters", "Requires", "Tables"]
@@ -2248,9 +2254,9 @@ version = "0.12.3"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
-git-tree-sha1 = "716e24b21538abc91f6205fd1d8363f39b442851"
+git-tree-sha1 = "a935806434c9d4c506ba941871b327b96d41f2bf"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.7.2"
+version = "2.8.0"
 
 [[deps.Permutations]]
 deps = ["Combinatorics", "LinearAlgebra", "Random"]
@@ -2384,9 +2390,9 @@ version = "2.2.8"
 
 [[deps.Primes]]
 deps = ["IntegerMathUtils"]
-git-tree-sha1 = "4c9f306e5d6603ae203c2000dd460d81a5251489"
+git-tree-sha1 = "1d05623b5952aed1307bf8b43bec8b8d1ef94b6e"
 uuid = "27ebfcd6-29c5-5fa9-bf4b-fb8fc14df3ae"
-version = "0.5.4"
+version = "0.5.5"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -2477,9 +2483,9 @@ version = "2.38.10"
 
 [[deps.RecursiveFactorization]]
 deps = ["LinearAlgebra", "LoopVectorization", "Polyester", "PrecompileTools", "StrideArraysCore", "TriangularSolve"]
-git-tree-sha1 = "2b6d4a40339aa02655b1743f4cd7c03109f520c1"
+git-tree-sha1 = "8bc86c78c7d8e2a5fe559e3721c0f9c9e303b2ed"
 uuid = "f2c3362d-daeb-58d1-803e-2bc74f2840b4"
-version = "0.2.20"
+version = "0.2.21"
 
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
@@ -2506,9 +2512,9 @@ version = "1.1.1"
 
 [[deps.Revise]]
 deps = ["CodeTracking", "Distributed", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "Pkg", "REPL", "Requires", "UUIDs", "Unicode"]
-git-tree-sha1 = "ba168f8fc36bf83c8d0573d464b7aab0f8a81623"
+git-tree-sha1 = "62fbfbbed77a20e9390c4f02219cb3b11d21708d"
 uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "3.5.7"
+version = "3.5.8"
 
 [[deps.RingLists]]
 deps = ["Random"]
@@ -2849,9 +2855,9 @@ version = "6.62.0"
 
 [[deps.StrideArraysCore]]
 deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "ManualMemory", "SIMDTypes", "Static", "StaticArrayInterface", "ThreadingUtilities"]
-git-tree-sha1 = "f02eb61eb5c97b48c153861c72fbbfdddc607e06"
+git-tree-sha1 = "e7dd250422df290cee14960c1ee144b44ac3dd77"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
-version = "0.4.17"
+version = "0.5.1"
 
 [[deps.StringManipulation]]
 deps = ["PrecompileTools"]
