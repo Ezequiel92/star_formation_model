@@ -138,13 +138,13 @@ Using the values in Table 1 of [Ferrière2001](https://doi.org/10.1103/RevModPhy
 | Cold atomic gas    | $20 - 50$                 | $\gtrsim 6.0$                     |
 | Warm ionized gas   | $0.2 - 0.5$               | $\gtrsim 1.6$                     |
 
-the relation from before
+and the relation from before
 
 $\begin{equation}
-    x_j = \frac{M_j}{m_j \, n_j \, V_j} \, ,
+    x_j = \frac{M_j}{m_j \, n_j \, V_j} \, .
 \end{equation}$
 
-and the fact that the Milky Way volume is $\sim 10^3 \, \mathrm{kpc^3}$. We can estimate the volume fractions by order of magnitude as
+We can estimate the volume fractions by order of magnitude as
 
 |||
 |:-----:|:--------------:|
@@ -918,7 +918,7 @@ let
 
 	for Zs in range(0, 1.5, 4)
 		push!(
-			ax, 
+			ax,
 			PGFPlotsX.Plot(Coordinates(ρ_cell, τ_cond.(0.6, 0.1, ρ_cell, Zs * Zsun))),
 		)
 		push!(ax, PGFPlotsX.LegendEntry(L"Z \, / \, Z_\odot = %$(Zs)"))
