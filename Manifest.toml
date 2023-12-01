@@ -87,9 +87,9 @@ version = "0.5.3"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
-git-tree-sha1 = "5eab648309e2e060198b45820af1a37182de3cce"
+git-tree-sha1 = "abbbb9ec3afd783a7cbd82ef01dcd088ea051398"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "1.10.0"
+version = "1.10.1"
 
 [[deps.HypertextLiteral]]
 deps = ["Tricks"]
@@ -159,9 +159,9 @@ version = "0.1.4"
 
 [[deps.Malt]]
 deps = ["Distributed", "Logging", "RelocatableFolders", "Serialization", "Sockets"]
-git-tree-sha1 = "5333200b6a2c49c2de68310cede765ebafa255ea"
+git-tree-sha1 = "18cf4151e390fce29ca846b92b06baf9bc6e002e"
 uuid = "36869731-bdee-424d-aa32-cab38c994e3b"
-version = "1.1.0"
+version = "1.1.1"
 
 [[deps.Markdown]]
 deps = ["Base64"]
