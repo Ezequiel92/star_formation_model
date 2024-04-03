@@ -53,13 +53,13 @@ jobs:
                     Export_baked_state=false,
                   )'
 
-            - name: Deploy to gh-pages
-              uses: JamesIves/github-pages-deploy-action@v4
-              with:
-                  token: ${{ secrets.GITHUB_TOKEN }}
-                  branch: gh-pages
-                  folder: .
-                  clean-exclude: |
-                      _config.yml
-                      index.md
-                      index.html
+            # - name: Deploy to gh-pages
+            #   uses: JamesIves/github-pages-deploy-action@v4
+            #   with:
+            #       token: ${{ secrets.GITHUB_TOKEN }}
+            #       branch: gh-pages
+            #       folder: .
+            #       clean-exclude: |
+            #           _config.yml
+            #           index.md
+            #           index.html
