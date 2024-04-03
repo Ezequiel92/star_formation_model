@@ -12,7 +12,7 @@
 
 Implementation in [Julia](https://julialang.org) and C of our star formation model.
 
-The goal of the model is to improve the star formation history (SFH) in cosmological simulations of Milky Way like galaxies, using [AREPO](https://arepo-code.org/).
+The goal is to improve the modeling of the star formation history (SFH) in cosmological simulations of Milky Way-like galaxies.
 
 The notebooks in this repo, can be view as static HTML files [here](https://ezequiel92.github.io/star_formation_model/),
 
