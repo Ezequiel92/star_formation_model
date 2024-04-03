@@ -17,10 +17,10 @@ jobs:
               run: sudo apt-get update && sudo apt-get install -y texlive-full
               
             - name: Checkout this repository
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - name: Install Julia
-              uses: julia-actions/setup-julia@v1
+              uses: julia-actions/setup-julia@v2
               with:
                   version: '1'
 
@@ -30,7 +30,7 @@ jobs:
                 cache-registries: "true"
 
             - name: Set up notebook state cache
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: pluto_state_cache
                   key: ${{ runner.os }}-pluto_state_cache-v2-${{ hashFiles('**/Project.toml', '**/Manifest.toml', '.github/workflows/*' ) }}-${{ hashFiles('**/*jl') }}
