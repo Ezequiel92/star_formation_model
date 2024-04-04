@@ -196,6 +196,7 @@ end;
   ╠═╡ =#
 
 # ╔═╡ 2e93c336-c055-4d2d-920b-70fb6d8117a4
+# ╠═╡ disabled = true
 # ╠═╡ skip_as_script = true
 #=╠═╡
 begin
@@ -645,6 +646,7 @@ md"## Integration"
   ╠═╡ =#
 
 # ╔═╡ 6f341d1b-8b0f-4bc5-b18c-d1e9dc9281d5
+# ╠═╡ disabled = true
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
@@ -724,6 +726,7 @@ end;
   ╠═╡ =#
 
 # ╔═╡ c4b6aa58-d3a5-446f-aca6-4e6dce11615a
+# ╠═╡ disabled = true
 #=╠═╡
 let
 	##################################################################################
