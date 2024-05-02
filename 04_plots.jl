@@ -643,6 +643,20 @@ let
 end
   ╠═╡ =#
 
+# ╔═╡ 7e2dd843-aa95-4d96-a07d-2ce4c1b1452b
+# ╠═╡ skip_as_script = true
+#=╠═╡
+begin
+	logρcell = 1.0
+	star_rec = MODEL.τ_star(exp10(logρcell)) / MODEL.τ_rec(0.5, exp10(logρcell))
+	cond_rec = MODEL.τ_cond(0.0, exp10(logρcell), MODEL.Zsun) / MODEL.τ_rec(0.5, exp10(logρcell))
+
+	println("τ_star / τ_rec: $(star_rec)")
+	println()
+	println("τ_cond / τ_rec: $(cond_rec)")
+end;
+  ╠═╡ =#
+
 # ╔═╡ 25ae9eb0-86ce-4e73-8b4b-128c33f15e4e
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1182,8 +1196,11 @@ let
 		grid_merged = joinpath(output_dir, "fractions-vs-time-merged.pdf")
 		grid_output = "../plots/integration/fractions-vs-time-grid_loose.pdf"
 
-		run(`./other/pdfcpu.exe merge $(grid_merged) $(grid_list)`)
-		run(`./other/pdfcpu.exe grid -- "bo:off" $(grid_output) 3 3 $(grid_merged)`)
+		@static if Sys.iswindows()
+			run(`./other/pdfcpu.exe merge $(grid_merged) $(grid_list)`)
+			run(`./other/pdfcpu.exe grid -- "bo:off" $(grid_output) 3 3 $(grid_merged)`)
+		end
+
 		rm(output_dir; recursive=true)
 
 	end
@@ -1424,6 +1441,8 @@ let
 
 		end
 
+		
+
 		grid_list = vcat(
 			joinpath(output_dir, "fractions-vs-density-ionized-*.pdf"),
 			joinpath(output_dir, "fractions-vs-density-atomic-*.pdf"),
@@ -1434,8 +1453,10 @@ let
 		grid_merged = joinpath(output_dir, "fractions-vs-density-merged.pdf")
 		grid_output = "../plots/integration/fractions-vs-density-grid_loose.pdf"
 
-		run(`./other/pdfcpu.exe merge $(grid_merged) $(grid_list)`)
-		run(`./other/pdfcpu.exe grid -- "bo:off" $(grid_output) 4 3 $(grid_merged)`)
+		@static if Sys.iswindows()
+			run(`./other/pdfcpu.exe merge $(grid_merged) $(grid_list)`)
+			run(`./other/pdfcpu.exe grid -- "bo:off" $(grid_output) 4 3 $(grid_merged)`)
+		end
 		rm(output_dir; recursive=true)
 
 	end
@@ -1498,7 +1519,7 @@ UnitfulAstro = "~1.2.1"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.10.2"
+julia_version = "1.10.3"
 manifest_format = "2.0"
 project_hash = "d963c0af605d9de5be01c827ae0db13a65612edb"
 
@@ -1834,7 +1855,7 @@ weakdeps = ["Dates", "LinearAlgebra"]
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.1.0+0"
+version = "1.1.1+0"
 
 [[deps.CompositeTypes]]
 git-tree-sha1 = "bce26c3dab336582805503bed209faab1c279768"
@@ -4235,6 +4256,7 @@ version = "3.5.0+0"
 # ╟─a539db70-7a37-4071-90d9-a0af4cf68afb
 # ╟─c8d75072-ae77-47c7-af31-a4ff18240d97
 # ╟─25ae9eb0-86ce-4e73-8b4b-128c33f15e4e
+# ╟─7e2dd843-aa95-4d96-a07d-2ce4c1b1452b
 # ╟─dfb8b71a-b3a3-4ea0-9ea3-213c206117ca
 # ╟─c51c3c7c-848c-44d5-8169-13e5a17777ef
 # ╟─45a1202d-527f-4a79-877e-d261c351d84f
