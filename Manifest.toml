@@ -2,7 +2,7 @@
 
 julia_version = "1.10.3"
 manifest_format = "2.0"
-project_hash = "431973e5be8c4a234999578f418d51995324ee67"
+project_hash = "33308c26aeaf88935c476becd75fdb6db775d1fc"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -77,9 +77,9 @@ uuid = "21656369-7473-754a-2065-74616d696c43"
 version = "1.0.2"
 
 [[deps.ExproniconLite]]
-git-tree-sha1 = "5552cf384e4577c5dd2db57d7086a4a41747dbb9"
+git-tree-sha1 = "c9f93670673240ab774393b8bda9451d5c6ffe78"
 uuid = "55351af7-c7e9-48d6-89ff-24e801d99491"
-version = "0.10.6"
+version = "0.10.7"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -92,9 +92,9 @@ version = "0.5.4"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
-git-tree-sha1 = "2c3ec1f90bb4a8f7beafb0cffea8a4c3f4e636ab"
+git-tree-sha1 = "d1d712be3164d61d1fb98e7ce9bcbc6cc06b45ed"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "1.10.6"
+version = "1.10.8"
 
 [[deps.HypertextLiteral]]
 deps = ["Tricks"]
@@ -354,32 +354,6 @@ uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
-
-[[deps.Unitful]]
-deps = ["Dates", "LinearAlgebra", "Random"]
-git-tree-sha1 = "3c793be6df9dd77a0cf49d80984ef9ff996948fa"
-uuid = "1986cc42-f94f-5a68-af5c-568840ba703d"
-version = "1.19.0"
-
-    [deps.Unitful.extensions]
-    ConstructionBaseUnitfulExt = "ConstructionBase"
-    InverseFunctionsUnitfulExt = "InverseFunctions"
-
-    [deps.Unitful.weakdeps]
-    ConstructionBase = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
-    InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
-
-[[deps.UnitfulAngles]]
-deps = ["Dates", "Unitful"]
-git-tree-sha1 = "79875b1f2e4bf918f0702a5980816955066d9ae2"
-uuid = "6fb2a4bd-7999-5318-a3b2-8ad61056cd98"
-version = "0.7.2"
-
-[[deps.UnitfulAstro]]
-deps = ["Unitful", "UnitfulAngles"]
-git-tree-sha1 = "da7577e6a726959b14f7451674d00b78d10ca30f"
-uuid = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
-version = "1.2.1"
 
 [[deps.Zlib_jll]]
 deps = ["Libdl"]

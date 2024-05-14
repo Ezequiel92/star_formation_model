@@ -16,6 +16,12 @@ using ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquati
 TableOfContents(title="Code generation", depth=4)
   ╠═╡ =#
 
+# ╔═╡ 7bd034e7-01fa-4ba1-835f-d83e5645c0ac
+begin
+	MARKERS = [:circle, :rect, :diamond, :hexagon, :cross, :xcross, :pentagon]
+	LINE_STYLES = [:solid, :dash, :dot, :dashdot, :dashdotdot]
+end;
+
 # ╔═╡ 42d6a2c4-e219-47bf-9552-6051c9d3f9af
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -27,14 +33,15 @@ DEFAULT_THEME = Theme(
     ############################
     # (left, right, bottom, top)
     ############################
-    figure_padding=(1, 15, 1, 15),
+    figure_padding=(1, 15, 5, 15),
+    palette=(color=Makie.wong_colors(), marker=MARKERS, linestyle=LINE_STYLES),
     CairoMakie=(px_per_unit=2.3622, pt_per_unit=0.283466),
     Axis=(
         xlabelpadding=15,
         xticklabelpad=10,
         xticksize=7,
         xgridvisible=false,
-		spinewidth=3,
+        spinewidth=3,
         xminorticksvisible=true,
         xminorticks=IntervalsBetween(5),
         ylabelpadding=15,
@@ -43,12 +50,12 @@ DEFAULT_THEME = Theme(
         ygridvisible=false,
         yminorticksvisible=true,
         yminorticks=IntervalsBetween(5),
-        ##############################################################################
+        #####################################################################################
         # Aspect ratio of the figures. The options are:
         # nothing: Default, the aspect ratio will be chosen by Makie.
         # AxisAspect(n): The aspect ratio will be given by the number `n` = width / height.
         # DataAspect(): The aspect ratio of the data will be used.
-        ##############################################################################
+#####################################################################################
         aspect=nothing,
     ),
     Legend=(
@@ -79,14 +86,29 @@ DEFAULT_THEME = Theme(
             Point2f(0.15, 0.85),
         ],
     ),
-    Lines=(linewidth=5,),
-    VLines=(linewidth=3,),
-    HLines=(linewidth=3,),
-    ScatterLines=(linewidth=5, markersize=22),
-    Scatter=(markersize=22,),
+    Lines=(linewidth=5, cycle=Cycle([:color, :linestyle], covary=true)),
+    VLines=(linewidth=3, cycle=Cycle([:color, :linestyle], covary=true)),
+    HLines=(linewidth=3, cycle=Cycle([:color, :linestyle], covary=true)),
+    ScatterLines=(
+        linewidth=5,
+        markersize=22,
+        cycle=Cycle([:color, :linestyle, :marker], covary=true),
+    ),
+    Scatter=(markersize=22, cycle=Cycle([:color, :marker], covary=true)),
     Errorbars=(whiskerwidth=10,),
     Heatmap=(colormap=:CMRmap, nan_color=ColorSchemes.CMRmap[1]),
     Colorbar=(size=25, ticklabelpad=10, minorticksvisible=true, ticksize=7),
+    BarPlot=(
+        color_over_background=:black,
+        color_over_bar=:black,
+        flip_labels_at=10,
+        direction=:x,
+        strokecolor=:black,
+        strokewidth=1,
+        bar_labels=:y,
+        dodge_gap=0.04,
+    ),
+    Arrows=(lengthscale=0.02, arrowsize=7.0, linestyle=:solid, color=:white),
 );
   ╠═╡ =#
 
@@ -4161,6 +4183,7 @@ version = "3.5.0+0"
 # ╠═f79c680a-7c97-4100-97e8-19190707c55b
 # ╟─f8351960-5a0a-44e6-8cfa-cd09757fd833
 # ╟─37653018-aaf5-42d1-a938-e05a44f18918
+# ╟─7bd034e7-01fa-4ba1-835f-d83e5645c0ac
 # ╟─42d6a2c4-e219-47bf-9552-6051c9d3f9af
 # ╟─4b65fd9c-bd69-4e97-a28c-357c6a9c7bda
 # ╠═a0ca487a-8a51-48cb-acc0-7b318c793d09
