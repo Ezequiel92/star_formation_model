@@ -19,7 +19,7 @@ TableOfContents(title="Code generation", depth=4)
 # ╔═╡ 7bd034e7-01fa-4ba1-835f-d83e5645c0ac
 begin
 	MARKERS = [:circle, :rect, :diamond, :hexagon, :cross, :xcross, :pentagon]
-	LINE_STYLES = [:solid, :dash, :dot, :dashdot, :dashdotdot]
+	LINE_STYLES = [:solid]
 end;
 
 # ╔═╡ 42d6a2c4-e219-47bf-9552-6051c9d3f9af
@@ -690,9 +690,9 @@ let
 			figure_padding=(1, 10, 10, 1),
 		)
 
-		##############################################################################
+		#############################################################################
 		# τ_star
-		##############################################################################
+		#############################################################################
 
 		τ = [MODEL.τ_star(exp10(logρcell)) for logρcell in logρcell_range]
 		logτ_range = log10.(τ)
@@ -724,9 +724,9 @@ let
 
 		hidedecorations!(ax_01)
 
-		##############################################################################
+		#############################################################################
 		# Colorbar
-		##############################################################################
+		#############################################################################
 
 		# Compute colorbar parameters
 		colorrange = hm.attributes.calculated_colors.val.colorrange.val
@@ -742,9 +742,9 @@ let
 			vertical=false,
 		)
 
-		##############################################################################
+		#############################################################################
 		# τ_cond
-		##############################################################################
+		#############################################################################
 		
 		τ = [
 			MODEL.τ_cond(fs, exp10(logρcell), solarZ * MODEL.Zsun) for 
@@ -783,9 +783,9 @@ let
 			colorrange=(-1.0, 3.0),
 		)
 
-        ##############################################################################
+		#############################################################################
 		# τ_rec
-		##############################################################################
+		#############################################################################
 		
 		τ = [
 			MODEL.τ_rec(exp10(logfi), exp10(logρcell)) for 
@@ -1054,9 +1054,9 @@ md"## Integration"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-	##################################################################################
+	#################################################################################
 	# Metallicity x density (tight) grid
-	##################################################################################
+	#################################################################################
 
 	output_dir  = mkpath("../plots/integration/")
 	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
@@ -1101,10 +1101,12 @@ let
 		zip(print_params, fractions, positions, xaxis_visible, yaxis_visible),
 	)
 
+	scale = 1700 / length(ρ_list)
+
 	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
 		f = Figure(
-			size=(566 * length(ρ_list), 566 * length(Z_list)),
+			size=(1700, scale * length(Z_list)),
 			figure_padding=(1, 15, 5, 15),
 		)
 
@@ -1233,15 +1235,15 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-	##################################################################################
+	#################################################################################
 	# ICs x fractions (tight) grid
-	##################################################################################
+	#################################################################################
 
 	output_dir   = mkpath("../plots/integration")
 	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
 	phases       = ["ionized", "atomic", "molecular", "stellar"]
 
-	ylimits = [(nothing, 0.4), (0.0, nothing), (nothing, 0.65), (nothing, 0.17)]
+	ylimits = [(nothing, 0.5), (0.0, nothing), (nothing, 0.65), (nothing, 0.17)]
 
 	# Axis visibility
 	xaxis_visible = [false, false, false, true]
@@ -1279,9 +1281,11 @@ let
 		zip(phases, phase_labels, positions, xaxis_visible, title_visible, ylimits),
 	)
 
+	scale = 1700 / length(ics)
+
 	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
-		f = Figure(size=(566 * length(ics), 566 * length(phases)))
+		f = Figure(size=(1700, scale * length(phases)))
 
 		for (col, (ic, fi, yaxis_v)) in col_iterator
 
