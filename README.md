@@ -10,6 +10,9 @@
     <a href="https://github.com/ezequiel92/star_formation_model/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ezequiel92/star_formation_model?style=flat&logo=GNU&labelColor=2B2D2F"></a>
 </p>
 
+> [!CAUTION]
+> These scripts are written for my personal use and may break at any moment. So, use them at your own risk.
+
 Implementation in [Julia](https://julialang.org) and C of our star formation model.
 
 The goal is to improve the modeling of the star formation history (SFH) in cosmological simulations of Milky Way-like galaxies.
@@ -21,6 +24,4 @@ The notebooks in this repo, can be view as static HTML files [here](https://ezeq
 - `003_testing.jl`: Tests and error calculations.
 - `004_plots.jl`: Plots.
 
-## ⚠️ Warning
 
-These scripts are written for my personal use and may break at any moment. So, use them at your own risk.
