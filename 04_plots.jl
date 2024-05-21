@@ -284,9 +284,9 @@ let
 
 		lines!(ax, ρ_cell, MODEL.τ_star.(ρ_cell))
 
-		mkpath("../plots/parameters")
+		mkpath("../plots/model/parameters")
 
-		Makie.save("../plots/parameters/tau_star-vs-density.pdf", f)
+		Makie.save("../plots/model/parameters/tau_star-vs-density.pdf", f)
 
 		f
 
@@ -326,9 +326,9 @@ let
 
 		axislegend(; position=:rt, nbanks=1)
 
-		mkpath("../plots/parameters")
+		mkpath("../plots/model/parameters")
 
-		Makie.save("../plots/parameters/tau_rec-vs-density.pdf", f)
+		Makie.save("../plots/model/parameters/tau_rec-vs-density.pdf", f)
 
 		f
 	end
@@ -367,9 +367,9 @@ let
 
 		axislegend(; position=:rt, nbanks=1)
 
-		mkpath("../plots/parameters")
+		mkpath("../plots/model/parameters")
 
-		Makie.save("../plots/parameters/tau_cond-vs-density.pdf", f)
+		Makie.save("../plots/model/parameters/tau_cond-vs-density.pdf", f)
 
 		f
 
@@ -389,8 +389,8 @@ md"### Time parameters"
 #=╠═╡
 let
 	# Total cell density [mp * cm⁻³]
-	ρ_cell_range = [0.19, 300.0] 
-	
+	ρ_cell_range = [0.19, 300.0]
+
 	τ_star_range = MODEL.τ_star.(ρ_cell_range)
 
 	τ_cond_range_0 = MODEL.τ_cond.(0.25, ρ_cell_range, 0.0 * MODEL.Zsun)
@@ -421,12 +421,12 @@ let
 	)
 
 	dc = distinguishable_colors(
-		5, 
+		5,
 		[RGB(1,1,1), RGB(0,0,0)],
 		dropseed=true,
 	)
 	colors = [dc[1], dc[3], dc[3], dc[5], dc[5]]
-	
+
 	haligns = [:center, :left, :center, :left, :center]
 
 	iterator = zip(ranges, yvalues, colors, haligns)
@@ -446,71 +446,71 @@ let
 		)
 
 		lines!(
-			ax, 
-			[τ_rec_range_1[1], τ_rec_range_9[1]], 
-			[4, 5]; 
-			color=dc[2], 
+			ax,
+			[τ_rec_range_1[1], τ_rec_range_9[1]],
+			[4, 5];
+			color=dc[2],
 			linestyle=:dash,
 			label=text=L"\rho_\mathrm{cell} = 0.19 \, \mathrm{cm}^{-3}",
 		)
 
 		lines!(
-			ax, 
-			[τ_rec_range_1[2], τ_rec_range_9[2]], 
-			[4, 5]; 
-			color=dc[4], 
-			linestyle=:dash, 
-	
+			ax,
+			[τ_rec_range_1[2], τ_rec_range_9[2]],
+			[4, 5];
+			color=dc[4],
+			linestyle=:dash,
+
 			label=text=L"\rho_\mathrm{cell} = 300 \, \mathrm{cm}^{-3}",
 		)
 
 		axislegend(ax, position=:rt, nbanks=1)
 
 		lines!(
-			ax, 
-			[τ_cond_range_0[1], τ_cond_range_1[1]], 
-			[2, 3]; 
-			color=dc[2], 
+			ax,
+			[τ_cond_range_0[1], τ_cond_range_1[1]],
+			[2, 3];
+			color=dc[2],
 			linestyle=:dash,
 		)
 
 		lines!(
-			ax, 
-			[τ_cond_range_0[2], τ_cond_range_1[2]], 
-			[2, 3]; 
-			color=dc[4], 
+			ax,
+			[τ_cond_range_0[2], τ_cond_range_1[2]],
+			[2, 3];
+			color=dc[4],
 			linestyle=:dash,
 		)
 
 		for (range, yvalue, color, halign) in iterator
-			
+
 			scatterlines!(ax, range, [yvalue, yvalue]; color, linestyle=nothing)
 
 			label_1 = @sprintf("%.2f", range[1])
-			
+
 			text!(
-				ax, 
-				range[1], 
-				yvalue + 0.1, 
-				text="$(label_1)", 
+				ax,
+				range[1],
+				yvalue + 0.1,
+				text="$(label_1)",
 				align=(halign, :bottom),
 			)
 
 			label_2 = @sprintf("%.2e", range[2])
-			
+
 			text!(
-				ax, 
-				range[2], 
-				yvalue + 0.1, 
-				text="$(label_2)", 
+				ax,
+				range[2],
+				yvalue + 0.1,
+				text="$(label_2)",
 				align=(halign, :bottom),
 			)
-			
+
 		end
 
-		mkpath("../plots/parameters")
+		mkpath("../plots/model/parameters")
 
-		Makie.save("../plots/parameters/tau_comparison.pdf", f)
+		Makie.save("../plots/model/parameters/tau_comparison.pdf", f)
 
 		f
 
@@ -522,16 +522,16 @@ end
 #=╠═╡
 let
 	resolution = 50
-	
+
 	# Total cell density range [mp * cm⁻³]
-	logρcell_range = range(-1, 3, resolution) 
-	
+	logρcell_range = range(-1, 3, resolution)
+
     # Ionized fraction [dimensionless]
 	logfi_range = range(-1.5, 0, resolution)
 
 	# τ_rec range [Myr]
 	τ = [
-		MODEL.τ_rec(exp10(logfi), exp10(logρcell)) for 
+		MODEL.τ_rec(exp10(logfi), exp10(logρcell)) for
 		logρcell in logρcell_range, logfi in logfi_range
 	]
 	logτ_range = range(log10.(extrema(τ))..., resolution)
@@ -539,7 +539,7 @@ let
 	# Color variable
 	fi(τ_rec, ρ_cell) = MODEL.c_rec / (τ_rec * ρ_cell)
 	fi_range = [
-		fi(exp10(logτ), exp10(logρcell)) for 
+		fi(exp10(logτ), exp10(logρcell)) for
 		logτ in logτ_range, logρcell in logρcell_range
 	]
 	fi = replace(x -> 0.0 < x < 1.0 ? x : NaN, fi_range)
@@ -556,8 +556,8 @@ let
 		)
 
 		hm = heatmap!(
-			ax, 
-			logτ_range, 
+			ax,
+			logτ_range,
 			logρcell_range,
 			fi;
 			nan_color=:white,
@@ -571,18 +571,18 @@ let
         ticks = round.(range(min_c, max_c, 5); digits=1)
 
         Colorbar(
-			f[1, 2], 
-			hm; 
-			ticks, 
+			f[1, 2],
+			hm;
+			ticks,
 			label=L"f_i",
 		)
-		
+
 		# Adjust the colorbar height
         rowsize!(f.layout, 1, Makie.Fixed(pixelarea(ax.scene)[].widths[2]))
 
-		mkpath("../plots/parameters")
+		mkpath("../plots/model/parameters")
 
-		Makie.save("../plots/parameters/rho-vs-τ_rec.pdf", f)
+		Makie.save("../plots/model/parameters/rho-vs-τ_rec.pdf", f)
 
 		f
 
@@ -594,19 +594,19 @@ end
 #=╠═╡
 let
 	resolution = 50
-	
+
 	# Stellar fraction
 	fs = 0.0
-	
+
 	# Total cell density range [mp * cm⁻³]
-	logρcell_range = range(-1, 3, resolution) 
-	
+	logρcell_range = range(-1, 3, resolution)
+
 	# Metallicity range [dimensionless]
 	solarZ_range = range(0.0, 1.0, 50)
 
 	# τ_rec range [Myr]
 	τ = [
-		MODEL.τ_cond(fs, exp10(logρcell), solarZ * MODEL.Zsun) for 
+		MODEL.τ_cond(fs, exp10(logρcell), solarZ * MODEL.Zsun) for
 		logρcell in logρcell_range, solarZ in solarZ_range
 	]
 	logτ_range = range(log10.(extrema(τ))..., resolution)
@@ -614,7 +614,7 @@ let
 	# Color variable
 	Z(fs, ρ_cell, τ_cond) = (MODEL.c_cond / (ρ_cell * τ_cond * (1.0 - fs))) - MODEL.Zeff
 	Z_range = [
-		Z(fs, exp10(logρcell), exp10.(logτ)) for 
+		Z(fs, exp10(logρcell), exp10.(logτ)) for
 		logτ in logτ_range, logρcell in logρcell_range
 	]
 	solarZ_range = replace(x -> 0.0 < x < 1.0 ? x : NaN, Z_range ./ MODEL.Zsun)
@@ -631,8 +631,8 @@ let
 		)
 
 		hm = heatmap!(
-			ax, 
-			logτ_range, 
+			ax,
+			logτ_range,
 			logρcell_range,
 			solarZ_range;
 			nan_color=:white,
@@ -646,18 +646,18 @@ let
         ticks = round.(range(min_c, max_c, 5); digits=1)
 
         Colorbar(
-			f[1, 2], 
-			hm; 
-			ticks, 
+			f[1, 2],
+			hm;
+			ticks,
 			label=L"Z \, / \, Z_\odot",
 		)
-		
+
 		# Adjust the colorbar height
         rowsize!(f.layout, 1, Makie.Fixed(pixelarea(ax.scene)[].widths[2]))
 
-		mkpath("../plots/parameters")
+		mkpath("../plots/model/parameters")
 
-		Makie.save("../plots/parameters/rho-vs-τ_cond.pdf", f)
+		Makie.save("../plots/model/parameters/rho-vs-τ_cond.pdf", f)
 
 		f
 
@@ -670,12 +670,12 @@ end
 #=╠═╡
 let
 	resolution = 50
-	
+
 	# Stellar fraction
 	fs = 0.0
-	
+
 	# Total cell density range [mp * cm⁻³]
-	logρcell_range = range(-1, 3, resolution) 
+	logρcell_range = range(-1, 3, resolution)
 
     # Ionized fraction range [dimensionless]
 	logfi_range = range(-2, 0, resolution)
@@ -686,7 +686,7 @@ let
 	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
 		f = Figure(
-			size=(880, 1000), 
+			size=(880, 1000),
 			figure_padding=(1, 10, 10, 1),
 		)
 
@@ -699,7 +699,7 @@ let
 
 		println("τ_star range: $(extrema(τ))")
 		println()
-	
+
 		# Color variable
 		ρ_cell(τ_star) = (MODEL.c_star / τ_star)^2
 		ρcell_range = [ρ_cell(exp10(logτ)) for logτ in logτ_range, _ in 1:1]
@@ -714,8 +714,8 @@ let
 		)
 
 		hm = heatmap!(
-			ax_01, 
-			logτ_range, 
+			ax_01,
+			logτ_range,
 			[1,],
 			logρcell;
 			nan_color=:gray85,
@@ -735,9 +735,9 @@ let
         ticks = round.(range(min_c, max_c, 5); digits=1)
 
         Colorbar(
-			f[1, 1], 
-			hm; 
-			ticks, 
+			f[1, 1],
+			hm;
+			ticks,
 			label=L"\log_{10} \, \rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
 			vertical=false,
 		)
@@ -745,21 +745,21 @@ let
 		#############################################################################
 		# τ_cond
 		#############################################################################
-		
+
 		τ = [
-			MODEL.τ_cond(fs, exp10(logρcell), solarZ * MODEL.Zsun) for 
+			MODEL.τ_cond(fs, exp10(logρcell), solarZ * MODEL.Zsun) for
 			logρcell in logρcell_range, solarZ in solarZ_range
 		]
 		logτ_range = range(log10.(extrema(τ))..., resolution)
 
 		println("τ_cond range: $(extrema(τ))")
 		println()
-	
+
 		# Color variable
 		ρ_cell(fs, τ_cond, Z) = MODEL.c_cond / (τ_cond * (Z + MODEL.Zeff) * (1.0 - fs))
 		ρcell_range = [
-			ρ_cell(fs, exp10(logτ), solarZ * MODEL.Zsun) for 
-			logτ in logτ_range, solarZ in solarZ_range		
+			ρ_cell(fs, exp10(logτ), solarZ * MODEL.Zsun) for
+			logτ in logτ_range, solarZ in solarZ_range
 		]
 		logρcell = replace(x -> -1 < x < 3 ? x : NaN, log10.(ρcell_range))
 
@@ -771,12 +771,12 @@ let
 			title=L"\tau_\mathrm{cond}",
 			backgroundcolor=:gray85,
 		)
-		
+
 		hidexdecorations!(ax_02)
 
 		hm = heatmap!(
-			ax_02, 
-			logτ_range, 
+			ax_02,
+			logτ_range,
 			solarZ_range,
 			logρcell;
 			nan_color=:gray85,
@@ -786,23 +786,23 @@ let
 		#############################################################################
 		# τ_rec
 		#############################################################################
-		
+
 		τ = [
-			MODEL.τ_rec(exp10(logfi), exp10(logρcell)) for 
+			MODEL.τ_rec(exp10(logfi), exp10(logρcell)) for
 			logρcell in logρcell_range, logfi in logfi_range
 		]
 		logτ_range = range(log10.(extrema(τ))..., resolution)
 
 		println("τ_rec range: $(extrema(τ))")
 		println()
-	
+
 		# Color variable
 		ρ_cell(τ_rec, fi) = MODEL.c_rec / (τ_rec * fi)
 		ρcell_range = [
 			ρ_cell(exp10(logτ), exp10(logfi)) for logτ in logτ_range, logfi in logfi_range
 		]
 		logρcell = replace(
-			x -> -1 < x < 3 ? x : NaN, 
+			x -> -1 < x < 3 ? x : NaN,
 			log10.(ρcell_range),
 		)
 
@@ -816,8 +816,8 @@ let
 		)
 
 		hm = heatmap!(
-			ax_03, 
-			logτ_range, 
+			ax_03,
+			logτ_range,
 			exp10.(logfi_range),
 			logρcell;
 			nan_color=:gray85,
@@ -826,9 +826,9 @@ let
 
 		rowsize!(f.layout, 1, Relative(1/30))
 		rowsize!(f.layout, 2, Relative(1/20))
-		
-		mkpath("../plots/parameters")
-		Makie.save("../plots/parameters/tau_comparison.pdf", f)
+
+		mkpath("../plots/model/parameters")
+		Makie.save("../plots/model/parameters/tau_comparison.pdf", f)
 
 		f
 
@@ -882,9 +882,9 @@ let
 
 		axislegend(ax; position=:lt, nbanks=1)
 
-		mkpath("../plots/parameters")
+		mkpath("../plots/model/parameters")
 
-		Makie.save("../plots/parameters/eta_diss-vs-stellar_age.pdf", f)
+		Makie.save("../plots/model/parameters/eta_diss-vs-stellar_age.pdf", f)
 
 		f
 
@@ -918,9 +918,9 @@ let
 
 		axislegend(ax; position=:lt, nbanks=1)
 
-		mkpath("../plots/parameters")
+		mkpath("../plots/model/parameters")
 
-		Makie.save("../plots/parameters/eta_ion-vs-stellar_age.pdf", f)
+		Makie.save("../plots/model/parameters/eta_ion-vs-stellar_age.pdf", f)
 
 		f
 
@@ -968,9 +968,9 @@ let
 
 		axislegend(ax; position=:lt, nbanks=1)
 
-		mkpath("../plots/parameters")
+		mkpath("../plots/model/parameters")
 
-		Makie.save("../plots/parameters/eta-vs-stellar_age.pdf", f)
+		Makie.save("../plots/model/parameters/eta-vs-stellar_age.pdf", f)
 
 		f
 
@@ -1004,9 +1004,9 @@ let
 
 		lines!(ax, metalicities, R)
 
-		mkpath("../plots/parameters")
+		mkpath("../plots/model/parameters")
 
-		Makie.save("../plots/parameters/R-vs-metallicity.pdf", f)
+		Makie.save("../plots/model/parameters/R-vs-metallicity.pdf", f)
 
 		f
 
@@ -1034,9 +1034,9 @@ let
 
 		lines!(ax, metalicities, Zsn)
 
-		mkpath("../plots/parameters")
+		mkpath("../plots/model/parameters")
 
-		Makie.save("../plots/parameters/Zsn-vs-metallicity.pdf", f)
+		Makie.save("../plots/model/parameters/Zsn-vs-metallicity.pdf", f)
 
 		f
 
@@ -1058,7 +1058,7 @@ let
 	# Metallicity x density (tight) grid
 	#################################################################################
 
-	output_dir  = mkpath("../plots/integration/")
+	output_dir  = mkpath("../plots/model/integration/")
 	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
 
 	xaxis_visible = [false, false, false, false, false, false, true, true, true]
@@ -1092,8 +1092,8 @@ let
 	]
 
 	positions = [
-		:lt, :lt, (0.98, 0.94), 
-		:lt, :lt, :rt, 
+		:lt, :lt, (0.98, 0.94),
+		:lt, :lt, :rt,
 		:lt, :lt, :rt,
     ]
 
@@ -1111,7 +1111,7 @@ let
 		)
 
 		for (idx, ((ρ, Z), fraction, position, xaxis_v, yaxis_v)) in iterator
-			
+
 			ax = CairoMakie.Axis(
 				f[ceil(Int, idx / length(ρ_list)), mod1(idx, length(Z_list))];
 				xlabel=L"t \,\, [\mathrm{%$(MODEL.t_u)}]",
@@ -1133,11 +1133,11 @@ let
 			for (label, idx) in zip(frac_labels, 1:4)
 				lines!(ax, time_list, getindex.(fraction, idx); label)
 			end
-			
+
 			if idx == length(iterator)
 				axislegend(ax; position, nbanks=2, labelsize=35)
 			end
-			
+
 		end
 
 		Makie.save(joinpath(output_dir, "fractions-vs-time-grid_tight.pdf"), f)
@@ -1156,7 +1156,7 @@ let
 	# Metallicity x density (loose) grid
 	##################################################################################
 
-	output_dir  = mkpath("../plots/integration/Z_rho_grid/")
+	output_dir  = mkpath("../plots/model/integration/Z_rho_grid/")
 	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
 
 	# Initial conditions
@@ -1187,8 +1187,8 @@ let
 	]
 
 	positions = [
-		(0.05, 0.5), :lt, (0.95, 0.9), 
-		(0.05, 0.5), (0.05, 0.15), :rt, 
+		(0.05, 0.5), :lt, (0.95, 0.9),
+		(0.05, 0.5), (0.05, 0.15), :rt,
 		(0.05, 0.5), (0.05, 0.15), (0.95, 0.5),
     ]
 
@@ -1218,7 +1218,7 @@ let
 
 		grid_list = joinpath(output_dir, "*.pdf")
 		grid_merged = joinpath(output_dir, "fractions-vs-time-merged.pdf")
-		grid_output = "../plots/integration/fractions-vs-time-grid_loose.pdf"
+		grid_output = "../plots/model/integration/fractions-vs-time-grid_loose.pdf"
 
 		@static if Sys.iswindows()
 			run(`./other/pdfcpu.exe merge $(grid_merged) $(grid_list)`)
@@ -1239,7 +1239,7 @@ let
 	# ICs x fractions (tight) grid
 	#################################################################################
 
-	output_dir   = mkpath("../plots/integration")
+	output_dir   = mkpath("../plots/model/integration")
 	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
 	phases       = ["ionized", "atomic", "molecular", "stellar"]
 
@@ -1260,11 +1260,11 @@ let
 
 	# Metallicities [dimensionless]
 	Z_labels = [
-		L"Z / Z_\odot = 0.0", 
-		L"Z / Z_\odot = 10^{-3}", 
-		L"Z / Z_\odot = 10^{-2}", 
-		L"Z / Z_\odot = 10^{-1}",  
-		L"Z / Z_\odot = 0.5", 
+		L"Z / Z_\odot = 0.0",
+		L"Z / Z_\odot = 10^{-3}",
+		L"Z / Z_\odot = 10^{-2}",
+		L"Z / Z_\odot = 10^{-1}",
+		L"Z / Z_\odot = 0.5",
 		L"Z / Z_\odot = 1.0",
 	]
 	Z_list = [0.0, 0.001, 0.01, 0.1, 0.5, 1.0] * MODEL.Zsun
@@ -1354,10 +1354,10 @@ let
 
 				fraction = getindex.(fractions_04, idx)
 				lines!(ax, ρ_exp_list, fraction; label=Z_labels[4])
-				
+
 				fraction = getindex.(fractions_05, idx)
 				lines!(ax, ρ_exp_list, fraction; label=Z_labels[5])
-				
+
 				fraction = getindex.(fractions_06, idx)
 				lines!(ax, ρ_exp_list, fraction; label=Z_labels[6])
 
@@ -1388,7 +1388,7 @@ let
 	# ICs x fractions (loose) grid
 	##################################################################################
 
-	output_dir   = mkpath("../plots/integration/ic_fractions_grid/")
+	output_dir   = mkpath("../plots/model/integration/ic_fractions_grid/")
 	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
 	phases       = ["ionized", "atomic", "molecular", "stellar"]
 
@@ -1467,7 +1467,7 @@ let
 
 		end
 
-		
+
 
 		grid_list = vcat(
 			joinpath(output_dir, "fractions-vs-density-ionized-*.pdf"),
@@ -1475,9 +1475,9 @@ let
 			joinpath(output_dir, "fractions-vs-density-molecular-*.pdf"),
 			joinpath(output_dir, "fractions-vs-density-stellar-*.pdf"),
 		)
-		
+
 		grid_merged = joinpath(output_dir, "fractions-vs-density-merged.pdf")
-		grid_output = "../plots/integration/fractions-vs-density-grid_loose.pdf"
+		grid_output = "../plots/model/integration/fractions-vs-density-grid_loose.pdf"
 
 		@static if Sys.iswindows()
 			run(`./other/pdfcpu.exe merge $(grid_merged) $(grid_list)`)
