@@ -4,7 +4,7 @@
  * \copyright   and contributing authors.
  *
  * \file        src/ez_sfr/ez_sfr.c
- * \date        01/2024
+ * \date        06/2024
  * \author      Ezequiel Lozano
  * \brief       Compute the star formation rate for a given gas cell.
  * \details     This file contains the routines to compute the star formation rate, according to our
@@ -627,8 +627,8 @@ double rate_of_star_formation(const int index)
    * Compute the ODE parameters
    *************************************************************************************************/
 
-  /* Cell density [cm⁻³] */
-  double rhoC = SphP[index].Density * RHO_COSMO;
+  /* Cell density [cm⁻³] (only hydrogen) */
+  double rhoC = SphP[index].Density * RHO_COSMO * HYDROGEN_MASSFRAC;
 
   /* Metallicity [dimensionless] */
   double Z = (SphP[index].Metallicity > 0.0) ? SphP[index].Metallicity : 0.0;

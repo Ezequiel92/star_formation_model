@@ -1044,6 +1044,74 @@ let
 end
   ╠═╡ =#
 
+# ╔═╡ 4ad4589f-9834-44a5-9c4b-994b7d91e442
+#=╠═╡
+with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
+
+		f = Figure(
+			size=(1700, 600),
+			# figure_padding=(1, 15, 5, 15),
+		)
+	
+		ax = CairoMakie.Axis(
+			f[1,1],
+			xlabel=L"\mathrm{stellar \,\, age \,\, [Myr]}",
+			ylabel=L"\eta_\mathrm{ion}",
+			xscale=log10,
+			aspect=AxisAspect(1),
+		)
+
+		ages = exp10.(range(-1, 3, 200))
+		η_ion(age, Zs) = MODEL.photodissociation_efficiency(age, Zs * MODEL.Zsun)[2]
+
+		for Zs in [0.0, 0.5, 1.0]
+			label = L"Z \, / \, Z_\odot = %$(Zs)"
+			lines!(ax, ages, x -> η_ion(x, Zs); label)
+		end
+
+		axislegend(ax; position=:rb, nbanks=1, labelsize=25)
+
+		ax = CairoMakie.Axis(
+			f[1,2],
+			xlabel=L"\mathrm{stellar \,\, age \,\, [Myr]}",
+			ylabel=L"\eta_\mathrm{diss}",
+			xscale=log10,
+			aspect=AxisAspect(1),
+		)
+
+		ages = exp10.(range(-1, 3, 200))
+		ηd(age, Zs) = MODEL.photodissociation_efficiency(age, Zs * MODEL.Zsun)[1]
+
+		for Zs in [0.0, 0.5, 1.0]
+			label = L"Z \, / \, Z_\odot = %$(Zs)"
+			lines!(ax, ages, x -> ηd(x, Zs); label)
+		end
+
+		axislegend(ax; position=:rb, nbanks=1, labelsize=25)
+
+		ax = CairoMakie.Axis(
+			f[1,3],
+			xlabel=L"Z \, / \, Z_\odot",
+			ylabel=L"R",
+			aspect=AxisAspect(1),
+		)
+
+		metalicities = range(0, 2.0, 200)
+		R(Zs) = MODEL.recycled_fractions(Zs * MODEL.Zsun)[1]
+
+		lines!(ax, metalicities, R)
+
+
+		output_dir = mkpath("../plots/model/parameters")
+	
+
+		Makie.save(joinpath(output_dir, "eta-eta-R_grid.pdf"), f)
+
+		f
+
+	end
+  ╠═╡ =#
+
 # ╔═╡ ad34b750-5e81-4cb8-a444-52220c116790
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1066,7 +1134,9 @@ let
 
 	# Initial conditions
 	fi = 0.5
-	ic = [fi, 1.0 - fi, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
+	ic_05 = [fi, 1.0 - fi, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
+	fi = 0.01
+	ic_001 = [fi, 1.0 - fi, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
 
 	# Total cell density range [mp * cm⁻³]
 	ρ_str = [L"0.19", L"10", L"300"]
@@ -1080,25 +1150,30 @@ let
 	base_params = [[ρ, Z] for ρ in ρ_list, Z in Z_list]
 
 	# Time variables
-	it         = 100.0 # Integration time [Myr]
+	it         = 1000.0 # Integration time [Myr]
 	# time_list  = collect(range(0.0, it, 1000))
 	time_list  = exp10.(range(-3, log10(it), 1000))
 	time_range = (time_list[1], time_list[end])
 
 	# Numerical integration
-	fractions = [
-		MODEL.integrate_model(ic, base_param, time_range; times=time_list) for
+	fractions_05 = [
+		MODEL.integrate_model(ic_05, base_param, time_range; times=time_list) for
+		base_param in base_params
+	]
+	fractions_001 = [
+		MODEL.integrate_model(ic_001, base_param, time_range; times=time_list) for
 		base_param in base_params
 	]
 
-	positions = [
-		:lt, :lt, (0.98, 0.94),
-		:lt, :lt, :rt,
-		:lt, :lt, :rt,
-    ]
-
 	iterator = enumerate(
-		zip(print_params, fractions, positions, xaxis_visible, yaxis_visible),
+		zip(
+			print_params, 
+			base_params,
+			fractions_05, 
+			fractions_001, 
+			xaxis_visible, 
+			yaxis_visible,
+		),
 	)
 
 	scale = 1700 / length(ρ_list)
@@ -1110,14 +1185,16 @@ let
 			figure_padding=(1, 15, 5, 15),
 		)
 
-		for (idx, ((ρ, Z), fraction, position, xaxis_v, yaxis_v)) in iterator
+		for (idx, ((ρ_str, Z_str), (ρ, Z), fraction_05, fraction_001, xaxis_v, yaxis_v)) in iterator
+
+			row = ceil(Int, idx / length(ρ_list))
+			col = mod1(idx, length(Z_list))
 
 			ax = CairoMakie.Axis(
-				f[ceil(Int, idx / length(ρ_list)), mod1(idx, length(Z_list))];
-				xlabel=L"t \,\, [\mathrm{%$(MODEL.t_u)}]",
+				f[row, col];
+				xlabel=L"\log_{10} \, t \,\, [\mathrm{%$(MODEL.t_u)}]",
 		        ylabel=L"f",
-				title=L"$Z / Z_\odot =$%$Z$\quad \rho_\mathrm{cell} =$%$ρ$\, \mathrm{%$(MODEL.l_u)^{-3}}$",
-				xscale=log10,
+				title=L"$Z / Z_\odot =$%$Z_str$\quad \rho_\mathrm{cell} =$%$ρ_str$\, \mathrm{%$(MODEL.l_u)^{-3}}$",
 				xminorticksvisible=xaxis_v,
 		        xticksvisible=xaxis_v,
 		        xlabelvisible=xaxis_v,
@@ -1126,16 +1203,78 @@ let
 		        yticksvisible=yaxis_v,
 		        ylabelvisible=yaxis_v,
 		        yticklabelsvisible=yaxis_v,
-				limits=(nothing, (nothing, 1.02)),
+				limits=((-3.2, 3.2), (-0.05, 1.02)),
 				aspect=AxisAspect(1),
+				xticks=(
+					[-3, -2, -1, 0, 1, 2, 3], 
+					["-3", "-2", "-1", "0", "1", "2", "3"],
+				),
 			)
 
-			for (label, idx) in zip(frac_labels, 1:4)
-				lines!(ax, time_list, getindex.(fraction, idx); label)
+			for (label, idx, color) in zip(frac_labels, 1:4, Makie.wong_colors())
+				
+				lines!(
+					ax, 
+					log10.(time_list), 
+					getindex.(fraction_05, idx); 
+					label, 
+					color,
+				)
+				
+				lines!(
+					ax, 
+					log10.(time_list), 
+					getindex.(fraction_001, idx); 
+					linestyle=:dash, 
+					color,
+				)
+
+				# vlines!(ax, -1, color=:gray65)
+				
 			end
 
-			if idx == length(iterator)
-				axislegend(ax; position, nbanks=2, labelsize=35)
+			# τ_star = MODEL.τ_star(ρ)
+			# τ_rec_05 = MODEL.τ_rec(0.5, ρ)
+			# τ_rec_001 = MODEL.τ_rec(0.01, ρ)
+			# τ_cond = MODEL.τ_cond(0.0, ρ, Z)
+
+			# arrows!(
+			# 	ax, 
+			# 	log10.([τ_star, τ_rec_05, τ_rec_001, τ_cond]),
+			# 	[0.55, 0.55, 0.55, 0.55], 
+			# 	[0.0, 0.0, 0.0, 0.0], 
+			# 	[-0.1, -0.1, -0.1, -0.1],
+			# 	color=[:red, :blue, :green, :purple],
+			# 	lengthscale=1.0,
+			# 	arrowsize=15, 
+			# )
+
+			# if row == 1 && col == 2
+
+			# 	Makie.Legend(
+	  #               f[row, col],
+	  #               [
+			# 			LineElement(; color=:red),
+			# 			LineElement(; color=:blue),
+			# 			LineElement(; color=:green,),
+			# 			LineElement(; color=:purple),
+			# 		],
+	  #               [
+			# 			L"\tau_\mathrm{star}", 
+			# 			L"\tau_\mathrm{rec} \, (0.5)", 
+			# 			L"\tau_\mathrm{rec} \, (0.01)",
+			# 			L"\tau_\mathrm{cond}", 
+			# 		],
+			# 		nbanks=2, 
+			# 		labelsize=35,
+			# 		halign=:right,
+   #      			valign=:top,
+	  #           )
+
+			# end
+
+			if row == 3 && col == 3
+				axislegend(ax; position=(0.5, 0.98), nbanks=2, labelsize=35)
 			end
 
 		end
@@ -1243,7 +1382,7 @@ let
 	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
 	phases       = ["ionized", "atomic", "molecular", "stellar"]
 
-	ylimits = [(nothing, 0.5), (0.0, nothing), (nothing, 0.65), (nothing, 0.17)]
+	ylimits = [(0.0, 0.5), (0.0, 1.05), (-0.04, 0.65), (-0.01, 0.17)]
 
 	# Axis visibility
 	xaxis_visible = [false, false, false, true]
@@ -1362,6 +1501,154 @@ let
 				lines!(ax, ρ_exp_list, fraction; label=Z_labels[6])
 
 				if row == length(phases) && col == length(ics)
+					axislegend(ax; position, nbanks=1, labelsize=35)
+				end
+
+			end
+
+		end
+
+		colgap!(f.layout, 35)
+
+		Makie.save(joinpath(output_dir, "fractions-vs-density-grid_tight.pdf"), f)
+
+		f
+
+	end
+
+end
+  ╠═╡ =#
+
+# ╔═╡ 3bd92a5f-4efd-441e-a7d1-c3597e1f4a39
+#=╠═╡
+let
+	#################################################################################
+	# ICs x fractions (tight) grid
+	#################################################################################
+
+	output_dir   = mkpath("../plots/model/integration")
+	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
+	phases       = ["ionized", "atomic", "molecular", "stellar"]
+
+	ylimits = [(-0.02, 0.43), (-0.04, 1.05), (-0.02, 0.45), (-0.04, 1.0)]
+
+	# Axis visibility
+	xaxis_visible = [false, false, false, true]
+	yaxis_visible = [true, false, false]
+	title_visible = [true, false, false, false]
+
+	# Initial conditions
+	fi = 0.5
+	ic = [fi, 1.0 - fi, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
+
+	# Total cell density range [mp * cm⁻³]
+	ρ_exp_list = range(-1, 3, 100)
+	ρ_list     = exp10.(ρ_exp_list)
+
+	# Metallicities [dimensionless]
+	Z_labels = [
+		L"Z / Z_\odot = 0.0",
+		L"Z / Z_\odot = 10^{-3}",
+		L"Z / Z_\odot = 10^{-2}",
+		L"Z / Z_\odot = 10^{-1}",
+		L"Z / Z_\odot = 0.5",
+		L"Z / Z_\odot = 1.0",
+	]
+	Z_list = [0.0, 0.001, 0.01, 0.1, 0.5, 1.0] * MODEL.Zsun
+
+	# Integration time [Myr]
+	its = [1.0, 10.0, 100.0]
+
+	# Label positions
+	positions = [(0.75, 0.1), (0.95, 0.85), :lt, :lt]
+
+	# Iterators
+	col_iterator = enumerate(zip(its, string.(Int.(its)), yaxis_visible))
+	row_iterator = enumerate(
+		zip(phases, phase_labels, positions, xaxis_visible, title_visible, ylimits),
+	)
+
+	scale = 1700 / length(its)
+
+	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
+
+		f = Figure(size=(1700, scale * length(phases)))
+
+		for (col, (it, fi, yaxis_v)) in col_iterator
+
+			base_params_01 = [[ρ, Z_list[1]] for ρ in ρ_list]
+			base_params_02 = [[ρ, Z_list[2]] for ρ in ρ_list]
+			base_params_03 = [[ρ, Z_list[3]] for ρ in ρ_list]
+			base_params_04 = [[ρ, Z_list[4]] for ρ in ρ_list]
+			base_params_05 = [[ρ, Z_list[5]] for ρ in ρ_list]
+			base_params_06 = [[ρ, Z_list[6]] for ρ in ρ_list]
+
+        	fractions_01 = [
+				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				base_param in base_params_01
+			]
+			fractions_02 = [
+				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				base_param in base_params_02
+			]
+			fractions_03 = [
+				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				base_param in base_params_03
+			]
+			fractions_04 = [
+				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				base_param in base_params_04
+			]
+			fractions_05 = [
+				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				base_param in base_params_05
+			]
+			fractions_06 = [
+				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				base_param in base_params_06
+			]
+
+			for (row, (phase, p_label, position, xaxis_v, title_v, ylimit)) in row_iterator
+
+				ax = CairoMakie.Axis(
+					f[row, col];
+					xlabel=L"\log_{10} \, \rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
+				    ylabel=p_label,
+					title=L"t_f = %$it \, \mathrm{Myr}",
+					titlevisible=title_v,
+					xminorticksvisible=xaxis_v,
+		            xticksvisible=xaxis_v,
+		            xlabelvisible=xaxis_v,
+		            xticklabelsvisible=xaxis_v,
+					yminorticksvisible=yaxis_v,
+		            yticksvisible=yaxis_v,
+		            ylabelvisible=yaxis_v,
+		            yticklabelsvisible=yaxis_v,
+					aspect=AxisAspect(1),
+					limits=(nothing, ylimit),
+				)
+
+				idx = MODEL.phase_name_to_index[phase]
+
+				fraction = getindex.(fractions_01, idx)
+				lines!(ax, ρ_exp_list, fraction; label=Z_labels[1])
+
+				fraction = getindex.(fractions_02, idx)
+				lines!(ax, ρ_exp_list, fraction; label=Z_labels[2])
+
+				fraction = getindex.(fractions_03, idx)
+				lines!(ax, ρ_exp_list, fraction; label=Z_labels[3])
+
+				fraction = getindex.(fractions_04, idx)
+				lines!(ax, ρ_exp_list, fraction; label=Z_labels[4])
+
+				fraction = getindex.(fractions_05, idx)
+				lines!(ax, ρ_exp_list, fraction; label=Z_labels[5])
+
+				fraction = getindex.(fractions_06, idx)
+				lines!(ax, ρ_exp_list, fraction; label=Z_labels[6])
+
+				if row == length(phases) && col == length(its)
 					axislegend(ax; position, nbanks=1, labelsize=35)
 				end
 
@@ -4241,10 +4528,12 @@ version = "3.5.0+0"
 # ╟─e65260dc-da8c-4acc-b650-079b1447b27f
 # ╟─3024fca3-4ea9-452c-9f2f-b12a45bef65d
 # ╟─6ddd4cd9-56df-4699-b80f-b09b9b5090a9
+# ╟─4ad4589f-9834-44a5-9c4b-994b7d91e442
 # ╟─ad34b750-5e81-4cb8-a444-52220c116790
-# ╠═6f341d1b-8b0f-4bc5-b18c-d1e9dc9281d5
+# ╟─6f341d1b-8b0f-4bc5-b18c-d1e9dc9281d5
 # ╟─4b9d02d7-917f-4760-9dc0-6d4e03c51595
 # ╟─c76cf08f-aaef-46df-ae18-9cd018141b70
+# ╟─3bd92a5f-4efd-441e-a7d1-c3597e1f4a39
 # ╟─d994b1d0-a226-4b95-9829-bc6a6b8c93eb
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
