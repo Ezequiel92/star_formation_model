@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -519,6 +519,7 @@ end
   ╠═╡ =#
 
 # ╔═╡ a539db70-7a37-4071-90d9-a0af4cf68afb
+# ╠═╡ skip_as_script = true
 #=╠═╡
 let
 	resolution = 50
@@ -591,6 +592,7 @@ end
   ╠═╡ =#
 
 # ╔═╡ c8d75072-ae77-47c7-af31-a4ff18240d97
+# ╠═╡ skip_as_script = true
 #=╠═╡
 let
 	resolution = 50
@@ -669,7 +671,7 @@ end
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-	resolution = 50
+	resolution = 100
 
 	# Stellar fraction
 	fs = 0.0
@@ -828,7 +830,7 @@ let
 		rowsize!(f.layout, 2, Relative(1/20))
 
 		mkpath("../plots/model/parameters")
-		Makie.save("../plots/model/parameters/tau_comparison.pdf", f)
+		Makie.save("../plots/model/parameters/timescale_comparison.pdf", f)
 
 		f
 
@@ -853,198 +855,11 @@ end;
 # ╔═╡ dfb8b71a-b3a3-4ea0-9ea3-213c206117ca
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"### Photodissociation efficiency"
-  ╠═╡ =#
-
-# ╔═╡ c51c3c7c-848c-44d5-8169-13e5a17777ef
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(880,880))
-
-		ax = CairoMakie.Axis(
-			f[1,1],
-			xlabel=L"\mathrm{stellar \,\, age \,\, [Myr]}",
-			ylabel=L"\eta_\mathrm{diss}",
-			xscale=log10,
-			aspect=AxisAspect(1),
-		)
-
-		ages = exp10.(range(-1, 3, 200))
-		ηd(age, Zs) = MODEL.photodissociation_efficiency(age, Zs * MODEL.Zsun)[1]
-
-		for Zs in [0.0, 0.5, 1.0]
-			label = L"Z \, / \, Z_\odot = %$(Zs)"
-			lines!(ax, ages, x -> ηd(x, Zs); label)
-		end
-
-		axislegend(ax; position=:lt, nbanks=1)
-
-		mkpath("../plots/model/parameters")
-
-		Makie.save("../plots/model/parameters/eta_diss-vs-stellar_age.pdf", f)
-
-		f
-
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ 45a1202d-527f-4a79-877e-d261c351d84f
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(880,880))
-
-		ax = CairoMakie.Axis(
-			f[1,1],
-			xlabel=L"\mathrm{stellar \,\, age \,\, [Myr]}",
-			ylabel=L"\eta_\mathrm{ion}",
-			xscale=log10,
-			aspect=AxisAspect(1),
-		)
-
-		ages = exp10.(range(-1, 3, 200))
-		η_ion(age, Zs) = MODEL.photodissociation_efficiency(age, Zs * MODEL.Zsun)[2]
-
-		for Zs in [0.0, 0.5, 1.0]
-			label = L"Z \, / \, Z_\odot = %$(Zs)"
-			lines!(ax, ages, x -> η_ion(x, Zs); label)
-		end
-
-		axislegend(ax; position=:lt, nbanks=1)
-
-		mkpath("../plots/model/parameters")
-
-		Makie.save("../plots/model/parameters/eta_ion-vs-stellar_age.pdf", f)
-
-		f
-
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ b2197f1a-ff9a-429c-8486-dfa27abc880d
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	ages = exp10.(range(-1, 3, 200))
-	η_ion(age, Zs) = MODEL.photodissociation_efficiency(age, Zs * MODEL.Zsun)[2]
-	ηd(age, Zs) = MODEL.photodissociation_efficiency(age, Zs * MODEL.Zsun)[1]
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(880,880))
-
-		ax = CairoMakie.Axis(
-			f[1,1],
-			xlabel=L"\mathrm{stellar \,\, age \,\, [Myr]}",
-			ylabel=L"\eta",
-			xscale=log10,
-			aspect=AxisAspect(1),
-		)
-
-		labels = [
-			L"\eta_\mathrm{ion} \,\, (Z = 0.0)",
-			L"\eta_\mathrm{ion} \,\, (Z = Z_\odot)",
-		]
-
-		for (Zs, label) in zip([0.0, 1.0], labels)
-			lines!(ax, ages, x -> η_ion(x, Zs); label)
-		end
-
-		labels = [
-			L"\eta_\mathrm{diss} \,\, (Z = 0.0)",
-			L"\eta_\mathrm{diss} \,\, (Z = Z_\odot)",
-		]
-
-		for (Zs, label) in zip([0.0, 1.0], labels)
-			lines!(ax, ages, x -> ηd(x, Zs); label)
-		end
-
-		axislegend(ax; position=:lt, nbanks=1)
-
-		mkpath("../plots/model/parameters")
-
-		Makie.save("../plots/model/parameters/eta-vs-stellar_age.pdf", f)
-
-		f
-
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ e65260dc-da8c-4acc-b650-079b1447b27f
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### Mass recycling"
-  ╠═╡ =#
-
-# ╔═╡ 3024fca3-4ea9-452c-9f2f-b12a45bef65d
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(880,880))
-
-		ax = CairoMakie.Axis(
-			f[1,1],
-			xlabel=L"Z \, / \, Z_\odot",
-			ylabel=L"R",
-			aspect=AxisAspect(1),
-		)
-
-		metalicities = range(0, 2.0, 200)
-		R(Zs) = MODEL.recycled_fractions(Zs * MODEL.Zsun)[1]
-
-		lines!(ax, metalicities, R)
-
-		mkpath("../plots/model/parameters")
-
-		Makie.save("../plots/model/parameters/R-vs-metallicity.pdf", f)
-
-		f
-
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ 6ddd4cd9-56df-4699-b80f-b09b9b5090a9
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(880,880))
-
-		ax = CairoMakie.Axis(
-			f[1,1],
-			xlabel=L"Z \, / \, Z_\odot",
-			ylabel=L"Z_\mathrm{sn}",
-			aspect=AxisAspect(1),
-		)
-
-		metalicities = range(0, 2.0, 200)
-	    Zsn(Zs) = MODEL.recycled_fractions(Zs * MODEL.Zsun)[2]
-
-		lines!(ax, metalicities, Zsn)
-
-		mkpath("../plots/model/parameters")
-
-		Makie.save("../plots/model/parameters/Zsn-vs-metallicity.pdf", f)
-
-		f
-
-	end
-end
+md"### Photodissociation efficiency and mass recycling"
   ╠═╡ =#
 
 # ╔═╡ 4ad4589f-9834-44a5-9c4b-994b7d91e442
+# ╠═╡ skip_as_script = true
 #=╠═╡
 with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
@@ -1110,6 +925,56 @@ with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 		f
 
 	end
+  ╠═╡ =#
+
+# ╔═╡ b2197f1a-ff9a-429c-8486-dfa27abc880d
+# ╠═╡ skip_as_script = true
+#=╠═╡
+let
+	ages = exp10.(range(-1, 3, 200))
+	η_ion(age, Zs) = MODEL.photodissociation_efficiency(age, Zs * MODEL.Zsun)[2]
+	ηd(age, Zs) = MODEL.photodissociation_efficiency(age, Zs * MODEL.Zsun)[1]
+
+	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
+
+		f = Figure(size=(880,880))
+
+		ax = CairoMakie.Axis(
+			f[1,1],
+			xlabel=L"\mathrm{stellar \,\, age \,\, [Myr]}",
+			ylabel=L"\eta",
+			xscale=log10,
+			aspect=AxisAspect(1),
+		)
+
+		labels = [
+			L"\eta_\mathrm{ion} \,\, (Z = 0.0)",
+			L"\eta_\mathrm{ion} \,\, (Z = Z_\odot)",
+		]
+
+		for (Zs, label) in zip([0.0, 1.0], labels)
+			lines!(ax, ages, x -> η_ion(x, Zs); label)
+		end
+
+		labels = [
+			L"\eta_\mathrm{diss} \,\, (Z = 0.0)",
+			L"\eta_\mathrm{diss} \,\, (Z = Z_\odot)",
+		]
+
+		for (Zs, label) in zip([0.0, 1.0], labels)
+			lines!(ax, ages, x -> ηd(x, Zs); label)
+		end
+
+		axislegend(ax; position=:lt, nbanks=1)
+
+		mkpath("../plots/model/parameters")
+
+		Makie.save("../plots/model/parameters/eta-vs-stellar_age.pdf", f)
+
+		f
+
+	end
+end
   ╠═╡ =#
 
 # ╔═╡ ad34b750-5e81-4cb8-a444-52220c116790
@@ -1287,89 +1152,6 @@ let
 end
   ╠═╡ =#
 
-# ╔═╡ 4b9d02d7-917f-4760-9dc0-6d4e03c51595
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	##################################################################################
-	# Metallicity x density (loose) grid
-	##################################################################################
-
-	output_dir  = mkpath("../plots/model/integration/Z_rho_grid/")
-	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
-
-	# Initial conditions
-	fi = 0.5
-	ic = [fi, 1.0 - fi, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
-
-	# Total cell density range [mp * cm⁻³]
-	ρ_str = [L"0.19", L"10", L"300"]
-	ρ_list = [0.19, 1.0e1, 300]
-
-	# Metallicity [dimensionless]
-	Z_str = [L"0.0", L"0.5", L"1.0"]
-	Z_list = [0.0, 0.5, 1.0] * MODEL.Zsun
-
-	print_params = [[ρ, Z] for ρ in ρ_str, Z in Z_str]
-	base_params = [[ρ, Z] for ρ in ρ_list, Z in Z_list]
-
-	# Time variables
-	it         = 0.5 # Integration time [Myr]
-	# time_list  = collect(range(0.0, it, 1000))
-	time_list  = exp10.(range(-3, log10(it), 1000))
-	time_range = (time_list[1], time_list[end])
-
-	# Numerical integration
-	fractions = [
-		MODEL.integrate_model(ic, base_param, time_range; times=time_list) for
-		base_param in base_params
-	]
-
-	positions = [
-		(0.05, 0.5), :lt, (0.95, 0.9),
-		(0.05, 0.5), (0.05, 0.15), :rt,
-		(0.05, 0.5), (0.05, 0.15), (0.95, 0.5),
-    ]
-
-	iterator = enumerate(zip(print_params, fractions, positions))
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		for (idx, ((ρ, Z), fraction, position)) in iterator
-			f = Figure(size=(566,566))
-
-			ax = CairoMakie.Axis(
-				f[1,1],
-				xlabel=L"t \,\, [\mathrm{%$(MODEL.t_u)}]",
-		        ylabel=L"f",
-				title=L"$Z / Z_\odot =$%$Z$\quad \rho_\mathrm{cell} =$%$ρ$\, \mathrm{%$(MODEL.l_u)^{-3}}$",
-				xscale=log10,
-			)
-
-			for (label, idx) in zip(frac_labels, 1:4)
-				lines!(ax, time_list, getindex.(fraction, idx); label)
-			end
-			axislegend(ax; position, nbanks=2, labelsize=25)
-
-			Makie.save(joinpath(output_dir, "fractions-vs-time-$(idx).pdf"), f)
-
-		end
-
-		grid_list = joinpath(output_dir, "*.pdf")
-		grid_merged = joinpath(output_dir, "fractions-vs-time-merged.pdf")
-		grid_output = "../plots/model/integration/fractions-vs-time-grid_loose.pdf"
-
-		@static if Sys.iswindows()
-			run(`./other/pdfcpu.exe merge $(grid_merged) $(grid_list)`)
-			run(`./other/pdfcpu.exe grid -- "bo:off" $(grid_output) 3 3 $(grid_merged)`)
-		end
-
-		rm(output_dir; recursive=true)
-
-	end
-end;
-  ╠═╡ =#
-
 # ╔═╡ c76cf08f-aaef-46df-ae18-9cd018141b70
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1520,6 +1302,7 @@ end
   ╠═╡ =#
 
 # ╔═╡ 3bd92a5f-4efd-441e-a7d1-c3597e1f4a39
+# ╠═╡ skip_as_script = true
 #=╠═╡
 let
 	#################################################################################
@@ -1667,116 +1450,6 @@ let
 end
   ╠═╡ =#
 
-# ╔═╡ d994b1d0-a226-4b95-9829-bc6a6b8c93eb
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	##################################################################################
-	# ICs x fractions (loose) grid
-	##################################################################################
-
-	output_dir   = mkpath("../plots/model/integration/ic_fractions_grid/")
-	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
-	phases       = ["ionized", "atomic", "molecular", "stellar"]
-
-	# Initial conditions
-	fis = [0.01, 0.25, 0.5]
-	ics = [[fi, 1.0 - fi, 0.0, 0.0] for fi in fis] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
-
-	# Total cell density range [mp * cm⁻³]
-	ρ_exp_list = range(-1, 3, 100)
-	ρ_list     = exp10.(ρ_exp_list)
-
-	# Metallicities [dimensionless]
-	Z_labels = [L"Z / Z_\odot = 0.0", L"Z / Z_\odot = 0.5", L"Z / Z_\odot = 1.0"]
-	Z_list   = [0.0, 0.5, 1.0] * MODEL.Zsun
-
-	# Integration time [Myr]
-	it = 0.5
-
-	# Label positions
-	positions = [(0.75, 0.1), (0.95, 0.85), :lt, :lt]
-
-	iterator = zip(phases, phase_labels, positions)
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		for (ic, fi) in zip(ics, string.(fis))
-
-			base_params_01 = [[ρ, Z_list[1]] for ρ in ρ_list]
-			base_params_02 = [[ρ, Z_list[2]] for ρ in ρ_list]
-			base_params_03 = [[ρ, Z_list[3]] for ρ in ρ_list]
-
-        	fractions_01 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_01
-			]
-			fractions_02 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_02
-			]
-			fractions_03 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_03
-			]
-
-			for (phase, phase_label, position) in iterator
-
-				f = Figure(size=(566,566))
-
-				ax = CairoMakie.Axis(
-					f[1,1];
-					xlabel=L"\rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
-				    ylabel=phase_label,
-					title=L"f_i = %$fi",
-					aspect=AxisAspect(1),
-				)
-
-				idx = MODEL.phase_name_to_index[phase]
-
-				fraction = getindex.(fractions_01, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[1])
-
-				fraction = getindex.(fractions_02, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[2])
-
-				fraction = getindex.(fractions_03, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[3])
-
-				axislegend(ax; position, nbanks=1, labelsize=25)
-
-				Makie.save(
-					joinpath(output_dir, "fractions-vs-density-$(phase)-$(fi).pdf"),
-					f,
-				)
-
-			end
-
-		end
-
-
-
-		grid_list = vcat(
-			joinpath(output_dir, "fractions-vs-density-ionized-*.pdf"),
-			joinpath(output_dir, "fractions-vs-density-atomic-*.pdf"),
-			joinpath(output_dir, "fractions-vs-density-molecular-*.pdf"),
-			joinpath(output_dir, "fractions-vs-density-stellar-*.pdf"),
-		)
-
-		grid_merged = joinpath(output_dir, "fractions-vs-density-merged.pdf")
-		grid_output = "../plots/model/integration/fractions-vs-density-grid_loose.pdf"
-
-		@static if Sys.iswindows()
-			run(`./other/pdfcpu.exe merge $(grid_merged) $(grid_list)`)
-			run(`./other/pdfcpu.exe grid -- "bo:off" $(grid_output) 4 3 $(grid_merged)`)
-		end
-		rm(output_dir; recursive=true)
-
-	end
-
-end
-  ╠═╡ =#
-
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -1806,7 +1479,7 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 UnitfulAstro = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
 
 [compat]
-CairoMakie = "~0.12.2"
+CairoMakie = "~0.12.3"
 ChaosTools = "~3.1.2"
 ColorSchemes = "~3.25.0"
 Colors = "~0.12.10"
@@ -1834,12 +1507,12 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.4"
 manifest_format = "2.0"
-project_hash = "22ee62ad85fecea246befb0418f876ffc3139d3c"
+project_hash = "ca767f52994fe27efb4df465e57b5c2d86227492"
 
 [[deps.ADTypes]]
-git-tree-sha1 = "fc02d55798c1af91123d07915a990fbb9a10d146"
+git-tree-sha1 = "3a6511b6e54550bcbc986c560921a8cd7761fcd8"
 uuid = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
-version = "1.3.0"
+version = "1.5.1"
 weakdeps = ["ChainRulesCore", "EnzymeCore"]
 
     [deps.ADTypes.extensions]
@@ -1951,9 +1624,9 @@ version = "7.11.0"
 
 [[deps.ArrayLayouts]]
 deps = ["FillArrays", "LinearAlgebra"]
-git-tree-sha1 = "420e2853770f50e5306b9d96b5a66f26e7c73bc6"
+git-tree-sha1 = "600078184f7de14b3e60efe13fc0ba5c59f6dca5"
 uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
-version = "1.9.4"
+version = "1.10.0"
 weakdeps = ["SparseArrays"]
 
     [deps.ArrayLayouts.extensions]
@@ -2055,10 +1728,10 @@ uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
 version = "1.0.5"
 
 [[deps.CairoMakie]]
-deps = ["CRC32c", "Cairo", "Colors", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "Makie", "PrecompileTools"]
-git-tree-sha1 = "9e8eaaff3e5951d8c61b7c9261d935eb27e0304b"
+deps = ["CRC32c", "Cairo", "Cairo_jll", "Colors", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "Makie", "PrecompileTools"]
+git-tree-sha1 = "3441d68ea63944a2b9b6de76603ec1c8b0fd4e3e"
 uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-version = "0.12.2"
+version = "0.12.3"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -2274,9 +1947,9 @@ version = "1.9.1"
 
 [[deps.DiffEqBase]]
 deps = ["ArrayInterface", "ConcreteStructs", "DataStructures", "DocStringExtensions", "EnumX", "EnzymeCore", "FastBroadcast", "FastClosures", "ForwardDiff", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "Logging", "Markdown", "MuladdMacro", "Parameters", "PreallocationTools", "PrecompileTools", "Printf", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLOperators", "Setfield", "SparseArrays", "Static", "StaticArraysCore", "Statistics", "Tricks", "TruncatedStacktraces"]
-git-tree-sha1 = "37d49a1f8eedfe68b7622075ff3ebe3dd0e8f327"
+git-tree-sha1 = "2c6b7bf16fd850c551a765e313e7522ba455cbfd"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "6.151.2"
+version = "6.151.4"
 
     [deps.DiffEqBase.extensions]
     DiffEqBaseCUDAExt = "CUDA"
@@ -2419,9 +2092,9 @@ uuid = "4e289a0a-7415-4d19-859d-a7e5c4648b56"
 version = "1.0.4"
 
 [[deps.EnzymeCore]]
-git-tree-sha1 = "a2f4588bde1588af6279729540099895f8dee843"
+git-tree-sha1 = "3a3177ba05b4763234819060fb6c2e1613379ca6"
 uuid = "f151be2c-9106-41f4-ab19-57ee4f262869"
-version = "0.7.4"
+version = "0.7.6"
 weakdeps = ["Adapt"]
 
     [deps.EnzymeCore.extensions]
@@ -2737,9 +2410,9 @@ version = "69.1.0+0"
 
 [[deps.IOCapture]]
 deps = ["Logging", "Random"]
-git-tree-sha1 = "8b72179abc660bfab5e28472e019392b97d0985c"
+git-tree-sha1 = "b6d6bfdd7ce25b0f9b2f6b3dd56b2673a66c8770"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
-version = "0.2.4"
+version = "0.2.5"
 
 [[deps.IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
@@ -2794,9 +2467,15 @@ version = "0.1.5"
 
 [[deps.InlineStrings]]
 deps = ["Parsers"]
-git-tree-sha1 = "9cc2baf75c6d09f9da536ddf58eb2f29dedaf461"
+git-tree-sha1 = "86356004f30f8e737eff143d57d41bd580e437aa"
 uuid = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
-version = "1.4.0"
+version = "1.4.1"
+
+    [deps.InlineStrings.extensions]
+    ArrowTypesExt = "ArrowTypes"
+
+    [deps.InlineStrings.weakdeps]
+    ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
 
 [[deps.IntelOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2903,9 +2582,9 @@ version = "3.0.3+0"
 
 [[deps.JuliaInterpreter]]
 deps = ["CodeTracking", "InteractiveUtils", "Random", "UUIDs"]
-git-tree-sha1 = "e9648d90370e2d0317f9518c9c6e0841db54a90b"
+git-tree-sha1 = "a6adc2dcfe4187c40dc7c2c9d2128e326360e90a"
 uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
-version = "0.9.31"
+version = "0.9.32"
 
 [[deps.JumpProcesses]]
 deps = ["ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "Markdown", "PoissonRandom", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "StaticArrays", "SymbolicIndexingInterface", "UnPack"]
@@ -3203,15 +2882,15 @@ version = "0.5.13"
 
 [[deps.Makie]]
 deps = ["Animations", "Base64", "CRC32c", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "Dates", "DelaunayTriangulation", "Distributions", "DocStringExtensions", "Downloads", "FFMPEG_jll", "FileIO", "FilePaths", "FixedPointNumbers", "Format", "FreeType", "FreeTypeAbstraction", "GeometryBasics", "GridLayoutBase", "ImageIO", "InteractiveUtils", "IntervalSets", "Isoband", "KernelDensity", "LaTeXStrings", "LinearAlgebra", "MacroTools", "MakieCore", "Markdown", "MathTeXEngine", "Observables", "OffsetArrays", "Packing", "PlotUtils", "PolygonOps", "PrecompileTools", "Printf", "REPL", "Random", "RelocatableFolders", "Scratch", "ShaderAbstractions", "Showoff", "SignedDistanceFields", "SparseArrays", "Statistics", "StatsBase", "StatsFuns", "StructArrays", "TriplotBase", "UnicodeFun", "Unitful"]
-git-tree-sha1 = "ec3a60c9de787bc6ef119d13e07d4bfacceebb83"
+git-tree-sha1 = "e11b0666b457e3bb60119f2ed4d063d2b68954d3"
 uuid = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-version = "0.21.2"
+version = "0.21.3"
 
 [[deps.MakieCore]]
 deps = ["ColorTypes", "GeometryBasics", "IntervalSets", "Observables"]
-git-tree-sha1 = "c1c9da1a69f6c635a60581c98da252958c844d70"
+git-tree-sha1 = "638bc817096742e8302f7b0b972ee5701fe00e97"
 uuid = "20f20a25-4f0e-4fdf-b5d1-57303727442b"
-version = "0.8.2"
+version = "0.8.3"
 
 [[deps.ManualMemory]]
 git-tree-sha1 = "bcaef4fc7a0cfe2cba636d84cda54b5e4e4ca3cd"
@@ -3296,15 +2975,15 @@ version = "0.2.4"
 
 [[deps.MultivariatePolynomials]]
 deps = ["ChainRulesCore", "DataStructures", "LinearAlgebra", "MutableArithmetics"]
-git-tree-sha1 = "dad7be0c92b688bf8f24af170825ccedc104b116"
+git-tree-sha1 = "5c1d1d9361e1417e5a065e1f84dc3686cbdaea21"
 uuid = "102ac46a-7ee4-5c85-9060-abc95bfdeaa3"
-version = "0.5.5"
+version = "0.5.6"
 
 [[deps.MutableArithmetics]]
 deps = ["LinearAlgebra", "SparseArrays", "Test"]
-git-tree-sha1 = "a3589efe0005fc4718775d8641b2de9060d23f73"
+git-tree-sha1 = "898c56fbf8bf71afb0c02146ef26f3a454e88873"
 uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
-version = "1.4.4"
+version = "1.4.5"
 
 [[deps.NLSolversBase]]
 deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
@@ -3326,9 +3005,9 @@ version = "1.0.2"
 
 [[deps.NearestNeighbors]]
 deps = ["Distances", "StaticArrays"]
-git-tree-sha1 = "ded64ff6d4fdd1cb68dfcbb818c69e144a5b2e4c"
+git-tree-sha1 = "91a67b4d73842da90b526011fa85c5c4c9343fe0"
 uuid = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
-version = "0.4.16"
+version = "0.4.18"
 
 [[deps.Neighborhood]]
 deps = ["Distances", "NearestNeighbors", "Random", "Test"]
@@ -3835,9 +3514,9 @@ version = "0.6.42"
 
 [[deps.SciMLBase]]
 deps = ["ADTypes", "Accessors", "ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "Printf", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "SciMLStructures", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables"]
-git-tree-sha1 = "c15e03738d4170f92ba477273ef0528341f79a9a"
+git-tree-sha1 = "7a6c5c8c38d2e37f45d4686c3598c20c1aebf48e"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "2.41.0"
+version = "2.41.3"
 
     [deps.SciMLBase.extensions]
     SciMLBaseChainRulesCoreExt = "ChainRulesCore"
@@ -4236,9 +3915,9 @@ uuid = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 version = "0.5.24"
 
 [[deps.TranscodingStreams]]
-git-tree-sha1 = "a947ea21087caba0a798c5e494d0bb78e3a1a3a0"
+git-tree-sha1 = "d73336d81cafdc277ff45558bb7eaa2b04a8e472"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.10.9"
+version = "0.10.10"
 weakdeps = ["Random", "Test"]
 
     [deps.TranscodingStreams.extensions]
@@ -4522,18 +4201,11 @@ version = "3.5.0+0"
 # ╟─25ae9eb0-86ce-4e73-8b4b-128c33f15e4e
 # ╟─7e2dd843-aa95-4d96-a07d-2ce4c1b1452b
 # ╟─dfb8b71a-b3a3-4ea0-9ea3-213c206117ca
-# ╟─c51c3c7c-848c-44d5-8169-13e5a17777ef
-# ╟─45a1202d-527f-4a79-877e-d261c351d84f
-# ╟─b2197f1a-ff9a-429c-8486-dfa27abc880d
-# ╟─e65260dc-da8c-4acc-b650-079b1447b27f
-# ╟─3024fca3-4ea9-452c-9f2f-b12a45bef65d
-# ╟─6ddd4cd9-56df-4699-b80f-b09b9b5090a9
 # ╟─4ad4589f-9834-44a5-9c4b-994b7d91e442
+# ╟─b2197f1a-ff9a-429c-8486-dfa27abc880d
 # ╟─ad34b750-5e81-4cb8-a444-52220c116790
 # ╟─6f341d1b-8b0f-4bc5-b18c-d1e9dc9281d5
-# ╟─4b9d02d7-917f-4760-9dc0-6d4e03c51595
 # ╟─c76cf08f-aaef-46df-ae18-9cd018141b70
 # ╟─3bd92a5f-4efd-441e-a7d1-c3597e1f4a39
-# ╟─d994b1d0-a226-4b95-9829-bc6a6b8c93eb
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
