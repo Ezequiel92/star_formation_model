@@ -1011,9 +1011,6 @@ let
 
 		axislegend(ax; position=:lt, nbanks=1)
 
-		mkpath("../plots/lozano_2024/figures/model/")
-		Makie.save("../plots/lozano_2024/figures/model/eta-vs-stellar_age.pdf", f)
-
 		f
 
 	end
