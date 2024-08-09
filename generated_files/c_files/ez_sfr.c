@@ -4,7 +4,7 @@
  * \copyright   and contributing authors.
  *
  * \file        src/ez_sfr/ez_sfr.c
- * \date        06/2024
+ * \date        08/2024
  * \author      Ezequiel Lozano
  * \brief       Compute the star formation rate for a given gas cell.
  * \details     This file contains the routines to compute the star formation rate, according to our
@@ -14,7 +14,6 @@
  *              contains functions:
  *                void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
  *                static double interpolate1D(double x, const void *table)
- *                static double interpolate2D(double x, double y, const void *table)
  *                static int sf_ode(double t, const double y[], double f[], void *parameters)
  *                static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
  *                static void integrate_ode(const double *ic, double *parameters, double it, double *fractions)
@@ -92,9 +91,9 @@ void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
  *  \return The interpolation function evaluated at `x`.
  */
 #ifdef TESTING
-double interpolate1D(double x, const char *table_path)
+double interpolate1D(double x, const char *table_path, const int NROWS, const int NCOLS)
 {
-  void *table = read_ftable(table_path, R_NROWS, R_NCOLS);
+  void *table = read_ftable(table_path, NROWS, NCOLS);
 #else  /* #ifdef TESTING */
 static double interpolate1D(double x, const void *table)
 {
@@ -163,138 +162,6 @@ static double interpolate1D(double x, const void *table)
   free(ya);
 
   return coeff * (term_01 + term_02);
-}
-
-/*! \brief Use bilinear interpolation to approximate f(x,y).
- *
- *  If the values are out of range, the boundaries of the function are used (constant extrapolation).
- *
- *  \param[in] x X coordinate at which the interpolation function will be evaluated.
- *  \param[in] y Y coordinate at which the interpolation function will be evaluated.
- *  \param[in] table_path Path to the table containing the values of f(xi,yi), for many xi and yi.
- *
- *  \return The interpolation function evaluated at `x` and `y`.
- */
-#ifdef TESTING
-double interpolate2D(double x, double y, const char *table_path)
-{
-  void *table = read_ftable(table_path, ETA_NROWS, ETA_NCOLS);
-#else  /* #ifdef TESTING */
-static double interpolate2D(double x, double y, const void *table)
-{
-#endif /* #ifdef TESTING */
-
-  data_table *interp_table = (data_table *)table;
-  double *data             = interp_table->data;
-  int n_rows               = interp_table->n_rows;
-  int n_cols               = interp_table->n_cols;
-
-  int nx = n_rows - 1;
-  int ny = n_cols - 1;
-
-  double *xa = malloc(nx * sizeof(double));
-  double *ya = malloc(ny * sizeof(double));
-  double *za = malloc(nx * ny * sizeof(double));
-
-  for(size_t i = 0; i < nx; ++i)
-    {
-      xa[i] = data[(i + 1) * n_cols];
-    }
-
-  for(size_t i = 0; i < ny; ++i)
-    {
-      ya[i] = data[i + 1];
-    }
-
-  for(size_t i = 0; i < nx; ++i)
-    {
-      for(size_t j = 0; j < ny; ++j)
-        {
-          za[i * ny + j] = data[(i + 1) * n_cols + (j + 1)];
-        }
-    }
-
-  double x1, x2, y1, y2;
-  int idx_x1, idx_x2, idx_y1, idx_y2;
-
-  if(x < xa[0])
-    {
-      x      = xa[0];
-      x1     = xa[0];
-      x2     = xa[1];
-      idx_x1 = 0;
-      idx_x2 = 1;
-    }
-  else if(x > xa[nx - 1])
-    {
-      x      = xa[nx - 1];
-      x1     = xa[nx - 2];
-      x2     = xa[nx - 1];
-      idx_x1 = nx - 2;
-      idx_x2 = nx - 1;
-    }
-  else
-    {
-      for(size_t i = 1; i < nx; ++i)
-        {
-          if(xa[i - 1] <= x && x <= xa[i])
-            {
-              x1     = xa[i - 1];
-              x2     = xa[i];
-              idx_x1 = i - 1;
-              idx_x2 = i;
-              break;
-            }
-        }
-    }
-
-  if(y < ya[0])
-    {
-      y      = ya[0];
-      y1     = ya[0];
-      y2     = ya[1];
-      idx_y1 = 0;
-      idx_y2 = 1;
-    }
-  else if(y > ya[ny - 1])
-    {
-      y      = ya[ny - 1];
-      y1     = ya[ny - 2];
-      y2     = ya[ny - 1];
-      idx_y1 = ny - 2;
-      idx_y2 = ny - 1;
-    }
-  else
-    {
-      for(size_t i = 1; i < ny; ++i)
-        {
-          if(ya[i - 1] <= y && y <= ya[i])
-            {
-              y1     = ya[i - 1];
-              y2     = ya[i];
-              idx_y1 = i - 1;
-              idx_y2 = i;
-              break;
-            }
-        }
-    }
-
-  double fQ11 = za[idx_x1 * ny + idx_y1];
-  double fQ21 = za[idx_x2 * ny + idx_y1];
-  double fQ12 = za[idx_x1 * ny + idx_y2];
-  double fQ22 = za[idx_x2 * ny + idx_y2];
-
-  double coeff   = 1 / ((x2 - x1) * (y2 - y1));
-  double term_01 = fQ11 * (x2 - x) * (y2 - y);
-  double term_02 = fQ21 * (x - x1) * (y2 - y);
-  double term_03 = fQ12 * (x2 - x) * (y - y1);
-  double term_04 = fQ22 * (x - x1) * (y - y1);
-
-  free(xa);
-  free(ya);
-  free(za);
-
-  return coeff * (term_01 + term_02 + term_03 + term_04);
 }
 
 /*! \brief Evaluate the systems of equations.
@@ -634,10 +501,10 @@ double rate_of_star_formation(const int index)
   double Z = (SphP[index].Metallicity > 0.0) ? SphP[index].Metallicity : 0.0;
 
   /* Photodissociation efficiency [dimensionless] */
-  double eta_d = interpolate2D(accu_integration_time, Z, All.ETA_D_TABLE_DATA);
+  double eta_d = interpolate1D(Z, All.ETA_D_TABLE_DATA);
 
   /* Photoionization efficiency [dimensionless] */
-  double eta_i = interpolate2D(accu_integration_time, Z, All.ETA_I_TABLE_DATA);
+  double eta_i = interpolate1D(Z, All.ETA_I_TABLE_DATA);
 
   /* Mass recycling fraction [dimensionless] */
   double R = interpolate1D(Z, All.R_TABLE_DATA);
