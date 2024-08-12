@@ -318,7 +318,7 @@ diagram = TikzPictures.TikzPicture(
 # ╔═╡ 6162a115-fdb7-43eb-becb-0f25192001e0
 # ╠═╡ skip_as_script = true
 #=╠═╡
-TikzPictures.save(PDF("../plots/lozano_2024/physical_processes"), diagram)
+TikzPictures.save(PDF("../plots/lozano2024/physical_processes"), diagram)
   ╠═╡ =#
 
 # ╔═╡ 6775e416-0878-4d82-9b3a-067eeebbe3ad
@@ -879,8 +879,8 @@ let
 		rowsize!(f.layout, 1, Relative(1/30))
 		rowsize!(f.layout, 2, Relative(1/20))
 
-		mkpath("../plots/lozano_2024/figures/model/")
-		Makie.save("../plots/lozano_2024/figures/model/timescale_comparison.pdf", f)
+		mkpath("../plots/lozano2024/figures/model/")
+		Makie.save("../plots/lozano2024/figures/model/timescale_comparison.pdf", f)
 
 		f
 
@@ -914,7 +914,7 @@ md"### Photodissociation efficiency and mass recycling"
 with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
 		f = Figure(size=(1700, 600))
-	
+
 		ax = CairoMakie.Axis(
 			f[1,1],
 			xlabel=L"\mathrm{stellar \,\, age \,\, [Myr]}",
@@ -1027,7 +1027,7 @@ let
 	#################################################################################
 	# Metallicity x density (tight) grid
 	#################################################################################
-	
+
 	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
 
 	xaxis_visible = [false, false, false, false, false, false, true, true, true]
@@ -1068,11 +1068,11 @@ let
 
 	iterator = enumerate(
 		zip(
-			print_params, 
+			print_params,
 			base_params,
-			fractions_05, 
-			fractions_001, 
-			xaxis_visible, 
+			fractions_05,
+			fractions_001,
+			xaxis_visible,
 			yaxis_visible,
 		),
 	)
@@ -1107,29 +1107,29 @@ let
 				limits=((-3.2, 3.2), (-0.05, 1.02)),
 				aspect=AxisAspect(1),
 				xticks=(
-					[-3, -2, -1, 0, 1, 2, 3], 
+					[-3, -2, -1, 0, 1, 2, 3],
 					["-3", "-2", "-1", "0", "1", "2", "3"],
 				),
 			)
 
 			for (label, idx, color) in zip(frac_labels, 1:4, Makie.wong_colors())
-				
+
 				lines!(
-					ax, 
-					log10.(time_list), 
-					getindex.(fraction_05, idx); 
-					label, 
+					ax,
+					log10.(time_list),
+					getindex.(fraction_05, idx);
+					label,
 					color,
 				)
-				
+
 				lines!(
-					ax, 
-					log10.(time_list), 
-					getindex.(fraction_001, idx); 
-					linestyle=:dash, 
+					ax,
+					log10.(time_list),
+					getindex.(fraction_001, idx);
+					linestyle=:dash,
 					color,
 				)
-				
+
 			end
 
 			if row == 3 && col == 3
@@ -1138,9 +1138,9 @@ let
 
 		end
 
-		mkpath("../plots/lozano_2024/figures/model/")
+		mkpath("../plots/lozano2024/figures/model/")
 		Makie.save(
-			"../plots/lozano_2024/figures/model/fractions-vs-time-grid.pdf", 
+			"../plots/lozano2024/figures/model/fractions-vs-time-grid.pdf",
 			f,
 		)
 
@@ -1435,9 +1435,9 @@ let
 
 		colgap!(f.layout, 35)
 
-		mkpath("../plots/lozano_2024/figures/model/")
+		mkpath("../plots/lozano2024/figures/model/")
 		Makie.save(
-			"../plots/lozano_2024/figures/model/fractions-vs-density-grid.pdf", 
+			"../plots/lozano_2024/figures/model/fractions-vs-density-grid.pdf",
 			f,
 		)
 
