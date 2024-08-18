@@ -318,7 +318,7 @@ diagram = TikzPictures.TikzPicture(
 # ╔═╡ 6162a115-fdb7-43eb-becb-0f25192001e0
 # ╠═╡ skip_as_script = true
 #=╠═╡
-TikzPictures.save(PDF("../plots/lozano2024/physical_processes"), diagram)
+TikzPictures.save(PDF("../../plots/lozano2024/physical_processes"), diagram)
   ╠═╡ =#
 
 # ╔═╡ 6775e416-0878-4d82-9b3a-067eeebbe3ad
@@ -565,10 +565,6 @@ let
 			)
 
 		end
-
-		mkpath("../plots/model/parameters")
-
-		Makie.save("../plots/model/parameters/tau_comparison.pdf", f)
 
 		f
 
@@ -879,8 +875,8 @@ let
 		rowsize!(f.layout, 1, Relative(1/30))
 		rowsize!(f.layout, 2, Relative(1/20))
 
-		mkpath("../plots/lozano2024/figures/model/")
-		Makie.save("../plots/lozano2024/figures/model/timescale_comparison.pdf", f)
+		mkpath("../../plots/lozano2024/figures/model/")
+		Makie.save("../../plots/lozano2024/figures/model/timescale_comparison.pdf", f)
 
 		f
 
@@ -1138,9 +1134,9 @@ let
 
 		end
 
-		mkpath("../plots/lozano2024/figures/model/")
+		mkpath("../../plots/lozano2024/figures/model/")
 		Makie.save(
-			"../plots/lozano2024/figures/model/fractions-vs-time-grid.pdf",
+			"../../plots/lozano2024/figures/model/fractions-vs-time-grid.pdf",
 			f,
 		)
 
@@ -1435,9 +1431,9 @@ let
 
 		colgap!(f.layout, 35)
 
-		mkpath("../plots/lozano2024/figures/model/")
+		mkpath("../../plots/lozano2024/figures/model/")
 		Makie.save(
-			"../plots/lozano_2024/figures/model/fractions-vs-density-grid.pdf",
+			"../../plots/lozano_2024/figures/model/fractions-vs-density-grid.pdf",
 			f,
 		)
 
