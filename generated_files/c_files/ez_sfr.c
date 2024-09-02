@@ -495,7 +495,7 @@ double rate_of_star_formation(const int index)
    *************************************************************************************************/
 
   /* Cell density [cm⁻³] (only hydrogen) */
-  double rhoC = SphP[index].Density * RHO_COSMO * HYDROGEN_MASSFRAC;
+  double rhoC = SphP[index].Density * RHO_COSMO;
 
   /* Metallicity [dimensionless] */
   double Z = (SphP[index].Metallicity > 0.0) ? SphP[index].Metallicity : 0.0;
@@ -559,7 +559,7 @@ double rate_of_star_formation(const int index)
   integrate_ode(ic, parameters, integration_time, fractions);
 
   /* Store the star formation time scale (τ_star) */
-  SphP[index].tau_S = ODE_CS / sqrt((1 - fractions[3]) * rhoC);
+  SphP[index].tau_S = ODE_CS / sqrt(rhoC);
 
   /* Store the results after solving the ODEs */
   for(size_t i = 0; i < N_EQU; ++i)
