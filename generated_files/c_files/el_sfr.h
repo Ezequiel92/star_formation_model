@@ -1,5 +1,5 @@
-#ifndef EZ_SFR_H
-#define EZ_SFR_H
+#ifndef EL_SFR_H
+#define EL_SFR_H
 
 /* T [internal_units] * T_MYR = T [Myr] */
 #define T_MYR (All.UnitTime_in_s / All.HubbleParam / SEC_PER_MEGAYEAR)
@@ -15,9 +15,9 @@
 #define R_NCOLS 3  // Number of columns in the R table
 
 /* Paths */
-static char *ETA_D_TABLE_PATH = "../code/src/ez_sfr/tables/eta_d.txt";
-static char *ETA_I_TABLE_PATH = "../code/src/ez_sfr/tables/eta_i.txt";
-static char *R_TABLE_PATH     = "../code/src/ez_sfr/tables/R_Zsn.txt";
+static char *ETA_D_TABLE_PATH = "../code/src/el_sfr/tables/eta_d.txt";
+static char *ETA_I_TABLE_PATH = "../code/src/el_sfr/tables/eta_i.txt";
+static char *R_TABLE_PATH     = "../code/src/el_sfr/tables/R_Zsn.txt";
 
 /* ODE constants */
 
@@ -122,5 +122,5 @@ static const double F_RHO[] = {
 void *read_ftable(const char *file_path, const int n_rows, const int n_cols);
 double rate_of_star_formation(const int index);
 
-#endif /* #ifdef EZ_SFR_H */
+#endif /* #ifdef EL_SFR_H */
 	
