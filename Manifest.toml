@@ -67,9 +67,9 @@ uuid = "460bff9d-24e4-43bc-9d9f-a8973cb893f4"
 version = "0.1.10"
 
 [[deps.ExpressionExplorer]]
-git-tree-sha1 = "045b3dc30fd2fd5777107955e2c9b8d47f087de1"
+git-tree-sha1 = "0889fdf7ac69b67b65f54b763941967e0a08b7b3"
 uuid = "21656369-7473-754a-2065-74616d696c43"
-version = "1.0.3"
+version = "1.0.4"
 
 [[deps.ExproniconLite]]
 git-tree-sha1 = "4c9ed87a6b3cd90acf24c556f2119533435ded38"
