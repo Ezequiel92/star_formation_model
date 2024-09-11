@@ -271,9 +271,9 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 	gsl_matrix_set(m, 0, 3, 0);
 
 	gsl_matrix_set(m, 1, 0, 16.409952 * y[0] * rho_C);
-	gsl_matrix_set(m, 1, 1, -17.393952755905513 * (1.0 - y[3]) * rho_C * (1.27e-5 + Z));
+	gsl_matrix_set(m, 1, 1, 17.393952755905513 * (1.0 - y[3]) * rho_C * (-1.27e-5 - Z));
 	gsl_matrix_set(m, 1, 2, 0.019428762831580126 * (eta_d - eta_i) * aux_var);
-	gsl_matrix_set(m, 1, 3, 17.393952755905513 * y[1] * rho_C * (1.27e-5 + Z));
+	gsl_matrix_set(m, 1, 3, -17.393952755905513 * y[1] * rho_C * (-1.27e-5 - Z));
 
 	gsl_matrix_set(m, 2, 0, 0);
 	gsl_matrix_set(m, 2, 1, 17.393952755905513 * (1.0 - y[3]) * rho_C * (1.27e-5 + Z));
