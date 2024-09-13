@@ -1496,6 +1496,8 @@ let
 				xticks=(-4:1:6),
 			)
 
+			vlines!(-1.0; color=:gray55)
+
 			lines!(ax, log10.(time_list), getindex.(fractions, idx); color)
 
 		end
@@ -1542,11 +1544,141 @@ let
 			xticks=(-4:1:6),
 		)
 
+		vlines!(-1.0; color=:gray55)
+
 		for (idx, (label, color)) in enumerate(zip(frac_labels, Makie.wong_colors()))
 			lines!(ax, log10.(time_list), getindex.(fractions, idx); color, label)
 		end
 
 		axislegend(ax; position=(0.02, 1.0), nbanks=2, labelsize=30)
+
+		f
+
+	end
+
+end
+  ╠═╡ =#
+
+# ╔═╡ a6b4d852-43dd-4fe9-a0d8-f07e1c53c1f1
+# ╠═╡ skip_as_script = true
+#=╠═╡
+let
+
+	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
+
+	# Initial conditions
+	ic = [0.15, 0.85, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
+
+	# Total cell density range [mp * cm⁻³]
+	ρ = 10.0
+
+	# Metallicities [dimensionless]
+	Z = 0.8 * MODEL.Zsun
+
+	# Integration time [Myr]
+	it = 100.0
+
+	time_list = exp10.(range(-4, log10(it), 10000))
+
+	# Integrate the system
+	fractions = MODEL.integrate_model(ic, [ρ, Z], (0.0, it); times=time_list)
+
+	# Gas fractions
+	fi = getindex.(fractions, 1)
+	fa = getindex.(fractions, 2)
+	fm = getindex.(fractions, 3)
+	fs = getindex.(fractions, 4)
+
+	############
+	# Constants
+	############
+
+	# Star formation efficiency
+	ϵff  = MODEL.ϵff
+	
+	# Recombination coefficient
+	αH   = MODEL.αH
+	
+	# Formation rate coefficient of H₂ on dust grain (at solar metallicity)
+	Rsun = MODEL.Rsun 
+	
+	# Solar metallicity
+	Zsun = MODEL.Zsun
+	
+	# Effective metallicity
+	Zeff = MODEL.Zeff
+	
+	# Clumping factor
+	Cρ   = MODEL.Cρ
+
+	C_star = sqrt(3π / 32u"G") / ϵff
+	C_rec  = u"mp" / αH
+	C_cond = (u"mp" * Zsun) / (2 * Rsun * Cρ)
+
+	##############
+	# Time scales
+	##############
+	
+	ρ_cell = ρ * u"mp*cm^-3"
+	
+	τ_star = C_star / sqrt(ρ_cell)
+	τ_rec  = C_rec / ρ_cell
+	τ_cond = C_cond / (ρ_cell * (Z + Zeff))
+
+	ηd, ηi = MODEL.photodissociation_efficiency(
+		exp10(MODEL.Q_ages[end] - 6), 
+		Z,
+	)
+	R, _ = MODEL.recycled_fractions(Z)
+
+	#####################
+	# Molecular equation
+	#####################
+
+	mol_ls = @. (fa / fm) * (1 - fs)
+    mol_rs = uconvert(Unitful.NoUnits, ((ηd + 1) * τ_cond) / τ_star)
+
+    mol_quotient = @. log10(mol_ls / mol_rs)
+
+	###################
+	# Ionized equation
+	###################
+
+	ion_ls = @. (fi * fi) / fm
+    ion_rs = uconvert(Unitful.NoUnits, ((ηi + R) * τ_rec) / τ_star)
+
+    ion_quotient = @. log10(ion_ls / ion_rs)
+
+	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
+
+		f = Figure(size=(880, 880), figure_padding=(1, 30, 5, 15))
+
+		ax = CairoMakie.Axis(
+			f[1,1];
+			xlabel=L"\log_{10} \, t \,\, [\mathrm{%$(MODEL.t_u)}]",
+		    ylabel=L"\log_{10} \, \mathrm{LS / RS}",
+			aspect=AxisAspect(1),
+			xticks=(-4:1:6),
+		)
+
+		vlines!(-1.0; color=:gray55)
+
+		lines!(
+			ax, 
+			log10.(time_list), 
+			mol_quotient; 
+			color=Makie.wong_colors()[1], 
+			label=L"\mathrm{H_2}",
+		)
+		lines!(
+			ax, 
+			log10.(time_list), 
+			ion_quotient; 
+			color=Makie.wong_colors()[2], 
+			label=L"\mathrm{HII}",
+		)
+
+		axislegend(ax; position=(0.98, 1.0), nbanks=1, labelsize=30)
 
 		f
 
@@ -4623,5 +4755,6 @@ version = "3.5.0+0"
 # ╟─e99ef380-2646-4948-8673-436baad64d3b
 # ╟─660aa82c-78db-469d-87cf-9325fa6a30ff
 # ╟─05c3a97a-4096-4642-a1ae-c47283666a43
+# ╟─a6b4d852-43dd-4fe9-a0d8-f07e1c53c1f1
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
