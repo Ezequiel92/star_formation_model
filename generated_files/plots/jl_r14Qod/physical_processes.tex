@@ -1,0 +1,57 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usepackage{adjustbox}
+		\usepackage{chemformula}
+		\definecolor{d_pink}{HTML}{C721DD}
+		\definecolor{d_orange}{HTML}{D14A00}
+		\definecolor{d_green}{HTML}{008C00}
+		\definecolor{d_blue}{HTML}{007FB1}
+		\definecolor{d_yellow}{HTML}{D1AC00}
+		\usetikzlibrary{shapes.misc, arrows, positioning, quotes, fit}
+		\tikzset{
+    		>=stealth',
+    		box/.style={
+        		rectangle,
+        		rounded corners,
+        		draw=black,
+        		thick,
+        		text width=4em,
+        		minimum height=2em,
+        		text centered,
+    		},
+			line/.style = {
+				thick,
+			},
+			every edge quotes/.append style = {
+				font=\small,
+				align=center,
+				auto,
+			},
+			myrect/.style={
+				rectangle,
+				draw,
+				inner sep=0pt,
+				fit=\#1,
+				thick,
+				rounded corners,
+			},
+		}
+	
+\begin{document}
+\begin{adjustbox}{width=75em,keepaspectratio}
+\begin{tikzpicture}[]
+$	\node[box, white] (stars) {Stars};
+	\node[box, white, text width=2em, above=2.5cm of stars] (atom) {HI};
+	\node[box, white, text width=2em, right=2cm of atom] (molecule) {\ch{H2}};
+	\node[box, white, text width=2em, left=2cm of atom] (ion) {HII};
+	\draw[line, white, ->]
+	(ion) edge [bend left, "\textcolor{d_pink}{recombination}"] (atom)
+	(atom) edge [bend left, "\textcolor{d_orange}{condensation}"] (molecule)
+	(molecule) edge [bend left,"\textcolor{d_green}{dissociation}"] (atom)
+	(atom) edge [bend left,"\textcolor{d_blue}{ionization}"] (ion)
+	(stars) edge [bend left, "\textcolor{d_yellow}{supernova}"] (ion)
+	(molecule) edge [bend left, "\textcolor{red}{star formation}"] (stars);
+$
+\end{tikzpicture}
+\end{adjustbox}
+\end{document}
