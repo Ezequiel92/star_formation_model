@@ -737,7 +737,7 @@ let
 	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
 		f = Figure(
-			size=(880, 1000),
+			size=(880, 880),
 			figure_padding=(1, 10, 10, 1),
 		)
 
@@ -757,7 +757,7 @@ let
 		logρcell = replace(x -> -1 < x < 3 ? x : NaN, log10.(ρcell_range))
 
 		ax_01 = CairoMakie.Axis(
-			f[2,1];
+			f[1,1];
 			xlabel=L"\log_{10} \, \tau_\mathrm{cond} \,\, [\mathrm{%$(MODEL.t_u)}]",
 			limits=(-4, 5, nothing, nothing),
 			title=L"\tau_\mathrm{star}",
@@ -786,11 +786,11 @@ let
         ticks = round.(range(min_c, max_c, 5); digits=1)
 
         Colorbar(
-			f[1, 1],
+			f[1:3, 2],
 			hm;
 			ticks,
 			label=L"\log_{10} \, \rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
-			vertical=false,
+			# vertical=false,
 		)
 
 		#############################################################################
@@ -815,7 +815,7 @@ let
 		logρcell = replace(x -> -1 < x < 3 ? x : NaN, log10.(ρcell_range))
 
 		ax_02 = CairoMakie.Axis(
-			f[3,1];
+			f[2,1];
 			xlabel=L"\log_{10} \, \tau_\mathrm{cond} \,\, [\mathrm{%$(MODEL.t_u)}]",
 			ylabel=L"Z \, / \, Z_\odot",
 			limits=(-4, 5, nothing, nothing),
@@ -858,7 +858,7 @@ let
 		)
 
 		ax_03 = CairoMakie.Axis(
-			f[4,1];
+			f[3,1];
 			xlabel=L"\log_{10} \, \tau \,\, [\mathrm{%$(MODEL.t_u)}]",
 			ylabel=L"f_i",
 			limits=(-4, 5, nothing, nothing),
@@ -875,8 +875,8 @@ let
 			colorrange=(-1.0, 3.0),
 		)
 
-		rowsize!(f.layout, 1, Relative(1/30))
-		rowsize!(f.layout, 2, Relative(1/20))
+		rowsize!(f.layout, 1, Relative(1/20))
+		# rowsize!(f.layout, 2, Relative(1/20))
 
 		mkpath("./generated_files/plots/model/")
 		Makie.save("./generated_files/plots/model/timescale_comparison.pdf", f)
