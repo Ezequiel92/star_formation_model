@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.47
+# v0.20.0
 
 using Markdown
 using InteractiveUtils
@@ -1377,7 +1377,7 @@ end;
 # base_parms: Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr])
 #####################################################################################
 
-function lyapunov(
+function lyapunov_spectrum(
 	ic::Vector{Float64},
 	base_params::NTuple{3,Float64},
 )::Vector{Float64}
@@ -1400,7 +1400,7 @@ end;
 # ╔═╡ ae2c3c1c-aa3f-4be6-b209-38b9b5b77244
 # ╠═╡ skip_as_script = true
 #=╠═╡
-lyapunov(
+lyapunov_spectrum(
 	[0.8, 0.2, 0.0, 0.0],     # Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
 	(100.0, 0.5*Zsun, 10.0),  # Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr])
 )
@@ -1409,7 +1409,7 @@ lyapunov(
 # ╔═╡ 0d4877b6-0659-441e-81a9-43c59635a14f
 # ╠═╡ skip_as_script = true
 #=╠═╡
-lyapunov(
+lyapunov_spectrum(
 	[0.8, 0.2, 0.0, 0.0],      # Initial conditions, [fi(0), fa(0), fm(0), fs(0)]
 	(1000.0, 0.5*Zsun, 10.0),  # Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr])
 )
@@ -2663,9 +2663,9 @@ version = "1.0.0"
 
 [[deps.JLLWrappers]]
 deps = ["Artifacts", "Preferences"]
-git-tree-sha1 = "f389674c99bfcde17dc57454011aa44d5a260a40"
+git-tree-sha1 = "be3dc50a92e5a386872a493a10050136d4703f9b"
 uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
-version = "1.6.0"
+version = "1.6.1"
 
 [[deps.JSON]]
 deps = ["Dates", "Mmap", "Parsers", "Unicode"]
@@ -3192,9 +3192,9 @@ version = "1.1.2"
 
 [[deps.OrdinaryDiffEqCore]]
 deps = ["ADTypes", "Accessors", "Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "EnumX", "FastBroadcast", "FastClosures", "FillArrays", "FunctionWrappersWrappers", "InteractiveUtils", "LinearAlgebra", "Logging", "MacroTools", "MuladdMacro", "Polyester", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLOperators", "SciMLStructures", "SimpleUnPack", "Static", "StaticArrayInterface", "StaticArraysCore", "TruncatedStacktraces"]
-git-tree-sha1 = "33e4292e832d439c3706410ae867f3c091d79155"
+git-tree-sha1 = "f4b7b11e2e4c0f4a7fe15d2edcec1e1ce2917d67"
 uuid = "bbf590c4-e513-4bbe-9b18-05decba2e5d8"
-version = "1.7.0"
+version = "1.7.1"
 weakdeps = ["EnzymeCore"]
 
     [deps.OrdinaryDiffEqCore.extensions]
@@ -3975,9 +3975,9 @@ version = "5.2.3+0"
 
 [[deps.SymbolicIndexingInterface]]
 deps = ["Accessors", "ArrayInterface", "RuntimeGeneratedFunctions", "StaticArraysCore"]
-git-tree-sha1 = "0225f7c62f5f78db35aae6abb2e5cabe38ce578f"
+git-tree-sha1 = "b708e5c01d4aad69c148241bda3346fda1c550d2"
 uuid = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
-version = "0.3.31"
+version = "0.3.32"
 
 [[deps.SymbolicLimits]]
 deps = ["SymbolicUtils"]
