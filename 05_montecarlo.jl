@@ -6,26 +6,18 @@ using InteractiveUtils
 
 # ╔═╡ f79c680a-7c97-4100-97e8-19190707c55b
 let
-	using CairoMakie, Colors, ColorSchemes, Measurements, Libdl, Printf, PrettyNumbers, PlutoLinks, Statistics
+	using CairoMakie, Colors, ColorSchemes, PlutoLinks
 	
 	using ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
 end
 
-# ╔═╡ 37653018-aaf5-42d1-a938-e05a44f18918
-# ╠═╡ skip_as_script = true
-#=╠═╡
-TableOfContents(title="Plots", depth=4)
-  ╠═╡ =#
-
-# ╔═╡ 7bd034e7-01fa-4ba1-835f-d83e5645c0ac
+# ╔═╡ 53faa843-2056-4c76-bc8b-31bb602d475c
 begin
 	MARKERS = [:circle, :rect, :diamond, :hexagon, :cross, :xcross, :pentagon]
 	LINE_STYLES = [:solid]
 end;
 
-# ╔═╡ 42d6a2c4-e219-47bf-9552-6051c9d3f9af
-# ╠═╡ skip_as_script = true
-#=╠═╡
+# ╔═╡ b07d40bf-e115-4cd6-82b7-55951aa1c04e
 DEFAULT_THEME = Theme(
     #################################################################################
     # Size of the figures in code units
@@ -120,1581 +112,359 @@ DEFAULT_THEME = Theme(
     Arrows=(lengthscale=0.02, arrowsize=7.0, linestyle=:solid, color=:white),
     Hist=(strokecolor=:black, strokewidth=1),
 );
-  ╠═╡ =#
-
-# ╔═╡ 4b65fd9c-bd69-4e97-a28c-357c6a9c7bda
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### Load the model"
-  ╠═╡ =#
 
 # ╔═╡ a0ca487a-8a51-48cb-acc0-7b318c793d09
+const MODEL = @ingredients("./01_model.jl");
+
+# ╔═╡ 35f987e3-321c-4772-8bee-ef3ae29c7e61
 begin
-    const TESTING = @ingredients("./03_testing.jl")
-	const CODEGEN = TESTING.CODEGEN
-    const MODEL   = CODEGEN.MODEL
-end;
+	mutable struct Cell
+        ρ::Float64
+        Z::Float64
+		fi::Float64
+		fa::Float64
+		fm::Float64
+		fs::Float64
+		stellar::Bool
+    end
+	
+	# Number of gas cells
+	N_cells = 1000
+	
+	# Number of time steps
+	N_steps = 50
 
-# ╔═╡ d393b8b2-fdef-4727-807a-68ad8c5e71db
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"# Benchmarks"
-  ╠═╡ =#
+	# Integration times [Myr]
+	time_steps = range(0.0, 1000.0, N_steps)
+	
+	# Allocate memory
+	cells   = Vector{Cell}(undef, N_cells)
+	N_stars = Vector{Int}(undef, N_steps - 1)
+	N_gas   = Vector{Int}(undef, N_steps - 1)
 
-# ╔═╡ ff7a0381-e149-4f51-9093-6e968f801ea0
-# ╠═╡ skip_as_script = true
-#=╠═╡
-begin
-	# ODE solver methods
-	const methods = [
-		(nothing,        "default"),
-		(Rodas4(),       "Rodas4"),
-		(Rodas42(),      "Rodas42"),
-		(Rodas4P(),      "Rodas4P"),
-		(Rodas4P2(),     "Rodas4P2"),
-		(Rodas5(),       "Rodas5"),
-		(KenCarp4(),     "KenCarp4"),
-		(Rosenbrock23(), "Rosenbrock23"),
-		(TRBDF2(),       "TRBDF2"),
-		(QNDF(),         "QNDF"),
-		(FBDF(),         "FBDF"),
-		(Kvaerno5(),     "Kvaerno5"),
-	    (RadauIIA5(),    "RadauIIA5"),
-		(AN5(),          "AN5"),
-	];
-end;
-  ╠═╡ =#
+	# Reference cell density [mp * cm⁻³]
+	ref_ρ = 50.0
+	
+	# Reference metallicity [dimensionless]
+	ref_Z = MODEL.Zsun
+	
+	# Reference ionized fraction [dimensionless]
+	ref_fi = 0.2
 
-# ╔═╡ 6facecda-73e6-4e4b-9029-35ed8dad0e05
-# ╠═╡ skip_as_script = true
-#=╠═╡
-#####################################################################################
-# Convenience wrapper around MODEL.integrate_model() to catch errors,
-# and print its runtime
-#####################################################################################
+	# Create gas cells
+	@inbounds for i in eachindex(cells)
+		
+		# Cell density [mp * cm⁻³]
+		# ρ = rand(0.19:300.0)
+		ρ = ref_ρ
+		
+		# Metallicity [dimensionless]
+		# Z = rand(0.0:MODEL.Zsun)
+		Z = ref_Z
 
-function benchmark_solve(method::Tuple)::Nothing
-
-	args = (method[1],)
-	name = method[2]
-
-	fi     = 0.5              # Ionized gas fraction (Mᵢ / MC) [dimensionless]
-	ρ_cell = 10.0             # Total cell density [mp * cm⁻³]
-	Z      = 1.0 * MODEL.Zsun # Metallicity [dimensionless]
-	it     = 10.0             # Integration time [Myr]
-
-	benchmark = try
-		@timed MODEL.integrate_model(
-		    [fi, 1.0 - fi, 0.0, 0.0],
-			[ρ_cell, Z],
-			(0.0, it);
-		    args,
-		)[end][MODEL.phase_name_to_index["stellar"]]
-	catch
-		nothing
+		# Ionized fraction [dimensionless]
+		# fi = rand(0.0:0.5)
+		fi = ref_fi
+		
+		cells[i] = Cell(ρ, Z, fi, 1.0 - fi, 0.0, 0.0, false)
+		
 	end
 
-	m_str = "Method: $(name)"
-	padding = 20 - length(m_str)
-	print(m_str * " "^padding * "  -  ")
+	# Reference initial conditions, [fi(0), fa(0), fm(0), fs(0)]
+	ref_ic = [ref_fi, 1.0 - ref_fi, 0.0, 0.0]
 
-	if isnothing(benchmark)
-		println("Failed.\n")
-	else
-		time = @sprintf("%.3g", benchmark.time * exp10(6.0))
-		value = @sprintf("%.3g", benchmark.value)
-		println("Time: $(time) μs  -  Result = $(value).")
-	end
-
-	return nothing
-
-end;
-  ╠═╡ =#
-
-# ╔═╡ fa3e0300-cf13-4261-8549-a67ae0ea6d62
-# ╠═╡ skip_as_script = true
-#=╠═╡
-#####################################################################################
-# Convinience wrapper around TESTING.integrate_with_c() to catch errors,
-# and print its runtime
-#####################################################################################
-
-function benchmark_csolve()::Nothing
-
-	integr_func = TESTING.integrate_with_c()
-
-	fi     = 0.5              # Ionized gas fraction (Mᵢ / MC) [dimensionless]
-	ρ_cell = 10.0             # Total cell density [mp * cm⁻³]
-	Z      = 1.0 * MODEL.Zsun # Metallicity [dimensionless]
-	it     = 10.0             # Integration time [Myr]
-
-	benchmark = @timed integr_func([fi, 1.0 - fi, 0.0, 0.0], [ρ_cell, Z], it)
-
-	print("Method: C library     -  ")
-
-	time = @sprintf("%.3g", benchmark.time * exp10(6.0))
-	value = @sprintf("%.3g", benchmark.value)
-	println("Time: $(time) μs  -  Result = $(value).")
-
-	return nothing
-
-end;
-  ╠═╡ =#
-
-# ╔═╡ 2e93c336-c055-4d2d-920b-70fb6d8117a4
-# ╠═╡ skip_as_script = true
-#=╠═╡
-begin
-	benchmark_csolve()
-
-	for method in methods
-		println()
-		benchmark_solve(method)
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ cfacae0b-ee2e-4ba5-b31e-0fc122a3676b
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"# Plots"
-  ╠═╡ =#
-
-# ╔═╡ b0c851e1-2cf7-48b7-b045-f5960147fb04
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"## Physical processes"
-  ╠═╡ =#
-
-# ╔═╡ 78385b04-ccee-48ad-8bb3-c6b1af1bfd1e
-# ╠═╡ skip_as_script = true
-#=╠═╡
-diagram = TikzPictures.TikzPicture(
-	L"""
-		\node[box, white] (stars) {Stars};
-		\node[box, white, text width=2em, above=2.5cm of stars] (atom) {HI};
-		\node[box, white, text width=2em, right=2cm of atom] (molecule) {\ch{H2}};
-		\node[box, white, text width=2em, left=2cm of atom] (ion) {HII};
-		\draw[line, white, ->]
-		(ion) edge [bend left, "\textcolor{d_pink}{recombination}"] (atom)
-		(atom) edge [bend left, "\textcolor{d_orange}{condensation}"] (molecule)
-		(molecule) edge [bend left,"\textcolor{d_green}{dissociation}"] (atom)
-		(atom) edge [bend left,"\textcolor{d_blue}{ionization}"] (ion)
-		(stars) edge [bend left, "\textcolor{d_yellow}{supernova}"] (ion)
-		(molecule) edge [bend left, "\textcolor{red}{star formation}"] (stars);
-	""",
-	width="75em",
-	preamble = """
-		\\usepackage{chemformula}
-		\\definecolor{d_pink}{HTML}{C721DD}
-		\\definecolor{d_orange}{HTML}{D14A00}
-		\\definecolor{d_green}{HTML}{008C00}
-		\\definecolor{d_blue}{HTML}{007FB1}
-		\\definecolor{d_yellow}{HTML}{D1AC00}
-		\\usetikzlibrary{shapes.misc, arrows, positioning, quotes, fit}
-		\\tikzset{
-    		>=stealth',
-    		box/.style={
-        		rectangle,
-        		rounded corners,
-        		draw=black,
-        		thick,
-        		text width=4em,
-        		minimum height=2em,
-        		text centered,
-    		},
-			line/.style = {
-				thick,
-			},
-			every edge quotes/.append style = {
-				font=\\small,
-				align=center,
-				auto,
-			},
-			myrect/.style={
-				rectangle,
-				draw,
-				inner sep=0pt,
-				fit=\\#1,
-				thick,
-				rounded corners,
-			},
-		}
-	""",
-)
-  ╠═╡ =#
-
-# ╔═╡ 6162a115-fdb7-43eb-becb-0f25192001e0
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-    mkpath("./generated_files/plots")
-    TikzPictures.save(PDF("./generated_files/plots/physical_processes"), diagram)
-end
-  ╠═╡ =#
-
-# ╔═╡ 6775e416-0878-4d82-9b3a-067eeebbe3ad
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"## Parameters"
-  ╠═╡ =#
-
-# ╔═╡ 3dab9439-1100-457e-b97f-6841eb7b976e
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### Star formation"
-  ╠═╡ =#
-
-# ╔═╡ 42f7392c-90eb-41ee-8e05-8115b5f9322b
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	ρ_cell = exp10.(range(-1, 3, 30))
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(880,880))
-
-		ax = CairoMakie.Axis(
-			f[1,1],
-			xlabel=L"\rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
-			ylabel=L"\tau_\mathrm{star} \,\, [\mathrm{%$(MODEL.t_u)}]",
-			xscale=log10,
-			yscale=log10,
-			aspect=AxisAspect(1),
-		)
-
-		lines!(ax, ρ_cell, MODEL.τ_star.(ρ_cell))
-
-		f
-
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ aea35bc4-4055-4e59-9f02-fa91366c0328
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### Recombination"
-  ╠═╡ =#
-
-# ╔═╡ 6f8b1403-a5ad-46cd-b8a2-c5f89ec062fe
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(880,880))
-
-		ax = CairoMakie.Axis(
-			f[1,1],
-			xlabel=L"\rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
-			ylabel=L"\tau_\mathrm{rec} \,\, [\mathrm{%$(MODEL.t_u)}]",
-			xscale=log10,
-			yscale=log10,
-			aspect=AxisAspect(1),
-		)
-
-		ρ_cell = exp10.(range(-1, 3, 30))
-
-		for fi in [0.01, 0.25, 0.5]
-			label = L"f_i = %$(fi)"
-			lines!(ax, ρ_cell, MODEL.τ_rec.(fi, ρ_cell); label)
-		end
-
-		axislegend(; position=:rt, nbanks=1)
-
-		f
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ 17a35c37-eb91-4d72-8ee0-62e67a7b1fe1
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### Condensation"
-  ╠═╡ =#
-
-# ╔═╡ 8b70e0e5-eaf9-4cc0-9d7d-a6109dd29e06
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(880,880))
-
-		ax = CairoMakie.Axis(
-			f[1,1],
-			xlabel=L"\rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
-			ylabel=L"\tau_\mathrm{cond} \,\, [\mathrm{%$(MODEL.t_u)}]",
-			xscale=log10,
-			yscale=log10,
-			aspect=AxisAspect(1),
-		)
-
-		ρ_cell = exp10.(range(-1, 3, 30))
-
-		for Zs in [0.0, 0.5, 1.0]
-			label = L"Z \, / \, Z_\odot = %$(Zs)"
-			lines!(ax, ρ_cell, MODEL.τ_cond.(0.1, ρ_cell, Zs * MODEL.Zsun); label)
-		end
-
-		axislegend(; position=:rt, nbanks=1)
-
-		f
-
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ d28e46e6-1322-433e-9ea3-b43ba36fdcd4
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### Time parameters"
-  ╠═╡ =#
-
-# ╔═╡ 3eb7d10c-6d6b-42d2-9db4-48dbfd8d19b8
-# ╠═╡ disabled = true
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	# Total cell density [mp * cm⁻³]
-	ρ_cell_range = [0.19, 300.0]
-
-	τ_star_range = MODEL.τ_star.(ρ_cell_range)
-
-	τ_cond_range_0 = MODEL.τ_cond.(0.25, ρ_cell_range, 0.0 * MODEL.Zsun)
-	τ_cond_range_1 = MODEL.τ_cond.(0.25, ρ_cell_range, 1.0 * MODEL.Zsun)
-
-	τ_rec_range_1 = MODEL.τ_rec.(0.01, ρ_cell_range)
-	τ_rec_range_9 = MODEL.τ_rec.(1.0, ρ_cell_range)
-
-	ranges = [
-		τ_star_range,
-		τ_cond_range_0,
-		τ_cond_range_1,
-		τ_rec_range_1,
-		τ_rec_range_9
-	]
-
-	yvalues = 1:length(ranges)
-
-	yticks = (
-		yvalues,
-		[
-			L"\tau_\mathrm{star}",
-			L"\tau_\mathrm{cond} \,\, (Z = 0.0)",
-			L"\tau_\mathrm{cond} \,\, (Z = Z_\odot)",
-			L"\tau_\mathrm{rec} \,\, (f_i = 0.01)",
-			L"\tau_\mathrm{rec} \,\, (f_i = 1.0)",
-		],
+	# Reference parameters for the ODEs, [ρ_cell, Z]
+	ref_params = [ref_ρ, ref_Z]
+	
+	reference_sim = MODEL.integrate_model(
+		ref_ic, 
+		ref_params, 
+		(0.0, time_steps[end]); 
+		times=collect(time_steps),
 	)
 
-	dc = distinguishable_colors(
-		5,
-		[RGB(1,1,1), RGB(0,0,0)],
-		dropseed=true,
-	)
-	colors = [dc[1], dc[3], dc[3], dc[5], dc[5]]
-
-	haligns = [:center, :left, :center, :left, :center]
-
-	iterator = zip(ranges, yvalues, colors, haligns)
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(1700, 1000), figure_padding=(1, 15, 5, 15),)
-
-		ax = CairoMakie.Axis(
-			f[1,1];
-			xlabel=L"\mathrm{range} \,\, [\mathrm{%$(MODEL.t_u)}]",
-			xscale=log10,
-			yticks,
-			yminorticksvisible=false,
-			xautolimitmargin=(0.08f0, 0.12f0),
-			yautolimitmargin=(0.08f0, 0.08f0),
-		)
-
-		lines!(
-			ax,
-			[τ_rec_range_1[1], τ_rec_range_9[1]],
-			[4, 5];
-			color=dc[2],
-			linestyle=:dash,
-			label=text=L"\rho_\mathrm{cell} = 0.19 \, \mathrm{cm}^{-3}",
-		)
-
-		lines!(
-			ax,
-			[τ_rec_range_1[2], τ_rec_range_9[2]],
-			[4, 5];
-			color=dc[4],
-			linestyle=:dash,
-
-			label=text=L"\rho_\mathrm{cell} = 300 \, \mathrm{cm}^{-3}",
-		)
-
-		axislegend(ax, position=:rt, nbanks=1)
-
-		lines!(
-			ax,
-			[τ_cond_range_0[1], τ_cond_range_1[1]],
-			[2, 3];
-			color=dc[2],
-			linestyle=:dash,
-		)
-
-		lines!(
-			ax,
-			[τ_cond_range_0[2], τ_cond_range_1[2]],
-			[2, 3];
-			color=dc[4],
-			linestyle=:dash,
-		)
-
-		for (range, yvalue, color, halign) in iterator
-
-			scatterlines!(ax, range, [yvalue, yvalue]; color, linestyle=nothing)
-
-			label_1 = @sprintf("%.2f", range[1])
-
-			text!(
-				ax,
-				range[1],
-				yvalue + 0.1,
-				text="$(label_1)",
-				align=(halign, :bottom),
-			)
-
-			label_2 = @sprintf("%.2e", range[2])
-
-			text!(
-				ax,
-				range[2],
-				yvalue + 0.1,
-				text="$(label_2)",
-				align=(halign, :bottom),
-			)
-
-		end
-
-		f
-
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ a539db70-7a37-4071-90d9-a0af4cf68afb
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	resolution = 50
-
-	# Total cell density range [mp * cm⁻³]
-	logρcell_range = range(-1, 3, resolution)
-
-    # Ionized fraction [dimensionless]
-	logfi_range = range(-1.5, 0, resolution)
-
-	# τ_rec range [Myr]
-	τ = [
-		MODEL.τ_rec(exp10(logfi), exp10(logρcell)) for
-		logρcell in logρcell_range, logfi in logfi_range
-	]
-	logτ_range = range(log10.(extrema(τ))..., resolution)
-
-	# Color variable
-	fi(τ_rec, ρ_cell) = MODEL.c_rec / (τ_rec * ρ_cell)
-	fi_range = [
-		fi(exp10(logτ), exp10(logρcell)) for
-		logτ in logτ_range, logρcell in logρcell_range
-	]
-	fi = replace(x -> 0.0 < x < 1.0 ? x : NaN, fi_range)
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(880, 730))
-
-		ax = CairoMakie.Axis(
-			f[1,1];
-			xlabel=L"\log_{10} \, \tau_\mathrm{rec} \,\, [\mathrm{%$(MODEL.t_u)}]",
-			ylabel=L"\log_{10} \, \rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
-			aspect=AxisAspect(1),
-		)
-
-		hm = heatmap!(
-			ax,
-			logτ_range,
-			logρcell_range,
-			fi;
-			nan_color=:white,
-			colorrange=(0.0, 1.0),
-		)
-
-		# Compute colorbar parameters
-		colorrange = hm.attributes.calculated_colors.val.colorrange.val
-        min_c = round(colorrange[1], RoundUp; digits=1)
-        max_c = round(colorrange[2], RoundDown; digits=1)
-        ticks = round.(range(min_c, max_c, 5); digits=1)
-
-        Colorbar(
-			f[1, 2],
-			hm;
-			ticks,
-			label=L"f_i",
-		)
-
-		# Adjust the colorbar height
-        rowsize!(f.layout, 1, Makie.Fixed(pixelarea(ax.scene)[].widths[2]))
-
-		f
-
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ c8d75072-ae77-47c7-af31-a4ff18240d97
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	resolution = 50
-
-	# Stellar fraction
-	fs = 0.0
-
-	# Total cell density range [mp * cm⁻³]
-	logρcell_range = range(-1, 3, resolution)
-
-	# Metallicity range [dimensionless]
-	solarZ_range = range(0.0, 1.0, 50)
-
-	# τ_rec range [Myr]
-	τ = [
-		MODEL.τ_cond(fs, exp10(logρcell), solarZ * MODEL.Zsun) for
-		logρcell in logρcell_range, solarZ in solarZ_range
-	]
-	logτ_range = range(log10.(extrema(τ))..., resolution)
-
-	# Color variable
-	Z(fs, ρ_cell, τ_cond) = (MODEL.c_cond / (ρ_cell * τ_cond * (1.0 - fs))) - MODEL.Zeff
-	Z_range = [
-		Z(fs, exp10(logρcell), exp10.(logτ)) for
-		logτ in logτ_range, logρcell in logρcell_range
-	]
-	solarZ_range = replace(x -> 0.0 < x < 1.0 ? x : NaN, Z_range ./ MODEL.Zsun)
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(880, 730))
-
-		ax = CairoMakie.Axis(
-			f[1,1];
-			xlabel=L"\log_{10} \, \tau_\mathrm{cond} \,\, [\mathrm{%$(MODEL.t_u)}]",
-			ylabel=L"\log_{10} \, \rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
-			aspect=AxisAspect(1),
-		)
-
-		hm = heatmap!(
-			ax,
-			logτ_range,
-			logρcell_range,
-			solarZ_range;
-			nan_color=:white,
-			colorrange=(0.0, 1.0),
-		)
-
-		# Compute colorbar parameters
-		colorrange = hm.attributes.calculated_colors.val.colorrange.val
-        min_c = round(colorrange[1], RoundUp; digits=1)
-        max_c = round(colorrange[2], RoundDown; digits=1)
-        ticks = round.(range(min_c, max_c, 5); digits=1)
-
-        Colorbar(
-			f[1, 2],
-			hm;
-			ticks,
-			label=L"Z \, / \, Z_\odot",
-		)
-
-		# Adjust the colorbar height
-        rowsize!(f.layout, 1, Makie.Fixed(pixelarea(ax.scene)[].widths[2]))
-
-		f
-
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ 25ae9eb0-86ce-4e73-8b4b-128c33f15e4e
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	resolution = 100
-
-	# Stellar fraction
-	fs = 0.0
-
-	# Total cell density range [mp * cm⁻³]
-	logρcell_range = range(-1, 3, resolution)
-
-    # Ionized fraction range [dimensionless]
-	logfi_range = range(-2, 0, resolution)
-
-	# Metallicity range [dimensionless]
-	solarZ_range = range(0.0, 1.0, 50)
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(
-			size=(880, 880),
-			figure_padding=(1, 10, 10, 1),
-		)
-
-		#############################################################################
-		# τ_star
-		#############################################################################
-
-		τ = [MODEL.τ_star(exp10(logρcell)) for logρcell in logρcell_range]
-		logτ_range = log10.(τ)
-
-		println("τ_star range: $(extrema(τ))")
-		println()
-
-		# Color variable
-		ρ_cell(τ_star) = (MODEL.c_star / τ_star)^2
-		ρcell_range = [ρ_cell(exp10(logτ)) for logτ in logτ_range, _ in 1:1]
-		logρcell = replace(x -> -1 < x < 3 ? x : NaN, log10.(ρcell_range))
-
-		ax_01 = CairoMakie.Axis(
-			f[1,1];
-			xlabel=L"\log_{10} \, \tau_\mathrm{cond} \,\, [\mathrm{%$(MODEL.t_u)}]",
-			limits=(-4, 5, nothing, nothing),
-			title=L"\tau_\mathrm{star}",
-			backgroundcolor=:gray85,
-			aspect=nothing,
-		)
-
-		hm = heatmap!(
-			ax_01,
-			logτ_range,
-			[1,],
-			logρcell;
-			nan_color=:gray85,
-			colorrange=(-1.0, 3.0),
-		)
-
-		hidedecorations!(ax_01)
-
-		#############################################################################
-		# Colorbar
-		#############################################################################
-
-		# Compute colorbar parameters
-		colorrange = hm.attributes.calculated_colors.val.colorrange.val
-        min_c = round(colorrange[1], RoundUp; digits=1)
-        max_c = round(colorrange[2], RoundDown; digits=1)
-        ticks = round.(range(min_c, max_c, 5); digits=1)
-
-        Colorbar(
-			f[1:3, 2],
-			hm;
-			ticks,
-			label=L"\log_{10} \, \rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
-		)
-
-		#############################################################################
-		# τ_cond
-		#############################################################################
-
-		τ = [
-			MODEL.τ_cond(fs, exp10(logρcell), solarZ * MODEL.Zsun) for
-			logρcell in logρcell_range, solarZ in solarZ_range
-		]
-		logτ_range = range(log10.(extrema(τ))..., resolution)
-
-		println("τ_cond range: $(extrema(τ))")
-		println()
-
-		# Color variable
-		ρ_cell(fs, τ_cond, Z) = MODEL.c_cond / (τ_cond * (Z + MODEL.Zeff) * (1.0 - fs))
-		ρcell_range = [
-			ρ_cell(fs, exp10(logτ), solarZ * MODEL.Zsun) for
-			logτ in logτ_range, solarZ in solarZ_range
-		]
-		logρcell = replace(x -> -1 < x < 3 ? x : NaN, log10.(ρcell_range))
-
-		ax_02 = CairoMakie.Axis(
-			f[2,1];
-			xlabel=L"\log_{10} \, \tau_\mathrm{cond} \,\, [\mathrm{%$(MODEL.t_u)}]",
-			ylabel=L"Z \, / \, Z_\odot",
-			limits=(-4, 5, nothing, nothing),
-			title=L"\tau_\mathrm{cond}",
-			backgroundcolor=:gray85,
-			aspect=nothing,
-		)
-
-		hidexdecorations!(ax_02)
-
-		hm = heatmap!(
-			ax_02,
-			logτ_range,
-			solarZ_range,
-			logρcell;
-			nan_color=:gray85,
-			colorrange=(-1.0, 3.0),
-		)
-
-		#############################################################################
-		# τ_rec
-		#############################################################################
-
-		τ = [
-			MODEL.τ_rec(exp10(logfi), exp10(logρcell)) for
-			logρcell in logρcell_range, logfi in logfi_range
-		]
-		logτ_range = range(log10.(extrema(τ))..., resolution)
-
-		println("τ_rec range: $(extrema(τ))")
-		println()
-
-		# Color variable
-		ρ_cell(τ_rec, fi) = MODEL.c_rec / (τ_rec * fi)
-		ρcell_range = [
-			ρ_cell(exp10(logτ), exp10(logfi)) for logτ in logτ_range, logfi in logfi_range
-		]
-		logρcell = replace(
-			x -> -1 < x < 3 ? x : NaN,
-			log10.(ρcell_range),
-		)
-
-		ax_03 = CairoMakie.Axis(
-			f[3,1];
-			xlabel=L"\log_{10} \, \tau \,\, [\mathrm{%$(MODEL.t_u)}]",
-			ylabel=L"f_i",
-			limits=(-4, 5, nothing, nothing),
-			title=L"\tau_\mathrm{rec}",
-			backgroundcolor=:gray85,
-			aspect=nothing,
-		)
-
-		hm = heatmap!(
-			ax_03,
-			logτ_range,
-			exp10.(logfi_range),
-			logρcell;
-			nan_color=:gray85,
-			colorrange=(-1.0, 3.0),
-		)
-
-		rowsize!(f.layout, 1, Relative(1/20))
-
-		mkpath("./generated_files/plots/model/")
-		Makie.save("./generated_files/plots/model/timescale_comparison.pdf", f)
-
-		f
-
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ 7e2dd843-aa95-4d96-a07d-2ce4c1b1452b
-# ╠═╡ skip_as_script = true
-#=╠═╡
-begin
-	logρcell = 1.0
-	star_rec = MODEL.τ_star(exp10(logρcell)) / MODEL.τ_rec(0.5, exp10(logρcell))
-	cond_rec = MODEL.τ_cond(0.0, exp10(logρcell), MODEL.Zsun) / MODEL.τ_rec(0.5, exp10(logρcell))
-
-	println("τ_star / τ_rec: $(star_rec)")
-	println()
-	println("τ_cond / τ_rec: $(cond_rec)")
+	ref_fs = getindex.(reference_sim, MODEL.phase_name_to_index["stellar"])
 end;
-  ╠═╡ =#
 
-# ╔═╡ dfb8b71a-b3a3-4ea0-9ea3-213c206117ca
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### Photodissociation efficiency and mass recycling"
-  ╠═╡ =#
-
-# ╔═╡ 4ad4589f-9834-44a5-9c4b-994b7d91e442
-# ╠═╡ skip_as_script = true
-#=╠═╡
-with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(1700, 600))
-
-		ax = CairoMakie.Axis(
-			f[1,1],
-			xlabel=L"\mathrm{stellar \,\, age \,\, [Myr]}",
-			ylabel=L"\eta_\mathrm{ion}",
-			xscale=log10,
-			aspect=AxisAspect(1),
-		)
-
-		ages = exp10.(range(-1, 3, 200))
-		η_ion(age, Zs) = MODEL.photodissociation_efficiency(age, Zs * MODEL.Zsun)[2]
-
-		for Zs in [0.0, 0.5, 1.0]
-			label = L"Z \, / \, Z_\odot = %$(Zs)"
-			lines!(ax, ages, x -> η_ion(x, Zs); label)
-		end
-
-		axislegend(ax; position=:rb, nbanks=1, labelsize=25)
-
-		ax = CairoMakie.Axis(
-			f[1,2],
-			xlabel=L"\mathrm{stellar \,\, age \,\, [Myr]}",
-			ylabel=L"\eta_\mathrm{diss}",
-			xscale=log10,
-			aspect=AxisAspect(1),
-		)
-
-		ages = exp10.(range(-1, 3, 200))
-		ηd(age, Zs) = MODEL.photodissociation_efficiency(age, Zs * MODEL.Zsun)[1]
-
-		for Zs in [0.0, 0.5, 1.0]
-			label = L"Z \, / \, Z_\odot = %$(Zs)"
-			lines!(ax, ages, x -> ηd(x, Zs); label)
-		end
-
-		axislegend(ax; position=:rb, nbanks=1, labelsize=25)
-
-		ax = CairoMakie.Axis(
-			f[1,3],
-			xlabel=L"Z \, / \, Z_\odot",
-			ylabel=L"R",
-			aspect=AxisAspect(1),
-		)
-
-		metalicities = range(0, 2.0, 200)
-		R(Zs) = MODEL.recycled_fractions(Zs * MODEL.Zsun)[1]
-
-		lines!(ax, metalicities, R)
-
-		f
-
-	end
-  ╠═╡ =#
-
-# ╔═╡ b2197f1a-ff9a-429c-8486-dfa27abc880d
-# ╠═╡ skip_as_script = true
-#=╠═╡
+# ╔═╡ 569231d3-a254-4e30-8e38-26cce1bfd3d5
 let
-	ages = exp10.(range(-1, 3, 200))
-	η_ion(age, Zs) = MODEL.photodissociation_efficiency(age, Zs * MODEL.Zsun)[2]
-	ηd(age, Zs) = MODEL.photodissociation_efficiency(age, Zs * MODEL.Zsun)[1]
+	cells_copy = deepcopy(cells)
+	
+	@inbounds for i in 2:N_steps
 
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
+		tspan = (0.0, time_steps[i] - time_steps[i - 1])
 
-		f = Figure(size=(880,880))
+		# Select only the cells that are still gas
+		gas_idxs = findall(x -> !x.stellar, cells_copy)
 
-		ax = CairoMakie.Axis(
-			f[1,1],
-			xlabel=L"\mathrm{stellar \,\, age \,\, [Myr]}",
-			ylabel=L"\eta",
-			xscale=log10,
-			aspect=AxisAspect(1),
-		)
+		Threads.@threads for cell in cells_copy[gas_idxs]
+				
+			# Set the initial conditions and the parameters
+			ic     = [cell.fi, cell.fa, cell.fm, cell.fs]
+			params = [cell.ρ, cell.Z]
 
-		labels = [
-			L"\eta_\mathrm{ion} \,\, (Z = 0.0)",
-			L"\eta_\mathrm{ion} \,\, (Z = Z_\odot)",
-		]
+			# Solve the ODEs
+			fracs = MODEL.integrate_model(ic, params, tspan)[end]
 
-		for (Zs, label) in zip([0.0, 1.0], labels)
-			lines!(ax, ages, x -> η_ion(x, Zs); label)
-		end
+			# Store the previus value of fs
+			old_fs = cell.fs
 
-		labels = [
-			L"\eta_\mathrm{diss} \,\, (Z = 0.0)",
-			L"\eta_\mathrm{diss} \,\, (Z = Z_\odot)",
-		]
+			# Read the fractions and renormalize negative values
+			fi = max(fracs[MODEL.phase_name_to_index["ionized"]], 0.0)
+			fa = max(fracs[MODEL.phase_name_to_index["atomic"]], 0.0)
+			fm = max(fracs[MODEL.phase_name_to_index["molecular"]], 0.0)
+			fs = max(fracs[MODEL.phase_name_to_index["stellar"]], 0.0)
 
-		for (Zs, label) in zip([0.0, 1.0], labels)
-			lines!(ax, ages, x -> ηd(x, Zs); label)
-		end
+     		ft = fi + fa + fm + fs
 
-		axislegend(ax; position=:lt, nbanks=1)
+			# Update the fractions in the gas cell
+			cell.fi = fi / ft
+			cell.fa = fa / ft
+			cell.fm = fm / ft
+			cell.fs = fs / ft
 
-		f
+			# Compute the probability of forming a star
+			prob = (cell.fs - old_fs) / (1.0 - old_fs)
 
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ ad34b750-5e81-4cb8-a444-52220c116790
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"## Integration"
-  ╠═╡ =#
-
-# ╔═╡ b31c615a-36b3-46c0-bf8e-f8b5a77296f4
-md"### Fractions vs time"
-
-# ╔═╡ 6f341d1b-8b0f-4bc5-b18c-d1e9dc9281d5
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	#################################################################################
-	# Metallicity x density (tight) grid
-	#################################################################################
-
-	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
-
-	xaxis_visible = [false, false, false, false, false, false, true, true, true]
-	yaxis_visible = [true, false, false, true, false, false, true, false, false]
-
-	# Initial conditions
-	fi = 0.5
-	ic_05 = [fi, 1.0 - fi, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
-	fi = 0.01
-	ic_001 = [fi, 1.0 - fi, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
-
-	# Total cell density range [mp * cm⁻³]
-	ρ_str = [L"0.19", L"10", L"300"]
-	ρ_list = [0.19, 10.0, 300.0]
-
-	# Metallicity [dimensionless]
-	Z_str = [L"0.0", L"0.1", L"1.0"]
-	Z_list = [0.0, 0.1, 1.0] * MODEL.Zsun
-
-	print_params = [[ρ, Z] for ρ in ρ_str, Z in Z_str]
-	base_params = [[ρ, Z] for ρ in ρ_list, Z in Z_list]
-
-	# Time variables
-	it         = 1000.0 # Integration time [Myr]
-	time_list  = exp10.(range(-3, log10(it), 1000))
-	time_range = (time_list[1], time_list[end])
-
-	# Numerical integration
-	fractions_05 = [
-		MODEL.integrate_model(ic_05, base_param, time_range; times=time_list) for
-		base_param in base_params
-	]
-	fractions_001 = [
-		MODEL.integrate_model(ic_001, base_param, time_range; times=time_list) for
-		base_param in base_params
-	]
-
-	iterator = enumerate(
-		zip(
-			print_params,
-			base_params,
-			fractions_05,
-			fractions_001,
-			xaxis_visible,
-			yaxis_visible,
-		),
-	)
-
-	scale = 1700 / length(ρ_list)
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(
-			size=(1700, scale * length(Z_list)),
-			figure_padding=(1, 15, 5, 15),
-		)
-
-		for (idx, ((ρ_str, Z_str), (ρ, Z), fraction_05, fraction_001, xaxis_v, yaxis_v)) in iterator
-
-			row = ceil(Int, idx / length(ρ_list))
-			col = mod1(idx, length(Z_list))
-
-			ax = CairoMakie.Axis(
-				f[row, col];
-				xlabel=L"\log_{10} \, t \,\, [\mathrm{%$(MODEL.t_u)}]",
-		        ylabel=L"f",
-				title=L"$Z / Z_\odot =$%$Z_str$\quad \rho_\mathrm{cell} =$%$ρ_str$\, \mathrm{%$(MODEL.l_u)^{-3}}$",
-				xminorticksvisible=xaxis_v,
-		        xticksvisible=xaxis_v,
-		        xlabelvisible=xaxis_v,
-		        xticklabelsvisible=xaxis_v,
-				yminorticksvisible=yaxis_v,
-		        yticksvisible=yaxis_v,
-		        ylabelvisible=yaxis_v,
-		        yticklabelsvisible=yaxis_v,
-				limits=((-3.2, 3.2), (-0.05, 1.02)),
-				aspect=AxisAspect(1),
-				xticks=(
-					[-3, -2, -1, 0, 1, 2, 3],
-					["-3", "-2", "-1", "0", "1", "2", "3"],
-				),
-			)
-
-			for (label, idx, color) in zip(frac_labels, 1:4, Makie.wong_colors())
-
-				lines!(
-					ax,
-					log10.(time_list),
-					getindex.(fraction_05, idx);
-					label,
-					color,
-				)
-
-				lines!(
-					ax,
-					log10.(time_list),
-					getindex.(fraction_001, idx);
-					linestyle=:dash,
-					color,
-				)
-
+			# Test if the gas cell turn into a star
+			if rand() < prob
+				cell.stellar = true
 			end
-
-			if row == 3 && col == 3
-				axislegend(ax; position=(0.5, 0.98), nbanks=2, labelsize=35)
-			end
-
+			
 		end
-
-		mkpath("./generated_files/plots/model/")
-		Makie.save(
-			"./generated_files/plots/model/fractions-vs-time-grid.pdf",
-			f,
-		)
-
-		f
-
+		
+		N_gas[i - 1] = count(x -> !x.stellar, cells_copy)
+		
 	end
-end
-  ╠═╡ =#
-
-# ╔═╡ 1d870ff9-fade-43c8-af55-6137ce051b8e
-md"### Fractions vs density"
-
-# ╔═╡ c76cf08f-aaef-46df-ae18-9cd018141b70
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	#################################################################################
-	# ICs x fractions (tight) grid
-	#################################################################################
-
-	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
-	phases       = ["ionized", "atomic", "molecular", "stellar"]
-
-	ylimits = [(0.0, 0.5), (0.0, 1.05), (-0.01, 0.2), (-0.002, 0.05)]
-
-	# Axis visibility
-	xaxis_visible = [false, false, false, true]
-	yaxis_visible = [true, false, false]
-	title_visible = [true, false, false, false]
-
-	# Initial conditions
-	fis = [0.01, 0.25, 0.5]
-	ics = [[fi, 1.0 - fi, 0.0, 0.0] for fi in fis] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
-
-	# Total cell density range [mp * cm⁻³]
-	ρ_exp_list = range(-1, 3, 100)
-	ρ_list     = exp10.(ρ_exp_list)
-
-	# Metallicities [dimensionless]
-	Z_labels = [
-		L"Z / Z_\odot = 0.0",
-		L"Z / Z_\odot = 10^{-3}",
-		L"Z / Z_\odot = 10^{-2}",
-		L"Z / Z_\odot = 10^{-1}",
-		L"Z / Z_\odot = 0.5",
-		L"Z / Z_\odot = 1.0",
-	]
-	Z_list = [0.0, 0.001, 0.01, 0.1, 0.5, 1.0] * MODEL.Zsun
-
-	# Integration time [Myr]
-	it = 0.5
-
-	# Label positions
-	positions = [(0.75, 0.1), (0.95, 0.85), :lt, :lt]
-
-	# Iterators
-	col_iterator = enumerate(zip(ics, string.(fis), yaxis_visible))
-	row_iterator = enumerate(
-		zip(phases, phase_labels, positions, xaxis_visible, title_visible, ylimits),
-	)
-
-	scale = 1700 / length(ics)
 
 	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
-		f = Figure(size=(1700, scale * length(phases)))
-
-		for (col, (ic, fi, yaxis_v)) in col_iterator
-
-			base_params_01 = [[ρ, Z_list[1]] for ρ in ρ_list]
-			base_params_02 = [[ρ, Z_list[2]] for ρ in ρ_list]
-			base_params_03 = [[ρ, Z_list[3]] for ρ in ρ_list]
-			base_params_04 = [[ρ, Z_list[4]] for ρ in ρ_list]
-			base_params_05 = [[ρ, Z_list[5]] for ρ in ρ_list]
-			base_params_06 = [[ρ, Z_list[6]] for ρ in ρ_list]
-
-        	fractions_01 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_01
-			]
-			fractions_02 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_02
-			]
-			fractions_03 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_03
-			]
-			fractions_04 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_04
-			]
-			fractions_05 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_05
-			]
-			fractions_06 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_06
-			]
-
-			for (row, (phase, p_label, position, xaxis_v, title_v, ylimit)) in row_iterator
-
-				ax = CairoMakie.Axis(
-					f[row, col];
-					xlabel=L"\log_{10} \, \rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
-				    ylabel=p_label,
-					title=L"f_i = %$fi",
-					titlevisible=title_v,
-					xminorticksvisible=xaxis_v,
-		            xticksvisible=xaxis_v,
-		            xlabelvisible=xaxis_v,
-		            xticklabelsvisible=xaxis_v,
-					yminorticksvisible=yaxis_v,
-		            yticksvisible=yaxis_v,
-		            ylabelvisible=yaxis_v,
-		            yticklabelsvisible=yaxis_v,
-					aspect=AxisAspect(1),
-					limits=(nothing, ylimit),
-				)
-
-				idx = MODEL.phase_name_to_index[phase]
-
-				fraction = getindex.(fractions_01, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[1])
-
-				fraction = getindex.(fractions_02, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[2])
-
-				fraction = getindex.(fractions_03, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[3])
-
-				fraction = getindex.(fractions_04, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[4])
-
-				fraction = getindex.(fractions_05, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[5])
-
-				fraction = getindex.(fractions_06, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[6])
-
-				if row == length(phases) && col == length(ics)
-					axislegend(ax; position, nbanks=1, labelsize=35)
-				end
-
-			end
-
-		end
-
-		colgap!(f.layout, 35)
-
-		f
-
-	end
-
-end
-  ╠═╡ =#
-
-# ╔═╡ 3bd92a5f-4efd-441e-a7d1-c3597e1f4a39
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-	#################################################################################
-	# ICs x fractions (tight) grid
-	#################################################################################
-
-	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
-	phases       = ["ionized", "atomic", "molecular", "stellar"]
-
-	ylimits = [(-0.02, 0.43), (-0.04, 1.05), (-0.01, 0.17), (-0.04, 1.0)]
-
-	# Axis visibility
-	xaxis_visible = [false, false, false, true]
-	yaxis_visible = [true, false, false]
-	title_visible = [true, false, false, false]
-
-	# Initial conditions
-	fi = 0.5
-	ic = [fi, 1.0 - fi, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
-
-	# Total cell density range [mp * cm⁻³]
-	ρ_exp_list = range(-1, 3, 100)
-	ρ_list     = exp10.(ρ_exp_list)
-
-	# Metallicities [dimensionless]
-	Z_labels = [
-		L"Z / Z_\odot = 0.0",
-		L"Z / Z_\odot = 10^{-3}",
-		L"Z / Z_\odot = 10^{-2}",
-		L"Z / Z_\odot = 10^{-1}",
-		L"Z / Z_\odot = 0.5",
-		L"Z / Z_\odot = 1.0",
-	]
-	Z_list = [0.0, 0.001, 0.01, 0.1, 0.5, 1.0] * MODEL.Zsun
-
-	# Integration time [Myr]
-	its = [1.0, 10.0, 100.0]
-
-	# Label positions
-	positions = [(0.75, 0.1), (0.95, 0.85), :lt, :lt]
-
-	# Iterators
-	col_iterator = enumerate(zip(its, string.(Int.(its)), yaxis_visible))
-	row_iterator = enumerate(
-		zip(phases, phase_labels, positions, xaxis_visible, title_visible, ylimits),
-	)
-
-	scale = 1700 / length(its)
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(1700, scale * length(phases)))
-
-		for (col, (it, fi, yaxis_v)) in col_iterator
-
-			base_params_01 = [[ρ, Z_list[1]] for ρ in ρ_list]
-			base_params_02 = [[ρ, Z_list[2]] for ρ in ρ_list]
-			base_params_03 = [[ρ, Z_list[3]] for ρ in ρ_list]
-			base_params_04 = [[ρ, Z_list[4]] for ρ in ρ_list]
-			base_params_05 = [[ρ, Z_list[5]] for ρ in ρ_list]
-			base_params_06 = [[ρ, Z_list[6]] for ρ in ρ_list]
-
-        	fractions_01 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_01
-			]
-			fractions_02 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_02
-			]
-			fractions_03 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_03
-			]
-			fractions_04 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_04
-			]
-			fractions_05 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_05
-			]
-			fractions_06 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
-				base_param in base_params_06
-			]
-
-			for (row, (phase, p_label, position, xaxis_v, title_v, ylimit)) in row_iterator
-
-				ax = CairoMakie.Axis(
-					f[row, col];
-					xlabel=L"\log_{10} \, \rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
-				    ylabel=p_label,
-					title=L"t_f = %$it \, \mathrm{Myr}",
-					titlevisible=title_v,
-					xminorticksvisible=xaxis_v,
-		            xticksvisible=xaxis_v,
-		            xlabelvisible=xaxis_v,
-		            xticklabelsvisible=xaxis_v,
-					yminorticksvisible=yaxis_v,
-		            yticksvisible=yaxis_v,
-		            ylabelvisible=yaxis_v,
-		            yticklabelsvisible=yaxis_v,
-					aspect=AxisAspect(1),
-					limits=(nothing, ylimit),
-				)
-
-				idx = MODEL.phase_name_to_index[phase]
-
-				fraction = getindex.(fractions_01, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[1])
-
-				fraction = getindex.(fractions_02, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[2])
-
-				fraction = getindex.(fractions_03, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[3])
-
-				fraction = getindex.(fractions_04, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[4])
-
-				fraction = getindex.(fractions_05, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[5])
-
-				fraction = getindex.(fractions_06, idx)
-				lines!(ax, ρ_exp_list, fraction; label=Z_labels[6])
-
-				if row == length(phases) && col == length(its)
-					axislegend(ax; position, nbanks=1, labelsize=35)
-				end
-
-			end
-
-		end
-
-		colgap!(f.layout, 35)
-
-		mkpath("./generated_files/plots/model/")
-		Makie.save(
-			"./generated_files/plots/model/fractions-vs-density-grid.pdf",
-			f,
-		)
-
-		f
-
-	end
-
-end
-  ╠═╡ =#
-
-# ╔═╡ e99ef380-2646-4948-8673-436baad64d3b
-md"### Long integration time"
-
-# ╔═╡ 660aa82c-78db-469d-87cf-9325fa6a30ff
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-
-	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
-
-	# Initial conditions
-	ic = [0.15, 0.85, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
-
-	# Total cell density range [mp * cm⁻³]
-	ρ = 10.0
-
-	# Metallicities [dimensionless]
-	Z = 0.8 * MODEL.Zsun
-
-	# Integration time [Myr]
-	it = 1000.0 * 1000.0 # 1000 Gyr
-
-	time_list = exp10.(range(-4, log10(it), 10000))
-
-	fractions = MODEL.integrate_model(ic, [ρ, Z], (0.0, it); times=time_list)
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(1500, 1500), figure_padding=(1, 30, 5, 15))
-
-		for (idx, (label, color)) in enumerate(zip(frac_labels, Makie.wong_colors()))
-
-			row = ceil(Int, idx / 2)
-			col = mod1(idx, 2)
-
-			ax = CairoMakie.Axis(
-				f[row, col];
-				xlabel=L"\log_{10} \, t \,\, [\mathrm{%$(MODEL.t_u)}]",
-		        ylabel=label,
-				aspect=AxisAspect(1),
-				xticks=(-4:1:6),
-			)
-
-			vlines!(-1.0; color=:gray55)
-
-			lines!(ax, log10.(time_list), getindex.(fractions, idx); color)
-
-		end
-
-		f
-
-	end
-
-end
-  ╠═╡ =#
-
-# ╔═╡ 05c3a97a-4096-4642-a1ae-c47283666a43
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-
-	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
-
-	# Initial conditions
-	ic = [0.15, 0.85, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
-
-	# Total cell density range [mp * cm⁻³]
-	ρ = 10.0
-
-	# Metallicities [dimensionless]
-	Z = 0.8 * MODEL.Zsun
-
-	# Integration time [Myr]
-	it = 1000.0 * 1000.0 # 1000 Gyr
-
-	time_list = exp10.(range(-4, log10(it), 10000))
-
-	fractions = MODEL.integrate_model(ic, [ρ, Z], (0.0, it); times=time_list)
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(880, 880), figure_padding=(1, 30, 5, 15))
-
+		f = Figure()
+	
 		ax = CairoMakie.Axis(
-			f[1,1];
-			xlabel=L"\log_{10} \, t \,\, [\mathrm{%$(MODEL.t_u)}]",
-		    ylabel=L"f",
-			aspect=AxisAspect(1),
-			xticks=(-4:1:6),
+			f[1, 1];
+			xlabel=L"t \, [\mathrm{Myr}]",
+			ylabel=L"\mathrm{Fraction}",
+			limits=(nothing, nothing, -0.05, 1.05),
 		)
 
-		vlines!(-1.0; color=:gray55)
-
-		for (idx, (label, color)) in enumerate(zip(frac_labels, Makie.wong_colors()))
-			lines!(ax, log10.(time_list), getindex.(fractions, idx); color, label)
-		end
-
-		axislegend(ax; position=(0.02, 1.0), nbanks=2, labelsize=30)
-
-		f
-
-	end
-
-end
-  ╠═╡ =#
-
-# ╔═╡ a6b4d852-43dd-4fe9-a0d8-f07e1c53c1f1
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
-
-	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
-
-	# Initial conditions
-	ic = [0.15, 0.85, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
-
-	# Total cell density range [mp * cm⁻³]
-	ρ = 10.0
-
-	# Metallicities [dimensionless]
-	Z = 0.8 * MODEL.Zsun
-
-	# Integration time [Myr]
-	it = 100.0
-
-	time_list = exp10.(range(-4, log10(it), 10000))
-
-	# Integrate the system
-	fractions = MODEL.integrate_model(ic, [ρ, Z], (0.0, it); times=time_list)
-
-	# Gas fractions
-	fi = getindex.(fractions, 1)
-	fa = getindex.(fractions, 2)
-	fm = getindex.(fractions, 3)
-	fs = getindex.(fractions, 4)
-
-	############
-	# Constants
-	############
-
-	# Star formation efficiency
-	ϵff  = MODEL.ϵff
-
-	# Recombination coefficient
-	αH   = MODEL.αH
-
-	# Formation rate coefficient of H₂ on dust grain (at solar metallicity)
-	Rsun = MODEL.Rsun
-
-	# Solar metallicity
-	Zsun = MODEL.Zsun
-
-	# Effective metallicity
-	Zeff = MODEL.Zeff
-
-	# Clumping factor
-	Cρ   = MODEL.Cρ
-
-	C_star = sqrt(3π / 32u"G") / ϵff
-	C_rec  = u"mp" / αH
-	C_cond = (u"mp" * Zsun) / (2 * Rsun * Cρ)
-
-	##############
-	# Time scales
-	##############
-
-	ρ_cell = ρ * u"mp*cm^-3"
-
-	τ_star = C_star / sqrt(ρ_cell)
-	τ_rec  = C_rec / ρ_cell
-	τ_cond = C_cond / (ρ_cell * (Z + Zeff))
-
-	ηd, ηi = MODEL.photodissociation_efficiency(
-		exp10(MODEL.Q_ages[end] - 6),
-		Z,
-	)
-	R, _ = MODEL.recycled_fractions(Z)
-
-	#####################
-	# Molecular equation
-	#####################
-
-	mol_ls = @. (fa / fm) * (1 - fs)
-    mol_rs = uconvert(Unitful.NoUnits, ((ηd + 1) * τ_cond) / τ_star)
-
-    mol_quotient = @. log10(mol_ls / mol_rs)
-
-	###################
-	# Ionized equation
-	###################
-
-	ion_ls = @. (fi * fi) / fm
-    ion_rs = uconvert(Unitful.NoUnits, ((ηi + R) * τ_rec) / τ_star)
-
-    ion_quotient = @. log10(ion_ls / ion_rs)
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure(size=(880, 880), figure_padding=(1, 30, 5, 15))
-
-		ax = CairoMakie.Axis(
-			f[1,1];
-			xlabel=L"\log_{10} \, t \,\, [\mathrm{%$(MODEL.t_u)}]",
-		    ylabel=L"\log_{10} \, \mathrm{LS / RS}",
-			aspect=AxisAspect(1),
-			xticks=(-4:1:6),
-		)
-
-		vlines!(-1.0; color=:gray55)
+		f_gas = N_gas ./ N_cells
 
 		lines!(
-			ax,
-			log10.(time_list),
-			mol_quotient;
+			ax, 
+			time_steps, 
+			ref_fs, 
+			label=L"\mathrm{Reference}", 
+			color=:gray55,
+		)
+	
+		lines!(
+			ax, 
+			time_steps[2:end], 
+			f_gas; 
+			label=L"\mathrm{Gas \,\, fraction}",
 			color=Makie.wong_colors()[1],
-			label=L"\mathrm{H_2}",
 		)
+		
 		lines!(
 			ax,
-			log10.(time_list),
-			ion_quotient;
+			time_steps[2:end],  
+			1.0 .- f_gas; 
+			label=L"\mathrm{Stellar \,\, fraction}",
 			color=Makie.wong_colors()[2],
-			label=L"\mathrm{HII}",
 		)
 
-		axislegend(ax; position=(0.98, 1.0), nbanks=1, labelsize=30)
+		axislegend(; position=:rc, nbanks=1)
+	
+		Makie.save("./generated_files/plots/montecarlo/recipe_01.png", f)
+	
+	end
+end;
 
-		f
+# ╔═╡ 7253e168-bd24-48c9-b013-2a21d4fa0879
+let
+	cells_copy = deepcopy(cells)
+	
+	@inbounds for i in 2:N_steps
 
+		tspan = (0.0, time_steps[i] - time_steps[i - 1])
+
+		# Select only the cells that are still gas
+		gas_idxs = findall(x -> !x.stellar, cells_copy)
+
+		Threads.@threads for cell in cells_copy[gas_idxs]
+				
+			# Set the initial conditions and the parameters
+			ic     = [cell.fi, cell.fa, cell.fm, cell.fs]
+			params = [cell.ρ, cell.Z]
+
+			# Solve the ODEs
+			fracs = MODEL.integrate_model(ic, params, tspan)[end]
+
+			# Read the fractions and renormalize negative values
+			fi = max(fracs[MODEL.phase_name_to_index["ionized"]], 0.0)
+			fa = max(fracs[MODEL.phase_name_to_index["atomic"]], 0.0)
+			fm = max(fracs[MODEL.phase_name_to_index["molecular"]], 0.0)
+			fs = max(fracs[MODEL.phase_name_to_index["stellar"]], 0.0)
+
+     		ft = fi + fa + fm + fs
+
+			# Update the fractions in the gas cell
+			cell.fi = fi / ft
+			cell.fa = fa / ft
+			cell.fm = fm / ft
+			cell.fs = fs / ft
+
+			# Compute the probability of forming a star
+			prob = cell.fs
+
+			# Test if the gas cell turn into a star
+			if rand() < prob
+				cell.stellar = true
+			end
+			
+		end
+		
+		N_gas[i - 1] = count(x -> !x.stellar, cells_copy)
+		
 	end
 
-end
-  ╠═╡ =#
+	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
+
+		f = Figure()
+	
+		ax = CairoMakie.Axis(
+			f[1, 1];
+			xlabel=L"t \, [\mathrm{Myr}]",
+			ylabel=L"\mathrm{Fraction}",
+			limits=(nothing, nothing, -0.05, 1.05),
+		)
+
+		f_gas = N_gas ./ N_cells
+
+		lines!(
+			ax, 
+			time_steps, 
+			ref_fs, 
+			label=L"\mathrm{Reference}", 
+			color=:gray55,
+		)
+	
+		lines!(
+			ax, 
+			time_steps[2:end], 
+			f_gas; 
+			label=L"\mathrm{Gas \,\, fraction}",
+			color=Makie.wong_colors()[1],
+		)
+		
+		lines!(
+			ax,
+			time_steps[2:end],  
+			1.0 .- f_gas; 
+			label=L"\mathrm{Stellar \,\, fraction}",
+			color=Makie.wong_colors()[2],
+		)
+
+		axislegend(; position=:rc, nbanks=1)
+	
+		Makie.save("./generated_files/plots/montecarlo/recipe_02.png", f)
+	
+	end
+end;
+
+# ╔═╡ da6f13ce-34fc-4344-b3c7-667bab0afb82
+let
+	cells_copy = deepcopy(cells)
+	
+	@inbounds for i in 2:N_steps
+
+		it = time_steps[i] - time_steps[i - 1]
+		tspan = (0.0, it)
+
+		# Select only the cells that are still gas
+		gas_idxs = findall(x -> !x.stellar, cells_copy)
+
+		Threads.@threads for cell in cells_copy[gas_idxs]
+				
+			# Set the initial conditions and the parameters
+			ic     = [cell.fi, cell.fa, cell.fm, cell.fs]
+			params = [cell.ρ, cell.Z]
+
+			# Solve the ODEs
+			fracs = MODEL.integrate_model(ic, params, tspan)[end]
+
+			# Read the fractions and renormalize negative values
+			fi = max(fracs[MODEL.phase_name_to_index["ionized"]], 0.0)
+			fa = max(fracs[MODEL.phase_name_to_index["atomic"]], 0.0)
+			fm = max(fracs[MODEL.phase_name_to_index["molecular"]], 0.0)
+			fs = max(fracs[MODEL.phase_name_to_index["stellar"]], 0.0)
+
+     		ft = fi + fa + fm + fs
+
+			# Update the fractions in the gas cell
+			cell.fi = fi / ft
+			cell.fa = fa / ft
+			cell.fm = fm / ft
+			cell.fs = fs / ft
+
+			# Compute the probability of forming a star
+			prob = 1.0 - exp(-cell.fs * (it / time_steps[i]))
+
+			# Test if the gas cell turn into a star
+			if rand() < prob
+				cell.stellar = true
+			end
+			
+		end
+		
+		N_gas[i - 1] = count(x -> !x.stellar, cells_copy)
+		
+	end
+
+	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
+
+		f = Figure()
+	
+		ax = CairoMakie.Axis(
+			f[1, 1];
+			xlabel=L"t \, [\mathrm{Myr}]",
+			ylabel=L"\mathrm{Fraction}",
+			limits=(nothing, nothing, -0.05, 1.05),
+		)
+
+		f_gas = N_gas ./ N_cells
+
+		lines!(
+			ax, 
+			time_steps, 
+			ref_fs, 
+			label=L"\mathrm{Reference}", 
+			color=:gray55,
+		)
+	
+		lines!(
+			ax, 
+			time_steps[2:end], 
+			f_gas; 
+			label=L"\mathrm{Gas \,\, fraction}",
+			color=Makie.wong_colors()[1],
+		)
+		
+		lines!(
+			ax,
+			time_steps[2:end],  
+			1.0 .- f_gas; 
+			label=L"\mathrm{Stellar \,\, fraction}",
+			color=Makie.wong_colors()[2],
+		)
+
+		axislegend(; position=:rc, nbanks=1)
+	
+		Makie.save("./generated_files/plots/montecarlo/recipe_03.png", f)
+	
+	end
+end;
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1708,16 +478,11 @@ DataFramesMeta = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
-Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
 PlutoLinks = "0ff47ea0-7a50-410d-8455-4348d5de0420"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-PrettyNumbers = "d1bdb62b-d559-469f-b147-fd8a93502a34"
-Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 TikzPictures = "37f6aa50-8035-52d0-81c2-5a1d08754b2d"
 Trapz = "592b5752-818d-11e9-1e9a-2b8ca4a44cd1"
@@ -1734,13 +499,10 @@ DataFramesMeta = "~0.15.3"
 DelimitedFiles = "~1.9.1"
 DifferentialEquations = "~7.14.0"
 Interpolations = "~0.15.1"
-Measurements = "~2.11.0"
 PlutoLinks = "~0.1.6"
 PlutoUI = "~0.7.60"
-PrettyNumbers = "~0.2.3"
 QuadGK = "~2.11.1"
 SpecialFunctions = "~2.4.0"
-Statistics = "~1.11.1"
 Symbolics = "~6.11.0"
 TikzPictures = "~3.5.0"
 Trapz = "~2.0.3"
@@ -1754,7 +516,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.1"
 manifest_format = "2.0"
-project_hash = "1f3b80d46a5d7123f6510a5a38a4e4cb94d72cff"
+project_hash = "4094046eb3da763bdc76e442812bf9ea06028e8f"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "eea5d80188827b35333801ef97a40c2ed653b081"
@@ -3885,12 +2647,6 @@ git-tree-sha1 = "9306f6085165d270f7e3db02af26a400d580f5c6"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.4.3"
 
-[[deps.PrettyNumbers]]
-deps = ["Printf"]
-git-tree-sha1 = "b5675770f17358747b4da71804e66f5885b60525"
-uuid = "d1bdb62b-d559-469f-b147-fd8a93502a34"
-version = "0.2.3"
-
 [[deps.PrettyTables]]
 deps = ["Crayons", "LaTeXStrings", "Markdown", "PrecompileTools", "Printf", "Reexport", "StringManipulation", "Tables"]
 git-tree-sha1 = "1101cd475833706e4d0e7b122218257178f48f34"
@@ -4840,45 +3596,12 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╠═f79c680a-7c97-4100-97e8-19190707c55b
-# ╟─37653018-aaf5-42d1-a938-e05a44f18918
-# ╟─7bd034e7-01fa-4ba1-835f-d83e5645c0ac
-# ╟─42d6a2c4-e219-47bf-9552-6051c9d3f9af
-# ╟─4b65fd9c-bd69-4e97-a28c-357c6a9c7bda
+# ╟─53faa843-2056-4c76-bc8b-31bb602d475c
+# ╟─b07d40bf-e115-4cd6-82b7-55951aa1c04e
 # ╠═a0ca487a-8a51-48cb-acc0-7b318c793d09
-# ╟─d393b8b2-fdef-4727-807a-68ad8c5e71db
-# ╠═ff7a0381-e149-4f51-9093-6e968f801ea0
-# ╠═6facecda-73e6-4e4b-9029-35ed8dad0e05
-# ╠═fa3e0300-cf13-4261-8549-a67ae0ea6d62
-# ╠═2e93c336-c055-4d2d-920b-70fb6d8117a4
-# ╟─cfacae0b-ee2e-4ba5-b31e-0fc122a3676b
-# ╟─b0c851e1-2cf7-48b7-b045-f5960147fb04
-# ╟─78385b04-ccee-48ad-8bb3-c6b1af1bfd1e
-# ╠═6162a115-fdb7-43eb-becb-0f25192001e0
-# ╟─6775e416-0878-4d82-9b3a-067eeebbe3ad
-# ╟─3dab9439-1100-457e-b97f-6841eb7b976e
-# ╟─42f7392c-90eb-41ee-8e05-8115b5f9322b
-# ╟─aea35bc4-4055-4e59-9f02-fa91366c0328
-# ╟─6f8b1403-a5ad-46cd-b8a2-c5f89ec062fe
-# ╟─17a35c37-eb91-4d72-8ee0-62e67a7b1fe1
-# ╟─8b70e0e5-eaf9-4cc0-9d7d-a6109dd29e06
-# ╟─d28e46e6-1322-433e-9ea3-b43ba36fdcd4
-# ╟─3eb7d10c-6d6b-42d2-9db4-48dbfd8d19b8
-# ╟─a539db70-7a37-4071-90d9-a0af4cf68afb
-# ╟─c8d75072-ae77-47c7-af31-a4ff18240d97
-# ╟─25ae9eb0-86ce-4e73-8b4b-128c33f15e4e
-# ╟─7e2dd843-aa95-4d96-a07d-2ce4c1b1452b
-# ╟─dfb8b71a-b3a3-4ea0-9ea3-213c206117ca
-# ╟─4ad4589f-9834-44a5-9c4b-994b7d91e442
-# ╟─b2197f1a-ff9a-429c-8486-dfa27abc880d
-# ╟─ad34b750-5e81-4cb8-a444-52220c116790
-# ╟─b31c615a-36b3-46c0-bf8e-f8b5a77296f4
-# ╟─6f341d1b-8b0f-4bc5-b18c-d1e9dc9281d5
-# ╟─1d870ff9-fade-43c8-af55-6137ce051b8e
-# ╟─c76cf08f-aaef-46df-ae18-9cd018141b70
-# ╟─3bd92a5f-4efd-441e-a7d1-c3597e1f4a39
-# ╟─e99ef380-2646-4948-8673-436baad64d3b
-# ╟─660aa82c-78db-469d-87cf-9325fa6a30ff
-# ╟─05c3a97a-4096-4642-a1ae-c47283666a43
-# ╟─a6b4d852-43dd-4fe9-a0d8-f07e1c53c1f1
+# ╠═35f987e3-321c-4772-8bee-ef3ae29c7e61
+# ╠═569231d3-a254-4e30-8e38-26cce1bfd3d5
+# ╠═7253e168-bd24-48c9-b013-2a21d4fa0879
+# ╠═da6f13ce-34fc-4344-b3c7-667bab0afb82
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
