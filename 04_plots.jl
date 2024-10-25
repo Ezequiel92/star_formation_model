@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.1
 
 using Markdown
 using InteractiveUtils
@@ -27,13 +27,19 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 DEFAULT_THEME = Theme(
-    #####################################
+    #################################################################################
+    # Size of the figures in code units
+    # For PDFs and SVGs, 880 [code ]unit = 8.8 cm
+    # For PNGs, when printed to a size of 1 point = 0.1 mm, one will get a dpi of 600 (23.622 px/mm)
+    #################################################################################
+    size=(880, 880),
+    ######################################
     # 35 unit * 0.283466 pt/unit ~ 9.9 pt
-    #####################################
+    ######################################
     fontsize=35,
-    ############################
+    #############################
     # (left, right, bottom, top)
-    ############################
+    #############################
     figure_padding=(1, 15, 5, 15),
     palette=(color=Makie.wong_colors(), marker=MARKERS, linestyle=LINE_STYLES),
     CairoMakie=(px_per_unit=2.3622, pt_per_unit=0.283466),
@@ -51,21 +57,17 @@ DEFAULT_THEME = Theme(
         ygridvisible=false,
         yminorticksvisible=true,
         yminorticks=IntervalsBetween(5),
-        #####################################################################################
+        #############################################################################
         # Aspect ratio of the figures. The options are:
-        # nothing: Default, the aspect ratio will be chosen by Makie.
-        # AxisAspect(n): The aspect ratio will be given by the number `n` = width / height.
-        # DataAspect(): The aspect ratio of the data will be used.
-#####################################################################################
-        aspect=nothing,
+        # nothing: The aspect ratio will be chosen by [Makie](https://docs.makie.org/stable/)
+        # AxisAspect(n): The aspect ratio will be given by the number `n` = width / height
+        # DataAspect(): The aspect ratio of the data will be used
+        #############################################################################
+        aspect=AxisAspect(1),
     ),
     Legend=(
         tellheight=false,
         tellwidth=false,
-        ##########################
-        # left, right, bottom, top
-        ##########################
-        margin=(15, 15, 10, 10),
         framevisible=false,
         colgap=20,
         halign=:right,
@@ -77,9 +79,9 @@ DEFAULT_THEME = Theme(
         markersize=28,
         patchsize=(50, 50),
         linepoints=[Point2f(0.0, 0.5), Point2f(0.9, 0.5)],
-        ##############################################
+        ###############################################
         # Vertices, relative to the default 1x1 square
-        ##############################################
+        ###############################################
         polypoints=[
             Point2f(0.15, 0.15),
             Point2f(0.85, 0.15),
@@ -96,9 +98,15 @@ DEFAULT_THEME = Theme(
         cycle=Cycle([:color, :linestyle, :marker], covary=true),
     ),
     Scatter=(markersize=22, cycle=Cycle([:color, :marker], covary=true)),
+    Band=(cycle=[:color],),
     Errorbars=(whiskerwidth=10,),
+    ########################################################################
+    # Alternative colormaps:
+    # colormap = :nipy_spectral - nan_color = ColorSchemes.nipy_spectral[1]
+    # colormap = :cubehelix     - nan_color = ColorSchemes.cubehelix[1]
+    ########################################################################
     Heatmap=(colormap=:CMRmap, nan_color=ColorSchemes.CMRmap[1]),
-    Colorbar=(size=25, ticklabelpad=10, minorticksvisible=true, ticksize=7),
+    Colorbar=(size=25, ticklabelpad=10, minorticksvisible=true, ticksize=7, labelpadding=2),
     BarPlot=(
         color_over_background=:black,
         color_over_bar=:black,
@@ -110,6 +118,7 @@ DEFAULT_THEME = Theme(
         dodge_gap=0.04,
     ),
     Arrows=(lengthscale=0.02, arrowsize=7.0, linestyle=:solid, color=:white),
+    Hist=(strokecolor=:black, strokewidth=1),
 );
   ╠═╡ =#
 
@@ -762,6 +771,7 @@ let
 			limits=(-4, 5, nothing, nothing),
 			title=L"\tau_\mathrm{star}",
 			backgroundcolor=:gray85,
+			aspect=nothing,
 		)
 
 		hm = heatmap!(
@@ -790,7 +800,6 @@ let
 			hm;
 			ticks,
 			label=L"\log_{10} \, \rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
-			# vertical=false,
 		)
 
 		#############################################################################
@@ -821,6 +830,7 @@ let
 			limits=(-4, 5, nothing, nothing),
 			title=L"\tau_\mathrm{cond}",
 			backgroundcolor=:gray85,
+			aspect=nothing,
 		)
 
 		hidexdecorations!(ax_02)
@@ -864,6 +874,7 @@ let
 			limits=(-4, 5, nothing, nothing),
 			title=L"\tau_\mathrm{rec}",
 			backgroundcolor=:gray85,
+			aspect=nothing,
 		)
 
 		hm = heatmap!(
@@ -876,7 +887,6 @@ let
 		)
 
 		rowsize!(f.layout, 1, Relative(1/20))
-		# rowsize!(f.layout, 2, Relative(1/20))
 
 		mkpath("./generated_files/plots/model/")
 		Makie.save("./generated_files/plots/model/timescale_comparison.pdf", f)
@@ -1054,7 +1064,6 @@ let
 
 	# Time variables
 	it         = 1000.0 # Integration time [Myr]
-	# time_list  = collect(range(0.0, it, 1000))
 	time_list  = exp10.(range(-3, log10(it), 1000))
 	time_range = (time_list[1], time_list[end])
 
@@ -1718,7 +1727,7 @@ UnitfulAstro = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
 [compat]
 CairoMakie = "~0.12.14"
 ChaosTools = "~3.2.1"
-ColorSchemes = "~3.26.0"
+ColorSchemes = "~3.27.0"
 Colors = "~0.12.11"
 DataFrames = "~1.7.0"
 DataFramesMeta = "~0.15.3"
@@ -1745,7 +1754,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.1"
 manifest_format = "2.0"
-project_hash = "1a343d2d6090712fa901ae7679c75b3bd10e5883"
+project_hash = "1f3b80d46a5d7123f6510a5a38a4e4cb94d72cff"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "eea5d80188827b35333801ef97a40c2ed653b081"
@@ -1806,9 +1815,9 @@ version = "0.1.38"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
-git-tree-sha1 = "6a55b747d1812e699320963ffde36f1ebdda4099"
+git-tree-sha1 = "d80af0733c99ea80575f612813fa6aa71022d33a"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "4.0.4"
+version = "4.1.0"
 weakdeps = ["StaticArrays"]
 
     [deps.Adapt.extensions]
@@ -2038,9 +2047,9 @@ version = "0.4.0"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]
-git-tree-sha1 = "b5278586822443594ff615963b0c09755771b3e0"
+git-tree-sha1 = "13951eb68769ad1cd460cdb2e64e5e95f1bf123d"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-version = "3.26.0"
+version = "3.27.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -2316,9 +2325,9 @@ version = "0.6.9"
 
 [[deps.Distances]]
 deps = ["LinearAlgebra", "Statistics", "StatsAPI"]
-git-tree-sha1 = "66c4c81f259586e8f002eacebc177e1fb06363b0"
+git-tree-sha1 = "c7e3a542b999843086e2f29dac96a618c105be1d"
 uuid = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
-version = "0.10.11"
+version = "0.10.12"
 weakdeps = ["ChainRulesCore", "SparseArrays"]
 
     [deps.Distances.extensions]
@@ -4347,9 +4356,9 @@ weakdeps = ["OffsetArrays", "StaticArrays"]
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "PrecompileTools", "Random", "StaticArraysCore"]
-git-tree-sha1 = "eeafab08ae20c62c44c8399ccb9354a04b80db50"
+git-tree-sha1 = "777657803913ffc7e8cc20f0fd04b634f871af8f"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.9.7"
+version = "1.9.8"
 weakdeps = ["ChainRulesCore", "Statistics"]
 
     [deps.StaticArrays.extensions]

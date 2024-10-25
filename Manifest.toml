@@ -158,9 +158,9 @@ version = "1.11.0"
 
 [[deps.LoggingExtras]]
 deps = ["Dates", "Logging"]
-git-tree-sha1 = "c1dd6d7978c12545b4179fb6153b9250c96b0075"
+git-tree-sha1 = "f02b56007b064fbfddb4c9cd60161b6dd0f40df3"
 uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
-version = "1.0.3"
+version = "1.1.0"
 
 [[deps.MIMEs]]
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
@@ -231,15 +231,15 @@ weakdeps = ["REPL"]
 
 [[deps.Pluto]]
 deps = ["Base64", "Configurations", "Dates", "Downloads", "ExpressionExplorer", "FileWatching", "FuzzyCompletions", "HTTP", "HypertextLiteral", "InteractiveUtils", "Logging", "LoggingExtras", "MIMEs", "Malt", "Markdown", "MsgPack", "Pkg", "PlutoDependencyExplorer", "PrecompileSignatures", "PrecompileTools", "REPL", "RegistryInstances", "RelocatableFolders", "Scratch", "Sockets", "TOML", "Tables", "URIs", "UUIDs"]
-git-tree-sha1 = "7bfacc26d134744edc825f1434abca4960f53936"
+git-tree-sha1 = "274f6900eb612a173104cddfe60ec95f72b6e379"
 uuid = "c3e4b0f8-55cb-11ea-2926-15256bba5781"
-version = "0.20.0"
+version = "0.20.1"
 
 [[deps.PlutoDependencyExplorer]]
 deps = ["ExpressionExplorer", "InteractiveUtils", "Markdown"]
-git-tree-sha1 = "4bc5284f77d731196d3e97f23abb732ad6f2a6e4"
+git-tree-sha1 = "592470bdf383cd34e88a21bbd7f1f7ffc52a21c6"
 uuid = "72656b73-756c-7461-726b-72656b6b696b"
-version = "1.0.4"
+version = "1.1.0"
 
 [[deps.PrecompileSignatures]]
 git-tree-sha1 = "18ef344185f25ee9d51d80e179f8dad33dc48eb1"
