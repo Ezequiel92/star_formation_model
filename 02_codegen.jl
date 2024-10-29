@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.1
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
@@ -476,14 +476,14 @@ md"### Photodissociation efficiency"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 #####################################################################################
-# Write tables to interpolate ηd(Z) and η_ion(Z)
+# Write tables to interpolate η_diss(Z) and η_ion(Z)
 #
 # Each file is named after the corresponding η
 #
 # path: Where to store the resulting files
 #####################################################################################
 
-function write_η_tables(path::String)::Nothing
+function write_η_tables_t_max(path::String)::Nothing
 
 	# Allocate memory for the ηs
 	η_diss = Matrix{Float64}(undef, length(MODEL.Q_metals), 2)
@@ -528,8 +528,76 @@ end;
 # ╔═╡ 9a3f2c8a-355a-4470-8c62-aec7e860c383
 # ╠═╡ skip_as_script = true
 #=╠═╡
-write_η_tables(joinpath(GEN_FILES, "interpolation_tables"))
+write_η_tables_t_max(joinpath(GEN_FILES, "interpolation_tables_t_max"))
   ╠═╡ =#
+
+# ╔═╡ 0db83126-5520-4438-9f6b-2a6839559787
+#####################################################################################
+# Write tables to interpolate η_diss(stellar_age, Z) and η_ion(stellar_age, Z)
+#
+# Each file is named after the corresponding η
+#
+# path: Where to store the resulting files
+#####################################################################################
+function write_η_tables(path::String)::Nothing
+
+	# Allocate memory for the ηs
+	η_diss = Matrix{Float64}(
+		undef, 
+		length(MODEL.Q_ages) + 1, length(MODEL.Q_metals) + 1,
+	)
+	η_ion = Matrix{Float64}(
+		undef, 
+		length(MODEL.Q_ages) + 1, length(MODEL.Q_metals) + 1,
+	)
+
+	η_diss[:, 1] .= [0.0, MODEL.Q_ages...]
+	η_ion[:, 1] .= [0.0, MODEL.Q_ages...]
+	η_diss[1, :] .= [0.0, MODEL.Q_metals...]
+	η_ion[1, :] .= [0.0, MODEL.Q_metals...]
+		
+	@inbounds for (i, log_age) in pairs(MODEL.Q_ages)
+			
+		@inbounds for (j, Zmet) in pairs(MODEL.Q_metals)
+					
+		    sub_df = @subset(
+				MODEL.Q_by_imf[MODEL.IMF], 
+				:Zmet .== Zmet, 
+				:log_age .<= log_age,
+			)
+					
+		    # Set the values of the axes, with an extra point, 
+			# to integrate from age 0 onwards
+		    ages = [0.0, exp10.(sub_df[!, :log_age])...] .* u"yr"
+					
+			q_diss = sub_df[!, :Q_diss]
+			Q_diss = [q_diss[1], q_diss...]
+			η_diss[i + 1, j + 1] = uconvert(
+				Unitful.NoUnits, 
+				trapz(ages, Q_diss) * MODEL.c_diss,
+			)
+	
+			q_ion = sub_df[!, :Q_ion]
+			Q_ion = [q_ion[1], q_ion...]
+		    η_ion[i + 1, j + 1] = uconvert(
+				Unitful.NoUnits,
+				trapz(ages, Q_ion) * MODEL.c_ion,
+			)
+					
+		end
+						
+	end
+
+	dir = mkpath(path)
+	writedlm(joinpath(dir, "eta_d.txt"), η_diss, ' ')
+	writedlm(joinpath(dir, "eta_i.txt"), η_ion, ' ')
+
+	return nothing
+
+end;
+
+# ╔═╡ 93d71685-815f-4faf-bff8-3bb35945d2bf
+write_η_tables(joinpath(GEN_FILES, "interpolation_tables"))
 
 # ╔═╡ 5db32b26-0485-4929-89ec-34c09450555e
 # ╠═╡ skip_as_script = true
@@ -1285,9 +1353,9 @@ uuid = "29a986be-02c6-4525-aec4-84b980013641"
 version = "2.0.4"
 
 [[deps.FastPower]]
-git-tree-sha1 = "46aee43f62bc2bc06a74e2d668ffeea0a2689c93"
+git-tree-sha1 = "58c3431137131577a7c379d00fea00be524338fb"
 uuid = "a4df4552-cc26-4903-aec0-212e50a0e84b"
-version = "1.1.0"
+version = "1.1.1"
 
     [deps.FastPower.extensions]
     FastPowerEnzymeExt = "Enzyme"
@@ -1745,21 +1813,21 @@ version = "3.2.2+1"
 
 [[deps.Libgcrypt_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgpg_error_jll"]
-git-tree-sha1 = "9fd170c4bbfd8b935fdc5f8b7aa33532c991a673"
+git-tree-sha1 = "8be878062e0ffa2c3f67bb58a595375eda5de80b"
 uuid = "d4300ac3-e22c-5743-9152-c294e39db1e4"
-version = "1.8.11+0"
+version = "1.11.0+0"
 
 [[deps.Libgpg_error_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "fbb1f2bef882392312feb1ede3615ddc1e9b99ed"
+git-tree-sha1 = "c6ce1e19f3aec9b59186bdf06cdf3c4fc5f5f3e6"
 uuid = "7add5ba3-2f88-524e-9cd5-f83b8a55f7b8"
-version = "1.49.0+0"
+version = "1.50.0+0"
 
 [[deps.Libiconv_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "f9557a255370125b405568f9767d6d195822a175"
+git-tree-sha1 = "61dfdba58e585066d8bce214c5a51eaa0539f269"
 uuid = "94ce4f54-9a6c-5748-9c1c-f9c7231a4531"
-version = "1.17.0+0"
+version = "1.17.0+1"
 
 [[deps.Libmount_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2517,9 +2585,9 @@ version = "1.3.4"
 
 [[deps.RecursiveArrayTools]]
 deps = ["Adapt", "ArrayInterface", "DocStringExtensions", "GPUArraysCore", "IteratorInterfaceExtensions", "LinearAlgebra", "RecipesBase", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables"]
-git-tree-sha1 = "b034171b93aebc81b3e1890a036d13a9c4a9e3e0"
+git-tree-sha1 = "43cdc0987135597867a37fc3e8e0fc9fdef6ac66"
 uuid = "731186ca-8d62-57ce-b412-fbd966d074cd"
-version = "3.27.0"
+version = "3.27.1"
 
     [deps.RecursiveArrayTools.extensions]
     RecursiveArrayToolsFastBroadcastExt = "FastBroadcast"
@@ -2630,9 +2698,9 @@ version = "0.6.43"
 
 [[deps.SciMLBase]]
 deps = ["ADTypes", "Accessors", "ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "Expronicon", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "Printf", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "SciMLStructures", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface"]
-git-tree-sha1 = "26fea1911818cd480400f1a2b7f6b32c3cc3836a"
+git-tree-sha1 = "86e1c491cddf233d77d8aadbe289005db44e8445"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "2.56.4"
+version = "2.57.2"
 
     [deps.SciMLBase.extensions]
     SciMLBaseChainRulesCoreExt = "ChainRulesCore"
@@ -2678,9 +2746,9 @@ version = "1.5.0"
 
 [[deps.SentinelArrays]]
 deps = ["Dates", "Random"]
-git-tree-sha1 = "ff11acffdb082493657550959d4feb4b6149e73a"
+git-tree-sha1 = "305becf8af67eae1dbc912ee9097f00aeeabb8d5"
 uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
-version = "1.4.5"
+version = "1.4.6"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -3129,9 +3197,9 @@ version = "1.0.0"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Zlib_jll"]
-git-tree-sha1 = "1165b0443d0eca63ac1e32b8c0eb69ed2f4f8127"
+git-tree-sha1 = "6a451c6f33a176150f315726eba8b92fbfdb9ae7"
 uuid = "02c8fc9c-b97f-50b9-bbe4-9be30ff0a78a"
-version = "2.13.3+0"
+version = "2.13.4+0"
 
 [[deps.XSLT_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgcrypt_jll", "Libgpg_error_jll", "Libiconv_jll", "XML2_jll", "Zlib_jll"]
@@ -3255,6 +3323,8 @@ version = "0.13.1+0"
 # ╟─65b56c83-f48a-4df5-8e52-326e40c56e78
 # ╠═8019b753-0c2d-41c9-bed6-01f21635ad81
 # ╠═9a3f2c8a-355a-4470-8c62-aec7e860c383
+# ╠═0db83126-5520-4438-9f6b-2a6839559787
+# ╠═93d71685-815f-4faf-bff8-3bb35945d2bf
 # ╟─5db32b26-0485-4929-89ec-34c09450555e
 # ╠═871a53c5-82aa-4a4e-9627-c759901e7a89
 # ╠═d85d8c28-7475-4c26-8bcc-5331fcd06a50

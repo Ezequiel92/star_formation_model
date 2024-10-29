@@ -13,12 +13,12 @@
  *              and stars.
  *              contains functions:
  *                void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
- *                static double interpolate1D(double x, const void *table)
+ *                static double interpolate1D(double x, const void *dtable)
  *                static int sf_ode(double t, const double y[], double f[], void *parameters)
  *                static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
  *                static void integrate_ode(const double *ic, double *parameters, double it, double *fractions)
- *                static double compute_sfr(const int index)
- *                double rate_of_star_formation(const int index)
+ *                static double compute_gas_sfr(const int index)
+ *                double rate_of_star_formation(const int index, double x)
  *
  * \par Major modifications and contributions:
  *
@@ -73,12 +73,12 @@ void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
 
     fclose(file_ptr);
 
-    data_table *table = malloc(sizeof(data_table));
-    table->data = data;
-    table->n_rows = n_rows;
-    table->n_cols = n_cols;
+    data_table *dtable = malloc(sizeof(data_table));
+    dtable->data = data;
+    dtable->n_rows = n_rows;
+    dtable->n_cols = n_cols;
 
-    return (void *)table;
+    return (void *)dtable;
 }
 
 /*! \brief Use linear interpolation to approximate f(x).
@@ -93,13 +93,13 @@ void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
 #ifdef TESTING
 double interpolate1D(double x, const char *table_path, const int NROWS, const int NCOLS)
 {
-    void *table = read_ftable(table_path, NROWS, NCOLS);
+    void *dtable = read_ftable(table_path, NROWS, NCOLS);
 #else  /* #ifdef TESTING */
-static double interpolate1D(double x, const void *table)
+static double interpolate1D(double x, const void *dtable)
 {
 #endif /* #ifdef TESTING */
 
-    data_table *interp_table = (data_table *)table;
+    data_table *interp_table = (data_table *)dtable;
     double *data = interp_table->data;
     int n_rows = interp_table->n_rows;
     int n_cols = interp_table->n_cols;
@@ -421,7 +421,7 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
  *
  *  \return The star formation rate in [Mₒ yr^(-1)].
  */
-static double compute_sfr(const int index)
+static double compute_gas_sfr(const int index)
 {
     double integration_time = SphP[index].accu_integration_time * 1000000; // [yr]
     double cell_mass = P[index].Mass * M_COSMO;                            // [Mₒ]
@@ -434,10 +434,11 @@ static double compute_sfr(const int index)
  *  Compute the star formation rate solving a set of ODEs.
  *
  *  \param[in] index Index of the gas cell in question.
+ *  \param[in] x Fraction of cold gas.
  *
  *  \return The star formation rate in [Mₒ yr^(-1)].
  */
-double rate_of_star_formation(const int index)
+double rate_of_star_formation(const int index, double x)
 {
     /* Check for cases when the SFR should be 0, to shortcut the computation */
     if (!P[index].TimeBinHydro)
@@ -462,12 +463,12 @@ double rate_of_star_formation(const int index)
 
     /* Delta time [Myr] */
     double delta_time = 0.0;
-    if (!isnan(SphP[index].current_time))
+    if !isnan(SphP[index].current_time)
     {
         delta_time = current_time - SphP[index].current_time;
         if (delta_time == 0.0)
         {
-            return compute_sfr(index);
+            return compute_gas_sfr(index);
         }
     }
 
@@ -539,12 +540,10 @@ double rate_of_star_formation(const int index)
     }
     else
     {
-        double nhp, nh;
-        get_arepo_fraction(index, &nhp, &nh);
         /* Ionized gas mass fraction [dimensionless] */
-        fi = nhp / (nhp + nh);
+        fi = 1.0 - x;
         /* Atomic gas mass fraction [dimensionless] */
-        fa = 1.0 - fi;
+        fa = x;
         /* Molecular gas mass fraction [dimensionless] */
         fm = 0.0;
         /* Stellar mass fraction [dimensionless] */
@@ -570,7 +569,7 @@ double rate_of_star_formation(const int index)
     }
 
     /* Return the star formation rate in [Mₒ yr^(-1)] */
-    return compute_sfr(index);
+    return compute_gas_sfr(index);
 }
 
 #endif /* #ifndef TESTING */

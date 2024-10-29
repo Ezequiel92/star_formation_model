@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.1
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
@@ -933,6 +933,32 @@ begin
     const Q_metals = unique(Q_df[!, :Zmet])     # List of metallicities
 end;
 
+# ╔═╡ b96de0fd-a65b-463a-9c91-2504b8427dba
+# ╠═╡ skip_as_script = true
+#=╠═╡
+begin
+	aprox_test = @subset(Q_df, :Zmet .== 0.05)
+	
+	max_age = round(
+		ustrip(u"Myr", exp10(aprox_test[!, :log_age][39]) * u"yr");
+		sigdigits=4,
+	)
+
+	Q_diss_quot = round(
+		sum(aprox_test[!, :Q_diss][1:39]) / sum(aprox_test[!, :Q_diss][40:end]);
+		sigdigits=4,
+	)
+	Q_ion_quot = round(
+		sum(aprox_test[!, :Q_diss][1:39]) / sum(aprox_test[!, :Q_diss][40:end]);
+		sigdigits=4,
+	)
+
+	println("The accumulated Q_diss for stars younger than $(max_age) Myr is $(Q_diss_quot) larger that the accumulated Q_diss produced by all the stars older than that.\n")
+	
+	println("The accumulated Q_ion for stars younger than $(max_age) Myr is $(Q_ion_quot) larger that the accumulated Q_ion produced by all the stars older than that.")
+end
+  ╠═╡ =#
+
 # ╔═╡ 1f190b07-164b-4ba9-86f8-edcf6e7ab3a9
 ##################################################################################
 # Compute η_diss and η_ion
@@ -1702,9 +1728,14 @@ begin
 end;
 
 # ╔═╡ 2235689d-9c83-4907-aa17-c2624fbeb68d
+# ╠═╡ skip_as_script = true
+#=╠═╡
 md"# Equilibrium fractions"
+  ╠═╡ =#
 
 # ╔═╡ df8a9449-851c-4546-97a7-7fd4a270a867
+# ╠═╡ skip_as_script = true
+#=╠═╡
 md"""
 To find the per-equation and global equilibrium we take que ODEs
 
@@ -1716,8 +1747,11 @@ $\begin{align}
 \end{align}$
 and set the derivatives to $0$.
 """
+  ╠═╡ =#
 
 # ╔═╡ 3ab760f8-57cc-4ab8-af0b-5dd91d53ea91
+# ╠═╡ skip_as_script = true
+#=╠═╡
 md"""
 ## Molecular equation
 
@@ -1748,8 +1782,11 @@ where we use the notation $f_X^0$ to idicate equilibrium fractions.
 
 This last expresion shows the value of $f_a^0$, $f_m^0$, and $f_s^0$ (as a function of the parameters of the model) that make the molecular equation have a $0$ derivative (equilibrium point for that particular equation).
 """
+  ╠═╡ =#
 
 # ╔═╡ 6fd22115-c747-4115-9958-c514952fc101
+# ╠═╡ skip_as_script = true
+#=╠═╡
 md"""
 ## Ionized equation
 
@@ -1779,8 +1816,11 @@ $\begin{equation}
 
 As before, this last expresion shows the value of $f_i^0$ and $f_m^0$ (as a function of the parameters of the model) that make the ionized equation have a $0$ derivative (equilibrium point for that particular equation).
 """
+  ╠═╡ =#
 
 # ╔═╡ da8ecf00-4990-462d-91e2-f8d9f2bb99ab
+# ╠═╡ skip_as_script = true
+#=╠═╡
 md"""
 ## Atomic equation
 
@@ -1811,8 +1851,11 @@ $\begin{equation}
 
 In this case this expresion can't be cleanly separated with the equilibrium fractions in one side and the parameters in the other.
 """
+  ╠═╡ =#
 
 # ╔═╡ e817ab9c-9091-43aa-a2a0-ee1a7cb74f8e
+# ╠═╡ skip_as_script = true
+#=╠═╡
 md"""
 ## Stellar equation
 
@@ -1849,6 +1892,7 @@ $\begin{align}
 	f_s^0 &= 1 \, .
 \end{align}$
 """
+  ╠═╡ =#
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2526,9 +2570,9 @@ uuid = "29a986be-02c6-4525-aec4-84b980013641"
 version = "2.0.4"
 
 [[deps.FastPower]]
-git-tree-sha1 = "46aee43f62bc2bc06a74e2d668ffeea0a2689c93"
+git-tree-sha1 = "58c3431137131577a7c379d00fea00be524338fb"
 uuid = "a4df4552-cc26-4903-aec0-212e50a0e84b"
-version = "1.1.0"
+version = "1.1.1"
 
     [deps.FastPower.extensions]
     FastPowerEnzymeExt = "Enzyme"
@@ -2980,21 +3024,21 @@ version = "3.2.2+1"
 
 [[deps.Libgcrypt_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgpg_error_jll"]
-git-tree-sha1 = "9fd170c4bbfd8b935fdc5f8b7aa33532c991a673"
+git-tree-sha1 = "8be878062e0ffa2c3f67bb58a595375eda5de80b"
 uuid = "d4300ac3-e22c-5743-9152-c294e39db1e4"
-version = "1.8.11+0"
+version = "1.11.0+0"
 
 [[deps.Libgpg_error_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "fbb1f2bef882392312feb1ede3615ddc1e9b99ed"
+git-tree-sha1 = "c6ce1e19f3aec9b59186bdf06cdf3c4fc5f5f3e6"
 uuid = "7add5ba3-2f88-524e-9cd5-f83b8a55f7b8"
-version = "1.49.0+0"
+version = "1.50.0+0"
 
 [[deps.Libiconv_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "f9557a255370125b405568f9767d6d195822a175"
+git-tree-sha1 = "61dfdba58e585066d8bce214c5a51eaa0539f269"
 uuid = "94ce4f54-9a6c-5748-9c1c-f9c7231a4531"
-version = "1.17.0+0"
+version = "1.17.0+1"
 
 [[deps.Libmount_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -3731,9 +3775,9 @@ version = "1.3.4"
 
 [[deps.RecursiveArrayTools]]
 deps = ["Adapt", "ArrayInterface", "DocStringExtensions", "GPUArraysCore", "IteratorInterfaceExtensions", "LinearAlgebra", "RecipesBase", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface", "Tables"]
-git-tree-sha1 = "b034171b93aebc81b3e1890a036d13a9c4a9e3e0"
+git-tree-sha1 = "43cdc0987135597867a37fc3e8e0fc9fdef6ac66"
 uuid = "731186ca-8d62-57ce-b412-fbd966d074cd"
-version = "3.27.0"
+version = "3.27.1"
 
     [deps.RecursiveArrayTools.extensions]
     RecursiveArrayToolsFastBroadcastExt = "FastBroadcast"
@@ -3838,9 +3882,9 @@ version = "0.6.43"
 
 [[deps.SciMLBase]]
 deps = ["ADTypes", "Accessors", "ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "Expronicon", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "Printf", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "SciMLStructures", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface"]
-git-tree-sha1 = "26fea1911818cd480400f1a2b7f6b32c3cc3836a"
+git-tree-sha1 = "86e1c491cddf233d77d8aadbe289005db44e8445"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "2.56.4"
+version = "2.57.2"
 
     [deps.SciMLBase.extensions]
     SciMLBaseChainRulesCoreExt = "ChainRulesCore"
@@ -3886,9 +3930,9 @@ version = "1.5.0"
 
 [[deps.SentinelArrays]]
 deps = ["Dates", "Random"]
-git-tree-sha1 = "ff11acffdb082493657550959d4feb4b6149e73a"
+git-tree-sha1 = "305becf8af67eae1dbc912ee9097f00aeeabb8d5"
 uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
-version = "1.4.5"
+version = "1.4.6"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -4333,9 +4377,9 @@ version = "1.0.0"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Zlib_jll"]
-git-tree-sha1 = "1165b0443d0eca63ac1e32b8c0eb69ed2f4f8127"
+git-tree-sha1 = "6a451c6f33a176150f315726eba8b92fbfdb9ae7"
 uuid = "02c8fc9c-b97f-50b9-bbe4-9be30ff0a78a"
-version = "2.13.3+0"
+version = "2.13.4+0"
 
 [[deps.XSLT_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgcrypt_jll", "Libgpg_error_jll", "Libiconv_jll", "XML2_jll", "Zlib_jll"]
@@ -4480,9 +4524,10 @@ version = "0.13.1+0"
 # ╟─1f59c4ca-37c4-4492-8670-4bfdda78bd65
 # ╟─1657d7c2-87af-4079-8cf7-7a1164a95cc8
 # ╟─4d09ed45-423c-4bd6-802d-59389a966d2e
-# ╟─35083c71-0a7c-4b97-94ef-4d06ecbd2ee8
+# ╠═35083c71-0a7c-4b97-94ef-4d06ecbd2ee8
 # ╟─76a10b7c-1135-49f1-a298-36c59bb94b37
 # ╠═72794eb3-7f09-4445-906a-af9756dceebd
+# ╟─b96de0fd-a65b-463a-9c91-2504b8427dba
 # ╠═1f190b07-164b-4ba9-86f8-edcf6e7ab3a9
 # ╟─7df63fdf-ef41-44f2-8a55-e5c2c849029c
 # ╟─0895d464-a029-410d-9e7d-89cfac2d1615
