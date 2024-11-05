@@ -14,6 +14,7 @@
  *              contains functions:
  *                void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
  *                static double interpolate1D(double x, const void *dtable)
+ *                static double interpolate2D(double x, double y, const void *dtable)
  *                static int sf_ode(double t, const double y[], double f[], void *parameters)
  *                static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
  *                static void integrate_ode(const double *ic, double *parameters, double it, double *fractions)
@@ -86,7 +87,7 @@ void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
  *  If the value is out of range, the boundaries of the function are used (constant extrapolation).
  *
  *  \param[in] x Value at which the interpolation function will be evaluated.
- *  \param[in] table_path Path to the table containing the values of f(xi), for several xi.
+ *  \param[in] dtable Path to the table containing the values of f(xi), for several xi.
  *
  *  \return The interpolation function evaluated at `x`.
  */
@@ -164,16 +165,148 @@ static double interpolate1D(double x, const void *dtable)
     return coeff * (term_01 + term_02);
 }
 
+/*! \brief Use bilinear interpolation to approximate f(x,y).
+ *
+ *  If the values are out of range, the boundaries of the function are used (constant extrapolation).
+ *
+ *  \param[in] x X coordinate at which the interpolation function will be evaluated.
+ *  \param[in] y Y coordinate at which the interpolation function will be evaluated.
+ *  \param[in] dtable Path to the table containing the values of f(xi,yi), for many xi and yi.
+ *
+ *  \return The interpolation function evaluated at `x` and `y`.
+ */
+#ifdef TESTING
+double interpolate2D(double x, double y, const char *table_path)
+{
+    void *dtable = read_ftable(table_path, ETA_NROWS, ETA_NCOLS);
+#else  /* #ifdef TESTING */
+static double interpolate2D(double x, double y, const void *dtable)
+{
+#endif /* #ifdef TESTING */
+
+    data_table *interp_table = (data_table *)dtable;
+    double *data = interp_table->data;
+    int n_rows = interp_table->n_rows;
+    int n_cols = interp_table->n_cols;
+
+    int nx = n_rows - 1;
+    int ny = n_cols - 1;
+
+    double *xa = malloc(nx * sizeof(double));
+    double *ya = malloc(ny * sizeof(double));
+    double *za = malloc(nx * ny * sizeof(double));
+
+    for (size_t i = 0; i < nx; ++i)
+    {
+        xa[i] = data[(i + 1) * n_cols];
+    }
+
+    for (size_t i = 0; i < ny; ++i)
+    {
+        ya[i] = data[i + 1];
+    }
+
+    for (size_t i = 0; i < nx; ++i)
+    {
+        for (size_t j = 0; j < ny; ++j)
+        {
+            za[i * ny + j] = data[(i + 1) * n_cols + (j + 1)];
+        }
+    }
+
+    double x1, x2, y1, y2;
+    int idx_x1, idx_x2, idx_y1, idx_y2;
+
+    if (x < xa[0])
+    {
+        x = xa[0];
+        x1 = xa[0];
+        x2 = xa[1];
+        idx_x1 = 0;
+        idx_x2 = 1;
+    }
+    else if (x > xa[nx - 1])
+    {
+        x = xa[nx - 1];
+        x1 = xa[nx - 2];
+        x2 = xa[nx - 1];
+        idx_x1 = nx - 2;
+        idx_x2 = nx - 1;
+    }
+    else
+    {
+        for (size_t i = 1; i < nx; ++i)
+        {
+            if (xa[i - 1] <= x && x <= xa[i])
+            {
+                x1 = xa[i - 1];
+                x2 = xa[i];
+                idx_x1 = i - 1;
+                idx_x2 = i;
+                break;
+            }
+        }
+    }
+
+    if (y < ya[0])
+    {
+        y = ya[0];
+        y1 = ya[0];
+        y2 = ya[1];
+        idx_y1 = 0;
+        idx_y2 = 1;
+    }
+    else if (y > ya[ny - 1])
+    {
+        y = ya[ny - 1];
+        y1 = ya[ny - 2];
+        y2 = ya[ny - 1];
+        idx_y1 = ny - 2;
+        idx_y2 = ny - 1;
+    }
+    else
+    {
+        for (size_t i = 1; i < ny; ++i)
+        {
+            if (ya[i - 1] <= y && y <= ya[i])
+            {
+                y1 = ya[i - 1];
+                y2 = ya[i];
+                idx_y1 = i - 1;
+                idx_y2 = i;
+                break;
+            }
+        }
+    }
+
+    double fQ11 = za[idx_x1 * ny + idx_y1];
+    double fQ21 = za[idx_x2 * ny + idx_y1];
+    double fQ12 = za[idx_x1 * ny + idx_y2];
+    double fQ22 = za[idx_x2 * ny + idx_y2];
+
+    double coeff = 1 / ((x2 - x1) * (y2 - y1));
+    double term_01 = fQ11 * (x2 - x) * (y2 - y);
+    double term_02 = fQ21 * (x - x1) * (y2 - y);
+    double term_03 = fQ12 * (x2 - x) * (y - y1);
+    double term_04 = fQ22 * (x - x1) * (y - y1);
+
+    free(xa);
+    free(ya);
+    free(za);
+
+    return coeff * (term_01 + term_02 + term_03 + term_04);
+}
+
 /*! \brief Evaluate the systems of equations.
  *
  *  Evaluate the four ODEs of the model, using the following variables:
  *
- *  Ionized gas fraction:    fi(t) = Mi(t) / MC --> y[0]
- *  Atomic gas fraction:     fa(t) = Ma(t) / MC --> y[1]
- *  Molecular gas fraction:  fm(t) = Mm(t) / MC --> y[2]
- *  Stellar fraction:        fs(t) = Ms(t) / MC --> y[3]
+ *  Ionized gas fraction:    fi(t) = Mi(t) / Mc --> y[0]
+ *  Atomic gas fraction:     fa(t) = Ma(t) / Mc --> y[1]
+ *  Molecular gas fraction:  fm(t) = Mm(t) / Mc --> y[2]
+ *  Stellar fraction:        fs(t) = Ms(t) / Mc --> y[3]
  *
- *  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) is the total mass of the gas cell,
+ *  where Mc = Mi(t) + Ma(t) + Mm(t) + Ms(t) is the total mass of the gas cell,
  *  and each equation has units of Myr^(-1).
  *
  *  \param[in] t Unused variable to comply with the `gsl_odeiv2_driver_alloc_y_new()` API.
@@ -195,6 +328,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
      * eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
      * eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
      * R:     Mass recycling fraction                            [dimensionless]
+     * a:     Scale factor                                       [dimensionless]
      */
     double *p = (double *)parameters;
     double rho_C = p[0];
@@ -202,6 +336,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     double eta_d = p[2];
     double eta_i = p[3];
     double R = p[4];
+    double a = p[5];
 
     /* Compute the auxiliary equations */
     double tau_R = ODE_CR / (y[0] * rho_C);
@@ -309,6 +444,7 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
  * eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
  * eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
  * R:     Mass recycling fraction                            [dimensionless]
+ * a:     Scale factor                                       [dimensionless]
  *
  *  \param[in] ic Initial conditions.
  *  \param[in] parameters Parameters for the ODEs.
@@ -383,7 +519,6 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
         {
             terminate("GSL ERROR: Could not integrate, status = %d\n", status);
         }
-
 #endif /* #ifndef TESTING */
     }
 
@@ -426,7 +561,13 @@ static double compute_gas_sfr(const int index)
     double integration_time = SphP[index].accu_integration_time * 1000000; // [yr]
     double cell_mass = P[index].Mass * M_COSMO;                            // [Mₒ]
 
+#ifdef EL_PROB
+    double fs_factor = log((1.0 - SphP[index].f_star_prev) / (1.0 - SphP[index].ODE_fractions[3]));
+
+    return fs_factor * cell_mass / integration_time;
+#else
     return SphP[index].ODE_fractions[3] * cell_mass / integration_time;
+#endif /* #ifdef EL_PROB */
 }
 
 /*! \brief Compute the star formation rate.
@@ -453,24 +594,29 @@ double rate_of_star_formation(const int index, double x)
     {
         return 0.0;
     }
-
-    /**********************************************************************************************
-     * Compute the time parameters
-     **********************************************************************************************/
-
-    /* Current time [Myr] */
-    double current_time = All.Time * T_MYR;
-
-    /* Delta time [Myr] */
-    double delta_time = 0.0;
-    if !isnan(SphP[index].current_time)
+    
+    /* Check if we are still in the same global timestep, to shortcut the computation */
+    if (!isnan(SphP[index].parameter_a))
     {
-        delta_time = current_time - SphP[index].current_time;
-        if (delta_time == 0.0)
+        if (All.Time == SphP[index].parameter_a)
         {
             return compute_gas_sfr(index);
         }
     }
+
+    /* Store previous stellar fraction */
+    if (!isnan(SphP[index].ODE_fractions[3]))
+    {
+        SphP[index].f_star_prev = SphP[index].ODE_fractions[3];
+    }
+    else
+    {
+        SphP[index].f_star_prev = 0.0;
+    }
+
+    /**********************************************************************************************
+     * Compute the time parameters
+     **********************************************************************************************/
 
     /* Integration time [Myr] */
     double integration_time = (((integertime)1) << P[index].TimeBinHydro) * All.Timebase_interval;
@@ -482,14 +628,12 @@ double rate_of_star_formation(const int index, double x)
 
     /* Accumulated integration time [Myr] */
     double accu_integration_time = integration_time;
-    if (!isnan(SphP[index].accu_integration_time) && delta_time < SphP[index].tau_S)
+    if (!isnan(SphP[index].accu_integration_time))
     {
         accu_integration_time += SphP[index].accu_integration_time;
     }
 
     /* Store the integration time parameters */
-    SphP[index].current_time = current_time;
-    SphP[index].delta_time = delta_time;
     SphP[index].integration_time = integration_time;
     SphP[index].accu_integration_time = accu_integration_time;
 
@@ -504,15 +648,15 @@ double rate_of_star_formation(const int index, double x)
     double Z = fmax(0.0, SphP[index].Metallicity);
 
     /* Photodissociation efficiency [dimensionless] */
-    double eta_d = interpolate1D(Z, All.ETA_D_TABLE_DATA);
+    double eta_d = interpolate2D(accu_integration_time, Z, All.ETA_D_TABLE_DATA);
 
     /* Photoionization efficiency [dimensionless] */
-    double eta_i = interpolate1D(Z, All.ETA_I_TABLE_DATA);
+    double eta_i = interpolate2D(accu_integration_time, Z, All.ETA_I_TABLE_DATA);
 
     /* Mass recycling fraction [dimensionless] */
     double R = interpolate1D(Z, All.R_TABLE_DATA);
 
-    double parameters[] = {rhoC, Z, eta_d, eta_i, R};
+    double parameters[] = {rhoC, Z, eta_d, eta_i, R, All.Time};
 
     /* Store the ODE parameters */
     SphP[index].parameter_rhoC = rhoC;
@@ -520,6 +664,7 @@ double rate_of_star_formation(const int index, double x)
     SphP[index].parameter_eta_d = eta_d;
     SphP[index].parameter_eta_i = eta_i;
     SphP[index].parameter_R = R;
+    SphP[index].parameter_a = All.Time;
 
     /**********************************************************************************************
      * Compute the initial conditions
@@ -527,7 +672,7 @@ double rate_of_star_formation(const int index, double x)
 
     double fi, fa, fm, fs;
 
-    if (!isnan(SphP[index].ODE_fractions[0]) && delta_time < SphP[index].tau_S)
+    if (!isnan(SphP[index].ODE_fractions[0]))
     {
         /* Ionized gas mass fraction [dimensionless] */
         fi = SphP[index].ODE_fractions[0];
