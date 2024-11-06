@@ -19,9 +19,10 @@ The goal is to improve the modeling of the star formation history (SFH) in cosmo
 
 The notebooks in this repo, can be view as static HTML files [here](https://ezequiel92.github.io/star_formation_model/),
 
-- `001_model.jl`: Description of the model.
-- `002_codegen.jl`: Generation of C code.
-- `003_testing.jl`: Tests and error calculations.
-- `004_plots.jl`: Plots.
+- `01_model.jl`: Description of the model.
+- `02_codegen.jl`: Generation of C code.
+- `03_testing.jl`: Tests and error calculations.
+- `04_plots.jl`: Plots.
+- `05_montecarlo.jl`: Montecarlo simulation.
 
 
