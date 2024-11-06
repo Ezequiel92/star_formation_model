@@ -7,7 +7,7 @@ using InteractiveUtils
 # ╔═╡ f79c680a-7c97-4100-97e8-19190707c55b
 let
 	using CairoMakie, Colors, ColorSchemes, PlutoLinks
-	
+
 	using ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
 end
 
@@ -22,7 +22,7 @@ DEFAULT_THEME = Theme(
     #################################################################################
     # Size of the figures in code units
     # For PDFs and SVGs, 880 [code ]unit = 8.8 cm
-    # For PNGs, when printed to a size of 1 point = 0.1 mm, 
+    # For PNGs, when printed to a size of 1 point = 0.1 mm,
 	# one will get a dpi of 600 (23.622 px/mm)
     #################################################################################
     size=(880, 880),
@@ -128,16 +128,16 @@ begin
 		fs::Float64
 		stellar::Bool
     end
-	
+
 	# Number of gas cells
-	N_cells = 10000
-	
+	N_cells = 1000
+
 	# Number of time steps
 	N_steps = 50
 
 	# Integration times [Myr]
 	time_steps = range(0.0, 1000.0, N_steps)
-	
+
 	# Allocate memory
 	cells   = Vector{Cell}(undef, N_cells)
 	N_stars = Vector{Int}(undef, N_steps - 1)
@@ -145,20 +145,20 @@ begin
 
 	# Reference cell density [mp * cm⁻³]
 	ref_ρ = 50.0
-	
+
 	# Reference metallicity [dimensionless]
 	ref_Z = MODEL.Zsun
-	
+
 	# Reference ionized fraction [dimensionless]
 	ref_fi = 0.2
 
 	# Create gas cells
 	@inbounds for i in eachindex(cells)
-		
+
 		# Cell density [mp * cm⁻³]
 		# ρ = rand(0.19:300.0)
 		ρ = ref_ρ
-		
+
 		# Metallicity [dimensionless]
 		# Z = rand(0.0:MODEL.Zsun)
 		Z = ref_Z
@@ -166,9 +166,9 @@ begin
 		# Ionized fraction [dimensionless]
 		# fi = rand(0.0:0.5)
 		fi = ref_fi
-		
+
 		cells[i] = Cell(ρ, Z, fi, 1.0 - fi, 0.0, 0.0, false)
-		
+
 	end
 
 	# Reference initial conditions, [fi(0), fa(0), fm(0), fs(0)]
@@ -176,11 +176,11 @@ begin
 
 	# Reference parameters for the ODEs, [ρ_cell, Z]
 	ref_params = [ref_ρ, ref_Z]
-	
+
 	reference_sim = MODEL.integrate_model(
-		ref_ic, 
-		ref_params, 
-		(0.0, time_steps[end]); 
+		ref_ic,
+		ref_params,
+		(0.0, time_steps[end]);
 		times=collect(time_steps),
 		args=(Rosenbrock23(),),
 	)
@@ -191,7 +191,7 @@ end;
 # ╔═╡ 569231d3-a254-4e30-8e38-26cce1bfd3d5
 let
 	cells_copy = deepcopy(cells)
-	
+
 	@inbounds for i in 2:N_steps
 
 		tspan = (0.0, time_steps[i] - time_steps[i - 1])
@@ -200,7 +200,7 @@ let
 		gas_idxs = findall(x -> !x.stellar, cells_copy)
 
 		Threads.@threads for cell in cells_copy[gas_idxs]
-				
+
 			# Set the initial conditions and the parameters
 			ic     = [cell.fi, cell.fa, cell.fm, cell.fs]
 			params = [cell.ρ, cell.Z]
@@ -232,17 +232,17 @@ let
 			if rand() < prob
 				cell.stellar = true
 			end
-			
+
 		end
-		
+
 		N_gas[i - 1] = count(x -> !x.stellar, cells_copy)
-		
+
 	end
 
 	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
 		f = Figure()
-	
+
 		ax = CairoMakie.Axis(
 			f[1, 1];
 			xlabel=L"t \, [\mathrm{Myr}]",
@@ -253,40 +253,40 @@ let
 		f_gas = N_gas ./ N_cells
 
 		lines!(
-			ax, 
-			time_steps, 
-			ref_fs, 
-			label=L"\mathrm{Reference}", 
+			ax,
+			time_steps,
+			ref_fs,
+			label=L"\mathrm{Reference}",
 			color=:gray55,
 		)
-	
+
 		lines!(
-			ax, 
-			time_steps[2:end], 
-			f_gas; 
+			ax,
+			time_steps[2:end],
+			f_gas;
 			label=L"\mathrm{Gas \,\, fraction}",
 			color=Makie.wong_colors()[1],
 		)
-		
+
 		lines!(
 			ax,
-			time_steps[2:end],  
-			1.0 .- f_gas; 
+			time_steps[2:end],
+			1.0 .- f_gas;
 			label=L"\mathrm{Stellar \,\, fraction}",
 			color=Makie.wong_colors()[2],
 		)
 
 		axislegend(; position=:rc, nbanks=1)
-	
+
 		Makie.save("./generated_files/plots/montecarlo/recipe_01.png", f)
-	
+
 	end
 end;
 
 # ╔═╡ 7253e168-bd24-48c9-b013-2a21d4fa0879
 let
 	cells_copy = deepcopy(cells)
-	
+
 	@inbounds for i in 2:N_steps
 
 		tspan = (0.0, time_steps[i] - time_steps[i - 1])
@@ -295,7 +295,7 @@ let
 		gas_idxs = findall(x -> !x.stellar, cells_copy)
 
 		Threads.@threads for cell in cells_copy[gas_idxs]
-				
+
 			# Set the initial conditions and the parameters
 			ic     = [cell.fi, cell.fa, cell.fm, cell.fs]
 			params = [cell.ρ, cell.Z]
@@ -324,17 +324,17 @@ let
 			if rand() < prob
 				cell.stellar = true
 			end
-			
+
 		end
-		
+
 		N_gas[i - 1] = count(x -> !x.stellar, cells_copy)
-		
+
 	end
 
 	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
 		f = Figure()
-	
+
 		ax = CairoMakie.Axis(
 			f[1, 1];
 			xlabel=L"t \, [\mathrm{Myr}]",
@@ -345,40 +345,40 @@ let
 		f_gas = N_gas ./ N_cells
 
 		lines!(
-			ax, 
-			time_steps, 
-			ref_fs, 
-			label=L"\mathrm{Reference}", 
+			ax,
+			time_steps,
+			ref_fs,
+			label=L"\mathrm{Reference}",
 			color=:gray55,
 		)
-	
+
 		lines!(
-			ax, 
-			time_steps[2:end], 
-			f_gas; 
+			ax,
+			time_steps[2:end],
+			f_gas;
 			label=L"\mathrm{Gas \,\, fraction}",
 			color=Makie.wong_colors()[1],
 		)
-		
+
 		lines!(
 			ax,
-			time_steps[2:end],  
-			1.0 .- f_gas; 
+			time_steps[2:end],
+			1.0 .- f_gas;
 			label=L"\mathrm{Stellar \,\, fraction}",
 			color=Makie.wong_colors()[2],
 		)
 
 		axislegend(; position=:rc, nbanks=1)
-	
+
 		Makie.save("./generated_files/plots/montecarlo/recipe_02.png", f)
-	
+
 	end
 end;
 
 # ╔═╡ da6f13ce-34fc-4344-b3c7-667bab0afb82
 let
 	cells_copy = deepcopy(cells)
-	
+
 	@inbounds for i in 2:N_steps
 
 		it = time_steps[i] - time_steps[i - 1]
@@ -388,7 +388,7 @@ let
 		gas_idxs = findall(x -> !x.stellar, cells_copy)
 
 		Threads.@threads for cell in cells_copy[gas_idxs]
-				
+
 			# Set the initial conditions and the parameters
 			ic     = [cell.fi, cell.fa, cell.fm, cell.fs]
 			params = [cell.ρ, cell.Z]
@@ -417,17 +417,17 @@ let
 			if rand() < prob
 				cell.stellar = true
 			end
-			
+
 		end
-		
+
 		N_gas[i - 1] = count(x -> !x.stellar, cells_copy)
-		
+
 	end
 
 	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
 		f = Figure()
-	
+
 		ax = CairoMakie.Axis(
 			f[1, 1];
 			xlabel=L"t \, [\mathrm{Myr}]",
@@ -438,33 +438,33 @@ let
 		f_gas = N_gas ./ N_cells
 
 		lines!(
-			ax, 
-			time_steps, 
-			ref_fs, 
-			label=L"\mathrm{Reference}", 
+			ax,
+			time_steps,
+			ref_fs,
+			label=L"\mathrm{Reference}",
 			color=:gray55,
 		)
-	
+
 		lines!(
-			ax, 
-			time_steps[2:end], 
-			f_gas; 
+			ax,
+			time_steps[2:end],
+			f_gas;
 			label=L"\mathrm{Gas \,\, fraction}",
 			color=Makie.wong_colors()[1],
 		)
-		
+
 		lines!(
 			ax,
-			time_steps[2:end],  
-			1.0 .- f_gas; 
+			time_steps[2:end],
+			1.0 .- f_gas;
 			label=L"\mathrm{Stellar \,\, fraction}",
 			color=Makie.wong_colors()[2],
 		)
 
 		axislegend(; position=:rc, nbanks=1)
-	
+
 		Makie.save("./generated_files/plots/montecarlo/recipe_03.png", f)
-	
+
 	end
 end;
 
