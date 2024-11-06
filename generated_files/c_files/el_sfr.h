@@ -9,8 +9,8 @@
 #define M_COSMO (All.UnitMass_in_g / SOLAR_MASS)
 
 /* Interpolation tables */
-#define ETA_NROWS 6  // Number of rows in the η tables
-#define ETA_NCOLS 2  // Number of columns in the η tables
+#define ETA_NROWS 107  // Number of rows in the η tables
+#define ETA_NCOLS 7  // Number of columns in the η tables
 #define R_NROWS 7  // Number of rows in the R table
 #define R_NCOLS 3  // Number of columns in the R table
 

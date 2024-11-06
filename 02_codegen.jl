@@ -83,8 +83,8 @@ function write_header_file(path::Union{String,Nothing})::Union{String,Nothing}
 #define M_COSMO (All.UnitMass_in_g / SOLAR_MASS)
 
 /* Interpolation tables */
-#define ETA_NROWS $(length(MODEL.Q_metals))  // Number of rows in the η tables
-#define ETA_NCOLS 2  // Number of columns in the η tables
+#define ETA_NROWS $(length(MODEL.Q_ages) + 1)  // Number of rows in the η tables
+#define ETA_NCOLS $(length(MODEL.Q_metals) + 1)  // Number of columns in the η tables
 #define R_NROWS $(length(MODEL.sy_metals))  // Number of rows in the R table
 #define R_NCOLS 3  // Number of columns in the R table
 
@@ -354,11 +354,11 @@ md"## Dynamic libraries"
 
 function compile_libraries(path::String)::Nothing
 
-	opt_cmd = `gcc -Wall -Wno-unused-variable -Wno-unused-function -Wno-unused-result -fpic -shared -Ofast -march=native -mtune=native -flto`
-	in_out_cmd = `$path/el_sfr.c -o $lib_path`
+	opt_cmd = `gcc -Wall -Wno-unused-variable -fpic -shared -Ofast -march=native -mtune=native -flto`
+	in_out_cmd = `$(path)/el_sfr.c -o $(lib_path)`
 	gsl_cmd = `-IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib -lgsl -lgslcblas -lm`
 
-	run(`$opt_cmd -D EL_SFR -D TESTING $in_out_cmd $gsl_cmd`)
+	run(`$(opt_cmd) -D EL_SFR -D TESTING $(in_out_cmd) $(gsl_cmd)`)
 
 	return nothing
 
@@ -392,6 +392,7 @@ function integrate_with_c(
 	# Load C functions
 	integrate_ode = Libdl.dlsym(library, :integrate_ode)
 	interpolate1D = Libdl.dlsym(library, :interpolate1D)
+	interpolate2D = Libdl.dlsym(library, :interpolate2D)
 
 	# Construct main Julia function
 	#
@@ -422,18 +423,16 @@ function integrate_with_c(
 		Z       = base_params[2]
 		log_age = log10(it * 10^6)
 
-		ηd = @ccall $interpolate1D(
+		ηd = @ccall $interpolate2D(
+			log_age::Cdouble,
 			Z::Cdouble,
 			eta_d_table::Cstring,
-			length(MODEL.Q_metals)::Cint,
-			2::Cint,
 		)::Cdouble
 
-		η_ion = @ccall $interpolate1D(
+		η_ion = @ccall $interpolate2D(
+			log_age::Cdouble,
 			Z::Cdouble,
 			eta_i_table::Cstring,
-			length(MODEL.Q_metals)::Cint,
-			2::Cint,
 		)::Cdouble
 
 		R = @ccall $interpolate1D(
@@ -543,11 +542,11 @@ function write_η_tables(path::String)::Nothing
 
 	# Allocate memory for the ηs
 	η_diss = Matrix{Float64}(
-		undef, 
+		undef,
 		length(MODEL.Q_ages) + 1, length(MODEL.Q_metals) + 1,
 	)
 	η_ion = Matrix{Float64}(
-		undef, 
+		undef,
 		length(MODEL.Q_ages) + 1, length(MODEL.Q_metals) + 1,
 	)
 
@@ -555,37 +554,37 @@ function write_η_tables(path::String)::Nothing
 	η_ion[:, 1] .= [0.0, MODEL.Q_ages...]
 	η_diss[1, :] .= [0.0, MODEL.Q_metals...]
 	η_ion[1, :] .= [0.0, MODEL.Q_metals...]
-		
+
 	@inbounds for (i, log_age) in pairs(MODEL.Q_ages)
-			
+
 		@inbounds for (j, Zmet) in pairs(MODEL.Q_metals)
-					
+
 		    sub_df = @subset(
-				MODEL.Q_by_imf[MODEL.IMF], 
-				:Zmet .== Zmet, 
+				MODEL.Q_by_imf[MODEL.IMF],
+				:Zmet .== Zmet,
 				:log_age .<= log_age,
 			)
-					
-		    # Set the values of the axes, with an extra point, 
+
+		    # Set the values of the axes, with an extra point,
 			# to integrate from age 0 onwards
 		    ages = [0.0, exp10.(sub_df[!, :log_age])...] .* u"yr"
-					
+
 			q_diss = sub_df[!, :Q_diss]
 			Q_diss = [q_diss[1], q_diss...]
 			η_diss[i + 1, j + 1] = uconvert(
-				Unitful.NoUnits, 
+				Unitful.NoUnits,
 				trapz(ages, Q_diss) * MODEL.c_diss,
 			)
-	
+
 			q_ion = sub_df[!, :Q_ion]
 			Q_ion = [q_ion[1], q_ion...]
 		    η_ion[i + 1, j + 1] = uconvert(
 				Unitful.NoUnits,
 				trapz(ages, Q_ion) * MODEL.c_ion,
 			)
-					
+
 		end
-						
+
 	end
 
 	dir = mkpath(path)
@@ -774,9 +773,9 @@ version = "0.1.38"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
-git-tree-sha1 = "d80af0733c99ea80575f612813fa6aa71022d33a"
+git-tree-sha1 = "50c3c56a52972d78e8be9fd135bfb91c9574c140"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "4.1.0"
+version = "4.1.1"
 weakdeps = ["StaticArrays"]
 
     [deps.Adapt.extensions]
@@ -830,9 +829,9 @@ version = "7.16.0"
 
 [[deps.ArrayLayouts]]
 deps = ["FillArrays", "LinearAlgebra"]
-git-tree-sha1 = "0dd7edaff278e346eb0ca07a7e75c9438408a3ce"
+git-tree-sha1 = "492681bc44fac86804706ddb37da10880a2bd528"
 uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
-version = "1.10.3"
+version = "1.10.4"
 weakdeps = ["SparseArrays"]
 
     [deps.ArrayLayouts.extensions]
@@ -1222,9 +1221,9 @@ version = "1.11.0"
 
 [[deps.Distributions]]
 deps = ["AliasTables", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "d7477ecdafb813ddee2ae727afa94e9dcb5f3fb0"
+git-tree-sha1 = "3101c32aab536e7a27b1763c0797dba151b899ad"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.112"
+version = "0.25.113"
 
     [deps.Distributions.extensions]
     DistributionsChainRulesCoreExt = "ChainRulesCore"
@@ -1432,9 +1431,9 @@ version = "1.3.7"
 
 [[deps.ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions"]
-git-tree-sha1 = "cf0fe81336da9fb90944683b8c41984b08793dad"
+git-tree-sha1 = "a9ce73d3c827adab2d70bf168aaece8cce196898"
 uuid = "f6369f11-7733-5829-9624-2563aa707210"
-version = "0.10.36"
+version = "0.10.37"
 weakdeps = ["StaticArrays"]
 
     [deps.ForwardDiff.extensions]
@@ -1693,9 +1692,9 @@ version = "0.6.0"
 
 [[deps.Krylov]]
 deps = ["LinearAlgebra", "Printf", "SparseArrays"]
-git-tree-sha1 = "267dad6b4b7b5d529c76d40ff48d33f7e94cb834"
+git-tree-sha1 = "4f20a2df85a9e5d55c9e84634bbf808ed038cabd"
 uuid = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
-version = "0.9.6"
+version = "0.9.8"
 
 [[deps.LERC_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -2057,9 +2056,9 @@ version = "0.5.7"
 
 [[deps.MutableArithmetics]]
 deps = ["LinearAlgebra", "SparseArrays", "Test"]
-git-tree-sha1 = "3eba928678787843e504c153a9b8e80d7d73ab17"
+git-tree-sha1 = "90077f1e79de8c9c7c8a90644494411111f4e07b"
 uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
-version = "1.5.0"
+version = "1.5.2"
 
 [[deps.NLSolversBase]]
 deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
@@ -2729,9 +2728,9 @@ version = "0.1.0"
 
 [[deps.SciMLOperators]]
 deps = ["Accessors", "ArrayInterface", "DocStringExtensions", "LinearAlgebra", "MacroTools"]
-git-tree-sha1 = "ef388ca9e4921ec5614ce714f8aa59a5cd33d867"
+git-tree-sha1 = "6149620767866d4b0f0f7028639b6e661b6a1e44"
 uuid = "c0aeaf25-5076-4817-a8d5-81caf7dfa961"
-version = "0.3.11"
+version = "0.3.12"
 weakdeps = ["SparseArrays", "StaticArraysCore"]
 
     [deps.SciMLOperators.extensions]
@@ -2746,9 +2745,9 @@ version = "1.5.0"
 
 [[deps.SentinelArrays]]
 deps = ["Dates", "Random"]
-git-tree-sha1 = "305becf8af67eae1dbc912ee9097f00aeeabb8d5"
+git-tree-sha1 = "d0553ce4031a081cc42387a9b9c8441b7d99f32d"
 uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
-version = "1.4.6"
+version = "1.4.7"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -3179,9 +3178,9 @@ version = "0.1.6"
 
 [[deps.VectorizationBase]]
 deps = ["ArrayInterface", "CPUSummary", "HostCPUFeatures", "IfElse", "LayoutPointers", "Libdl", "LinearAlgebra", "SIMDTypes", "Static", "StaticArrayInterface"]
-git-tree-sha1 = "e7f5b81c65eb858bed630fe006837b935518aca5"
+git-tree-sha1 = "4ab62a49f1d8d9548a1c8d1a75e5f55cf196f64e"
 uuid = "3d5dd08c-fd9d-11e8-17fa-ed2836048c2f"
-version = "0.21.70"
+version = "0.21.71"
 
 [[deps.VertexSafeGraphs]]
 deps = ["Graphs"]
