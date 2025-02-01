@@ -40,7 +40,7 @@ jobs:
       - run: julia --color=yes --project=@. -e 'import Pkg; Pkg.instantiate'
       - run: julia --color=yes --project=@. -e 'import Pkg; Pkg.update()'
       - run: git status
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: manifest_files
           path: Manifest.toml
@@ -56,7 +56,7 @@ jobs:
       - run: rm -rf /tmp/manifest_updater
       - run: mkdir /tmp/manifest_updater
       - run: chmod 700 /tmp/manifest_updater
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           path: /tmp/manifest_updater/download_artifacts
       - run: mv /tmp/manifest_updater/download_artifacts/manifest_files/Manifest.toml .
