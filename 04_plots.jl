@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -8,7 +8,7 @@ using InteractiveUtils
 let
 	using CairoMakie, ColorSchemes, Measurements, Libdl, Printf, PlutoLinks, Statistics
 
-	using ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
+	using ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, Measurements, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
 end
 
 # ╔═╡ 37653018-aaf5-42d1-a938-e05a44f18918
@@ -182,12 +182,13 @@ function benchmark_solve(method::Tuple)::Nothing
 	fi     = 0.5              # Ionized gas fraction (Mᵢ / MC) [dimensionless]
 	ρ_cell = 10.0             # Total cell density [mp * cm⁻³]
 	Z      = 1.0 * MODEL.Zsun # Metallicity [dimensionless]
+	a      = 1.0              # Scale factor [dimensionless]
 	it     = 10.0             # Integration time [Myr]
 
 	benchmark = try
 		@timed MODEL.integrate_model(
-		    [fi, 1.0 - fi, 0.0, 0.0],
-			[ρ_cell, Z],
+		    [fi - Z, 1.0 - (fi - Z), 0.0, 0.0, 0.9 * Z, 0.1 * Z],
+			[ρ_cell, Z, a],
 			(0.0, it);
 		    args,
 		)[end][MODEL.phase_name_to_index["stellar"]]
@@ -227,9 +228,14 @@ function benchmark_csolve()::Nothing
 	fi     = 0.5              # Ionized gas fraction (Mᵢ / MC) [dimensionless]
 	ρ_cell = 10.0             # Total cell density [mp * cm⁻³]
 	Z      = 1.0 * MODEL.Zsun # Metallicity [dimensionless]
+	a      = 1.0              # Scale factor [dimensionless]
 	it     = 10.0             # Integration time [Myr]
 
-	benchmark = @timed integr_func([fi, 1.0 - fi, 0.0, 0.0], [ρ_cell, Z], it)
+	benchmark = @timed integr_func(
+		[fi - Z, 1.0 - (fi - Z), 0.0, 0.0, 0.9 * Z, 0.1 * Z], 
+		[ρ_cell, Z, a], 
+		it,
+	)
 
 	print("Method: C library     -  ")
 
@@ -277,13 +283,18 @@ diagram = TikzPictures.TikzPicture(
 		\node[box, white, text width=2em, above=2.5cm of stars] (atom) {HI};
 		\node[box, white, text width=2em, right=2cm of atom] (molecule) {\ch{H2}};
 		\node[box, white, text width=2em, left=2cm of atom] (ion) {HII};
+		\node[box, white, text width=2em, below=0.8cm of stars] (metals) {Z};
+		\node[box, white, text width=2em, below=0.8cm of metals] (dust) {Dust};
 		\draw[line, white, ->]
 		(ion) edge [bend left, "\textcolor{d_pink}{recombination}"] (atom)
 		(atom) edge [bend left, "\textcolor{d_orange}{condensation}"] (molecule)
 		(molecule) edge [bend left,"\textcolor{d_green}{dissociation}"] (atom)
 		(atom) edge [bend left,"\textcolor{d_blue}{ionization}"] (ion)
 		(stars) edge [bend left, "\textcolor{d_yellow}{supernova}"] (ion)
-		(molecule) edge [bend left, "\textcolor{red}{star formation}"] (stars);
+		(molecule) edge [bend left, "\textcolor{red}{star formation}"] (stars)
+		(stars) edge ["\textcolor{d_yellow}{supernova}"] (metals)
+		(metals) edge [bend left, "\textcolor{g_green}{dust growth}"] (dust)
+		(dust) edge [bend left, "\textcolor{g_red}{dust destruction}"] (metals);
 	""",
 	width="75em",
 	preamble = """
@@ -293,6 +304,8 @@ diagram = TikzPictures.TikzPicture(
 		\\definecolor{d_green}{HTML}{008C00}
 		\\definecolor{d_blue}{HTML}{007FB1}
 		\\definecolor{d_yellow}{HTML}{D1AC00}
+		\\definecolor{g_green}{HTML}{88b57b}
+		\\definecolor{g_red}{HTML}{b57b7b}
 		\\usetikzlibrary{shapes.misc, arrows, positioning, quotes, fit}
 		\\tikzset{
     		>=stealth',
@@ -1042,16 +1055,19 @@ let
 	# Metallicity x density (tight) grid
 	#################################################################################
 
-	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
+	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s", L"f_Z", L"f_d"]
 
 	xaxis_visible = [false, false, false, false, false, false, true, true, true]
 	yaxis_visible = [true, false, false, true, false, false, true, false, false]
 
 	# Initial conditions
 	fi = 0.5
-	ic_05 = [fi, 1.0 - fi, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	ic_05(Z) = [fi - Z, 1.0 - (fi - Z), 0.0, 0.0, 0.9 * Z, 0.1 * Z]
+	
 	fi = 0.01
-	ic_001 = [fi, 1.0 - fi, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	ic_001(Z) = [fi - Z, 1.0 - (fi - Z), 0.0, 0.0, 0.9 * Z, 0.1 * Z] 
 
 	# Total cell density range [mp * cm⁻³]
 	ρ_str = [L"0.19", L"10", L"300"]
@@ -1061,8 +1077,8 @@ let
 	Z_str = [L"0.0", L"0.1", L"1.0"]
 	Z_list = [0.0, 0.1, 1.0] * MODEL.Zsun
 
-	print_params = [[ρ, Z] for ρ in ρ_str, Z in Z_str]
-	base_params = [[ρ, Z] for ρ in ρ_list, Z in Z_list]
+	print_params = [[ρ, Z, 1.0] for ρ in ρ_str, Z in Z_str]
+	base_params = [[ρ, Z, 1.0] for ρ in ρ_list, Z in Z_list]
 
 	# Time variables
 	it         = 1000.0 # Integration time [Myr]
@@ -1071,12 +1087,20 @@ let
 
 	# Numerical integration
 	fractions_05 = [
-		MODEL.integrate_model(ic_05, base_param, time_range; times=time_list) for
-		base_param in base_params
+		MODEL.integrate_model(
+			ic_05(base_param[2]), 
+			base_param, 
+			time_range; 
+			times=time_list,
+		) for base_param in base_params
 	]
 	fractions_001 = [
-		MODEL.integrate_model(ic_001, base_param, time_range; times=time_list) for
-		base_param in base_params
+		MODEL.integrate_model(
+			ic_001(base_param[2]), 
+			base_param, 
+			time_range; 
+			times=time_list,
+		) for base_param in base_params
 	]
 
 	iterator = enumerate(
@@ -1125,7 +1149,7 @@ let
 				),
 			)
 
-			for (label, idx, color) in zip(frac_labels, 1:4, Makie.wong_colors())
+			for (label, idx, color) in zip(frac_labels, 1:6, Makie.wong_colors())
 
 				lines!(
 					ax,
@@ -1174,19 +1198,34 @@ let
 	# ICs x fractions (tight) grid
 	#################################################################################
 
-	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
-	phases       = ["ionized", "atomic", "molecular", "stellar"]
+	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s", L"f_Z", L"f_d"]
+	phases       = [
+		"ionized", 
+		"atomic", 
+		"molecular", 
+		"stellar", 
+		"metals", 
+		"dust",
+	]
 
-	ylimits = [(0.0, 0.5), (0.0, 1.05), (-0.01, 0.2), (-0.002, 0.05)]
+	ylimits = [
+		(0.0, 0.5), 
+		(0.0, 1.05), 
+		(-0.01, 0.2), 
+		(-0.002, 0.05), 
+		(-0.002, 0.02), 
+		(-0.0004, 0.005),
+	]
 
 	# Axis visibility
-	xaxis_visible = [false, false, false, true]
+	xaxis_visible = [false, false, false, false, false, true]
 	yaxis_visible = [true, false, false]
-	title_visible = [true, false, false, false]
+	title_visible = [true, false, false, false, false, false]
 
 	# Initial conditions
 	fis = [0.01, 0.25, 0.5]
-	ics = [[fi, 1.0 - fi, 0.0, 0.0] for fi in fis] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	ics(fi, Z) = [fi - Z, 1.0 - (fi - Z), 0.0, 0.0, 0.9 * Z, 0.1 * Z]
 
 	# Total cell density range [mp * cm⁻³]
 	ρ_exp_list = range(-1, 3, 100)
@@ -1207,51 +1246,51 @@ let
 	it = 0.5
 
 	# Label positions
-	positions = [(0.75, 0.1), (0.95, 0.85), :lt, :lt]
+	positions = [(0.75, 0.1), (0.95, 0.85), :lt, :lt, :lt, :lt]
 
 	# Iterators
-	col_iterator = enumerate(zip(ics, string.(fis), yaxis_visible))
+	col_iterator = enumerate(zip(fis, yaxis_visible))
 	row_iterator = enumerate(
 		zip(phases, phase_labels, positions, xaxis_visible, title_visible, ylimits),
 	)
 
-	scale = 1700 / length(ics)
+	scale = 1700 / length(fis)
 
 	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
 		f = Figure(size=(1700, scale * length(phases)))
 
-		for (col, (ic, fi, yaxis_v)) in col_iterator
+		for (col, (fi, yaxis_v)) in col_iterator
 
-			base_params_01 = [[ρ, Z_list[1]] for ρ in ρ_list]
-			base_params_02 = [[ρ, Z_list[2]] for ρ in ρ_list]
-			base_params_03 = [[ρ, Z_list[3]] for ρ in ρ_list]
-			base_params_04 = [[ρ, Z_list[4]] for ρ in ρ_list]
-			base_params_05 = [[ρ, Z_list[5]] for ρ in ρ_list]
-			base_params_06 = [[ρ, Z_list[6]] for ρ in ρ_list]
+			base_params_01 = [[ρ, Z_list[1], 1.0] for ρ in ρ_list]
+			base_params_02 = [[ρ, Z_list[2], 1.0] for ρ in ρ_list]
+			base_params_03 = [[ρ, Z_list[3], 1.0] for ρ in ρ_list]
+			base_params_04 = [[ρ, Z_list[4], 1.0] for ρ in ρ_list]
+			base_params_05 = [[ρ, Z_list[5], 1.0] for ρ in ρ_list]
+			base_params_06 = [[ρ, Z_list[6], 1.0] for ρ in ρ_list]
 
         	fractions_01 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ics(fi, base_param[2]), base_param, (0.0, it))[end] for
 				base_param in base_params_01
 			]
 			fractions_02 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ics(fi, base_param[2]), base_param, (0.0, it))[end] for
 				base_param in base_params_02
 			]
 			fractions_03 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ics(fi, base_param[2]), base_param, (0.0, it))[end] for
 				base_param in base_params_03
 			]
 			fractions_04 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ics(fi, base_param[2]), base_param, (0.0, it))[end] for
 				base_param in base_params_04
 			]
 			fractions_05 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ics(fi, base_param[2]), base_param, (0.0, it))[end] for
 				base_param in base_params_05
 			]
 			fractions_06 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ics(fi, base_param[2]), base_param, (0.0, it))[end] for
 				base_param in base_params_06
 			]
 
@@ -1261,7 +1300,7 @@ let
 					f[row, col];
 					xlabel=L"\log_{10} \, \rho_\mathrm{cell} \,\, [\mathrm{%$(MODEL.l_u)^{-3}}]",
 				    ylabel=p_label,
-					title=L"f_i = %$fi",
+					title=L"f_i = %$(string(fi))",
 					titlevisible=title_v,
 					xminorticksvisible=xaxis_v,
 		            xticksvisible=xaxis_v,
@@ -1295,7 +1334,7 @@ let
 				fraction = getindex.(fractions_06, idx)
 				lines!(ax, ρ_exp_list, fraction; label=Z_labels[6])
 
-				if row == length(phases) && col == length(ics)
+				if row == length(phases) && col == length(fis)
 					axislegend(ax; position, nbanks=1, labelsize=35)
 				end
 
@@ -1730,7 +1769,6 @@ ChaosTools = "~3.2.1"
 ColorSchemes = "~3.29.0"
 DataFrames = "~1.7.0"
 DataFramesMeta = "~0.15.3"
-DelimitedFiles = "~1.9.1"
 DifferentialEquations = "~7.14.0"
 Interpolations = "~0.15.1"
 Measurements = "~2.12.0"
@@ -1738,12 +1776,11 @@ PlutoLinks = "~0.1.6"
 PlutoUI = "~0.7.60"
 QuadGK = "~2.11.2"
 SpecialFunctions = "~2.5.0"
-Statistics = "~1.11.1"
 Symbolics = "~6.11.0"
 TikzPictures = "~3.5.0"
 Trapz = "~2.0.3"
 Unitful = "~1.22.0"
-UnitfulAstro = "~1.2.1"
+UnitfulAstro = "~1.2.2"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -1752,7 +1789,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.4"
 manifest_format = "2.0"
-project_hash = "95532172887b38440be5d1762d0c2b4b59a1dc21"
+project_hash = "8580cdaea2c5ea15d14ad04a60c3df6bb960cc9f"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "eea5d80188827b35333801ef97a40c2ed653b081"
@@ -2020,9 +2057,9 @@ version = "0.12.15"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "009060c9a6168704143100f36ab08f06c2af4642"
+git-tree-sha1 = "2ac646d71d0d24b44f3f8c84da8c9f4d70fb67df"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
-version = "1.18.2+1"
+version = "1.18.4+0"
 
 [[deps.Calculus]]
 deps = ["LinearAlgebra"]
@@ -2204,9 +2241,9 @@ version = "0.15.3"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
-git-tree-sha1 = "1d0a14036acb104d9e89698bd408f63ab58cdc82"
+git-tree-sha1 = "4e1fe97fdaed23e9dc21d4d664bea76b65fc50a0"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.18.20"
+version = "0.18.22"
 
 [[deps.DataValueInterfaces]]
 git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
@@ -2382,10 +2419,9 @@ version = "0.25.118"
     Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [[deps.DocStringExtensions]]
-deps = ["LibGit2"]
-git-tree-sha1 = "2fb1e02f2b635d0845df5d7c167fec4dd739b00d"
+git-tree-sha1 = "e7b7e6f178525d17c720ab9c081e4ef04429f860"
 uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
-version = "0.9.3"
+version = "0.9.4"
 
 [[deps.DomainSets]]
 deps = ["CompositeTypes", "IntervalSets", "LinearAlgebra", "Random", "StaticArrays"]
@@ -2425,9 +2461,9 @@ uuid = "5ae413db-bbd1-5e63-b57d-d24a61df00f5"
 version = "2.2.4+0"
 
 [[deps.EnumX]]
-git-tree-sha1 = "bdb1942cd4c45e3c678fd11569d5cccd80976237"
+git-tree-sha1 = "bddad79635af6aec424f53ed8aad5d7555dc6f00"
 uuid = "4e289a0a-7415-4d19-859d-a7e5c4648b56"
-version = "1.0.4"
+version = "1.0.5"
 
 [[deps.EnzymeCore]]
 git-tree-sha1 = "04c777af6ef65530a96ab68f0a81a4608113aa1d"
@@ -2643,9 +2679,9 @@ version = "4.1.1"
 
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "786e968a8d2fb167f2e4880baba62e0e26bd8e4e"
+git-tree-sha1 = "2c5512e11c791d1baed2049c5652441b28fc6a31"
 uuid = "d7e528f0-a631-5988-bf34-fe36492bcfd7"
-version = "2.13.3+1"
+version = "2.13.4+0"
 
 [[deps.FreeTypeAbstraction]]
 deps = ["ColorVectorSpace", "Colors", "FreeType", "GeometryBasics"]
@@ -2742,9 +2778,9 @@ version = "1.3.14+1"
 
 [[deps.Graphs]]
 deps = ["ArnoldiMethod", "Compat", "DataStructures", "Distributed", "Inflate", "LinearAlgebra", "Random", "SharedArrays", "SimpleTraits", "SparseArrays", "Statistics"]
-git-tree-sha1 = "1dc470db8b1131cfc7fb4c115de89fe391b9e780"
+git-tree-sha1 = "3169fd3440a02f35e549728b0890904cfd4ae58a"
 uuid = "86223c79-3864-5bf0-83f7-82e725a168b6"
-version = "1.12.0"
+version = "1.12.1"
 
 [[deps.GridLayoutBase]]
 deps = ["GeometryBasics", "InteractiveUtils", "Observables"]
@@ -2968,9 +3004,9 @@ version = "0.21.4"
 
 [[deps.JpegTurbo]]
 deps = ["CEnum", "FileIO", "ImageCore", "JpegTurbo_jll", "TOML"]
-git-tree-sha1 = "fa6d0bcff8583bac20f1ffa708c3913ca605c611"
+git-tree-sha1 = "9496de8fb52c224a2e3f9ff403947674517317d9"
 uuid = "b835a17e-a41a-41e7-81f0-2f016b05efe0"
-version = "0.1.5"
+version = "0.1.6"
 
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -3160,9 +3196,9 @@ version = "1.18.0+0"
 
 [[deps.Libmount_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "89211ea35d9df5831fca5d33552c02bd33878419"
+git-tree-sha1 = "a31572773ac1b745e0343fe5e2c8ddda7a37e997"
 uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
-version = "2.40.3+0"
+version = "2.41.0+0"
 
 [[deps.Libtiff_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "Pkg", "Zlib_jll", "Zstd_jll"]
@@ -3172,9 +3208,9 @@ version = "4.4.0+0"
 
 [[deps.Libuuid_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "e888ad02ce716b319e6bdb985d2ef300e7089889"
+git-tree-sha1 = "321ccef73a96ba828cd51f2ab5b9f917fa73945a"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
-version = "2.40.3+0"
+version = "2.41.0+0"
 
 [[deps.LineSearch]]
 deps = ["ADTypes", "CommonSolve", "ConcreteStructs", "FastClosures", "LinearAlgebra", "MaybeInplace", "SciMLBase", "SciMLJacobianOperators", "StaticArraysCore"]
@@ -3267,9 +3303,9 @@ version = "1.0.3"
 
 [[deps.LoopVectorization]]
 deps = ["ArrayInterface", "CPUSummary", "CloseOpenIntervals", "DocStringExtensions", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "PrecompileTools", "SIMDTypes", "SLEEFPirates", "Static", "StaticArrayInterface", "ThreadingUtilities", "UnPack", "VectorizationBase"]
-git-tree-sha1 = "8084c25a250e00ae427a379a5b607e7aed96a2dd"
+git-tree-sha1 = "e5afce7eaf5b5ca0d444bcb4dc4fd78c54cbbac0"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
-version = "0.12.171"
+version = "0.12.172"
 weakdeps = ["ChainRulesCore", "ForwardDiff", "SpecialFunctions"]
 
     [deps.LoopVectorization.extensions]
@@ -3494,9 +3530,9 @@ uuid = "510215fc-4207-5dde-b226-833fc4488ee2"
 version = "0.5.5"
 
 [[deps.OffsetArrays]]
-git-tree-sha1 = "5e1897147d1ff8d98883cda2be2187dcf57d8f0c"
+git-tree-sha1 = "a414039192a155fb38c4599a60110f0018c6ec82"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.15.0"
+version = "1.16.0"
 weakdeps = ["Adapt"]
 
     [deps.OffsetArrays.extensions]
@@ -3768,9 +3804,9 @@ version = "10.42.0+1"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "966b85253e959ea89c53a9abebbf2e964fbf593b"
+git-tree-sha1 = "48566789a6d5f6492688279e22445002d171cf76"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.11.32"
+version = "0.11.33"
 
 [[deps.PNGFiles]]
 deps = ["Base64", "CEnum", "ImageCore", "IndirectArrays", "OffsetArrays", "libpng_jll"]
@@ -3816,9 +3852,9 @@ version = "2.8.1"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "Libdl"]
-git-tree-sha1 = "35621f10a7531bc8fa58f74610b1bfb70a3cfc6b"
+git-tree-sha1 = "db76b1ecd5e9715f3d043cec13b2ec93ce015d53"
 uuid = "30392449-352a-5448-841d-b1acce4e97dc"
-version = "0.43.4+0"
+version = "0.44.2+0"
 
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "p7zip_jll"]
@@ -4076,9 +4112,9 @@ version = "1.1.1"
 
 [[deps.Revise]]
 deps = ["CodeTracking", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "REPL", "Requires", "UUIDs", "Unicode"]
-git-tree-sha1 = "9bb80533cb9769933954ea4ffbecb3025a783198"
+git-tree-sha1 = "5cf59106f9b47014c58c5053a1ce09c0a2e0333c"
 uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "3.7.2"
+version = "3.7.3"
 weakdeps = ["Distributed"]
 
     [deps.Revise.extensions]
@@ -4437,9 +4473,9 @@ version = "0.34.4"
 
 [[deps.StatsFuns]]
 deps = ["HypergeometricFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
-git-tree-sha1 = "b423576adc27097764a90e163157bcfc9acf0f46"
+git-tree-sha1 = "35b09e80be285516e52c9054792c884b9216ae3c"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
-version = "1.3.2"
+version = "1.4.0"
 weakdeps = ["ChainRulesCore", "InverseFunctions"]
 
     [deps.StatsFuns.extensions]
@@ -4657,9 +4693,9 @@ uuid = "781d530d-4396-4725-bb49-402e4bee1e77"
 version = "1.4.0"
 
 [[deps.URIs]]
-git-tree-sha1 = "67db6cc7b3821e19ebe75791a9dd19c9b1188f2b"
+git-tree-sha1 = "cbbebadbcc76c5ca1cc4b4f3b0614b3e603b5000"
 uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
-version = "1.5.1"
+version = "1.5.2"
 
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
@@ -4700,9 +4736,9 @@ version = "0.7.2"
 
 [[deps.UnitfulAstro]]
 deps = ["Unitful", "UnitfulAngles"]
-git-tree-sha1 = "da7577e6a726959b14f7451674d00b78d10ca30f"
+git-tree-sha1 = "fbe44a0ade62ae5ed0240ad314dfdd5482b90b40"
 uuid = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
-version = "1.2.1"
+version = "1.2.2"
 
 [[deps.Unityper]]
 deps = ["ConstructionBase"]
@@ -4927,7 +4963,7 @@ version = "3.5.0+0"
 # ╟─b2197f1a-ff9a-429c-8486-dfa27abc880d
 # ╟─ad34b750-5e81-4cb8-a444-52220c116790
 # ╟─b31c615a-36b3-46c0-bf8e-f8b5a77296f4
-# ╟─6f341d1b-8b0f-4bc5-b18c-d1e9dc9281d5
+# ╠═6f341d1b-8b0f-4bc5-b18c-d1e9dc9281d5
 # ╟─1d870ff9-fade-43c8-af55-6137ce051b8e
 # ╟─c76cf08f-aaef-46df-ae18-9cd018141b70
 # ╟─3bd92a5f-4efd-441e-a7d1-c3597e1f4a39

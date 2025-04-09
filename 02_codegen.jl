@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.5
 
 using Markdown
 using InteractiveUtils
@@ -8,7 +8,7 @@ using InteractiveUtils
 let
 	using Printf, PlutoLinks, Libdl
 
-	using ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
+	using ChaosTools, DataFrames, DataFramesMeta, DelimitedFiles, DifferentialEquations, Interpolations, LinearAlgebra, Measurements, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Trapz, Unitful, UnitfulAstro
 end
 
 # ╔═╡ 37653018-aaf5-42d1-a938-e05a44f18918
@@ -52,7 +52,8 @@ begin
 	# Paths to the interpolation tables
 	const ETA_D_TABLE = joinpath(GEN_FILES, "interpolation_tables/eta_d.txt")
 	const ETA_I_TABLE = joinpath(GEN_FILES, "interpolation_tables/eta_i.txt")
-	const R_TABLE     = joinpath(GEN_FILES, "interpolation_tables/R_Zsn.txt")
+	const R_TABLE     = joinpath(GEN_FILES, "interpolation_tables/R.txt")
+	const ZSN_TABLE   = joinpath(GEN_FILES, "interpolation_tables/Zsn.txt")
 	const TIME_TABLE  = joinpath(GEN_FILES, "interpolation_tables/times.txt")
 
 	# Paths to the C libraries (DLLs or SOs)
@@ -92,13 +93,14 @@ function write_header_file(path::Union{String,Nothing})::Union{String,Nothing}
 /* Interpolation tables */
 #define ETA_NROWS $(length(MODEL.Q_ages) + 1)  // Number of rows in the η tables
 #define ETA_NCOLS $(length(MODEL.Q_metals) + 1)  // Number of columns in the η tables
-#define R_NROWS $(length(MODEL.sy_metals))  // Number of rows in the R table
-#define R_NCOLS 3  // Number of columns in the R table
+#define R_ZSN_NROWS $(length(MODEL.sy_metals))  // Number of rows in the R and Zsn table
+#define R_ZSN_NCOLS 2  // Number of columns in the R and Zsn table
 
 /* Paths */
 static char *ETA_D_TABLE_PATH = "../code/src/el_sfr/tables/eta_d.txt";
 static char *ETA_I_TABLE_PATH = "../code/src/el_sfr/tables/eta_i.txt";
-static char *R_TABLE_PATH     = "../code/src/el_sfr/tables/R_Zsn.txt";
+static char *R_TABLE_PATH     = "../code/src/el_sfr/tables/R.txt";
+static char *ZSN_TABLE_PATH   = "../code/src/el_sfr/tables/Zsn.txt";
 
 /* ODE constants */
 
@@ -108,9 +110,12 @@ static char *R_TABLE_PATH     = "../code/src/el_sfr/tables/R_Zsn.txt";
 
 #define N_EQU $(MODEL.N_EQU) /* Number of equations */
 #define ODE_CS $(@sprintf("%.7e", MODEL.c_star))  /* [Myr * cm^(-3/2)] */
-#define ODE_CR $(@sprintf("%.7e", MODEL.c_rec))  /* [Myr * cm^(-3)] */
+#define ODE_CR $(@sprintf("%.7e", MODEL.c_rec))   /* [Myr * cm^(-3)] */
 #define ODE_CC $(@sprintf("%.7e", MODEL.c_cond))  /* [Myr * cm^(-3)] */
-#define ZEFF $(@sprintf("%.4e", MODEL.Zeff))  /* 1e-3 Zₒ */
+#define ODE_CD $(@sprintf("%.7e", MODEL.c_dg))    /* [Myr * mp * cm^(-3)] */
+#define TAU_DD $(@sprintf("%.7e", MODEL.τ_dd))    /* [Myr] */
+#define ZEFF $(@sprintf("%.4e", MODEL.Zeff))      /* 1e-3 Zₒ */
+#define CXD $(@sprintf("%.4e", MODEL.c_xd))       /* [dimensionless] */
 
 typedef struct DataTable
 {
@@ -220,8 +225,10 @@ function write_jacobian(path::String)::Nothing
 	*  Atomic gas fraction:     fa(t) = Ma(t) / MC --> y[1]
 	*  Molecular gas fraction:  fm(t) = Mm(t) / MC --> y[2]
 	*  Stellar fraction:        fs(t) = Ms(t) / MC --> y[3]
+	*  Metal fraction:          fZ(t) = MZ(t) / MC --> y[4]
+	*  Dust fraction:           fd(t) = Md(t) / MC --> y[5]
 	*
-	*  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) is the total density of the gas cell,
+	*  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) + MZ(t) + Md(t) is the total density of the gas cell, 
 	*  and each equation has units of Myr^(-1).
 	*
 	*  \\param[in] t Unused variable to comply with the `gsl_odeiv2_driver_alloc_y_new()` API.
@@ -235,28 +242,33 @@ function write_jacobian(path::String)::Nothing
 	static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
 	{
 		(void)(t);
-
-	    /*
+	
+		/*
 		* Destructure the parameters
 		*
 		* rho_C: Total cell density [mp * cm⁻³]
-		* Z:     Metallicity [dimensionless]
+		* Z:     Arepo metallicity [dimensionless]
+		* a:     Scale factor [dimensionless]
 		* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
 		* eta_i: Photoionization efficiency of Hydrogen atoms [dimensionless]
 		* R:     Mass recycling fraction [dimensionless]
+		* Zsn:   Metals recycling fraction [dimensionless]
 		*/
+			
 		double *p    = (double *)parameters;
 		double rho_C = p[0];
 		double Z     = p[1];
-		double eta_d = p[2];
-		double eta_i = p[3];
-		double R     = p[4];
-
+		double a     = p[2];
+		double eta_d = p[3];
+		double eta_i = p[4];
+		double R     = p[5];
+		double Zsn   = p[6];
+			
 		gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, $(MODEL.N_EQU), $(MODEL.N_EQU));
 		gsl_matrix *m = &dfdy_mat.matrix;
-
-	    double aux_var = AUX_VAR;
-
+	
+		double aux_var = AUX_VAR;
+	
 	"""
 
 	tail = """
@@ -264,6 +276,8 @@ function write_jacobian(path::String)::Nothing
 		dfdt[1] = 0;
 		dfdt[2] = 0;
 		dfdt[3] = 0;
+		dfdt[4] = 0;
+		dfdt[5] = 0;
 
 		return GSL_SUCCESS;
 	"""
@@ -309,9 +323,12 @@ function write_jacobian(path::String)::Nothing
 			"RHS1"    => "y",
 			"RHS2[0]" => "rho_C",
  			"RHS2[1]" => "Z",
-  			"RHS2[2]" => "eta_d",
-  			"RHS2[3]" => "eta_i",
-			"RHS2[4]" => "R",
+			"RHS2[2]" => "a",
+  			"RHS2[3]" => "eta_d",
+  			"RHS2[4]" => "eta_i",
+			"RHS2[5]" => "R",
+			"RHS2[6]" => "Zsn",
+			# "pow(y[2], 2)" => "y[2] * y[2]",
 			"-1 * "  => "- ",
 			"1 "     => "1.0 ",
 		) * "\n"
@@ -326,6 +343,7 @@ function write_jacobian(path::String)::Nothing
 		aux_var_pattern => "aux_var",
 		"AUX_VAR" => aux_var_str,
 		"+ -"     => "-",
+		"pow(y[2], 2)" => "y[2] * y[2]",
 	)
 
 	file_with_jacobian = replace(
@@ -361,7 +379,7 @@ md"## Dynamic libraries"
 
 function compile_libraries(path::String)::Nothing
 
-	opt_cmd = `gcc -Wall -Wno-unused-variable -fpic -shared -Ofast -march=native -mtune=native -flto`
+	opt_cmd = `C:/msys64/mingw64/bin/gcc.exe -Wall -Wno-unused-variable -fpic -shared -Ofast -march=native -mtune=native -flto`
 	in_out_cmd = `$(path)/el_sfr.c -o $(lib_path)`
 	gsl_cmd = `-IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib -lgsl -lgslcblas -lm`
 
@@ -393,6 +411,7 @@ function integrate_with_c(
 	eta_d_table::String,
 	eta_i_table::String,
 	R_table::String,
+	Zsn_table::String,
 	library::Ptr{Nothing},
 )::Function
 
@@ -405,15 +424,18 @@ function integrate_with_c(
 	#
 	# ICs (`ic`):
 	#
-	# fi: Ionized gas fraction (of the total cell mass) [dimensionless]
-	# fa: Atomic gas fraction (of the total cell mass) [dimensionless]
-	# fm: Molecular gas fraction (of the total cell mass) [dimensionless]
-	# fs: Stellar fraction (of the total cell mass) [dimensionless]
+	# fi: Ionized gas fraction [dimensionless]
+	# fa: Atomic gas fraction [dimensionless]
+	# fm: Molecular gas fraction [dimensionless]
+	# fs: Stellar fraction [dimensionless]
+	# fZ: Metal fraction [dimensionless]
+	# fd: Dust fraction [dimensionless]
 	#
 	# Parameters (`base_params`):
 	#
 	# rho_C: Total cell density [mp * cm⁻³]
- 	# Z:     Metallicity [dimensionless]
+ 	# Z:     Arepo metallicity [dimensionless]
+	# a:     Scale factor [dimensionless]
 	#
 	# Integration time (`it`):
 	#
@@ -428,6 +450,7 @@ function integrate_with_c(
 
 		ρ_cell  = base_params[1]
 		Z       = base_params[2]
+		a       = base_params[3]
 		log_age = log10(it * 10^6)
 
 		ηd = @ccall $interpolate2D(
@@ -446,10 +469,17 @@ function integrate_with_c(
 			Z::Cdouble,
 			R_table::Cstring,
 			length(MODEL.sy_metals)::Cint,
-			3::Cint,
+			2::Cint,
 		)::Cdouble
 
-		parameters = [ρ_cell, Z, ηd, η_ion, R]
+		Zsn = @ccall $interpolate1D(
+			Z::Cdouble,
+			Zsn_table::Cstring,
+			length(MODEL.sy_metals)::Cint,
+			2::Cint,
+		)::Cdouble
+
+		parameters = [ρ_cell, Z, a, ηd, η_ion, R, Zsn]
 
 		@ccall $integrate_ode(
 		    ic::Ptr{Cdouble},
@@ -615,14 +645,15 @@ md"### Mass recycling"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 #####################################################################################
-# Write a table to interpolate R(Z) and Zsn(Z)
+# Write a table to interpolate R(Z) and a table to interpolate Zsn(Z)
 #
-# The columns are : Z  |  R  |  Zsn
+# The columns are : Z  |  R
+# The columns are : Z  |  Zsn
 #
 # path: Where to store the resulting file
 #####################################################################################
 
-function write_R_table(path::String)::Nothing
+function write_R_Zsn_table(path::String)::Nothing
 
 	m_low    = ustrip(u"Msun", MODEL.M_LOW)
 	m_high   = ustrip(u"Msun", MODEL.M_HIGH)
@@ -660,7 +691,8 @@ function write_R_table(path::String)::Nothing
 	end
 
 	dir = mkpath(path)
-	writedlm(joinpath(dir, "R_Zsn.txt"), [MODEL.sy_metals;; Rs;; Zsns])
+	writedlm(joinpath(dir, "R.txt"), [MODEL.sy_metals;; Rs])
+	writedlm(joinpath(dir, "Zsn.txt"), [MODEL.sy_metals;; Zsns])
 
 	return nothing
 
@@ -670,7 +702,7 @@ end;
 # ╔═╡ d85d8c28-7475-4c26-8bcc-5331fcd06a50
 # ╠═╡ skip_as_script = true
 #=╠═╡
-write_R_table(joinpath(GEN_FILES, "interpolation_tables"))
+write_R_Zsn_table(joinpath(GEN_FILES, "interpolation_tables"))
   ╠═╡ =#
 
 # ╔═╡ 451d1da4-e7f9-4e49-921f-ed5c83d7c0ad
@@ -749,6 +781,7 @@ DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
 PlutoLinks = "0ff47ea0-7a50-410d-8455-4348d5de0420"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
@@ -764,9 +797,9 @@ UnitfulAstro = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
 ChaosTools = "~3.2.1"
 DataFrames = "~1.7.0"
 DataFramesMeta = "~0.15.3"
-DelimitedFiles = "~1.9.1"
 DifferentialEquations = "~7.14.0"
 Interpolations = "~0.15.1"
+Measurements = "~2.12.0"
 PlutoLinks = "~0.1.6"
 PlutoUI = "~0.7.60"
 QuadGK = "~2.11.2"
@@ -775,7 +808,7 @@ Symbolics = "~6.11.0"
 TikzPictures = "~3.5.0"
 Trapz = "~2.0.3"
 Unitful = "~1.22.0"
-UnitfulAstro = "~1.2.1"
+UnitfulAstro = "~1.2.2"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -784,7 +817,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.4"
 manifest_format = "2.0"
-project_hash = "7fba8104164987577d67eeb6e996d72747158afb"
+project_hash = "028d77a51331926245973db6466a5f9a4c2217d2"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "eea5d80188827b35333801ef97a40c2ed653b081"
@@ -1013,9 +1046,9 @@ version = "1.0.1+0"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "009060c9a6168704143100f36ab08f06c2af4642"
+git-tree-sha1 = "2ac646d71d0d24b44f3f8c84da8c9f4d70fb67df"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
-version = "1.18.2+1"
+version = "1.18.4+0"
 
 [[deps.Calculus]]
 deps = ["LinearAlgebra"]
@@ -1164,9 +1197,9 @@ version = "0.15.3"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
-git-tree-sha1 = "1d0a14036acb104d9e89698bd408f63ab58cdc82"
+git-tree-sha1 = "4e1fe97fdaed23e9dc21d4d664bea76b65fc50a0"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.18.20"
+version = "0.18.22"
 
 [[deps.DataValueInterfaces]]
 git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
@@ -1336,10 +1369,9 @@ version = "0.25.118"
     Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [[deps.DocStringExtensions]]
-deps = ["LibGit2"]
-git-tree-sha1 = "2fb1e02f2b635d0845df5d7c167fec4dd739b00d"
+git-tree-sha1 = "e7b7e6f178525d17c720ab9c081e4ef04429f860"
 uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
-version = "0.9.3"
+version = "0.9.4"
 
 [[deps.DomainSets]]
 deps = ["CompositeTypes", "IntervalSets", "LinearAlgebra", "Random", "StaticArrays"]
@@ -1375,9 +1407,9 @@ weakdeps = ["StochasticDiffEq"]
     StochasticSystemsBase = "StochasticDiffEq"
 
 [[deps.EnumX]]
-git-tree-sha1 = "bdb1942cd4c45e3c678fd11569d5cccd80976237"
+git-tree-sha1 = "bddad79635af6aec424f53ed8aad5d7555dc6f00"
 uuid = "4e289a0a-7415-4d19-859d-a7e5c4648b56"
-version = "1.0.4"
+version = "1.0.5"
 
 [[deps.EnzymeCore]]
 git-tree-sha1 = "04c777af6ef65530a96ab68f0a81a4608113aa1d"
@@ -1541,9 +1573,9 @@ weakdeps = ["StaticArrays"]
 
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "786e968a8d2fb167f2e4880baba62e0e26bd8e4e"
+git-tree-sha1 = "2c5512e11c791d1baed2049c5652441b28fc6a31"
 uuid = "d7e528f0-a631-5988-bf34-fe36492bcfd7"
-version = "2.13.3+1"
+version = "2.13.4+0"
 
 [[deps.FunctionWrappers]]
 git-tree-sha1 = "d62485945ce5ae9c0c48f124a84998d755bae00e"
@@ -1599,9 +1631,9 @@ version = "1.3.14+1"
 
 [[deps.Graphs]]
 deps = ["ArnoldiMethod", "Compat", "DataStructures", "Distributed", "Inflate", "LinearAlgebra", "Random", "SharedArrays", "SimpleTraits", "SparseArrays", "Statistics"]
-git-tree-sha1 = "1dc470db8b1131cfc7fb4c115de89fe391b9e780"
+git-tree-sha1 = "3169fd3440a02f35e549728b0890904cfd4ae58a"
 uuid = "86223c79-3864-5bf0-83f7-82e725a168b6"
-version = "1.12.0"
+version = "1.12.1"
 
 [[deps.HarfBuzz_ICU_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "HarfBuzz_jll", "ICU_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
@@ -1930,9 +1962,9 @@ version = "1.18.0+0"
 
 [[deps.Libmount_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "89211ea35d9df5831fca5d33552c02bd33878419"
+git-tree-sha1 = "a31572773ac1b745e0343fe5e2c8ddda7a37e997"
 uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
-version = "2.40.3+0"
+version = "2.41.0+0"
 
 [[deps.Libtiff_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "Pkg", "Zlib_jll", "Zstd_jll"]
@@ -1942,9 +1974,9 @@ version = "4.4.0+0"
 
 [[deps.Libuuid_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "e888ad02ce716b319e6bdb985d2ef300e7089889"
+git-tree-sha1 = "321ccef73a96ba828cd51f2ab5b9f917fa73945a"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
-version = "2.40.3+0"
+version = "2.41.0+0"
 
 [[deps.LineSearch]]
 deps = ["ADTypes", "CommonSolve", "ConcreteStructs", "FastClosures", "LinearAlgebra", "MaybeInplace", "SciMLBase", "SciMLJacobianOperators", "StaticArraysCore"]
@@ -2037,9 +2069,9 @@ version = "1.0.3"
 
 [[deps.LoopVectorization]]
 deps = ["ArrayInterface", "CPUSummary", "CloseOpenIntervals", "DocStringExtensions", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "PrecompileTools", "SIMDTypes", "SLEEFPirates", "Static", "StaticArrayInterface", "ThreadingUtilities", "UnPack", "VectorizationBase"]
-git-tree-sha1 = "8084c25a250e00ae427a379a5b607e7aed96a2dd"
+git-tree-sha1 = "e5afce7eaf5b5ca0d444bcb4dc4fd78c54cbbac0"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
-version = "0.12.171"
+version = "0.12.172"
 weakdeps = ["ChainRulesCore", "ForwardDiff", "SpecialFunctions"]
 
     [deps.LoopVectorization.extensions]
@@ -2224,9 +2256,9 @@ version = "3.15.1"
     SpeedMapping = "f1835b91-879b-4a3f-a438-e4baacf14412"
 
 [[deps.OffsetArrays]]
-git-tree-sha1 = "5e1897147d1ff8d98883cda2be2187dcf57d8f0c"
+git-tree-sha1 = "a414039192a155fb38c4599a60110f0018c6ec82"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.15.0"
+version = "1.16.0"
 weakdeps = ["Adapt"]
 
     [deps.OffsetArrays.extensions]
@@ -2474,9 +2506,9 @@ version = "10.42.0+1"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "966b85253e959ea89c53a9abebbf2e964fbf593b"
+git-tree-sha1 = "48566789a6d5f6492688279e22445002d171cf76"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.11.32"
+version = "0.11.33"
 
 [[deps.PackageExtensionCompat]]
 git-tree-sha1 = "fb28e33b8a95c4cee25ce296c817d89cc2e53518"
@@ -2498,9 +2530,9 @@ version = "2.8.1"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "Libdl"]
-git-tree-sha1 = "35621f10a7531bc8fa58f74610b1bfb70a3cfc6b"
+git-tree-sha1 = "db76b1ecd5e9715f3d043cec13b2ec93ce015d53"
 uuid = "30392449-352a-5448-841d-b1acce4e97dc"
-version = "0.43.4+0"
+version = "0.44.2+0"
 
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "p7zip_jll"]
@@ -2734,9 +2766,9 @@ version = "1.1.1"
 
 [[deps.Revise]]
 deps = ["CodeTracking", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "REPL", "Requires", "UUIDs", "Unicode"]
-git-tree-sha1 = "9bb80533cb9769933954ea4ffbecb3025a783198"
+git-tree-sha1 = "5cf59106f9b47014c58c5053a1ce09c0a2e0333c"
 uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "3.7.2"
+version = "3.7.3"
 weakdeps = ["Distributed"]
 
     [deps.Revise.extensions]
@@ -3049,9 +3081,9 @@ version = "0.34.4"
 
 [[deps.StatsFuns]]
 deps = ["HypergeometricFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
-git-tree-sha1 = "b423576adc27097764a90e163157bcfc9acf0f46"
+git-tree-sha1 = "35b09e80be285516e52c9054792c884b9216ae3c"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
-version = "1.3.2"
+version = "1.4.0"
 weakdeps = ["ChainRulesCore", "InverseFunctions"]
 
     [deps.StatsFuns.extensions]
@@ -3234,9 +3266,9 @@ uuid = "781d530d-4396-4725-bb49-402e4bee1e77"
 version = "1.4.0"
 
 [[deps.URIs]]
-git-tree-sha1 = "67db6cc7b3821e19ebe75791a9dd19c9b1188f2b"
+git-tree-sha1 = "cbbebadbcc76c5ca1cc4b4f3b0614b3e603b5000"
 uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
-version = "1.5.1"
+version = "1.5.2"
 
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
@@ -3271,9 +3303,9 @@ version = "0.7.2"
 
 [[deps.UnitfulAstro]]
 deps = ["Unitful", "UnitfulAngles"]
-git-tree-sha1 = "da7577e6a726959b14f7451674d00b78d10ca30f"
+git-tree-sha1 = "fbe44a0ade62ae5ed0240ad314dfdd5482b90b40"
 uuid = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
-version = "1.2.1"
+version = "1.2.2"
 
 [[deps.Unityper]]
 deps = ["ConstructionBase"]

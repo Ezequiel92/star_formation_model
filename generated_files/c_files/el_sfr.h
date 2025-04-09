@@ -11,13 +11,14 @@
 /* Interpolation tables */
 #define ETA_NROWS 107  // Number of rows in the η tables
 #define ETA_NCOLS 7  // Number of columns in the η tables
-#define R_NROWS 7  // Number of rows in the R table
-#define R_NCOLS 3  // Number of columns in the R table
+#define R_ZSN_NROWS 7  // Number of rows in the R and Zsn table
+#define R_ZSN_NCOLS 2  // Number of columns in the R and Zsn table
 
 /* Paths */
 static char *ETA_D_TABLE_PATH = "../code/src/el_sfr/tables/eta_d.txt";
 static char *ETA_I_TABLE_PATH = "../code/src/el_sfr/tables/eta_i.txt";
-static char *R_TABLE_PATH     = "../code/src/el_sfr/tables/R_Zsn.txt";
+static char *R_TABLE_PATH     = "../code/src/el_sfr/tables/R.txt";
+static char *ZSN_TABLE_PATH   = "../code/src/el_sfr/tables/Zsn.txt";
 
 /* ODE constants */
 
@@ -25,11 +26,14 @@ static char *R_TABLE_PATH     = "../code/src/el_sfr/tables/R_Zsn.txt";
 /* Zsun = 0.0127 (solar metallicity) */
 /* Cρ   = 100.0000 (clumping factor) */
 
-#define N_EQU 4 /* Number of equations */
+#define N_EQU 6 /* Number of equations */
 #define ODE_CS 5.1470081e+01  /* [Myr * cm^(-3/2)] */
-#define ODE_CR 1.2187726e-01  /* [Myr * cm^(-3)] */
+#define ODE_CR 1.2187726e-01   /* [Myr * cm^(-3)] */
 #define ODE_CC 5.7491245e-02  /* [Myr * cm^(-3)] */
-#define ZEFF 1.2700e-05  /* 1e-3 Zₒ */
+#define ODE_CD 1.7736986e+03    /* [Myr * mp * cm^(-3)] */
+#define TAU_DD 2.2953846e+03    /* [Myr] */
+#define ZEFF 1.2700e-05      /* 1e-3 Zₒ */
+#define CXD 2.8360e-01       /* [dimensionless] */
 
 typedef struct DataTable
 {
