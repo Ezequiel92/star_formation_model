@@ -4,7 +4,7 @@
  * \copyright   and contributing authors.
  *
  * \file        src/el_sfr/el_sfr.c
- * \date        09/2024
+ * \date        04/2025
  * \author      Ezequiel Lozano
  * \brief       Compute the star formation rate for a given gas cell.
  * \details     This file contains the routines to compute the star formation rate, according to our
@@ -301,13 +301,15 @@ static double interpolate2D(double x, double y, const void *dtable)
  *
  *  Evaluate the four ODEs of the model, using the following variables:
  *
- *  Ionized gas fraction:    fi(t) = Mi(t) / Mc --> y[0]
- *  Atomic gas fraction:     fa(t) = Ma(t) / Mc --> y[1]
- *  Molecular gas fraction:  fm(t) = Mm(t) / Mc --> y[2]
- *  Stellar fraction:        fs(t) = Ms(t) / Mc --> y[3]
+ *  Ionized gas fraction:    fi(t) = Mi(t) / MC --> y[0]
+ *  Atomic gas fraction:     fa(t) = Ma(t) / MC --> y[1]
+ *  Molecular gas fraction:  fm(t) = Mm(t) / MC --> y[2]
+ *  Stellar fraction:        fs(t) = Ms(t) / MC --> y[3]
+ *  Metal fraction:          fZ(t) = MZ(t) / MC --> y[4]
+ *  Dust fraction:           fd(t) = Md(t) / MC --> y[5]
  *
- *  where Mc = Mi(t) + Ma(t) + Mm(t) + Ms(t) is the total mass of the gas cell,
- *  and each equation has units of Myr^(-1).
+ *  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) + MZ(t) + Md(t) is the total density of the gas cell,
+ * and each equation has units of Myr^(-1).
  *
  *  \param[in] t Unused variable to comply with the `gsl_odeiv2_driver_alloc_y_new()` API.
  *  \param[in] y Values of the variables at which the ODEs will be evaluated.
@@ -323,34 +325,41 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     /*
      * Destructure the parameters
      *
-     * rho_C: Total cell density                                 [mp * cm⁻³]
-     * Z:     Metallicity                                        [dimensionless]
+     * rho_C: Total cell density [mp * cm⁻³]
+     * Z:     Arepo metallicity [dimensionless]
+     * a:     Scale factor [dimensionless]
      * eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
-     * eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
-     * R:     Mass recycling fraction                            [dimensionless]
-     * a:     Scale factor                                       [dimensionless]
+     * eta_i: Photoionization efficiency of Hydrogen atoms [dimensionless]
+     * R:     Mass recycling fraction [dimensionless]
+     * Zsn:   Metals recycling fraction [dimensionless]
      */
+
     double *p = (double *)parameters;
     double rho_C = p[0];
     double Z = p[1];
-    double eta_d = p[2];
-    double eta_i = p[3];
-    double R = p[4];
-    double a = p[5];
+    double a = p[2];
+    double eta_d = p[3];
+    double eta_i = p[4];
+    double R = p[5];
+    double Zsn = p[6];
 
     /* Compute the auxiliary equations */
     double tau_R = ODE_CR / (y[0] * rho_C);
-    double tau_C = ODE_CC / (rho_C * (Z + ZEFF) * (1.0 - y[3]));
+    double tau_C = ODE_CC / (rho_C * (y[4] + ZEFF) * (1 - y[3]));
     double tau_S = ODE_CS / sqrt(rho_C);
     double recombination = y[0] / tau_R;
     double cloud_formation = y[1] / tau_C;
     double sfr = y[2] / tau_S;
+    double dust_destruction = y[5] / TAU_DD;
+    double dust_growth = (y[4] - y[5]) * (y[5] * y[2] * y[2] * rho_C) / ODE_CD;
 
     /* Evaluate the ODE system */
-    f[0] = -recombination + (eta_i + R) * sfr;
+    f[0] = -recombination + eta_i * sfr + R * sfr * (1 - Zsn);
     f[1] = -cloud_formation + recombination + (eta_d - eta_i) * sfr;
     f[2] = cloud_formation - (1 + eta_d) * sfr;
     f[3] = (1 - R) * sfr;
+    f[4] = Zsn * R * sfr + dust_destruction - dust_growth;
+    f[5] = dust_growth - dust_destruction;
 
     return GSL_SUCCESS;
 }
@@ -363,8 +372,10 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
 *  Atomic gas fraction:     fa(t) = Ma(t) / MC --> y[1]
 *  Molecular gas fraction:  fm(t) = Mm(t) / MC --> y[2]
 *  Stellar fraction:        fs(t) = Ms(t) / MC --> y[3]
+*  Metal fraction:          fZ(t) = MZ(t) / MC --> y[4]
+*  Dust fraction:           fd(t) = Md(t) / MC --> y[5]
 *
-*  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) is the total density of the gas cell,
+*  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) + MZ(t) + Md(t) is the total density of the gas cell, 
 *  and each equation has units of Myr^(-1).
 *
 *  \param[in] t Unused variable to comply with the `gsl_odeiv2_driver_alloc_y_new()` API.
@@ -379,51 +390,80 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 {
 	(void)(t);
 
-    /*
+	/*
 	* Destructure the parameters
 	*
 	* rho_C: Total cell density [mp * cm⁻³]
-	* Z:     Metallicity [dimensionless]
+	* Z:     Arepo metallicity [dimensionless]
+	* a:     Scale factor [dimensionless]
 	* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
 	* eta_i: Photoionization efficiency of Hydrogen atoms [dimensionless]
 	* R:     Mass recycling fraction [dimensionless]
+	* Zsn:   Metals recycling fraction [dimensionless]
 	*/
+		
 	double *p    = (double *)parameters;
 	double rho_C = p[0];
 	double Z     = p[1];
-	double eta_d = p[2];
-	double eta_i = p[3];
-	double R     = p[4];
-
-	gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 4, 4);
+	double a     = p[2];
+	double eta_d = p[3];
+	double eta_i = p[4];
+	double R     = p[5];
+	double Zsn   = p[6];
+		
+	gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 6, 6);
 	gsl_matrix *m = &dfdy_mat.matrix;
 
-    double aux_var = sqrt(rho_C);
+	double aux_var = sqrt(rho_C);
 
 	gsl_matrix_set(m, 0, 0, -16.409952 * y[0] * rho_C);
 	gsl_matrix_set(m, 0, 1, 0);
-	gsl_matrix_set(m, 0, 2, 0.019428762831580126 * (eta_i + R) * aux_var);
+	gsl_matrix_set(m, 0, 2, 0.019428762831580126 * eta_i * aux_var + 0.019428762831580126 * R * (1.0 - Zsn) * aux_var);
 	gsl_matrix_set(m, 0, 3, 0);
+	gsl_matrix_set(m, 0, 4, 0);
+	gsl_matrix_set(m, 0, 5, 0);
 
 	gsl_matrix_set(m, 1, 0, 16.409952 * y[0] * rho_C);
-	gsl_matrix_set(m, 1, 1, 17.393952755905513 * (1.0 - y[3]) * rho_C * (-1.27e-5 - Z));
+	gsl_matrix_set(m, 1, 1, 17.393952755905513 * (1.0 - y[3]) * (-1.27e-5 - y[4]) * rho_C);
 	gsl_matrix_set(m, 1, 2, 0.019428762831580126 * (eta_d - eta_i) * aux_var);
-	gsl_matrix_set(m, 1, 3, -17.393952755905513 * y[1] * rho_C * (-1.27e-5 - Z));
+	gsl_matrix_set(m, 1, 3, -17.393952755905513 * y[1] * (-1.27e-5 - y[4]) * rho_C);
+	gsl_matrix_set(m, 1, 4, -17.393952755905513 * y[1] * (1.0 - y[3]) * rho_C);
+	gsl_matrix_set(m, 1, 5, 0);
 
 	gsl_matrix_set(m, 2, 0, 0);
-	gsl_matrix_set(m, 2, 1, 17.393952755905513 * (1.0 - y[3]) * rho_C * (1.27e-5 + Z));
-	gsl_matrix_set(m, 2, 2, -0.019428762831580126 * (1.0 + eta_d) * aux_var);
-	gsl_matrix_set(m, 2, 3, -17.393952755905513 * y[1] * rho_C * (1.27e-5 + Z));
+	gsl_matrix_set(m, 2, 1, 17.393952755905513 * (1.0 - y[3]) * (1.27e-5 + y[4]) * rho_C);
+	gsl_matrix_set(m, 2, 2, 0.019428762831580126 * (-1.0 - eta_d) * aux_var);
+	gsl_matrix_set(m, 2, 3, -17.393952755905513 * y[1] * (1.27e-5 + y[4]) * rho_C);
+	gsl_matrix_set(m, 2, 4, 17.393952755905513 * y[1] * (1.0 - y[3]) * rho_C);
+	gsl_matrix_set(m, 2, 5, 0);
 
 	gsl_matrix_set(m, 3, 0, 0);
 	gsl_matrix_set(m, 3, 1, 0);
 	gsl_matrix_set(m, 3, 2, 0.019428762831580126 * (1.0 - R) * aux_var);
 	gsl_matrix_set(m, 3, 3, 0);
+	gsl_matrix_set(m, 3, 4, 0);
+	gsl_matrix_set(m, 3, 5, 0);
+
+	gsl_matrix_set(m, 4, 0, 0);
+	gsl_matrix_set(m, 4, 1, 0);
+	gsl_matrix_set(m, 4, 2, 0.019428762831580126 * R * Zsn * aux_var -0.0011275872721655854 * y[2] * (y[4] - y[5]) * y[5] * rho_C);
+	gsl_matrix_set(m, 4, 3, 0);
+	gsl_matrix_set(m, 4, 4, -0.0005637936360827927 * y[2] * y[2] * y[5] * rho_C);
+	gsl_matrix_set(m, 4, 5, 0.0004356568364611259 -0.0005637936360827927 * y[2] * y[2] * (y[4] - y[5]) * rho_C + 0.0005637936360827927 * y[2] * y[2] * y[5] * rho_C);
+
+	gsl_matrix_set(m, 5, 0, 0);
+	gsl_matrix_set(m, 5, 1, 0);
+	gsl_matrix_set(m, 5, 2, 0.0011275872721655854 * y[2] * (y[4] - y[5]) * y[5] * rho_C);
+	gsl_matrix_set(m, 5, 3, 0);
+	gsl_matrix_set(m, 5, 4, 0.0005637936360827927 * y[2] * y[2] * y[5] * rho_C);
+	gsl_matrix_set(m, 5, 5, -0.0004356568364611259 + 0.0005637936360827927 * y[2] * y[2] * (y[4] - y[5]) * rho_C -0.0005637936360827927 * y[2] * y[2] * y[5] * rho_C);
 
 	dfdt[0] = 0;
 	dfdt[1] = 0;
 	dfdt[2] = 0;
 	dfdt[3] = 0;
+	dfdt[4] = 0;
+	dfdt[5] = 0;
 
 	return GSL_SUCCESS;
 }
@@ -436,15 +476,18 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
  * fa: Atomic gas fraction    [dimensionless]
  * fm: Molecular gas fraction [dimensionless]
  * fs: Stellar fraction       [dimensionless]
+ * fZ: Metal fraction         [dimensionless]
+ * fs: Dust fraction          [dimensionless]
  *
  * Parameters
  *
  * rho_C: Total cell density                                 [mp * cm⁻³]
  * Z:     Metallicity                                        [dimensionless]
+ * a:     Scale factor                                       [dimensionless]
  * eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
  * eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
  * R:     Mass recycling fraction                            [dimensionless]
- * a:     Scale factor                                       [dimensionless]
+ * Zsn:   Metals recycling fraction                          [dimensionless]
  *
  *  \param[in] ic Initial conditions.
  *  \param[in] parameters Parameters for the ODEs.
@@ -464,14 +507,16 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
     double fa = ic[1];
     double fm = ic[2];
     double fs = ic[3];
+    double fZ = ic[4];
+    double fd = ic[5];
 
     double negative_limit = -1e-8;
 
 #ifndef TESTING
     /* Check that none of the inputs are too negative */
-    if (fi < negative_limit || fa < negative_limit || fm < negative_limit || fs < negative_limit)
+    if (fi < negative_limit || fa < negative_limit || fm < negative_limit || fs < negative_limit || fZ < negative_limit || fd < negative_limit)
     {
-        terminate("ERROR: Negative initial conditions: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf", fi, fa, fm, fs);
+        terminate("ERROR: Negative initial conditions: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf", fi, fa, fm, fs, fZ, fd);
     }
 #endif /* #ifndef TESTING */
 
@@ -480,7 +525,9 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
     fa = fmax(0.0, fa);
     fm = fmax(0.0, fm);
     fs = fmax(0.0, fs);
-    double total = fi + fa + fm + fs;
+    fZ = fmax(0.0, fZ);
+    fd = fmax(0.0, fd);
+    double total = fi + fa + fm + fs + fZ + fd;
 
     /* Initialize the integration variables */
     double t0 = 0.0;
@@ -488,6 +535,8 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
     double a_f = 0.0;
     double m_f = 0.0;
     double s_f = 0.0;
+    double Z_f = 0.0;
+    double d_f = 0.0;
 
     /* Save the mean cell density */
     double rhoC = parameters[0];
@@ -501,6 +550,8 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
         fractions[1] = fa / total;
         fractions[2] = fm / total;
         fractions[3] = fs / total;
+        fractions[4] = fZ / total;
+        fractions[5] = fd / total;
 
         parameters[0] = rhoC * F_RHO[i];
 
@@ -511,6 +562,8 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
         a_f += fractions[1] * PDF[i];
         m_f += fractions[2] * PDF[i];
         s_f += fractions[3] * PDF[i];
+        Z_f += fractions[4] * PDF[i];
+        d_f += fractions[5] * PDF[i];
 
         t0 = 0.0;
 
@@ -526,9 +579,9 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
 
 #ifndef TESTING
     /* Check that none of the outputs are too negative */
-    if (i_f < negative_limit || a_f < negative_limit || m_f < negative_limit || s_f < negative_limit)
+    if (i_f < negative_limit || a_f < negative_limit || m_f < negative_limit || s_f < negative_limit || Z_f < negative_limit || d_f < negative_limit)
     {
-        warn("WARNING: Negative equation outputs: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf", i_f, a_f, m_f, s_f);
+        warn("WARNING: Negative equation outputs: \nfi = %.9lf, fa = %.9lf, fm = %.9lf, fs = %.9lf, fZ = %.9lf, fd = %.9lf ", i_f, a_f, m_f, s_f, Z_f, d_f);
     }
 #endif /* #ifndef TESTING */
 
@@ -537,13 +590,17 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
     fractions[1] = fmax(0.0, a_f);
     fractions[2] = fmax(0.0, m_f);
     fractions[3] = fmax(0.0, s_f);
+    fractions[4] = fmax(0.0, Z_f);
+    fractions[5] = fmax(0.0, d_f);
 
     /* Renormalize the ICs */
-    total = fractions[0] + fractions[1] + fractions[2] + fractions[3];
+    total = fractions[0] + fractions[1] + fractions[2] + fractions[3] + fractions[4] + fractions[5];
     fractions[0] /= total;
     fractions[1] /= total;
     fractions[2] /= total;
     fractions[3] /= total;
+    fractions[4] /= total;
+    fractions[5] /= total;
 }
 
 #ifndef TESTING
@@ -594,7 +651,7 @@ double rate_of_star_formation(const int index, double x)
     {
         return 0.0;
     }
-    
+
     /* Check if we are still in the same global timestep, to shortcut the computation */
     if (!isnan(SphP[index].parameter_a))
     {
@@ -656,7 +713,10 @@ double rate_of_star_formation(const int index, double x)
     /* Mass recycling fraction [dimensionless] */
     double R = interpolate1D(Z, All.R_TABLE_DATA);
 
-    double parameters[] = {rhoC, Z, eta_d, eta_i, R, All.Time};
+    /* Metals recycling fraction [dimensionless] */
+    double Zsn = interpolate1D(Z, All.ZSN_TABLE_DATA);
+
+    double parameters[] = {rhoC, Z, All.Time, eta_d, eta_i, R, Zsn};
 
     /* Store the ODE parameters */
     SphP[index].parameter_rhoC = rhoC;
@@ -664,38 +724,40 @@ double rate_of_star_formation(const int index, double x)
     SphP[index].parameter_eta_d = eta_d;
     SphP[index].parameter_eta_i = eta_i;
     SphP[index].parameter_R = R;
+    SphP[index].parameter_Zsn = Zsn;
     SphP[index].parameter_a = All.Time;
 
     /**********************************************************************************************
      * Compute the initial conditions
      **********************************************************************************************/
 
-    double fi, fa, fm, fs;
+    double fi, fa, fm, fs, fZ, fd;
 
-    if (!isnan(SphP[index].ODE_fractions[0]))
-    {
-        /* Ionized gas mass fraction [dimensionless] */
-        fi = SphP[index].ODE_fractions[0];
-        /* Atomic gas mass fraction [dimensionless] */
-        fa = SphP[index].ODE_fractions[1];
-        /* Molecular gas mass fraction [dimensionless] */
-        fm = SphP[index].ODE_fractions[2];
-        /* Stellar mass fraction [dimensionless] */
-        fs = SphP[index].ODE_fractions[3];
-    }
-    else
-    {
-        /* Ionized gas mass fraction [dimensionless] */
-        fi = 1.0 - x;
-        /* Atomic gas mass fraction [dimensionless] */
-        fa = x;
-        /* Molecular gas mass fraction [dimensionless] */
-        fm = 0.0;
-        /* Stellar mass fraction [dimensionless] */
-        fs = 0.0;
-    }
+    double nhp, nh;
+    get_arepo_fraction(index, &nhp, &nh);
 
-    const double ic[] = {fi, fa, fm, fs};
+    /* Ionized gas mass fraction [dimensionless] */
+    fi = (1 - Z) * nhp / (nhp + nh);
+
+    /* Atomic gas mass fraction [dimensionless] */
+    fa = (1 - Z) * (1.0 - fi);
+
+    /* Molecular gas mass fraction [dimensionless] */
+    fm = 0.0;
+
+    /* Stellar mass fraction [dimensionless] */
+    fs = 0.0;
+
+    /* Dust fraction in the metals [dimensionless] */
+    df = CXD * fa;
+
+    /* Metal mass fraction [dimensionless] */
+    fZ = Z * (1 - df);
+
+    /* Dust mass fraction [dimensionless] */
+    fd = Z * df;
+
+    const double ic[] = {fi, fa, fm, fs, fZ, fd};
 
     /**********************************************************************************************
      * Integrate the ODEs
