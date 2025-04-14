@@ -45,14 +45,14 @@ md"## Constants"
 begin
 	# Ranges:
 	#
-	# fi:     Ionized gas fraction (Mᵢ / MC) [dimensionless]
+	# fi:     Ionized gas fraction (Mi / MC) [dimensionless]
     # ρ_cell: log10(Total cell density [mp * cm⁻³])
     # Z:      log10(Metallicity [dimensionless] / Zsun)
     # it:     Integration time [Myr]
-    const fi_r      = (0.4, 1.0)    # Linear range
-    const ρ_cell_lr = (-0.1, 3.0)   # Log range
-	const Z_lr      = (-3.0, -1.0)  # Log range
-	const it_r      = (0.5, 10.0)   # Linear range
+    const fi_r      = (0.4, 1.0)   # Linear range
+    const ρ_cell_lr = (-0.1, 3.0)  # Log range
+	const Z_lr      = (-3.0, -1.0) # Log range
+	const it_r      = (0.5, 10.0)  # Linear range
 
     # Random points to compute the errors
     const N_ERR  = 2000
@@ -85,18 +85,18 @@ md"## C function"
 #
 #   ic::Vector{Float64}
 #
-#     fi: Ionized gas fraction [dimensionless]
-#     fa: Atomic gas fraction [dimensionless]
+#     fi: Ionized gas fraction   [dimensionless]
+#     fa: Atomic gas fraction    [dimensionless]
 #     fm: Molecular gas fraction [dimensionless]
-#     fs: Stellar fraction [dimensionless]
-#     fZ: Metal fraction [dimensionless]
-#     fd: Dust fraction [dimensionless]
+#     fs: Stellar fraction       [dimensionless]
+#     fZ: Metal fraction         [dimensionless]
+#     fd: Dust fraction          [dimensionless]
 #
 #   base_param::Vector{Float64}
 #
 #     ρ_cell: Total cell density [mp * cm⁻³]
-#     Z:      Metallicity [dimensionless]
-#     a:      Scale factor [dimensionless]
+#     Z:      Arepo metallicity  [dimensionless]
+#     a:      Scale factor       [dimensionless]
 #
 #   it::Float64
 #
@@ -140,18 +140,18 @@ md"## Julia function"
 #
 #   ic::Vector{Float64}
 #
-#     fi: Ionized gas fraction [dimensionless]
-#     fa: Atomic gas fraction [dimensionless]
+#     fi: Ionized gas fraction   [dimensionless]
+#     fa: Atomic gas fraction    [dimensionless]
 #     fm: Molecular gas fraction [dimensionless]
-#     fs: Stellar fraction [dimensionless]
-#     fZ: Metal fraction [dimensionless]
-#     fd: Dust fraction [dimensionless]
+#     fs: Stellar fraction       [dimensionless]
+#     fZ: Metal fraction         [dimensionless]
+#     fd: Dust fraction          [dimensionless]
 #
 #   base_param::Vector{Float64}
 #
 #     rho_C: Total cell density [mp * cm⁻³]
-#     Z:     Metallicity [dimensionless]
-#     a:     Scale factor [dimensionless]
+#     Z:     Arepo metallicity  [dimensionless]
+#     a:     Scale factor       [dimensionless]
 #
 #   it::Float64
 #
@@ -205,7 +205,7 @@ function test_integration(; phase::String="stellar")::Nothing
 		a      = 1.0
     	it     = rand_it[i]
 
-		ic = [fi - Z, 1.0 - (fi - Z), 0.0, 0.0, 0.9 * Z, 0.1 * Z]
+		ic = [fi - Z, 1.0 - fi, 0.0, 0.0, 0.9 * Z, 0.1 * Z]
 		base_parms = [ρ_cell, Z, a]
 
 		result_j = try integr_func_j(ic, base_parms, it) catch; NaN end
@@ -229,6 +229,7 @@ end;
   ╠═╡ =#
 
 # ╔═╡ 06dba542-6b7c-426a-8d76-bec153f1eeae
+# ╠═╡ disabled = true
 # ╠═╡ skip_as_script = true
 #=╠═╡
 test_integration(; phase="stellar")

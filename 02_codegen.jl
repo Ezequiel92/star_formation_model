@@ -112,10 +112,10 @@ static char *ZSN_TABLE_PATH   = "../code/src/el_sfr/tables/Zsn.txt";
 #define ODE_CS $(@sprintf("%.7e", MODEL.c_star))  /* [Myr * cm^(-3/2)] */
 #define ODE_CR $(@sprintf("%.7e", MODEL.c_rec))   /* [Myr * cm^(-3)] */
 #define ODE_CC $(@sprintf("%.7e", MODEL.c_cond))  /* [Myr * cm^(-3)] */
-#define ODE_CD $(@sprintf("%.7e", MODEL.c_dg))    /* [Myr * mp * cm^(-3)] */
-#define TAU_DD $(@sprintf("%.7e", MODEL.τ_dd))    /* [Myr] */
+#define ODE_CD $(@sprintf("%.9e", MODEL.c_dg))    /* [Myr * mp * cm^(-3)] */
+#define TAU_DD $(@sprintf("%.9e", MODEL.τ_dd))    /* [Myr] */
 #define ZEFF $(@sprintf("%.4e", MODEL.Zeff))      /* 1e-3 Zₒ */
-#define CXD $(@sprintf("%.4e", MODEL.c_xd))       /* [dimensionless] */
+#define CXD $(@sprintf("%.7e", MODEL.c_xd))       /* [dimensionless] */
 
 typedef struct DataTable
 {
@@ -246,15 +246,14 @@ function write_jacobian(path::String)::Nothing
 		/*
 		* Destructure the parameters
 		*
-		* rho_C: Total cell density [mp * cm⁻³]
-		* Z:     Arepo metallicity [dimensionless]
-		* a:     Scale factor [dimensionless]
+		* rho_C: Total cell density                                 [mp * cm⁻³]
+		* Z:     Arepo metallicity                                  [dimensionless]
+		* a:     Scale factor                                       [dimensionless]
 		* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
-		* eta_i: Photoionization efficiency of Hydrogen atoms [dimensionless]
-		* R:     Mass recycling fraction [dimensionless]
-		* Zsn:   Metals recycling fraction [dimensionless]
-		*/
-			
+		* eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
+		* R:     Mass recycling fraction                            [dimensionless]
+		* Zsn:   Metals recycling fraction                          [dimensionless]
+		*/	
 		double *p    = (double *)parameters;
 		double rho_C = p[0];
 		double Z     = p[1];
@@ -424,18 +423,18 @@ function integrate_with_c(
 	#
 	# ICs (`ic`):
 	#
-	# fi: Ionized gas fraction [dimensionless]
-	# fa: Atomic gas fraction [dimensionless]
+	# fi: Ionized gas fraction   [dimensionless]
+	# fa: Atomic gas fraction    [dimensionless]
 	# fm: Molecular gas fraction [dimensionless]
-	# fs: Stellar fraction [dimensionless]
-	# fZ: Metal fraction [dimensionless]
-	# fd: Dust fraction [dimensionless]
+	# fs: Stellar fraction       [dimensionless]
+	# fZ: Metal fraction         [dimensionless]
+	# fd: Dust fraction          [dimensionless]
 	#
 	# Parameters (`base_params`):
 	#
 	# rho_C: Total cell density [mp * cm⁻³]
- 	# Z:     Arepo metallicity [dimensionless]
-	# a:     Scale factor [dimensionless]
+ 	# Z:     Arepo metallicity  [dimensionless]
+	# a:     Scale factor       [dimensionless]
 	#
 	# Integration time (`it`):
 	#
@@ -453,7 +452,7 @@ function integrate_with_c(
 		a       = base_params[3]
 		log_age = log10(it * 10^6)
 
-		ηd = @ccall $interpolate2D(
+		η_diss = @ccall $interpolate2D(
 			log_age::Cdouble,
 			Z::Cdouble,
 			eta_d_table::Cstring,
@@ -479,7 +478,7 @@ function integrate_with_c(
 			2::Cint,
 		)::Cdouble
 
-		parameters = [ρ_cell, Z, a, ηd, η_ion, R, Zsn]
+		parameters = [ρ_cell, Z, a, η_diss, η_ion, R, Zsn]
 
 		@ccall $integrate_ode(
 		    ic::Ptr{Cdouble},
@@ -647,8 +646,8 @@ md"### Mass recycling"
 #####################################################################################
 # Write a table to interpolate R(Z) and a table to interpolate Zsn(Z)
 #
-# The columns are : Z  |  R
-# The columns are : Z  |  Zsn
+# The columns are : Z | R
+# The columns are : Z | Zsn
 #
 # path: Where to store the resulting file
 #####################################################################################

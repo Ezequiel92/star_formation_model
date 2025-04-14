@@ -9,8 +9,8 @@
  * \brief       Compute the star formation rate for a given gas cell.
  * \details     This file contains the routines to compute the star formation rate, according to our
  *              star formation model. The model evolves a set of ODEs which describe the mass
- *              exchange between the different phases of Hydrogen (ionized, atomic, and molecular),
- *              and stars.
+ *              exchange between the different phases of hydrogen (ionized, atomic, and molecular),
+ *              and stars, metals, and dust.
  *              contains functions:
  *                void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
  *                static double interpolate1D(double x, const void *dtable)
@@ -299,7 +299,7 @@ static double interpolate2D(double x, double y, const void *dtable)
 
 /*! \brief Evaluate the systems of equations.
  *
- *  Evaluate the four ODEs of the model, using the following variables:
+ *  Evaluate the six ODEs of the model, using the following variables:
  *
  *  Ionized gas fraction:    fi(t) = Mi(t) / MC --> y[0]
  *  Atomic gas fraction:     fa(t) = Ma(t) / MC --> y[1]
@@ -309,7 +309,7 @@ static double interpolate2D(double x, double y, const void *dtable)
  *  Dust fraction:           fd(t) = Md(t) / MC --> y[5]
  *
  *  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) + MZ(t) + Md(t) is the total density of the gas cell,
- * and each equation has units of Myr^(-1).
+ *  and each equation has units of Myr^(-1).
  *
  *  \param[in] t Unused variable to comply with the `gsl_odeiv2_driver_alloc_y_new()` API.
  *  \param[in] y Values of the variables at which the ODEs will be evaluated.
@@ -325,15 +325,14 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     /*
      * Destructure the parameters
      *
-     * rho_C: Total cell density [mp * cm⁻³]
-     * Z:     Arepo metallicity [dimensionless]
-     * a:     Scale factor [dimensionless]
-     * eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
-     * eta_i: Photoionization efficiency of Hydrogen atoms [dimensionless]
-     * R:     Mass recycling fraction [dimensionless]
-     * Zsn:   Metals recycling fraction [dimensionless]
+     * rho_C: Total cell density                                 [mp * cm⁻³]
+     * Z:     Arepo metallicity                                  [dimensionless]
+     * a:     Scale factor                                       [dimensionless]
+     * eta_d: Photodissociation efficiency of hydrogen molecules [dimensionless]
+     * eta_i: Photoionization efficiency of hydrogen atoms       [dimensionless]
+     * R:     Mass recycling fraction                            [dimensionless]
+     * Zsn:   Metals recycling fraction                          [dimensionless]
      */
-
     double *p = (double *)parameters;
     double rho_C = p[0];
     double Z = p[1];
@@ -393,15 +392,14 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 	/*
 	* Destructure the parameters
 	*
-	* rho_C: Total cell density [mp * cm⁻³]
-	* Z:     Arepo metallicity [dimensionless]
-	* a:     Scale factor [dimensionless]
+	* rho_C: Total cell density                                 [mp * cm⁻³]
+	* Z:     Arepo metallicity                                  [dimensionless]
+	* a:     Scale factor                                       [dimensionless]
 	* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
-	* eta_i: Photoionization efficiency of Hydrogen atoms [dimensionless]
-	* R:     Mass recycling fraction [dimensionless]
-	* Zsn:   Metals recycling fraction [dimensionless]
-	*/
-		
+	* eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
+	* R:     Mass recycling fraction                            [dimensionless]
+	* Zsn:   Metals recycling fraction                          [dimensionless]
+	*/	
 	double *p    = (double *)parameters;
 	double rho_C = p[0];
 	double Z     = p[1];
@@ -484,8 +482,8 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
  * rho_C: Total cell density                                 [mp * cm⁻³]
  * Z:     Metallicity                                        [dimensionless]
  * a:     Scale factor                                       [dimensionless]
- * eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
- * eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
+ * eta_d: Photodissociation efficiency of hydrogen molecules [dimensionless]
+ * eta_i: Photoionization efficiency of hydrogen atoms       [dimensionless]
  * R:     Mass recycling fraction                            [dimensionless]
  * Zsn:   Metals recycling fraction                          [dimensionless]
  *

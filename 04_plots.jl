@@ -174,20 +174,21 @@ end;
 # and print its runtime
 #####################################################################################
 
-function benchmark_solve(method::Tuple)::Nothing
+function benchmark_solve(params::Vector{Float64}, method::Tuple)::Nothing
 
 	args = (method[1],)
 	name = method[2]
 
-	fi     = 0.5              # Ionized gas fraction (Mᵢ / MC) [dimensionless]
-	ρ_cell = 10.0             # Total cell density [mp * cm⁻³]
-	Z      = 1.0 * MODEL.Zsun # Metallicity [dimensionless]
-	a      = 1.0              # Scale factor [dimensionless]
-	it     = 10.0             # Integration time [Myr]
+	# fi: Ionized gas fraction (Mi / MC) [dimensionless]
+	# ρ_cell: Total cell density         [mp * cm⁻³]
+	# Z: Metallicity                     [dimensionless]
+	# a: Scale factor                    [dimensionless]
+	# it: Integration time               [Myr]
+	fi, ρ_cell, Z, a, it = params
 
 	benchmark = try
 		@timed MODEL.integrate_model(
-		    [fi - Z, 1.0 - (fi - Z), 0.0, 0.0, 0.9 * Z, 0.1 * Z],
+		    [fi - Z, 1.0 - fi, 0.0, 0.0, 0.9 * Z, 0.1 * Z],
 			[ρ_cell, Z, a],
 			(0.0, it);
 		    args,
@@ -221,18 +222,19 @@ end;
 # and print its runtime
 #####################################################################################
 
-function benchmark_csolve()::Nothing
+function benchmark_csolve(params::Vector{Float64})::Nothing
 
 	integr_func = TESTING.integrate_with_c()
 
-	fi     = 0.5              # Ionized gas fraction (Mᵢ / MC) [dimensionless]
-	ρ_cell = 10.0             # Total cell density [mp * cm⁻³]
-	Z      = 1.0 * MODEL.Zsun # Metallicity [dimensionless]
-	a      = 1.0              # Scale factor [dimensionless]
-	it     = 10.0             # Integration time [Myr]
+	# fi: Ionized gas fraction (Mi / MC) [dimensionless]
+	# ρ_cell: Total cell density         [mp * cm⁻³]
+	# Z: Metallicity                     [dimensionless]
+	# a: Scale factor                    [dimensionless]
+	# it: Integration time               [Myr]
+	fi, ρ_cell, Z, a, it = params
 
 	benchmark = @timed integr_func(
-		[fi - Z, 1.0 - (fi - Z), 0.0, 0.0, 0.9 * Z, 0.1 * Z], 
+		[fi - Z, 1.0 - fi, 0.0, 0.0, 0.9 * Z, 0.1 * Z], 
 		[ρ_cell, Z, a], 
 		it,
 	)
@@ -253,11 +255,18 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 begin
-	benchmark_csolve()
+	params = [
+		0.2,              # Ionized gas fraction (Mi / MC) [dimensionless]
+		10.0,             # Total cell density             [mp * cm⁻³]
+		1.0 * MODEL.Zsun, # Metallicity                    [dimensionless]
+		1.0,              # Scale factor                   [dimensionless]
+		10.0,             # Integration time               [Myr]
+	]
+	benchmark_csolve(params)
 
 	for method in methods
 		println()
-		benchmark_solve(method)
+		benchmark_solve(params, method)
 	end
 end
   ╠═╡ =#
@@ -1063,11 +1072,11 @@ let
 	# Initial conditions
 	fi = 0.5
 	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-	ic_05(Z) = [fi - Z, 1.0 - (fi - Z), 0.0, 0.0, 0.9 * Z, 0.1 * Z]
+	ic_05(Z) = [fi - Z, 1.0 - fi, 0.0, 0.0, 0.9 * Z, 0.1 * Z]
 	
 	fi = 0.01
 	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-	ic_001(Z) = [fi - Z, 1.0 - (fi - Z), 0.0, 0.0, 0.9 * Z, 0.1 * Z] 
+	ic_001(Z) = [fi - Z, 1.0 - fi, 0.0, 0.0, 0.9 * Z, 0.1 * Z] 
 
 	# Total cell density range [mp * cm⁻³]
 	ρ_str = [L"0.19", L"10", L"300"]
@@ -1077,7 +1086,7 @@ let
 	Z_str = [L"0.0", L"0.1", L"1.0"]
 	Z_list = [0.0, 0.1, 1.0] * MODEL.Zsun
 
-	print_params = [[ρ, Z, 1.0] for ρ in ρ_str, Z in Z_str]
+	print_params = [[ρ, Z] for ρ in ρ_str, Z in Z_str]
 	base_params = [[ρ, Z, 1.0] for ρ in ρ_list, Z in Z_list]
 
 	# Time variables
@@ -1123,7 +1132,17 @@ let
 			figure_padding=(1, 15, 5, 15),
 		)
 
-		for (idx, ((ρ_str, Z_str), (ρ, Z), fraction_05, fraction_001, xaxis_v, yaxis_v)) in iterator
+		for (
+			idx, 
+			(
+				(ρ_str, Z_str), 
+				(ρ, Z, a), 
+				fraction_05, 
+				fraction_001, 
+				xaxis_v, 
+				yaxis_v,
+			),
+		) in iterator
 
 			row = ceil(Int, idx / length(ρ_list))
 			col = mod1(idx, length(Z_list))
@@ -1169,8 +1188,8 @@ let
 
 			end
 
-			if row == 3 && col == 3
-				axislegend(ax; position=(0.5, 0.98), nbanks=2, labelsize=35)
+			if row == 3 && col == 1
+				axislegend(ax; position=(0.1, 0.5), nbanks=2, labelsize=45)
 			end
 
 		end
@@ -1211,10 +1230,10 @@ let
 	ylimits = [
 		(0.0, 0.5), 
 		(0.0, 1.05), 
-		(-0.01, 0.2), 
+		(-0.01, 0.3), 
 		(-0.002, 0.05), 
-		(-0.002, 0.02), 
-		(-0.0004, 0.005),
+		(-0.001, 0.02), 
+		(-0.0002, 0.005),
 	]
 
 	# Axis visibility
@@ -1225,7 +1244,7 @@ let
 	# Initial conditions
 	fis = [0.01, 0.25, 0.5]
 	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-	ics(fi, Z) = [fi - Z, 1.0 - (fi - Z), 0.0, 0.0, 0.9 * Z, 0.1 * Z]
+	ics(fi, Z) = [fi - Z, 1.0 - fi, 0.0, 0.0, 0.9 * Z, 0.1 * Z]
 
 	# Total cell density range [mp * cm⁻³]
 	ρ_exp_list = range(-1, 3, 100)
@@ -1254,11 +1273,11 @@ let
 		zip(phases, phase_labels, positions, xaxis_visible, title_visible, ylimits),
 	)
 
-	scale = 1700 / length(fis)
+	scale = 1800 / length(fis)
 
 	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
-		f = Figure(size=(1700, scale * length(phases)))
+		f = Figure(size=(1800, scale * length(phases)))
 
 		for (col, (fi, yaxis_v)) in col_iterator
 
@@ -1270,27 +1289,27 @@ let
 			base_params_06 = [[ρ, Z_list[6], 1.0] for ρ in ρ_list]
 
         	fractions_01 = [
-				MODEL.integrate_model(ics(fi, base_param[2]), base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ics(fi, Z_list[1]), base_param, (0.0, it))[end] for
 				base_param in base_params_01
 			]
 			fractions_02 = [
-				MODEL.integrate_model(ics(fi, base_param[2]), base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ics(fi, Z_list[2]), base_param, (0.0, it))[end] for
 				base_param in base_params_02
 			]
 			fractions_03 = [
-				MODEL.integrate_model(ics(fi, base_param[2]), base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ics(fi, Z_list[3]), base_param, (0.0, it))[end] for
 				base_param in base_params_03
 			]
 			fractions_04 = [
-				MODEL.integrate_model(ics(fi, base_param[2]), base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ics(fi, Z_list[4]), base_param, (0.0, it))[end] for
 				base_param in base_params_04
 			]
 			fractions_05 = [
-				MODEL.integrate_model(ics(fi, base_param[2]), base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ics(fi, Z_list[5]), base_param, (0.0, it))[end] for
 				base_param in base_params_05
 			]
 			fractions_06 = [
-				MODEL.integrate_model(ics(fi, base_param[2]), base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ics(fi, Z_list[6]), base_param, (0.0, it))[end] for
 				base_param in base_params_06
 			]
 
@@ -1359,19 +1378,34 @@ let
 	# ICs x fractions (tight) grid
 	#################################################################################
 
-	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
-	phases       = ["ionized", "atomic", "molecular", "stellar"]
+	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s", L"f_Z", L"f_d"]
+	phases       = [
+		"ionized", 
+		"atomic", 
+		"molecular", 
+		"stellar", 
+		"metals", 
+		"dust",
+	]
 
-	ylimits = [(-0.02, 0.43), (-0.04, 1.05), (-0.01, 0.17), (-0.04, 1.0)]
+    ylimits = [
+		(-0.02, 0.43), 
+		(-0.04, 1.05), 
+		(-0.01, 0.17), 
+		(-0.04, 1.0),
+		(-0.001, 0.02), 
+		(-0.0002, 0.005),
+	]
 
 	# Axis visibility
-	xaxis_visible = [false, false, false, true]
+	xaxis_visible = [false, false, false, false, false, true]
 	yaxis_visible = [true, false, false]
-	title_visible = [true, false, false, false]
+	title_visible = [true, false, false, false, false, false]
 
 	# Initial conditions
 	fi = 0.5
-	ic = [fi, 1.0 - fi, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	ic(Z) = [fi - Z, 1.0 - fi, 0.0, 0.0, 0.9 * Z, 0.1 * Z]
 
 	# Total cell density range [mp * cm⁻³]
 	ρ_exp_list = range(-1, 3, 100)
@@ -1392,7 +1426,7 @@ let
 	its = [1.0, 10.0, 100.0]
 
 	# Label positions
-	positions = [(0.75, 0.1), (0.95, 0.85), :lt, :lt]
+	positions = [(0.75, 0.1), (0.95, 0.85), :lt, :lt, :lt, :lt]
 
 	# Iterators
 	col_iterator = enumerate(zip(its, string.(Int.(its)), yaxis_visible))
@@ -1408,35 +1442,35 @@ let
 
 		for (col, (it, fi, yaxis_v)) in col_iterator
 
-			base_params_01 = [[ρ, Z_list[1]] for ρ in ρ_list]
-			base_params_02 = [[ρ, Z_list[2]] for ρ in ρ_list]
-			base_params_03 = [[ρ, Z_list[3]] for ρ in ρ_list]
-			base_params_04 = [[ρ, Z_list[4]] for ρ in ρ_list]
-			base_params_05 = [[ρ, Z_list[5]] for ρ in ρ_list]
-			base_params_06 = [[ρ, Z_list[6]] for ρ in ρ_list]
+			base_params_01 = [[ρ, Z_list[1], 1.0] for ρ in ρ_list]
+			base_params_02 = [[ρ, Z_list[2], 1.0] for ρ in ρ_list]
+			base_params_03 = [[ρ, Z_list[3], 1.0] for ρ in ρ_list]
+			base_params_04 = [[ρ, Z_list[4], 1.0] for ρ in ρ_list]
+			base_params_05 = [[ρ, Z_list[5], 1.0] for ρ in ρ_list]
+			base_params_06 = [[ρ, Z_list[6], 1.0] for ρ in ρ_list]
 
         	fractions_01 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ic(Z_list[1]), base_param, (0.0, it))[end] for
 				base_param in base_params_01
 			]
 			fractions_02 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ic(Z_list[2]), base_param, (0.0, it))[end] for
 				base_param in base_params_02
 			]
 			fractions_03 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ic(Z_list[3]), base_param, (0.0, it))[end] for
 				base_param in base_params_03
 			]
 			fractions_04 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ic(Z_list[4]), base_param, (0.0, it))[end] for
 				base_param in base_params_04
 			]
 			fractions_05 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ic(Z_list[5]), base_param, (0.0, it))[end] for
 				base_param in base_params_05
 			]
 			fractions_06 = [
-				MODEL.integrate_model(ic, base_param, (0.0, it))[end] for
+				MODEL.integrate_model(ic(Z_list[6]), base_param, (0.0, it))[end] for
 				base_param in base_params_06
 			]
 
@@ -1510,30 +1544,32 @@ md"### Long integration time"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-
-	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
-
-	# Initial conditions
-	ic = [0.15, 0.85, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
-
-	# Total cell density range [mp * cm⁻³]
-	ρ = 10.0
+	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s", L"f_Z", L"f_d"]
 
 	# Metallicities [dimensionless]
 	Z = 0.8 * MODEL.Zsun
 
+	# Initial conditions
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	ic = [0.2 - Z, 0.8, 0.0, 0.0, 0.9 * Z, 0.1 * Z] 
+
+	# Total cell density range [mp * cm⁻³]
+	ρ = 10.0
+
 	# Integration time [Myr]
-	it = 1000.0 * 1000.0 # 1000 Gyr
+	it = 1000000.0 # 1000 Gyr
 
 	time_list = exp10.(range(-4, log10(it), 10000))
 
-	fractions = MODEL.integrate_model(ic, [ρ, Z], (0.0, it); times=time_list)
+	fractions = MODEL.integrate_model(ic, [ρ, Z, 1.0], (0.0, it); times=time_list)
+
+	colors = Makie.wong_colors()
 
 	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
-		f = Figure(size=(1500, 1500), figure_padding=(1, 30, 5, 15))
+		f = Figure(size=(1500, 2100))
 
-		for (idx, (label, color)) in enumerate(zip(frac_labels, Makie.wong_colors()))
+		for (idx, (label, color)) in enumerate(zip(phase_labels, colors))
 
 			row = ceil(Int, idx / 2)
 			col = mod1(idx, 2)
@@ -1563,28 +1599,30 @@ end
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-
-	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
-
-	# Initial conditions
-	ic = [0.15, 0.85, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
-
-	# Total cell density range [mp * cm⁻³]
-	ρ = 10.0
+	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s", L"f_Z", L"f_d"]
 
 	# Metallicities [dimensionless]
 	Z = 0.8 * MODEL.Zsun
 
+	# Initial conditions
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	ic = [0.2 - Z, 0.8, 0.0, 0.0, 0.9 * Z, 0.1 * Z] 
+
+	# Total cell density range [mp * cm⁻³]
+	ρ = 10.0
+
 	# Integration time [Myr]
-	it = 1000.0 * 1000.0 # 1000 Gyr
+	it = 1000000.0 # 1000 Gyr
 
 	time_list = exp10.(range(-4, log10(it), 10000))
 
-	fractions = MODEL.integrate_model(ic, [ρ, Z], (0.0, it); times=time_list)
+	fractions = MODEL.integrate_model(ic, [ρ, Z, 1.0], (0.0, it); times=time_list)
+
+	colors = Makie.wong_colors()
 
 	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
-		f = Figure(size=(880, 880), figure_padding=(1, 30, 5, 15))
+		f = Figure(size=(880, 880))
 
 		ax = CairoMakie.Axis(
 			f[1,1];
@@ -1596,11 +1634,11 @@ let
 
 		vlines!(-1.0; color=:gray55)
 
-		for (idx, (label, color)) in enumerate(zip(frac_labels, Makie.wong_colors()))
+		for (idx, (label, color)) in enumerate(zip(phase_labels, colors))
 			lines!(ax, log10.(time_list), getindex.(fractions, idx); color, label)
 		end
 
-		axislegend(ax; position=(0.02, 1.0), nbanks=2, labelsize=30)
+		axislegend(ax; position=(0.02, 0.5), nbanks=2, labelsize=30)
 
 		f
 
@@ -1613,17 +1651,17 @@ end
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-
-	frac_labels = [L"f_i", L"f_a", L"f_m", L"f_s"]
-
-	# Initial conditions
-	ic = [0.15, 0.85, 0.0, 0.0] # [fᵢ(0), fₐ(0), fₘ(0), fₛ(0)]
-
-	# Total cell density range [mp * cm⁻³]
-	ρ = 10.0
+	phase_labels = [L"f_i", L"f_a", L"f_m", L"f_s", L"f_Z", L"f_d"]
 
 	# Metallicities [dimensionless]
 	Z = 0.8 * MODEL.Zsun
+
+	# Initial conditions
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	ic = [0.2 - Z, 0.8, 0.0, 0.0, 0.9 * Z, 0.1 * Z] 
+
+	# Total cell density range [mp * cm⁻³]
+	ρ = 10.0
 
 	# Integration time [Myr]
 	it = 100.0
@@ -1631,13 +1669,15 @@ let
 	time_list = exp10.(range(-4, log10(it), 10000))
 
 	# Integrate the system
-	fractions = MODEL.integrate_model(ic, [ρ, Z], (0.0, it); times=time_list)
+	fractions = MODEL.integrate_model(ic, [ρ, Z, 1.0], (0.0, it); times=time_list)
 
 	# Gas fractions
 	fi = getindex.(fractions, 1)
 	fa = getindex.(fractions, 2)
 	fm = getindex.(fractions, 3)
 	fs = getindex.(fractions, 4)
+	fZ = getindex.(fractions, 4)
+	fd = getindex.(fractions, 4)
 
 	############
 	# Constants
@@ -4963,7 +5003,7 @@ version = "3.5.0+0"
 # ╟─b2197f1a-ff9a-429c-8486-dfa27abc880d
 # ╟─ad34b750-5e81-4cb8-a444-52220c116790
 # ╟─b31c615a-36b3-46c0-bf8e-f8b5a77296f4
-# ╠═6f341d1b-8b0f-4bc5-b18c-d1e9dc9281d5
+# ╟─6f341d1b-8b0f-4bc5-b18c-d1e9dc9281d5
 # ╟─1d870ff9-fade-43c8-af55-6137ce051b8e
 # ╟─c76cf08f-aaef-46df-ae18-9cd018141b70
 # ╟─3bd92a5f-4efd-441e-a7d1-c3597e1f4a39
