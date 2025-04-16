@@ -350,7 +350,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     double cloud_formation = y[1] / tau_C;
     double sfr = y[2] / tau_S;
     double dust_destruction = y[5] / TAU_DD;
-    double dust_growth = (y[4] - y[5]) * (y[5] * y[2] * y[2] * rho_C) / ODE_CD;
+    double dust_growth = ODE_CD * y[5] * y[4] * y[2] * rho_C
 
     /* Evaluate the ODE system */
     f[0] = -recombination + eta_i * sfr + R * sfr * (1 - Zsn);
@@ -444,17 +444,17 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 
 	gsl_matrix_set(m, 4, 0, 0);
 	gsl_matrix_set(m, 4, 1, 0);
-	gsl_matrix_set(m, 4, 2, 0.019428762831580126 * R * Zsn * aux_var -0.0011234721451247988 * y[2] * (y[4] - y[5]) * y[5] * rho_C);
+	gsl_matrix_set(m, 4, 2, -0.0005617360725623994 * y[4] * y[5] * rho_C + 0.019428762831580126 * R * Zsn * aux_var);
 	gsl_matrix_set(m, 4, 3, 0);
-	gsl_matrix_set(m, 4, 4, -0.0005617360725623994 * y[2] * y[2] * y[5] * rho_C);
-	gsl_matrix_set(m, 4, 5, 0.0004356568364611259 -0.0005617360725623994 * y[2] * y[2] * (y[4] - y[5]) * rho_C + 0.0005617360725623994 * y[2] * y[2] * y[5] * rho_C);
+	gsl_matrix_set(m, 4, 4, -0.0005617360725623994 * y[2] * y[5] * rho_C);
+	gsl_matrix_set(m, 4, 5, 0.0004356568364611259 -0.0005617360725623994 * y[2] * y[4] * rho_C);
 
 	gsl_matrix_set(m, 5, 0, 0);
 	gsl_matrix_set(m, 5, 1, 0);
-	gsl_matrix_set(m, 5, 2, 0.0011234721451247988 * y[2] * (y[4] - y[5]) * y[5] * rho_C);
+	gsl_matrix_set(m, 5, 2, 0.0005617360725623994 * y[4] * y[5] * rho_C);
 	gsl_matrix_set(m, 5, 3, 0);
-	gsl_matrix_set(m, 5, 4, 0.0005617360725623994 * y[2] * y[2] * y[5] * rho_C);
-	gsl_matrix_set(m, 5, 5, -0.0004356568364611259 + 0.0005617360725623994 * y[2] * y[2] * (y[4] - y[5]) * rho_C -0.0005617360725623994 * y[2] * y[2] * y[5] * rho_C);
+	gsl_matrix_set(m, 5, 4, 0.0005617360725623994 * y[2] * y[5] * rho_C);
+	gsl_matrix_set(m, 5, 5, -0.0004356568364611259 + 0.0005617360725623994 * y[2] * y[4] * rho_C);
 
 	dfdt[0] = 0;
 	dfdt[1] = 0;

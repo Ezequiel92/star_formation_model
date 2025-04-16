@@ -1058,10 +1058,10 @@ $\begin{align}
 # ╔═╡ 2a39d6f8-da49-4976-9aa7-889391e55a5d
 begin
 	const Zdsun = 0.02	
-	const C_dg = (A * a * Zdsun * nH0 * 2 * Unitful.mp * sqrt(T0) * S0) / (a0 * sqrt(T) * S)
-	const c_dg = ustrip(t_u * l_u^-3, C_dg / m_u)
+	const C_dg = (a0 * sqrt(T) * S) / (A * a * Zdsun * nH0 * 2 * Unitful.mp * sqrt(T0) * S0)
+	const c_dg = ustrip(t_u^-1 * l_u^3, C_dg * m_u)
 	
-	τ_dg(Z, fm, ρ_cell) = c_dg / (Z * fm * ρ_cell)
+	τ_dg(Z, fm, ρ_cell) = 1 / (c_dg * Z * ρ_cell * fm)
 end;
 
 # ╔═╡ 43ee281f-1a16-445d-894d-23e0319b1fd0
@@ -1744,7 +1744,7 @@ function system!(dydt, ic, parameters, t)
     cloud_formation  = fa / τ_cond(fs, ρ_cell, fZ + fd)
 	sfr              = ψ(fm, ρ_cell)
 	dust_destruction = fd / τ_dd
-	dust_growth      = (fZ - fd) * (fd * fm * fm * ρ_cell) / c_dg
+	dust_growth = c_dg * fd * fZ * fm * ρ_cell
 
     # ODE system
 	dydt[1] = -recombination + η_ion * sfr + R * sfr * (1 - Zsn)
