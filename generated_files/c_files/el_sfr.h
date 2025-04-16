@@ -27,13 +27,13 @@ static char *ZSN_TABLE_PATH   = "../code/src/el_sfr/tables/Zsn.txt";
 /* Cρ   = 100.0000 (clumping factor) */
 
 #define N_EQU 6 /* Number of equations */
-#define ODE_CS 5.1470081e+01  /* [Myr * cm^(-3/2)] */
-#define ODE_CR 1.2187726e-01   /* [Myr * cm^(-3)] */
-#define ODE_CC 5.7491245e-02  /* [Myr * cm^(-3)] */
-#define ODE_CD 5.617360726e-04    /* [Myr * mp * cm^(-3)] */
-#define TAU_DD 2.295384615e+03    /* [Myr] */
-#define ZEFF 1.2700e-05      /* 1e-3 Zₒ */
-#define CXD 2.8359533e-01       /* [dimensionless] */
+#define ODE_CS 5.1470081e+01 /* [Myr * cm^(-3/2)] */
+#define ODE_CR 1.2187726e-01 /* [Myr * cm^(-3)] */
+#define ODE_CC 5.7491245e-02 /* [Myr * cm^(-3)] */
+#define ODE_CD 5.617360726e-04 /* [Myr^(-1) * mp^(-1) * cm^3] */
+#define TAU_DD 2.295384615e+03 /* [Myr] */
+#define ZEFF 1.2700e-05 /* 1e-3 Zₒ */
+#define CXD 2.8359533e-01 /* [dimensionless] */
 
 typedef struct DataTable
 {

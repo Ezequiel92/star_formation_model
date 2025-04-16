@@ -326,7 +326,6 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
      * Destructure the parameters
      *
      * rho_C: Total cell density                                 [mp * cm⁻³]
-     * Z:     Arepo metallicity                                  [dimensionless]
      * a:     Scale factor                                       [dimensionless]
      * eta_d: Photodissociation efficiency of hydrogen molecules [dimensionless]
      * eta_i: Photoionization efficiency of hydrogen atoms       [dimensionless]
@@ -335,12 +334,11 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
      */
     double *p = (double *)parameters;
     double rho_C = p[0];
-    double Z = p[1];
-    double a = p[2];
-    double eta_d = p[3];
-    double eta_i = p[4];
-    double R = p[5];
-    double Zsn = p[6];
+    double a = p[1];
+    double eta_d = p[2];
+    double eta_i = p[3];
+    double R = p[4];
+    double Zsn = p[5];
 
     /* Compute the auxiliary equations */
     double tau_R = ODE_CR / (y[0] * rho_C);
@@ -350,7 +348,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     double cloud_formation = y[1] / tau_C;
     double sfr = y[2] / tau_S;
     double dust_destruction = y[5] / TAU_DD;
-    double dust_growth = ODE_CD * y[5] * y[4] * y[2] * rho_C
+    double dust_growth = ODE_CD * y[5] * y[4] * y[2] * rho_C;
 
     /* Evaluate the ODE system */
     f[0] = -recombination + eta_i * sfr + R * sfr * (1 - Zsn);
@@ -393,7 +391,6 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 	* Destructure the parameters
 	*
 	* rho_C: Total cell density                                 [mp * cm⁻³]
-	* Z:     Arepo metallicity                                  [dimensionless]
 	* a:     Scale factor                                       [dimensionless]
 	* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
 	* eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
@@ -402,12 +399,11 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 	*/	
 	double *p    = (double *)parameters;
 	double rho_C = p[0];
-	double Z     = p[1];
-	double a     = p[2];
-	double eta_d = p[3];
-	double eta_i = p[4];
-	double R     = p[5];
-	double Zsn   = p[6];
+	double a     = p[1];
+	double eta_d = p[2];
+	double eta_i = p[3];
+	double R     = p[4];
+	double Zsn   = p[5];
 		
 	gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 6, 6);
 	gsl_matrix *m = &dfdy_mat.matrix;
@@ -430,7 +426,7 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 
 	gsl_matrix_set(m, 2, 0, 0);
 	gsl_matrix_set(m, 2, 1, 17.393952755905513 * (1.0 - y[3]) * (1.27e-5 + y[4] + y[5]) * rho_C);
-	gsl_matrix_set(m, 2, 2, 0.019428762831580126 * (-1.0 - eta_d) * aux_var);
+	gsl_matrix_set(m, 2, 2, -0.019428762831580126 * (1.0 + eta_d) * aux_var);
 	gsl_matrix_set(m, 2, 3, -17.393952755905513 * y[1] * (1.27e-5 + y[4] + y[5]) * rho_C);
 	gsl_matrix_set(m, 2, 4, 17.393952755905513 * y[1] * (1.0 - y[3]) * rho_C);
 	gsl_matrix_set(m, 2, 5, 17.393952755905513 * y[1] * (1.0 - y[3]) * rho_C);

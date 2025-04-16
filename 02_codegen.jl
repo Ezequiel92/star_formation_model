@@ -109,13 +109,13 @@ static char *ZSN_TABLE_PATH   = "../code/src/el_sfr/tables/Zsn.txt";
 /* Cρ   = $(@sprintf("%.4f", MODEL.Cρ)) (clumping factor) */
 
 #define N_EQU $(MODEL.N_EQU) /* Number of equations */
-#define ODE_CS $(@sprintf("%.7e", MODEL.c_star))  /* [Myr * cm^(-3/2)] */
-#define ODE_CR $(@sprintf("%.7e", MODEL.c_rec))   /* [Myr * cm^(-3)] */
-#define ODE_CC $(@sprintf("%.7e", MODEL.c_cond))  /* [Myr * cm^(-3)] */
-#define ODE_CD $(@sprintf("%.9e", MODEL.c_dg))    /* [Myr * mp * cm^(-3)] */
-#define TAU_DD $(@sprintf("%.9e", MODEL.τ_dd))    /* [Myr] */
-#define ZEFF $(@sprintf("%.4e", MODEL.Zeff))      /* 1e-3 Zₒ */
-#define CXD $(@sprintf("%.7e", MODEL.c_xd))       /* [dimensionless] */
+#define ODE_CS $(@sprintf("%.7e", MODEL.c_star)) /* [Myr * cm^(-3/2)] */
+#define ODE_CR $(@sprintf("%.7e", MODEL.c_rec)) /* [Myr * cm^(-3)] */
+#define ODE_CC $(@sprintf("%.7e", MODEL.c_cond)) /* [Myr * cm^(-3)] */
+#define ODE_CD $(@sprintf("%.9e", MODEL.c_dg)) /* [Myr^(-1) * mp^(-1) * cm^3] */
+#define TAU_DD $(@sprintf("%.9e", MODEL.τ_dd)) /* [Myr] */
+#define ZEFF $(@sprintf("%.4e", MODEL.Zeff)) /* 1e-3 Zₒ */
+#define CXD $(@sprintf("%.7e", MODEL.c_xd)) /* [dimensionless] */
 
 typedef struct DataTable
 {
@@ -247,7 +247,6 @@ function write_jacobian(path::String)::Nothing
 		* Destructure the parameters
 		*
 		* rho_C: Total cell density                                 [mp * cm⁻³]
-		* Z:     Arepo metallicity                                  [dimensionless]
 		* a:     Scale factor                                       [dimensionless]
 		* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
 		* eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
@@ -256,12 +255,11 @@ function write_jacobian(path::String)::Nothing
 		*/	
 		double *p    = (double *)parameters;
 		double rho_C = p[0];
-		double Z     = p[1];
-		double a     = p[2];
-		double eta_d = p[3];
-		double eta_i = p[4];
-		double R     = p[5];
-		double Zsn   = p[6];
+		double a     = p[1];
+		double eta_d = p[2];
+		double eta_i = p[3];
+		double R     = p[4];
+		double Zsn   = p[5];
 			
 		gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, $(MODEL.N_EQU), $(MODEL.N_EQU));
 		gsl_matrix *m = &dfdy_mat.matrix;
@@ -321,13 +319,11 @@ function write_jacobian(path::String)::Nothing
 			matrix,
 			"RHS1"    => "y",
 			"RHS2[0]" => "rho_C",
- 			"RHS2[1]" => "Z",
-			"RHS2[2]" => "a",
-  			"RHS2[3]" => "eta_d",
-  			"RHS2[4]" => "eta_i",
-			"RHS2[5]" => "R",
-			"RHS2[6]" => "Zsn",
-			# "pow(y[2], 2)" => "y[2] * y[2]",
+			"RHS2[1]" => "a",
+  			"RHS2[2]" => "eta_d",
+  			"RHS2[3]" => "eta_i",
+			"RHS2[4]" => "R",
+			"RHS2[5]" => "Zsn",
 			"-1 * "  => "- ",
 			"1 "     => "1.0 ",
 		) * "\n"
@@ -478,7 +474,7 @@ function integrate_with_c(
 			2::Cint,
 		)::Cdouble
 
-		parameters = [ρ_cell, Z, a, η_diss, η_ion, R, Zsn]
+		parameters = [ρ_cell, a, η_diss, η_ion, R, Zsn]
 
 		@ccall $integrate_ode(
 		    ic::Ptr{Cdouble},

@@ -1692,7 +1692,7 @@ md"## Constants"
 # ╔═╡ f863d68f-590e-4b96-8433-dc6b5177539f
 begin
 	const N_EQU = 6  # Number of equations
-	const N_PAR = 7  # Number of parameters
+	const N_PAR = 6  # Number of parameters
 
 	# Index of each phase in the ODE solution  matrix
 	const phase_name_to_index = Dict(
@@ -1731,13 +1731,12 @@ function system!(dydt, ic, parameters, t)
     # Parameters
 	#
 	# ρ_cell: Total cell density                                 [mp * cm⁻³]
-	# Z:      Arepo metallicity                                  [dimensionless]
 	# a:      Scale factor                                       [dimensionless]
 	# η_diss: Photodissociation efficiency of hydrogen molecules [dimensionless]
 	# η_ion:  Photoionization efficiency of hydrogen atoms       [dimensionless]
 	# R:      Mass recycling fraction                            [dimensionless]
 	# Zsn:    Metals recycling fraction                          [dimensionless]
-    ρ_cell, Z, a, η_diss, η_ion, R, Zsn = parameters
+    ρ_cell, a, η_diss, η_ion, R, Zsn = parameters
 
     # Auxiliary equations
 	recombination    = fi / τ_rec(fi, ρ_cell)
@@ -1777,7 +1776,7 @@ function lyapunov_spectrum(
 	η_diss, η_ion = photodissociation_efficiency(it, Z)
 	R, Zsn        = recycled_fractions(Z)
 
-	parameters = [ρ, Z, a, η_diss, η_ion, R, Zsn]
+	parameters = [ρ, a, η_diss, η_ion, R, Zsn]
 	ds = CoupledODEs(system!, ic, parameters)
 
 	# Compute the Lyapunov spectrum
@@ -1840,7 +1839,7 @@ const JACOBIAN_FUNCTION = construct_jacobian(system!);
 #
 # J:          Matrix to save the results, it must have size N_EQU × N_EQU
 # ic:         Initial condition, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-# parameters: Parameters for the ODEs, [ρ, Z, a, η_diss, η_ion, R, Zsn]
+# parameters: Parameters for the ODEs, [ρ, a, η_diss, η_ion, R, Zsn]
 # t:          Unused variable to comply with with the DifferentialEquations.jl API
 #####################################################################################
 
@@ -1880,7 +1879,7 @@ function stiffness_ratio(
 	η_diss, η_ion = photodissociation_efficiency(it, Z)
 	R, Zsn        = recycled_fractions(Z)
 
-	parameters = [ρ, Z, a, η_diss, η_ion, R, Zsn]
+	parameters = [ρ, a, η_diss, η_ion, R, Zsn]
 	J = Matrix{Float64}(undef, N_EQU, N_EQU)
 
 	# Compute the Jacobian and store it in J
@@ -1958,7 +1957,7 @@ function integrate_model(
 	η_diss, η_ion = photodissociation_efficiency(tspan[2], Z)
 	R, Zsn        = recycled_fractions(Z)
 
-	parameters = [ρ_cell, Z, a, η_diss, η_ion, R, Zsn]
+	parameters = [ρ_cell, a, η_diss, η_ion, R, Zsn]
 
     sol = solve(ODEProblem(
 		ode_function,
@@ -2273,8 +2272,8 @@ $\begin{align}
 	\frac{\mathrm{d}}{\mathrm{d}t} f_a(t) &= \frac{f_i(t)}{\tau_\mathrm{rec}(t)} - \eta_\text{ion} \, \psi(t) - \frac{f_a(t)}{\tau_\mathrm{cond}(t)} + \eta_\text{diss} \, \psi(t) \, , \\
 	\frac{\mathrm{d}}{\mathrm{d}t} f_m(t) &= \frac{f_a(t)}{\tau_\mathrm{cond}(t)} - \eta_\text{diss} \, \psi(t) - \psi(t) \, , \\
 	\frac{\mathrm{d}}{\mathrm{d}t} f_s(t) &= \psi(t) - R \, \psi(t) \, , \\
-	\frac{\mathrm{d}}{\mathrm{d}t} f_Z(t) &= Z_\mathrm{SN} \, R \, \psi(t) + \frac{f_d}{\tau_\mathrm{dd}} - \left(1 - \frac{f_d}{f_Z}\right) \frac{f_d}{\tau_\mathrm{dg}} \, f_m \, , \\
-	\frac{\mathrm{d}}{\mathrm{d}t} f_d(t) &= \left(1 - \frac{f_d}{f_Z}\right) \frac{f_d}{\tau_\mathrm{dg}} \, f_m - \frac{f_d}{\tau_\mathrm{dd}} \, ,
+	\frac{\mathrm{d}}{\mathrm{d}t} f_Z(t) &= Z_\mathrm{SN} \, R \, \psi(t) + \frac{f_d}{\tau_\mathrm{dd}} - \left(1 - \frac{f_d}{f_Z + f_d}\right) \frac{f_d}{\tau_\mathrm{dg}} \, , \\
+	\frac{\mathrm{d}}{\mathrm{d}t} f_d(t) &= \left(1 - \frac{f_d}{f_Z + f_d}\right) \frac{f_d}{\tau_\mathrm{dg}} - \frac{f_d}{\tau_\mathrm{dd}} \, ,
 \end{align}$
 and set the derivatives to $0$.
 """
