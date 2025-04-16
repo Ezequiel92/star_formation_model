@@ -257,8 +257,8 @@ TikzPictures.TikzPicture(
 		(atom) edge [bend left, "$\textcolor{d_orange}{\dfrac{f_a(t)}{\tau_\mathrm{cond}(t)}} - \textcolor{d_green}{\eta_\text{diss} \, \psi(t)}$"] (molecule)
 		(stars) edge [bend left, "$\textcolor{d_yellow}{R \, \psi(t) \, (1 - Z_\mathrm{SN})}$"] (ion)
 		(molecule) edge [bend left, "$\textcolor{red}{\psi(t)}$"] (stars)
-		(stars) edge ["$\textcolor{d_yellow}{R \, \psi(t) \, Z_\mathrm{SN}}$"] (metals)
-		(metals) edge ["$\textcolor{g_red}{\dfrac{f_d}{\tau_\mathrm{dd}}} - \textcolor{g_green}{\left(1 - \dfrac{f_d}{f_Z}\right) \dfrac{f_d}{\tau_\mathrm{dg}} \, f_m}$"] (dust);
+		(stars) edge node[midway, yshift=-10mm] {$\textcolor{d_yellow}{R \, \psi(t) \, Z_\mathrm{SN}}$} (metals)
+		(metals) edge node[midway, yshift=-10mm] {$\textcolor{g_red}{\dfrac{f_d}{\tau_\mathrm{dd}}} - \textcolor{g_green}{\left(1 - \dfrac{f_d}{f_Z + f_d}\right) \dfrac{f_d}{\tau_\mathrm{dg}}}$} (dust);
 	""",
 	width="75em",
 	preamble = """
@@ -380,7 +380,7 @@ $\begin{equation}
 The dust grows directly from the metals,
 
 $\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\text{Z}} = \left(1 - \frac{f_d(t)}{f_Z(t)}\right) \frac{f_d(t)}{\tau_\mathrm{dg}(t)} \, f_m(t) \, .
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\text{Z}} = \left(1 - \frac{f_d(t)}{f_Z(t) + f_d(t)}\right) \frac{f_d(t)}{\tau_\mathrm{dg}(t)} \, .
 \end{equation}$
 """
   ╠═╡ =#
@@ -405,8 +405,8 @@ TikzPictures.TikzPicture(
 		\dv{}{t}f_a(t) &= \textcolor{d_pink}{\frac{f_i(t)}{\tau_\mathrm{rec}(t)}} - \textcolor{d_blue}{\eta_\text{ion} \, \psi(t)} - \textcolor{d_orange}{\frac{f_a(t)}{\tau_\mathrm{cond}(t)}} + \textcolor{d_green}{\eta_\text{diss} \, \psi(t)} \, , \\
 		\dv{}{t}f_m(t) &= \textcolor{d_orange}{\frac{f_a(t)}{\tau_\mathrm{cond}(t)}} - \textcolor{d_green}{\eta_\text{diss} \, \psi(t)} - \textcolor{red}{\psi(t)} \, , \\
 		\dv{}{t}f_s(t) &= \textcolor{red}{\psi(t)} - \textcolor{d_yellow}{R \, \psi(t)} \, , \\
-		\dv{}{t}f_Z(t) &= \textcolor{d_yellow}{Z_\mathrm{SN} \, R \, \psi(t)} + \textcolor{g_red}{\frac{f_d}{\tau_\mathrm{dd}}} - \textcolor{g_green}{\left(1 - \frac{f_d}{f_Z}\right) \frac{f_d}{\tau_\mathrm{dg}} \, f_m} \, , \\
-		\dv{}{t}f_d(t) &= \textcolor{g_green}{\left(1 - \frac{f_d}{f_Z}\right) \frac{f_d}{\tau_\mathrm{dg}} \, f_m} - \textcolor{g_red}{\frac{f_d}{\tau_\mathrm{dd}}} \, ,
+		\dv{}{t}f_Z(t) &= \textcolor{d_yellow}{Z_\mathrm{SN} \, R \, \psi(t)} + \textcolor{g_red}{\frac{f_d}{\tau_\mathrm{dd}}} - \textcolor{g_green}{\left(1 - \frac{f_d}{f_Z + f_d}\right) \frac{f_d}{\tau_\mathrm{dg}}} \, , \\
+		\dv{}{t}f_d(t) &= \textcolor{g_green}{\left(1 - \frac{f_d}{f_Z + f_d}\right) \frac{f_d}{\tau_\mathrm{dg}}} - \textcolor{g_red}{\frac{f_d}{\tau_\mathrm{dd}}} \, ,
 	\end{aligned}}$
 	};
 	""",
@@ -762,7 +762,7 @@ end;
 md"""
 ### Dust destruction
 
-For the destruction of dust we will summarize several physical processes with a single time scale [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635). The physical proceses in question are: sputtering,
+For the destruction of dust we will summarize several physical processes with a single time scale as in [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635). The physical proceses in question are: sputtering,
 collision with cosmic rays, supernova shock waves, and radiative torque of a powerful and anisotropic radiation field. In our model, we will ignore astration (the "consumption" of dust when stars are created).
 
 From [Slavin2015](https://doi.org/10.1088/0004-637X/803/1/7) we have that the time scale of dust destruction is (Table 3):
@@ -806,9 +806,33 @@ end;
 md"""
 ### Dust creation
 
-Following [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) we will model the dust creation as a condensation process from the metals in the cell.  
+Following [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) we will model the dust growth as a condensation process from the metals in the cell. But in contrast with [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) we will follow the functional form of [Dwek1998](https://doi.org/10.1086/305829) (eq. 32):
 
-For the the dust growth time scale we will use the model described in [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x), [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x), and [Hirashita2019](https://doi.org/10.1111/10.1093/mnras/sty2838), where $\tau_\mathrm{dg}$ is scaled by the relevant variables assuming a linear relation around the fiducial values (kind of like dimensional analysis)
+$\begin{align}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\text{Z}} = \left(1 - \frac{f_d}{f_Z + f_d}\right) \frac{f_d}{\tau_\mathrm{dg}} \, ,
+\end{align}$
+
+Notice how in [Millán-Irigoyen2020](https://doi.org/10.1093/mnras/staa635) (eq. 28) the previous equation is instead
+
+$\begin{align}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\text{Z}} = \left(1 - \frac{f_d}{f_Z}\right) \frac{f_d}{\tau_\mathrm{dg}} \, f_m \, ,
+\end{align}$
+
+The difference $f_Z + f_d \rightarrow f_Z$ is probably a mistake (in [Dwek1998](https://doi.org/10.1086/305829), [Hirashita1998](https://doi.org/10.1086/311806), and [Hirashita2019](https://doi.org/10.1093/mnras/sty2838) it is explicitly said that the fraction in the equation is the fraction of metals in the dust, $f_d$, with respect to the total amount of metals in the gas and dust: $f_Z + f_d$).
+
+The story of the factor $f_m$ is more complicated. [Hirashita1998](https://doi.org/10.1086/311806) combined the works of [Dwek1998](https://doi.org/10.1086/305829) and [Lisenfeld1998](https://doi.org/10.1086/305354) to write the equations that model dust (eqs. 1, 2 and 3 in [Hirashita1998](https://doi.org/10.1086/311806)), so, the functional form of the term follows [Dwek1998](https://doi.org/10.1086/305829). 
+
+Later, in [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259), there is a change as he adds the fraction of cold gas to the equation (eqs. 1 and 2 with the corresponding change in the time scales). The whole paper is a discussion on this change, but there are no calculations of the time scales. This calculation appears for the first time in [Hirashita2000](https://doi.org/10.1093/pasj/52.4.585) (eq. 12). We are still explicitly using the fraction of cold gas (eq. 7 in [Hirashita2000](https://doi.org/10.1093/pasj/52.4.585)). 
+
+When we jump to [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) and [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) new forms for the time scale are given (eq. 23 and eqs. 19 and 20 respectively), but it is not clear if we are still considering the cold fraction for the time derivative of the dust mass. Finally, in [Hirashita2019](https://doi.org/10.1093/mnras/sty2838), the time scale of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) is used (eq. 13) and it is explicit that the cold fraction is **not** in the time derivative of the dust mass (eq. 12). Given that [Hirashita2019](https://doi.org/10.1093/mnras/sty2838) shares the same time scale as [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) and [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (at least in functional form) we can assume is the same for those papers.
+
+As mentioned, we will follow [Dwek1998](https://doi.org/10.1086/305829) and [Hirashita2019](https://doi.org/10.1093/mnras/sty2838),
+
+$\begin{align}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\text{Z}} = \left(1 - \frac{f_d}{f_Z + f_d}\right) \frac{f_d}{\tau_\mathrm{dg}} \, ,
+\end{align}$
+
+where $\tau_\mathrm{dg}$ is scaled by the relevant variables assuming a linear relation around the fiducial values
 
 $\begin{equation}
 	\tau_\mathrm{dg} = A \, \frac{a}{a^0} \, \frac{Z_\odot^d}{Z} \, \frac{n_H^0}{n_H} \, \sqrt{\frac{T^0}{T}} \, \frac{S^0}{S} \, ,
@@ -823,13 +847,13 @@ where:
 | $n_H$       | Hydrogen number density         |
 | $T$         | Gas temperature                 |
 | $S$         | Sticking efficiency             |
-| $a^0$       | Fiducial value of a             |
+| $a^0$       | Fiducial value of $a$           |
 | $Z_\odot^d$ | Fiducial solar metallicity      |
 | $n_H^0$     | Fiducal hydrogen number density |
 | $T^0$       | Fiducial gas temperature        |
 | $S^0$       | Fiducial sticking efficiency    |
 
-Of all these parameters only $Z$ and $n_H$ will vary from cell to cell, all other being constant.
+Of all these parameters only $Z$ and $n_H$ will vary from cell to cell, all others are constants.
 """
   ╠═╡ =#
 
@@ -858,7 +882,7 @@ So the $A$ given are
 | Silicate    | $6.30 \times 10^7 \, \mathrm{yr}$ |
 | Graphite    | $5.59 \times 10^7 \, \mathrm{yr}$ |
 
-From [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) and [Hirashita2019](https://doi.org/10.1111/10.1093/mnras/sty2838) we have
+From [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) and [Hirashita2019](https://doi.org/10.1093/mnras/sty2838) we have
 
 | Parameter   | Fiducial value             |
 |:-----------:|:--------------------------:|
@@ -875,9 +899,9 @@ So the $A$ given are
 | Silicate    | $1.61 \times 10^8 \, \mathrm{yr}$  |
 | Graphite    | $0.993 \times 10^8 \, \mathrm{yr}$ |
 
-Comparing with the values in [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) one would think that the difference is only given by the choice of fiducial parameters in each paper. But doing the quotient between $\tau_\mathrm{dg}^{2011}$ and $\tau_\mathrm{dg}^{2012/19}$ it can be easily checked that that is not the case. The computation of $A$ is different beyond the choises of fiducial parameters in the papers.
+Comparing with the values in [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) one would think that the difference is only due to the choice of fiducial parameters in each paper. But doing the quotient between $\tau_\mathrm{dg}^{2011}$ and $\tau_\mathrm{dg}^{2012/19}$ it can be easily checked that that is not the case. The computation of $A$ is different beyond the choices of fiducial parameters in the papers.
 
-We will follow [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) and [Hirashita2019](https://doi.org/10.1111/10.1093/mnras/sty2838), so we end up with
+We will follow [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) and [Hirashita2019](https://doi.org/10.1093/mnras/sty2838), so we end up with
 
 | Parameter   | Fiducial value                   |
 |:-----------:|:--------------------------------:|
@@ -925,7 +949,12 @@ $\begin{equation}
 
 # ╔═╡ a3d1e1bf-c513-4d6b-a43b-3dab0106f1a5
 begin
-	const a = 0.0083u"μm"
+	const ai = 0.005 # μm
+	const af = 1.0 # μm
+
+	const am = quadgk(r -> r^(-2.5), ai, af)[1] / quadgk(r -> r^(-3.5), ai, af)[1]  
+	
+	const a = am * u"μm"
 	const a0 = 0.1u"μm"
 end;
 
@@ -2069,6 +2098,156 @@ begin
     const F_POINTS = exp.(S_POINTS)
 end;
 
+# ╔═╡ 74c82c98-f233-4e72-8f74-17bdfeddf884
+md"# Dust initial condition"
+
+# ╔═╡ ab1b7695-3cd6-4e67-9cfd-fbaf2f4d1d15
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+Schematic diagram of the share of mass of each phase in the initial condition.
+"""
+  ╠═╡ =#
+
+# ╔═╡ 6475b25b-8711-44cd-bc3b-e3d42681bb93
+# ╠═╡ skip_as_script = true
+#=╠═╡
+TikzPictures.TikzPicture(
+	L"""
+	    % Base line
+	    \draw[thick] (0,0) -- (10,0);
+	
+	    % Vertical dividers
+	    \foreach \x in {0, 5, 10} {
+	        \draw[thick] (\x, -0.2) -- (\x, 0.2);
+	    }
+	
+	    % Top braces
+	    \draw[thick] (0,0.5) .. controls (2.5,0.8) and (2.5,0.8) .. (5,0.5);
+	    \draw[thick] (5,0.5) .. controls (7.5,0.8) and (7.5,0.8) .. (10,0.5);
+	
+	    \node at (2.5,1.0) {metals};
+	    \node at (7.5,1.0) {H + He};
+	
+	    % Bottom braces
+	    \draw[thick] (0,-0.5) .. controls (0.5,-0.8) and (1.5,-0.8) .. (2,-0.5);
+	    \node at (1,-1.0) {dust};
+	
+	    \draw[thick] (2,-0.5) .. controls (2.5,-0.8) and (4.5,-0.8) .. (5,-0.5);
+	    \node at (3.5,-1.0) {$Z$};
+	
+	    \draw[thick] (5,-0.5) .. controls (5.5,-0.8) and (7,-0.8) .. (7.5,-0.5);
+	    \node at (6.25,-1.0) {$a$};
+	
+	    \draw[thick] (7.5,-0.5) .. controls (8,-0.8) and (9.5,-0.8) .. (10,-0.5);
+	    \node at (8.75,-1.0) {$i$};
+	
+	    % Left label
+	    \node[left] at (0,0) {cell};
+	""",
+	width="75em",
+	preamble = """
+		\\usepackage{xcolor}
+	    \\color{white} 
+	""",
+)
+  ╠═╡ =#
+
+# ╔═╡ ea4e58e9-d041-4a6e-b0d8-83e3aef7648b
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+Following [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) we have that the inital mass density of dust is
+
+$\begin{equation}
+	\rho_d(0) = f_d \, \rho_\mathrm{cell} = \frac{m_\mathrm{X_d}}{f_\mathrm{X_d}}  \, (1 - \xi(0)) \, \frac{Z}{Z_\odot} \, \left( \mathrm{\frac{X_d}{H}} \right)_\odot \, n_H \, , 
+\end{equation}$
+
+where $f_\mathrm{X_d}$ is the mass fraction of element $\mathrm{X_d}$ in the dust, $m_\mathrm{X_d}$ is the atomic mass of element $\mathrm{X_d}$, $\left( \mathrm{X_d / H} \right)_\odot$ is the solar abundance of element $\mathrm{X_d}$, $n_H$ is the number density of hydrogen, and $\xi(0)$ is the initial value of
+
+$\begin{equation}
+	\xi(t) = \frac{n_\mathrm{X_d}^\mathrm{gas}}{n_\mathrm{X_d}^\mathrm{tot}} \, , 
+\end{equation}$
+
+where $n_\mathrm{X_d}^\mathrm{gas}$ is the number density in the gas of element $\mathrm{X_d}$ and $n_\mathrm{X_d}^\mathrm{tot}$ is the number density in the gas + dust of element $\mathrm{X_d}$.
+
+Using
+
+|  Species | $\mathrm{X_d}$ | $f_\mathrm{X_d}$ | $m_\mathrm{X_d}$ | $(\mathrm{X_d / H})_\odot$ |
+|:--------:|:--------------:|:----------------:|:----------------:|:--------------------------:|
+| Silicate |       Si       |      $0.166$     |      $28.1$      |    $3.55 \times 10^{−5}$   |
+| Graphite |        C       |        $1$       |       $12$       |    $3.63 \times 10^{−4}$   |
+
+where $m_\mathrm{X_d}$ is in daltons (Da) and the fiducial value $\xi(0) = 0.3$ ([Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x)).
+
+We can write
+
+$\begin{equation}
+    f_d = C_\mathrm{X_d} \, Z \, f_a \, ,
+\end{equation}$
+
+where we used
+
+$\begin{align}
+    n_H &= n_a  = f_a \, \frac{\rho_\mathrm{cell}}{m_p} \, , \\
+	Z_\odot &= 0.0127 \, ,
+\end{align}$
+
+In his case we used $n_H = n_a$ (in contrats with the previous choice of $n_H = n_m$) because we will always have $f_m(0) = 0$ which would give $f_d(0) = 0$. This is a problem because we need some initial dust to jumpstart dust formation, otherwise we would always have $\mathrm{d}f_d / \mathrm{d}t = 0$.
+
+Using the values from the table we have
+
+|  Species | $\mathrm{X_d}$ | $C_\mathrm{X_d}$ |
+|:--------:|:--------------:|:----------------:|
+| Silicate |       Si       |      $0.329$     |
+| Graphite |        C       |      $0.238$     |
+
+So our fiducial value is the average: $C_\mathrm{X_d} = 0.283$
+"""
+  ╠═╡ =#
+
+# ╔═╡ d7cc8a66-220a-4e9b-b42e-a0e085ed3a0f
+begin
+	const ξ0 = 0.3
+	
+	C_xd(mx, fx, XH) = (mx / fx) * (1.0 - ξ0) * XH / (Zsun * 1.0u"mp")
+
+	silicate = C_xd(28.1u"u", 0.166, 3.55e-5)
+	graphite = C_xd(12.0u"u", 1.0, 3.63e-4)
+	
+	const c_xd = ustrip(Unitful.NoUnits, silicate + graphite) / 2.0
+end;
+
+# ╔═╡ 477c8f59-97d1-405d-a1c8-64b7e0b9119f
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"# Efficiency per free-fall time"
+  ╠═╡ =#
+
+# ╔═╡ 08e05c65-06a2-4560-92eb-b014dc7c3d70
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+As defined in [Krumholz2011](https://iopscience.iop.org/article/10.1088/0004-637X/745/1/69) the efficiency per free-fall time is
+
+$\begin{equation}
+	\epsilon_\mathrm{ff} = \mathrm{SFR} \, \frac{t_\mathrm{ff}}{M_g} \, ,
+\end{equation}$
+where $M_g$ is the mass of gas in consideration, $\mathrm{SFR}$ the star formation rate (in the case of the simulations, the one used in the probability calculations: $\mathrm{SFR}_p$), and
+
+$\begin{equation}
+	t_\mathrm{ff} = \sqrt{\frac{3 \, \pi}{32 \, G \, \rho}} \, .
+\end{equation}$
+
+So we can write
+
+$\begin{equation}
+	\epsilon_\mathrm{ff} = c \, \frac{\mathrm{SFR}_p}{M_\mathrm{cell} \, \sqrt{\rho_\mathrm{cell}}} \, .
+\end{equation}$
+where $c = \sqrt{3 \, \pi / 32 \, G}$.
+"""
+  ╠═╡ =#
+
 # ╔═╡ 2235689d-9c83-4907-aa17-c2624fbeb68d
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -2255,156 +2434,6 @@ md"""
 
 """
   ╠═╡ =#
-
-# ╔═╡ 477c8f59-97d1-405d-a1c8-64b7e0b9119f
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"# Efficiency per free-fall time"
-  ╠═╡ =#
-
-# ╔═╡ 08e05c65-06a2-4560-92eb-b014dc7c3d70
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"""
-As defined in [Krumholz2011](https://iopscience.iop.org/article/10.1088/0004-637X/745/1/69) the efficiency per free-fall time is
-
-$\begin{equation}
-	\epsilon_\mathrm{ff} = \mathrm{SFR} \, \frac{t_\mathrm{ff}}{M_g} \, ,
-\end{equation}$
-where $M_g$ is the mass of gas in consideration, $\mathrm{SFR}$ the star formation rate (in the case of the simulations, the one used in the probability calculations: $\mathrm{SFR}_p$), and
-
-$\begin{equation}
-	t_\mathrm{ff} = \sqrt{\frac{3 \, \pi}{32 \, G \, \rho}} \, .
-\end{equation}$
-
-So we can write
-
-$\begin{equation}
-	\epsilon_\mathrm{ff} = c \, \frac{\mathrm{SFR}_p}{M_\mathrm{cell} \, \sqrt{\rho_\mathrm{cell}}} \, .
-\end{equation}$
-where $c = \sqrt{3 \, \pi / 32 \, G}$.
-"""
-  ╠═╡ =#
-
-# ╔═╡ 74c82c98-f233-4e72-8f74-17bdfeddf884
-md"# Dust initial condition"
-
-# ╔═╡ ab1b7695-3cd6-4e67-9cfd-fbaf2f4d1d15
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"""
-Schematic diagram of the share of mass of each phase in the initial condition.
-"""
-  ╠═╡ =#
-
-# ╔═╡ 6475b25b-8711-44cd-bc3b-e3d42681bb93
-# ╠═╡ skip_as_script = true
-#=╠═╡
-TikzPictures.TikzPicture(
-	L"""
-	    % Base line
-	    \draw[thick] (0,0) -- (10,0);
-	
-	    % Vertical dividers
-	    \foreach \x in {0, 5, 10} {
-	        \draw[thick] (\x, -0.2) -- (\x, 0.2);
-	    }
-	
-	    % Top braces
-	    \draw[thick] (0,0.5) .. controls (2.5,0.8) and (2.5,0.8) .. (5,0.5);
-	    \draw[thick] (5,0.5) .. controls (7.5,0.8) and (7.5,0.8) .. (10,0.5);
-	
-	    \node at (2.5,1.0) {metals};
-	    \node at (7.5,1.0) {H + He};
-	
-	    % Bottom braces
-	    \draw[thick] (0,-0.5) .. controls (0.5,-0.8) and (1.5,-0.8) .. (2,-0.5);
-	    \node at (1,-1.0) {dust};
-	
-	    \draw[thick] (2,-0.5) .. controls (2.5,-0.8) and (4.5,-0.8) .. (5,-0.5);
-	    \node at (3.5,-1.0) {$Z$};
-	
-	    \draw[thick] (5,-0.5) .. controls (5.5,-0.8) and (7,-0.8) .. (7.5,-0.5);
-	    \node at (6.25,-1.0) {$a$};
-	
-	    \draw[thick] (7.5,-0.5) .. controls (8,-0.8) and (9.5,-0.8) .. (10,-0.5);
-	    \node at (8.75,-1.0) {$i$};
-	
-	    % Left label
-	    \node[left] at (0,0) {cell};
-	""",
-	width="75em",
-	preamble = """
-		\\usepackage{xcolor}
-	    \\color{white} 
-	""",
-)
-  ╠═╡ =#
-
-# ╔═╡ ea4e58e9-d041-4a6e-b0d8-83e3aef7648b
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"""
-Following [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) we have that the inital mass density of dust is
-
-$\begin{equation}
-	\rho_d(0) = f_d \, \rho_\mathrm{cell} = \frac{m_\mathrm{X_d}}{f_\mathrm{X_d}}  \, (1 - \xi(0)) \, \frac{Z}{Z_\odot} \, \left( \mathrm{\frac{X_d}{H}} \right)_\odot \, n_H \, , 
-\end{equation}$
-
-where $f_\mathrm{X_d}$ is the mass fraction of element $\mathrm{X_d}$ in the dust, $m_\mathrm{X_d}$ is the atomic mass of element $\mathrm{X_d}$, $\left( \mathrm{X_d / H} \right)_\odot$ is the solar abundance of element $\mathrm{X_d}$, $n_H$ is the number density of hydrogen, and $\xi(0)$ is the initial value of
-
-$\begin{equation}
-	\xi(t) = \frac{n_\mathrm{X_d}^\mathrm{gas}}{n_\mathrm{X_d}^\mathrm{tot}} \, , 
-\end{equation}$
-
-where $n_\mathrm{X_d}^\mathrm{gas}$ is the number density in the gas of element $\mathrm{X_d}$ and $n_\mathrm{X_d}^\mathrm{tot}$ is the number density in the gas + dust of element $\mathrm{X_d}$.
-
-Using
-
-|  Species | $\mathrm{X_d}$ | $f_\mathrm{X_d}$ | $m_\mathrm{X_d}$ | $(\mathrm{X_d / H})_\odot$ |
-|:--------:|:--------------:|:----------------:|:----------------:|:--------------------------:|
-| Silicate |       Si       |      $0.166$     |      $28.1$      |    $3.55 \times 10^{−5}$   |
-| Graphite |        C       |        $1$       |       $12$       |    $3.63 \times 10^{−4}$   |
-
-where $m_\mathrm{X_d}$ is in daltons (Da) and the fiducial value $\xi(0) = 0.3$ ([Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x)).
-
-We can write
-
-$\begin{equation}
-    f_d = C_\mathrm{X_d} \, Z \, f_a \, ,
-\end{equation}$
-
-where we used
-
-$\begin{align}
-    n_H &= n_a  = f_a \, \frac{\rho_\mathrm{cell}}{m_p} \, , \\
-	Z_\odot &= 0.0127 \, ,
-\end{align}$
-
-In his case we used $n_H = n_a$ (in contrats with the previous choice of $n_H = n_m$) because we will always have $f_m(0) = 0$ which would give $f_d(0) = 0$. This is a problem because we need some initial dust to jumpstart dust formation, otherwise we would always have $\mathrm{d}f_d / \mathrm{d}t = 0$.
-
-Using the values from the table we have
-
-|  Species | $\mathrm{X_d}$ | $C_\mathrm{X_d}$ |
-|:--------:|:--------------:|:----------------:|
-| Silicate |       Si       |      $0.329$     |
-| Graphite |        C       |      $0.238$     |
-
-So our fiducial value is the average: $C_\mathrm{X_d} = 0.283$
-"""
-  ╠═╡ =#
-
-# ╔═╡ d7cc8a66-220a-4e9b-b42e-a0e085ed3a0f
-begin
-	const ξ0 = 0.3
-	
-	C_xd(mx, fx, XH) = (mx / fx) * (1.0 - ξ0) * XH / (Zsun * 1.0u"mp")
-
-	silicate = C_xd(28.1u"u", 0.166, 3.55e-5)
-	graphite = C_xd(12.0u"u", 1.0, 3.63e-4)
-	
-	const c_xd = ustrip(Unitful.NoUnits, silicate + graphite) / 2.0
-end;
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """

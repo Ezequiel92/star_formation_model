@@ -444,17 +444,17 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 
 	gsl_matrix_set(m, 4, 0, 0);
 	gsl_matrix_set(m, 4, 1, 0);
-	gsl_matrix_set(m, 4, 2, 0.019428762831580126 * R * Zsn * aux_var -0.0011275872721655854 * y[2] * (y[4] - y[5]) * y[5] * rho_C);
+	gsl_matrix_set(m, 4, 2, 0.019428762831580126 * R * Zsn * aux_var -0.0011234721451247988 * y[2] * (y[4] - y[5]) * y[5] * rho_C);
 	gsl_matrix_set(m, 4, 3, 0);
-	gsl_matrix_set(m, 4, 4, -0.0005637936360827927 * y[2] * y[2] * y[5] * rho_C);
-	gsl_matrix_set(m, 4, 5, 0.0004356568364611259 -0.0005637936360827927 * y[2] * y[2] * (y[4] - y[5]) * rho_C + 0.0005637936360827927 * y[2] * y[2] * y[5] * rho_C);
+	gsl_matrix_set(m, 4, 4, -0.0005617360725623994 * y[2] * y[2] * y[5] * rho_C);
+	gsl_matrix_set(m, 4, 5, 0.0004356568364611259 -0.0005617360725623994 * y[2] * y[2] * (y[4] - y[5]) * rho_C + 0.0005617360725623994 * y[2] * y[2] * y[5] * rho_C);
 
 	gsl_matrix_set(m, 5, 0, 0);
 	gsl_matrix_set(m, 5, 1, 0);
-	gsl_matrix_set(m, 5, 2, 0.0011275872721655854 * y[2] * (y[4] - y[5]) * y[5] * rho_C);
+	gsl_matrix_set(m, 5, 2, 0.0011234721451247988 * y[2] * (y[4] - y[5]) * y[5] * rho_C);
 	gsl_matrix_set(m, 5, 3, 0);
-	gsl_matrix_set(m, 5, 4, 0.0005637936360827927 * y[2] * y[2] * y[5] * rho_C);
-	gsl_matrix_set(m, 5, 5, -0.0004356568364611259 + 0.0005637936360827927 * y[2] * y[2] * (y[4] - y[5]) * rho_C -0.0005637936360827927 * y[2] * y[2] * y[5] * rho_C);
+	gsl_matrix_set(m, 5, 4, 0.0005617360725623994 * y[2] * y[2] * y[5] * rho_C);
+	gsl_matrix_set(m, 5, 5, -0.0004356568364611259 + 0.0005617360725623994 * y[2] * y[2] * (y[4] - y[5]) * rho_C -0.0005617360725623994 * y[2] * y[2] * y[5] * rho_C);
 
 	dfdt[0] = 0;
 	dfdt[1] = 0;
