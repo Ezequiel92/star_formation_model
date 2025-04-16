@@ -229,7 +229,6 @@ end;
   ╠═╡ =#
 
 # ╔═╡ 06dba542-6b7c-426a-8d76-bec153f1eeae
-# ╠═╡ disabled = true
 # ╠═╡ skip_as_script = true
 #=╠═╡
 test_integration(; phase="stellar")

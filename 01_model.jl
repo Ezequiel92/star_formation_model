@@ -1034,24 +1034,23 @@ md"""
 Now we can finally write
 
 $\begin{equation}
-	\tau_\mathrm{dg} = \frac{C_\mathrm{dg}}{Z \, \rho_\mathrm{cell} \, f_m} \, ,
+	\tau_\mathrm{dg} = \frac{1}{C_\mathrm{dg} \, Z \, \rho_\mathrm{cell} \, f_m} \, ,
 \end{equation}$
 
 where 
 
 $\begin{equation}
-	C_\mathrm{dg} = \frac{A \, a \, Z_\odot^d \, n_H^0 \, 2 \, m_p \, \sqrt{T^0} \, S^0}{a^0 \, \sqrt{T} \, S} \, ,
+	C_\mathrm{dg} = \frac{a^0 \, \sqrt{T} \, S}{A \, a \, Z_\odot^d \, n_H^0 \, 2 \, m_p \, \sqrt{T^0} \, S^0} \, ,
 \end{equation}$
 
-Notice that $Z_\odot^d$ is not the solar metallicity we use everywhere else, but the one use in [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) and [Hirashita2019](https://doi.org/10.1111/10.1093/mnras/sty2838).
+Notice that $Z_\odot^d$ is not the solar metallicity we use everywhere else, but the one use in [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) and [Hirashita2019](https://doi.org/10.1093/mnras/sty2838).
 
-Using $Z = f_Z$, the dust creation term in the equations can be rewritten to avoid divergencies
+Using $Z = f_Z + f_d$, where we are considering that $Z$ represent the total metallicity in the gas and dust (see eq. 11 in [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x)), the dust creation term in the equations can be rewritten as
 
 $\begin{align}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\text{Z}} &= \left(1 - \frac{f_d}{f_Z}\right) \frac{f_d}{\tau_\mathrm{dg}} \, f_m \\
-	&= \left(\frac{f_d \, f_m}{\tau_\mathrm{dg}} - \frac{f_d^2 \, f_m}{f_Z \, \tau_\mathrm{dg}}\right) \\ 
-	&= \left(\frac{f_d \, f_m^2 \, f_Z \, \rho_\mathrm{cell}}{C_\mathrm{dg}} - \frac{f_d^2 \, f_m^2 \, \rho_\mathrm{cell}}{C_\mathrm{dg}}\right) \\
-	&= \frac{f_d \, f_m^2 \, \rho_\mathrm{cell}}{C_\mathrm{dg}} \left(f_Z - f_d\right)
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\text{Z}} &= \left(1 - \frac{f_d}{f_Z + f_d}\right) \frac{f_d}{\tau_\mathrm{dg}} \\
+	&= \left(\frac{f_Z}{f_Z + f_d}\right) f_d \, (f_Z + f_d) \, \rho_\mathrm{cell} \, f_m \, C_\mathrm{dg} \\
+	&= C_\mathrm{dg} \, f_d \, f_Z \, f_m \, \rho_\mathrm{cell} \, .
 \end{align}$
 """
   ╠═╡ =#
@@ -2099,7 +2098,10 @@ begin
 end;
 
 # ╔═╡ 74c82c98-f233-4e72-8f74-17bdfeddf884
+# ╠═╡ skip_as_script = true
+#=╠═╡
 md"# Dust initial condition"
+  ╠═╡ =#
 
 # ╔═╡ ab1b7695-3cd6-4e67-9cfd-fbaf2f4d1d15
 # ╠═╡ skip_as_script = true
@@ -2163,7 +2165,7 @@ $\begin{equation}
 	\rho_d(0) = f_d \, \rho_\mathrm{cell} = \frac{m_\mathrm{X_d}}{f_\mathrm{X_d}}  \, (1 - \xi(0)) \, \frac{Z}{Z_\odot} \, \left( \mathrm{\frac{X_d}{H}} \right)_\odot \, n_H \, , 
 \end{equation}$
 
-where $f_\mathrm{X_d}$ is the mass fraction of element $\mathrm{X_d}$ in the dust, $m_\mathrm{X_d}$ is the atomic mass of element $\mathrm{X_d}$, $\left( \mathrm{X_d / H} \right)_\odot$ is the solar abundance of element $\mathrm{X_d}$, $n_H$ is the number density of hydrogen, and $\xi(0)$ is the initial value of
+where $f_\mathrm{X_d}$ is the mass fraction in the dust of element $\mathrm{X_d}$, $m_\mathrm{X_d}$ is the atomic mass of element $\mathrm{X_d}$, $\left( \mathrm{X_d / H} \right)_\odot$ is the solar abundance of element $\mathrm{X_d}$, $n_H$ is the number density of hydrogen, and $\xi(0)$ is the initial value of
 
 $\begin{equation}
 	\xi(t) = \frac{n_\mathrm{X_d}^\mathrm{gas}}{n_\mathrm{X_d}^\mathrm{tot}} \, , 
@@ -2186,11 +2188,17 @@ $\begin{equation}
     f_d = C_\mathrm{X_d} \, Z \, f_a \, ,
 \end{equation}$
 
+where 
+
+$\begin{equation}
+    C_\mathrm{X_d} = \frac{m_\mathrm{X_d}}{f_\mathrm{X_d}}  \, (1 - \xi(0)) \, \frac{1}{Z_\odot \, m_p} \, \left( \mathrm{\frac{X_d}{H}} \right)_\odot \, ,
+\end{equation}$
+
 where we used
 
 $\begin{align}
     n_H &= n_a  = f_a \, \frac{\rho_\mathrm{cell}}{m_p} \, , \\
-	Z_\odot &= 0.0127 \, ,
+	Z_\odot &= 0.0127 \, .
 \end{align}$
 
 In his case we used $n_H = n_a$ (in contrats with the previous choice of $n_H = n_m$) because we will always have $f_m(0) = 0$ which would give $f_d(0) = 0$. This is a problem because we need some initial dust to jumpstart dust formation, otherwise we would always have $\mathrm{d}f_d / \mathrm{d}t = 0$.
@@ -2202,7 +2210,7 @@ Using the values from the table we have
 | Silicate |       Si       |      $0.329$     |
 | Graphite |        C       |      $0.238$     |
 
-So our fiducial value is the average: $C_\mathrm{X_d} = 0.283$
+So our fiducial value is the average $C_\mathrm{X_d} = 0.283$
 """
   ╠═╡ =#
 
