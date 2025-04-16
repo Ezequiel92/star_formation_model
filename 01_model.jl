@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -998,28 +998,6 @@ begin
 	const S = 0.073
 end;
 
-# ╔═╡ 4f037519-bd86-4670-b3da-f104444be7b8
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"""
-#### $S$ - Sticking efficiency 
-
-Fpor the sticking efficiency we will use the fit of [Grassi2011](https://doi.org/10.1051/0004-6361/200913779) to the data of [Leitch-Devlin1985](https://doi.org/10.1093/mnras/213.2.295):
-
-$\begin{equation}
-    S(T_g, T_d) = 0.019 \, T_g \, (0.0017 \, T_d + 0.4) \, \exp(-0.007 \, T_g) \, .
-\end{equation}$
-
-where $T_g$ is the gas temperature and $T_d$ is the dust temperature, both in Kelvin.
-
-Using the simples option of $T_g = T_d = T = 10 \, \mathrm{K}$, we get
-
-$\begin{equation}
-    S = 0.073 \, .
-\end{equation}$
-"""
-  ╠═╡ =#
-
 # ╔═╡ 8c9ab125-2acb-4732-a9bf-7838e819e4f7
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1735,7 +1713,7 @@ function system!(dydt, ic, parameters, t)
 
     # Auxiliary equations
 	recombination    = fi / τ_rec(fi, ρ_cell)
-    cloud_formation  = fa / τ_cond(fs, ρ_cell, fZ)
+    cloud_formation  = fa / τ_cond(fs, ρ_cell, fZ + fd)
 	sfr              = ψ(fm, ρ_cell)
 	dust_destruction = fd / τ_dd
 	dust_growth      = (fZ - fd) * (fd * fm * fm * ρ_cell) / c_dg
@@ -2469,7 +2447,7 @@ UnitfulAstro = "~1.2.2"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.4"
+julia_version = "1.11.5"
 manifest_format = "2.0"
 project_hash = "7211d8f1aeb55882b1f87b64c33321eccdbf6690"
 
@@ -3914,7 +3892,7 @@ version = "2.4.0+0"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+4"
+version = "0.8.5+0"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -5095,7 +5073,6 @@ version = "0.13.1+0"
 # ╠═a9c6a292-086e-4aa0-9856-78d3ab3fbe35
 # ╟─5890b699-b7de-47a3-bee7-1e7dd7663fbe
 # ╠═ef79392b-395c-497a-9c0e-dc2cd468f6e1
-# ╟─4f037519-bd86-4670-b3da-f104444be7b8
 # ╟─8c9ab125-2acb-4732-a9bf-7838e819e4f7
 # ╠═2a39d6f8-da49-4976-9aa7-889391e55a5d
 # ╟─43ee281f-1a16-445d-894d-23e0319b1fd0
@@ -5136,6 +5113,13 @@ version = "0.13.1+0"
 # ╟─aec6e4fc-e496-4add-b982-ab60f9f900a0
 # ╠═8940cb2b-2c8c-407e-bc6b-426843cf6125
 # ╠═28955b95-df19-403a-bf79-b68e9be8e1dd
+# ╟─74c82c98-f233-4e72-8f74-17bdfeddf884
+# ╟─ab1b7695-3cd6-4e67-9cfd-fbaf2f4d1d15
+# ╟─6475b25b-8711-44cd-bc3b-e3d42681bb93
+# ╟─ea4e58e9-d041-4a6e-b0d8-83e3aef7648b
+# ╠═d7cc8a66-220a-4e9b-b42e-a0e085ed3a0f
+# ╟─477c8f59-97d1-405d-a1c8-64b7e0b9119f
+# ╟─08e05c65-06a2-4560-92eb-b014dc7c3d70
 # ╟─2235689d-9c83-4907-aa17-c2624fbeb68d
 # ╟─df8a9449-851c-4546-97a7-7fd4a270a867
 # ╟─3ab760f8-57cc-4ab8-af0b-5dd91d53ea91
@@ -5144,12 +5128,5 @@ version = "0.13.1+0"
 # ╟─e817ab9c-9091-43aa-a2a0-ee1a7cb74f8e
 # ╟─6879378d-3145-4a48-ae4a-ef49a64336d0
 # ╟─0d37601d-46d2-49c0-9225-f4786bd34419
-# ╟─477c8f59-97d1-405d-a1c8-64b7e0b9119f
-# ╟─08e05c65-06a2-4560-92eb-b014dc7c3d70
-# ╟─74c82c98-f233-4e72-8f74-17bdfeddf884
-# ╟─ab1b7695-3cd6-4e67-9cfd-fbaf2f4d1d15
-# ╟─6475b25b-8711-44cd-bc3b-e3d42681bb93
-# ╟─ea4e58e9-d041-4a6e-b0d8-83e3aef7648b
-# ╠═d7cc8a66-220a-4e9b-b42e-a0e085ed3a0f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

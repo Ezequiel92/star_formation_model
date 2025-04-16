@@ -344,7 +344,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
 
     /* Compute the auxiliary equations */
     double tau_R = ODE_CR / (y[0] * rho_C);
-    double tau_C = ODE_CC / (rho_C * (y[4] + ZEFF) * (1 - y[3]));
+    double tau_C = ODE_CC / (rho_C * (y[4] + y[5] + ZEFF) * (1 - y[3]));
     double tau_S = ODE_CS / sqrt(rho_C);
     double recombination = y[0] / tau_R;
     double cloud_formation = y[1] / tau_C;
@@ -422,18 +422,18 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 	gsl_matrix_set(m, 0, 5, 0);
 
 	gsl_matrix_set(m, 1, 0, 16.409952 * y[0] * rho_C);
-	gsl_matrix_set(m, 1, 1, 17.393952755905513 * (1.0 - y[3]) * (-1.27e-5 - y[4]) * rho_C);
+	gsl_matrix_set(m, 1, 1, 17.393952755905513 * (1.0 - y[3]) * (-1.27e-5 - y[4] - y[5]) * rho_C);
 	gsl_matrix_set(m, 1, 2, 0.019428762831580126 * (eta_d - eta_i) * aux_var);
-	gsl_matrix_set(m, 1, 3, -17.393952755905513 * y[1] * (-1.27e-5 - y[4]) * rho_C);
+	gsl_matrix_set(m, 1, 3, -17.393952755905513 * y[1] * (-1.27e-5 - y[4] - y[5]) * rho_C);
 	gsl_matrix_set(m, 1, 4, -17.393952755905513 * y[1] * (1.0 - y[3]) * rho_C);
-	gsl_matrix_set(m, 1, 5, 0);
+	gsl_matrix_set(m, 1, 5, -17.393952755905513 * y[1] * (1.0 - y[3]) * rho_C);
 
 	gsl_matrix_set(m, 2, 0, 0);
-	gsl_matrix_set(m, 2, 1, 17.393952755905513 * (1.0 - y[3]) * (1.27e-5 + y[4]) * rho_C);
+	gsl_matrix_set(m, 2, 1, 17.393952755905513 * (1.0 - y[3]) * (1.27e-5 + y[4] + y[5]) * rho_C);
 	gsl_matrix_set(m, 2, 2, 0.019428762831580126 * (-1.0 - eta_d) * aux_var);
-	gsl_matrix_set(m, 2, 3, -17.393952755905513 * y[1] * (1.27e-5 + y[4]) * rho_C);
+	gsl_matrix_set(m, 2, 3, -17.393952755905513 * y[1] * (1.27e-5 + y[4] + y[5]) * rho_C);
 	gsl_matrix_set(m, 2, 4, 17.393952755905513 * y[1] * (1.0 - y[3]) * rho_C);
-	gsl_matrix_set(m, 2, 5, 0);
+	gsl_matrix_set(m, 2, 5, 17.393952755905513 * y[1] * (1.0 - y[3]) * rho_C);
 
 	gsl_matrix_set(m, 3, 0, 0);
 	gsl_matrix_set(m, 3, 1, 0);
