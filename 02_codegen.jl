@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.5
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -109,13 +109,13 @@ static char *ZSN_TABLE_PATH   = "../code/src/el_sfr/tables/Zsn.txt";
 /* Cρ   = $(@sprintf("%.4f", MODEL.Cρ)) (clumping factor) */
 
 #define N_EQU $(MODEL.N_EQU) /* Number of equations */
-#define ODE_CS $(@sprintf("%.7e", MODEL.c_star))  /* [Myr * cm^(-3/2)] */
-#define ODE_CR $(@sprintf("%.7e", MODEL.c_rec))   /* [Myr * cm^(-3)] */
-#define ODE_CC $(@sprintf("%.7e", MODEL.c_cond))  /* [Myr * cm^(-3)] */
-#define ODE_CD $(@sprintf("%.9e", MODEL.c_dg))    /* [Myr * mp * cm^(-3)] */
-#define TAU_DD $(@sprintf("%.9e", MODEL.τ_dd))    /* [Myr] */
-#define ZEFF $(@sprintf("%.4e", MODEL.Zeff))      /* 1e-3 Zₒ */
-#define CXD $(@sprintf("%.7e", MODEL.c_xd))       /* [dimensionless] */
+#define ODE_CS $(@sprintf("%.7e", MODEL.c_star)) /* [Myr * cm^(-3/2)] */
+#define ODE_CR $(@sprintf("%.7e", MODEL.c_rec)) /* [Myr * cm^(-3)] */
+#define ODE_CC $(@sprintf("%.7e", MODEL.c_cond)) /* [Myr * cm^(-3)] */
+#define ODE_CD $(@sprintf("%.9e", MODEL.c_dg)) /* [Myr^(-1) * mp^(-1) * cm^3] */
+#define TAU_DD $(@sprintf("%.9e", MODEL.τ_dd)) /* [Myr] */
+#define ZEFF $(@sprintf("%.4e", MODEL.Zeff)) /* 1e-3 Zₒ */
+#define CXD $(@sprintf("%.7e", MODEL.c_xd)) /* [dimensionless] */
 
 typedef struct DataTable
 {
@@ -247,7 +247,6 @@ function write_jacobian(path::String)::Nothing
 		* Destructure the parameters
 		*
 		* rho_C: Total cell density                                 [mp * cm⁻³]
-		* Z:     Arepo metallicity                                  [dimensionless]
 		* a:     Scale factor                                       [dimensionless]
 		* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
 		* eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
@@ -256,12 +255,11 @@ function write_jacobian(path::String)::Nothing
 		*/	
 		double *p    = (double *)parameters;
 		double rho_C = p[0];
-		double Z     = p[1];
-		double a     = p[2];
-		double eta_d = p[3];
-		double eta_i = p[4];
-		double R     = p[5];
-		double Zsn   = p[6];
+		double a     = p[1];
+		double eta_d = p[2];
+		double eta_i = p[3];
+		double R     = p[4];
+		double Zsn   = p[5];
 			
 		gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, $(MODEL.N_EQU), $(MODEL.N_EQU));
 		gsl_matrix *m = &dfdy_mat.matrix;
@@ -321,13 +319,11 @@ function write_jacobian(path::String)::Nothing
 			matrix,
 			"RHS1"    => "y",
 			"RHS2[0]" => "rho_C",
- 			"RHS2[1]" => "Z",
-			"RHS2[2]" => "a",
-  			"RHS2[3]" => "eta_d",
-  			"RHS2[4]" => "eta_i",
-			"RHS2[5]" => "R",
-			"RHS2[6]" => "Zsn",
-			# "pow(y[2], 2)" => "y[2] * y[2]",
+			"RHS2[1]" => "a",
+  			"RHS2[2]" => "eta_d",
+  			"RHS2[3]" => "eta_i",
+			"RHS2[4]" => "R",
+			"RHS2[5]" => "Zsn",
 			"-1 * "  => "- ",
 			"1 "     => "1.0 ",
 		) * "\n"
@@ -478,7 +474,7 @@ function integrate_with_c(
 			2::Cint,
 		)::Cdouble
 
-		parameters = [ρ_cell, Z, a, η_diss, η_ion, R, Zsn]
+		parameters = [ρ_cell, a, η_diss, η_ion, R, Zsn]
 
 		@ccall $integrate_ode(
 		    ic::Ptr{Cdouble},
@@ -814,7 +810,7 @@ UnitfulAstro = "~1.2.2"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.4"
+julia_version = "1.11.5"
 manifest_format = "2.0"
 project_hash = "028d77a51331926245973db6466a5f9a4c2217d2"
 
@@ -1084,9 +1080,9 @@ version = "0.1.13"
 
 [[deps.CodeTracking]]
 deps = ["InteractiveUtils", "UUIDs"]
-git-tree-sha1 = "7eee164f122511d3e4e1ebadb7956939ea7e1c77"
+git-tree-sha1 = "062c5e1a5bf6ada13db96a4ae4749a4c2234f521"
 uuid = "da1fd8a2-8d9e-5ec2-8556-3022fb5608a2"
-version = "1.3.6"
+version = "1.3.9"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -1804,9 +1800,9 @@ version = "3.1.1+0"
 
 [[deps.JuliaInterpreter]]
 deps = ["CodeTracking", "InteractiveUtils", "Random", "UUIDs"]
-git-tree-sha1 = "a434e811d10e7cbf4f0674285542e697dca605d0"
+git-tree-sha1 = "872cd273cb995ed873c58f196659e32f11f31543"
 uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
-version = "0.9.42"
+version = "0.9.44"
 
 [[deps.JumpProcesses]]
 deps = ["ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "Markdown", "PoissonRandom", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "Setfield", "StaticArrays", "SymbolicIndexingInterface", "UnPack"]
@@ -2277,7 +2273,7 @@ version = "2.4.0+0"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+4"
+version = "0.8.5+0"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
