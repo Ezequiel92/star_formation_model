@@ -124,7 +124,7 @@ static const double F_RHO[] = {
 #endif /* #ifdef RHO_PDF */
 
 void *read_ftable(const char *file_path, const int n_rows, const int n_cols);
-double rate_of_star_formation(const int index, double x);
+double rate_of_star_formation(const int index);
 
 #endif /* #ifdef EL_SFR_H */
 	
