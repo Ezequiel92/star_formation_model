@@ -326,7 +326,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
      * Destructure the parameters
      *
      * rho_C: Total cell density                                 [mp * cm⁻³]
-     * UVB:   UVB photoionization                                [Myr^-1]
+     * UVB:   UVB photoionization rate                           [Myr^-1]
      * eta_d: Photodissociation efficiency of hydrogen molecules [dimensionless]
      * eta_i: Photoionization efficiency of hydrogen atoms       [dimensionless]
      * R:     Mass recycling fraction                            [dimensionless]
@@ -397,7 +397,7 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 	* Destructure the parameters
 	*
 	* rho_C: Total cell density                                 [mp * cm⁻³]
-	* UVB:   UVB photoionization                                [Myr^-1]
+	* UVB:   UVB photoionization rate                           [Myr^-1]
 	* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
 	* eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
 	* R:     Mass recycling fraction                            [dimensionless]
@@ -700,7 +700,7 @@ double rate_of_star_formation(const int index)
     /* Metals recycling fraction [dimensionless] */
     double Zsn = interpolate1D(Z, All.ZSN_TABLE_DATA);
 
-    /* UVB photoionization [Myr^-1] */
+    /* UVB photoionization rate [Myr^-1] */
     double UVB = interpolate1D(All.cf_redshift, All.UVB_TABLE_DATA);
 
     /* Column height [cm] */

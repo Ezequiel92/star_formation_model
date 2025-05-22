@@ -254,7 +254,7 @@ function write_jacobian(path::String)::Nothing
 		* Destructure the parameters
 		*
 		* rho_C: Total cell density                                 [mp * cm⁻³]
-		* UVB:   UVB photoionization                                [Myr^-1]
+		* UVB:   UVB photoionization rate                           [Myr^-1]
 		* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
 		* eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
 		* R:     Mass recycling fraction                            [dimensionless]
@@ -344,7 +344,7 @@ function write_jacobian(path::String)::Nothing
 		) * "\n"
 
 	end
-	
+
 	aux_var_01 = "sqrt(rho_C)"
 	aux_var_02 = "sqrt(1.0 + 1.0e-15 * y[2] * rho_C * h)"
 	aux_var_03 = "exp(-3.149606299212598e-19 * (y[1] + y[2]) * y[4] * rho_C * h)"

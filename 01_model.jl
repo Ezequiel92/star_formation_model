@@ -158,7 +158,7 @@ For simplicity we will adopt $x_i = x_a = x_m = 1.0$, which is like assuming tha
 md"""
 ## Volume fractions in the Milky Way
 
-Even though we will assume $x_i = x_a = x_m = 1.0$, for completeness we will show the stimates for the volume fractions in the Milky Way. 
+Even though we will assume $x_i = x_a = x_m = 1.0$, for completeness we will show the stimates for the volume fractions in the Milky Way.
 
 Using the values from [Ferrière2001](https://doi.org/10.1103/RevModPhys.73.1031) we have
 """
@@ -170,10 +170,10 @@ Using the values from [Ferrière2001](https://doi.org/10.1103/RevModPhys.73.1031
 let
 	# Approximate Milky Way radius
 	R = (25.0u"kpc" + 30.0u"kpc") / 2.0
-	
+
 	# Approximate Milky Way height
 	h = (400.0u"pc" + 600.0u"pc") / 2.0
-	
+
 	# Milky WAy volume (as a disc)
 	V = π * R^2 * h
 
@@ -725,7 +725,7 @@ let
 	#################################
 	# From ecu. 36 of Seaton (1959)
 	#################################
-	
+
 	D = 5.197e-14u"cm^3*s^-1"
 	λ(T) = 157890u"K" / T
 
@@ -756,7 +756,7 @@ let
 	###############################
 	# From ecu. 4 of Verner (1996)
 	###############################
-	
+
 	a  = 7.982e-11u"cm^3*s^-1"
 	b  = 0.748
 	T0 = 3.148u"K"
@@ -864,7 +864,7 @@ For the solar metallicity, we find several values in the literature
 
 To keep it consistent with the $\texttt{AREPO}$ codebase, we will use $Z_\odot = 0.0127$, noting that is only $35\%$ off the largest value in the list ([Steiger2015](https://doi.org/10.3847/0004-637X/816/1/13)).
 
-We found that we need a $C_\rho \approx 100$ to form a disk, which is a reasonable value for the clumping factor under certain circumstances ([Micic2012](https://doi.org/10.1111/j.1365-2966.2012.20477.x)). 
+We found that we need a $C_\rho \approx 100$ to form a disk, which is a reasonable value for the clumping factor under certain circumstances ([Micic2012](https://doi.org/10.1111/j.1365-2966.2012.20477.x)).
 """
   ╠═╡ =#
 
@@ -901,7 +901,7 @@ From [Slavin2015](https://doi.org/10.1088/0004-637X/803/1/7) we have that the ti
 |     HIM dominated     |        $0.92 \pm 0.39$       | $0.72 \pm 0.20$ |
 |      WM dominated     |         $2.0 \pm 0.8$        |  $1.5 \pm 0.4$  |
 
-As we can see the time scale scale depends on the dust grain composition and on the environment: HIM dominated values are for the assumption that the grain destruction occurs in warm clouds embedded in a hot medium, while the WM dominated values use the fiducial model of [Slavin2015](https://doi.org/10.1088/0004-637X/803/1/7). 
+As we can see the time scale scale depends on the dust grain composition and on the environment: HIM dominated values are for the assumption that the grain destruction occurs in warm clouds embedded in a hot medium, while the WM dominated values use the fiducial model of [Slavin2015](https://doi.org/10.1088/0004-637X/803/1/7).
 
 We will consider this fiducial model (because we assume the grains form in cold gas), and the local measurements for the SN mass interval, so the possible time scales are:
 
@@ -944,9 +944,9 @@ $\begin{align}
 
 The difference $f_Z + f_d \rightarrow f_Z$ is probably a mistake (in [Dwek1998](https://doi.org/10.1086/305829), [Hirashita1998](https://doi.org/10.1086/311806), and [Hirashita2019](https://doi.org/10.1093/mnras/sty2838) it is explicitly said that the fraction in the equation is the fraction of metals in the dust, $f_d$, with respect to the total amount of metals in the gas and dust: $f_Z + f_d$).
 
-The story of the factor $f_m$ is more complicated. [Hirashita1998](https://doi.org/10.1086/311806) combined the works of [Dwek1998](https://doi.org/10.1086/305829) and [Lisenfeld1998](https://doi.org/10.1086/305354) to write the equations that model dust (eqs. 1, 2 and 3 in [Hirashita1998](https://doi.org/10.1086/311806)), so, the functional form of the term follows [Dwek1998](https://doi.org/10.1086/305829). 
+The story of the factor $f_m$ is more complicated. [Hirashita1998](https://doi.org/10.1086/311806) combined the works of [Dwek1998](https://doi.org/10.1086/305829) and [Lisenfeld1998](https://doi.org/10.1086/305354) to write the equations that model dust (eqs. 1, 2 and 3 in [Hirashita1998](https://doi.org/10.1086/311806)), so, the functional form of the term follows [Dwek1998](https://doi.org/10.1086/305829).
 
-Later, in [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259), there is a change as he adds the fraction of cold gas to the equation (eqs. 1 and 2 with the corresponding change in the time scales). The whole paper is a discussion on this change, but there are no calculations of the time scales. This calculation appears for the first time in [Hirashita2000](https://doi.org/10.1093/pasj/52.4.585) (eq. 12). We are still explicitly using the fraction of cold gas (eq. 7 in [Hirashita2000](https://doi.org/10.1093/pasj/52.4.585)). 
+Later, in [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259), there is a change as he adds the fraction of cold gas to the equation (eqs. 1 and 2 with the corresponding change in the time scales). The whole paper is a discussion on this change, but there are no calculations of the time scales. This calculation appears for the first time in [Hirashita2000](https://doi.org/10.1093/pasj/52.4.585) (eq. 12). We are still explicitly using the fraction of cold gas (eq. 7 in [Hirashita2000](https://doi.org/10.1093/pasj/52.4.585)).
 
 When we jump to [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) and [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) new forms for the time scale are given (eq. 23 and eqs. 19 and 20 respectively), but it is not clear if we are still considering the cold fraction for the time derivative of the dust mass. Finally, in [Hirashita2019](https://doi.org/10.1093/mnras/sty2838), the time scale of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) is used (eq. 13) and it is explicit that the cold fraction is **not** in the time derivative of the dust mass (eq. 12). Given that [Hirashita2019](https://doi.org/10.1093/mnras/sty2838) shares the same time scale as [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) and [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (at least in functional form) we can assume is the same for those papers.
 
@@ -962,7 +962,7 @@ $\begin{equation}
 	\tau_\mathrm{dg} = A \, \frac{a}{a^0} \, \frac{Z_\odot^d}{Z} \, \frac{n_H^0}{n_H} \, \sqrt{\frac{T^0}{T}} \, \frac{S^0}{S} \, ,
 \end{equation}$
 where:
-  
+
 | Parameter   | Description                     |
 |:-----------:|:-------------------------------:|
 | $A$         | Normalization constant          |
@@ -1063,7 +1063,7 @@ $\begin{equation}
 	\langle a \rangle = \dfrac{\int_{a_i}^{a_f} a \, n(a) \, \mathrm{d}a}{\int_{a_i}^{a_f} n(a) \, \mathrm{d}a} \, .
 \end{equation}$
 
-With the range $a_i = 0.005 \, \mathrm{\mu m}$ and $a_f = 1 \, \mathrm{\mu m}$, we have 
+With the range $a_i = 0.005 \, \mathrm{\mu m}$ and $a_f = 1 \, \mathrm{\mu m}$, we have
 
 $\begin{equation}
 	\langle a \rangle =  0.0083 \, \mathrm{\mu m} \, .
@@ -1076,8 +1076,8 @@ begin
 	const ai = 0.005 # μm
 	const af = 1.0 # μm
 
-	const am = quadgk(r -> r^(-2.5), ai, af)[1] / quadgk(r -> r^(-3.5), ai, af)[1]  
-	
+	const am = quadgk(r -> r^(-2.5), ai, af)[1] / quadgk(r -> r^(-3.5), ai, af)[1]
+
 	const a = am * u"μm"
 	const a0 = 0.1u"μm"
 end;
@@ -1127,7 +1127,7 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-#### $S$ - Sticking efficiency 
+#### $S$ - Sticking efficiency
 
 For the sticking efficiency we will use the fit of [Grassi2011](https://doi.org/10.1051/0004-6361/200913779) to the data of [Leitch-Devlin1985](https://doi.org/10.1093/mnras/213.2.295):
 
@@ -1161,7 +1161,7 @@ $\begin{equation}
 	\tau_\mathrm{dg} = \frac{1}{C_\mathrm{dg} \, Z \, \rho_\mathrm{cell} \, f_m} \, ,
 \end{equation}$
 
-where 
+where
 
 $\begin{equation}
 	C_\mathrm{dg} = \frac{a^0 \, \sqrt{T} \, S}{A \, a \, Z_\odot^d \, n_H^0 \, 2 \, m_p \, \sqrt{T^0} \, S^0} \, ,
@@ -1181,10 +1181,10 @@ $\begin{align}
 
 # ╔═╡ 2a39d6f8-da49-4976-9aa7-889391e55a5d
 begin
-	const Zdsun = 0.02	
+	const Zdsun = 0.02
 	const C_dg = (a0 * sqrt(T) * S) / (A * a * Zdsun * nH0 * 2 * Unitful.mp * sqrt(T0) * S0)
 	const c_dg = ustrip(t_u^-1 * l_u^3, C_dg * m_u)
-	
+
 	τ_dg(Z, fm, ρ_cell) = 1 / (c_dg * Z * ρ_cell * fm)
 end;
 
@@ -1213,7 +1213,7 @@ $\begin{align}
     \dot{M}_\mathrm{ion} &= \dot{N}_\mathrm{ion} \, c_\mathrm{ion} \, ,
 \end{align}$
 
-where $\dot{N}_\mathrm{diss}$ is the number of photodissociating photons produced per unit time (in the Lyman–Werner band, $912\,\mathrm{Å}$ to $1107\,\mathrm{Å}$), $\dot{N}_\mathrm{ion}$ the number of ionizing photons produced per unit time (between $0$ and $912\,Å$), and $c_\mathrm{diss}$ and $c_\mathrm{ion}$ are the unit conversion factors (proton mass into solar mass). 
+where $\dot{N}_\mathrm{diss}$ is the number of photodissociating photons produced per unit time (in the Lyman–Werner band, $912\,\mathrm{Å}$ to $1107\,\mathrm{Å}$), $\dot{N}_\mathrm{ion}$ the number of ionizing photons produced per unit time (between $0$ and $912\,Å$), and $c_\mathrm{diss}$ and $c_\mathrm{ion}$ are the unit conversion factors (proton mass into solar mass).
 
 The unit conversion factors are
 """
@@ -1404,7 +1404,7 @@ begin
 	aprox_test = @subset(Q_df, :Zmet .== 0.05)
 
 	idx = 74
-	
+
 	max_age = round(
 		ustrip(u"Myr", exp10(aprox_test[!, :log_age][idx]) * u"yr");
 		sigdigits=4,
@@ -1420,7 +1420,7 @@ begin
 	)
 
 	println("The accumulated Q_diss for stars younger than $(max_age) Myr is $(Q_diss_quot) larger that the accumulated Q_diss produced by all the stars older than that.\n")
-	
+
 	println("The accumulated Q_ion for stars younger than $(max_age) Myr is $(Q_ion_quot) larger that the accumulated Q_ion produced by all the stars older than that.")
 end
   ╠═╡ =#
@@ -1506,8 +1506,8 @@ function photoionization_UVB(a::Float64)::Float64
 	z = (1 / a) - 1
 
     ΓUVB = linear_interpolation(
-		UVB_TABLE[:, 1], 
-		UVB_TABLE[:, 2], 
+		UVB_TABLE[:, 1],
+		UVB_TABLE[:, 2],
 		extrapolation_bc=Flat(),
 	)
 
@@ -1550,7 +1550,7 @@ $\begin{equation}
     S_d = \exp\left(C_{sd} \, Z \, (f_a + f_m) \, \rho_\mathrm{cell} \, h\right) \, ,
 \end{equation}$
 
-where 
+where
 
 $\begin{equation}
     C_{sd} = −\frac{\sigma_{d, eff}}{Z_\odot \, m_p} \, .
@@ -1576,7 +1576,7 @@ $\begin{equation}
 
 where $\omega_\mathrm{H_2} = 0.2$ and $x = N_\mathrm{H_2} \, / \, 5 \times 10^{14} \, \mathrm{cm^{-2}}$.
 
-Notice that in [Draine1996](https://doi.org/10.1086/177689) and [Glover2007](https://doi.org/10.1086/512238) the first term is 
+Notice that in [Draine1996](https://doi.org/10.1086/177689) and [Glover2007](https://doi.org/10.1086/512238) the first term is
 
 $\begin{equation}
     \frac{1 − \omega_\mathrm{H_2}}{(1 + x / b_5)^2} \, ,
@@ -1590,7 +1590,7 @@ $\begin{equation}
     x = \frac{f_m \, \rho_\mathrm{cell} \, h}{2 \, m_p \, x_\mathrm{nf}} = C_{sh2} \, f_m \, \rho_\mathrm{cell} \, h \, ,
 \end{equation}$
 
-where $x_\mathrm{nf} = 5 \times 10^{14} \, \mathrm{cm^{-2}}$ and 
+where $x_\mathrm{nf} = 5 \times 10^{14} \, \mathrm{cm^{-2}}$ and
 
 $\begin{equation}
     C_{sh2} = \frac{1}{2 \, m_p \, x_\mathrm{nf}} \, .
@@ -1979,7 +1979,7 @@ function system!(dydt, ic, parameters, t)
     # Parameters
 	#
 	# ρ_cell: Total cell density                                 [mp * cm⁻³]
-	# ΓUVB:   UVB photoionization                                [Myr^-1]
+	# ΓUVB:   UVB photoionization rate                           [Myr^-1]
 	# η_diss: Photodissociation efficiency of hydrogen molecules [dimensionless]
 	# η_ion:  Photoionization efficiency of hydrogen atoms       [dimensionless]
 	# R:      Mass recycling fraction                            [dimensionless]
@@ -1995,7 +1995,7 @@ function system!(dydt, ic, parameters, t)
 	dust_growth      = c_dg * fd * fZ * fm * ρ_cell
 	sd               = Sd(fZ, h, ρ_cell, fa, fm)
 	sh2              = SH2(h, ρ_cell, fm)
-	
+
     # ODE system
 	dydt[1] = -recombination + sd * η_ion * sfr + ΓUVB * fa + R * sfr * (1 - Zsn)
     dydt[2] = -cloud_formation + recombination - ΓUVB * fa + sd * (sh2 * η_diss - η_ion) * sfr
@@ -2044,9 +2044,9 @@ end;
 #=╠═╡
 lyapunov_spectrum(
 	# Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-	[0.7, 0.27, 0.0, 0.0, 0.02, 0.01],   
+	[0.7, 0.27, 0.0, 0.0, 0.02, 0.01],
 	# Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr], a [dimensionless], h [cm])
-	(1.0, Zsun, 5.0, 1.0, 3.0e20),  
+	(1.0, Zsun, 5.0, 1.0, 3.0e20),
 )
   ╠═╡ =#
 
@@ -2055,9 +2055,9 @@ lyapunov_spectrum(
 #=╠═╡
 lyapunov_spectrum(
 	# Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-	[0.7, 0.27, 0.0, 0.0, 0.02, 0.01],  
+	[0.7, 0.27, 0.0, 0.0, 0.02, 0.01],
 	# Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr], a [dimensionless], h [cm])
-	(10.0, Zsun, 5.0, 1.0, 3.0e20)  
+	(10.0, Zsun, 5.0, 1.0, 3.0e20)
 )
   ╠═╡ =#
 
@@ -2159,7 +2159,7 @@ stiffness_ratio(
 	# Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
 	[0.7, 0.27, 0.0, 0.0, 0.02, 0.01],
 	# Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr], a [dimensionless], h [cm])
-	(1.0, Zsun, 5.0, 1.0, 3.0e20),  
+	(1.0, Zsun, 5.0, 1.0, 3.0e20),
 )
   ╠═╡ =#
 
@@ -2214,7 +2214,7 @@ function integrate_model(
 	Z             = base_params[2]
 	a             = base_params[3]
 	h             = base_params[4]
-	
+
 	ΓUVB          = photoionization_UVB(a)
 	η_diss, η_ion = photodissociation_efficiency(tspan[2], Z)
 	R, Zsn        = recycled_fractions(Z)
@@ -2379,39 +2379,39 @@ TikzPictures.TikzPicture(
 	L"""
 	    % Base line
 	    \draw[thick] (0,0) -- (10,0);
-	
+
 	    % Vertical dividers
 	    \foreach \x in {0, 5, 10} {
 	        \draw[thick] (\x, -0.2) -- (\x, 0.2);
 	    }
-	
+
 	    % Top braces
 	    \draw[thick] (0,0.5) .. controls (2.5,0.8) and (2.5,0.8) .. (5,0.5);
 	    \draw[thick] (5,0.5) .. controls (7.5,0.8) and (7.5,0.8) .. (10,0.5);
-	
+
 	    \node at (2.5,1.0) {metals};
 	    \node at (7.5,1.0) {H + He};
-	
+
 	    % Bottom braces
 	    \draw[thick] (0,-0.5) .. controls (0.5,-0.8) and (1.5,-0.8) .. (2,-0.5);
 	    \node at (1,-1.0) {dust};
-	
+
 	    \draw[thick] (2,-0.5) .. controls (2.5,-0.8) and (4.5,-0.8) .. (5,-0.5);
 	    \node at (3.5,-1.0) {$Z$};
-	
+
 	    \draw[thick] (5,-0.5) .. controls (5.5,-0.8) and (7,-0.8) .. (7.5,-0.5);
 	    \node at (6.25,-1.0) {$a$};
-	
+
 	    \draw[thick] (7.5,-0.5) .. controls (8,-0.8) and (9.5,-0.8) .. (10,-0.5);
 	    \node at (8.75,-1.0) {$i$};
-	
+
 	    % Left label
 	    \node[left] at (0,0) {cell};
 	""",
 	width="75em",
 	preamble = """
 		\\usepackage{xcolor}
-	    \\color{white} 
+	    \\color{white}
 	""",
 )
   ╠═╡ =#
@@ -2423,13 +2423,13 @@ md"""
 Following [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) we have that the inital mass density of dust is
 
 $\begin{equation}
-	\rho_d(0) = f_d \, \rho_\mathrm{cell} = \frac{m_\mathrm{X_d}}{f_\mathrm{X_d}}  \, (1 - \xi(0)) \, \frac{Z}{Z_\odot} \, \left( \mathrm{\frac{X_d}{H}} \right)_\odot \, n_H \, , 
+	\rho_d(0) = f_d \, \rho_\mathrm{cell} = \frac{m_\mathrm{X_d}}{f_\mathrm{X_d}}  \, (1 - \xi(0)) \, \frac{Z}{Z_\odot} \, \left( \mathrm{\frac{X_d}{H}} \right)_\odot \, n_H \, ,
 \end{equation}$
 
 where $f_\mathrm{X_d}$ is the mass fraction in the dust of element $\mathrm{X_d}$, $m_\mathrm{X_d}$ is the atomic mass of element $\mathrm{X_d}$, $\left( \mathrm{X_d / H} \right)_\odot$ is the solar abundance of element $\mathrm{X_d}$, $n_H$ is the number density of hydrogen, and $\xi(0)$ is the initial value of
 
 $\begin{equation}
-	\xi(t) = \frac{n_\mathrm{X_d}^\mathrm{gas}}{n_\mathrm{X_d}^\mathrm{tot}} \, , 
+	\xi(t) = \frac{n_\mathrm{X_d}^\mathrm{gas}}{n_\mathrm{X_d}^\mathrm{tot}} \, ,
 \end{equation}$
 
 where $n_\mathrm{X_d}^\mathrm{gas}$ is the number density in the gas of element $\mathrm{X_d}$ and $n_\mathrm{X_d}^\mathrm{tot}$ is the number density in the gas + dust of element $\mathrm{X_d}$.
@@ -2449,7 +2449,7 @@ $\begin{equation}
     f_d = C_\mathrm{X_d} \, Z \, f_a \, ,
 \end{equation}$
 
-where 
+where
 
 $\begin{equation}
     C_\mathrm{X_d} = \frac{m_\mathrm{X_d}}{f_\mathrm{X_d}}  \, (1 - \xi(0)) \, \frac{1}{Z_\odot \, m_p} \, \left( \mathrm{\frac{X_d}{H}} \right)_\odot \, ,
@@ -2478,12 +2478,12 @@ So our fiducial value is the average $C_\mathrm{X_d} = 0.283$
 # ╔═╡ d7cc8a66-220a-4e9b-b42e-a0e085ed3a0f
 begin
 	const ξ0 = 0.3
-	
+
 	C_xd(mx, fx, XH) = (mx / fx) * (1.0 - ξ0) * XH / (Zsun * 1.0u"mp")
 
 	silicate = C_xd(28.1u"u", 0.166, 3.55e-5)
 	graphite = C_xd(12.0u"u", 1.0, 3.63e-4)
-	
+
 	const c_xd = ustrip(Unitful.NoUnits, silicate + graphite) / 2.0
 end;
 
@@ -2753,9 +2753,9 @@ We trivially get
 $\begin{equation}
 	f_m^0 = 0 \, ,
 \end{equation}$
-if $R \neq 1$, which for our particular model is always true. 
+if $R \neq 1$, which for our particular model is always true.
 
-With this result we can compute the global equilibrium. Using $f_m^0 = 0$ in the ionized equation we get $f_i^0 = 0$, and using it in the metals or dust equation we get $f_d^0 = 0$. 
+With this result we can compute the global equilibrium. Using $f_m^0 = 0$ in the ionized equation we get $f_i^0 = 0$, and using it in the metals or dust equation we get $f_d^0 = 0$.
 
 Using $f_m^0 = f_i^0 = f_d^0 = 0$ in either the molecular or atomic equation we have
 
@@ -2769,7 +2769,7 @@ $\begin{equation}
 	f_i^0 + f_a^0 + f_m^0 + f_s^0 + f_Z^0 + f_d^0 = 1 \, .
 \end{equation}$
 
-It reduces to 
+It reduces to
 
 $\begin{equation}
 	f_s^0 + f_Z^0 = 1 \, .
