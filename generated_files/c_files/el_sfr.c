@@ -4,7 +4,7 @@
  * \copyright   and contributing authors.
  *
  * \file        src/el_sfr/el_sfr.c
- * \date        04/2025
+ * \date        05/2025
  * \author      Ezequiel Lozano
  * \brief       Compute the star formation rate for a given gas cell.
  * \details     This file contains the routines to compute the star formation rate, according to our
@@ -326,19 +326,21 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
      * Destructure the parameters
      *
      * rho_C: Total cell density                                 [mp * cm⁻³]
-     * a:     Scale factor                                       [dimensionless]
+     * UVB:   UVB photoionization                                [Myr^-1]
      * eta_d: Photodissociation efficiency of hydrogen molecules [dimensionless]
      * eta_i: Photoionization efficiency of hydrogen atoms       [dimensionless]
      * R:     Mass recycling fraction                            [dimensionless]
      * Zsn:   Metals recycling fraction                          [dimensionless]
+     * h:     Column height                                      [cm]
      */
     double *p = (double *)parameters;
     double rho_C = p[0];
-    double a = p[1];
+    double UVB = p[1];
     double eta_d = p[2];
     double eta_i = p[3];
     double R = p[4];
     double Zsn = p[5];
+    double h = p[6];
 
     /* Compute the auxiliary equations */
     double tau_R = ODE_CR / (y[0] * rho_C);
@@ -349,11 +351,15 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     double sfr = y[2] / tau_S;
     double dust_destruction = y[5] / TAU_DD;
     double dust_growth = ODE_CD * y[5] * y[4] * y[2] * rho_C;
+    double sd = exp(ODE_CSD * y[4] * (y[1] + y[2]) * rho_C * h);
+    double xp1 = 1 + ODE_CSH2 * y[2] * rho_C * h;
+    double sqxp1 = sqrt(xp1);
+    double sh2 = ((1 - WH2) / (xp1 * xp1)) + (WH2 / sqxp1) * exp(-8.5e-4 * sqxp1);
 
     /* Evaluate the ODE system */
-    f[0] = -recombination + eta_i * sfr + R * sfr * (1 - Zsn);
-    f[1] = -cloud_formation + recombination + (eta_d - eta_i) * sfr;
-    f[2] = cloud_formation - (1 + eta_d) * sfr;
+    f[0] = -recombination + sd * eta_i * sfr + UVB * y[1] + R * sfr * (1 - Zsn);
+    f[1] = -cloud_formation + recombination - UVB * y[1] + sd * (sh2 * eta_d - eta_i) * sfr;
+    f[2] = cloud_formation - (1 + sh2 * eta_d) * sfr;
     f[3] = (1 - R) * sfr;
     f[4] = Zsn * R * sfr + dust_destruction - dust_growth;
     f[5] = dust_growth - dust_destruction;
@@ -391,56 +397,64 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
 	* Destructure the parameters
 	*
 	* rho_C: Total cell density                                 [mp * cm⁻³]
-	* a:     Scale factor                                       [dimensionless]
+	* UVB:   UVB photoionization                                [Myr^-1]
 	* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
 	* eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
 	* R:     Mass recycling fraction                            [dimensionless]
 	* Zsn:   Metals recycling fraction                          [dimensionless]
+	* h:     Column height                                      [cm]
 	*/
 	double *p    = (double *)parameters;
 	double rho_C = p[0];
-	double a     = p[1];
+	double UVB   = p[1];
 	double eta_d = p[2];
 	double eta_i = p[3];
 	double R     = p[4];
 	double Zsn   = p[5];
+	double h     = p[6];
 
 	gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 6, 6);
 	gsl_matrix *m = &dfdy_mat.matrix;
 
-	double aux_var = sqrt(rho_C);
+	double aux_var_01 = sqrt(rho_C);
+	double aux_var_02 = sqrt(1.0 + 1.0e-15 * y[2] * rho_C * h);
+	double aux_var_03 = exp(-3.149606299212598e-19 * (y[1] + y[2]) * y[4] * rho_C * h);
+	double aux_var_04 = pow(1.0 + 1.0e-15 * y[2] * rho_C * h, 2);
+	double aux_var_05 = exp(-0.00085 * aux_var_02);
+	double aux_var_06 = aux_var_02 * aux_var_02;
+	double aux_var_07 = aux_var_04 * aux_var_04;
 
 	gsl_matrix_set(m, 0, 0, -16.409952 * y[0] * rho_C);
-	gsl_matrix_set(m, 0, 1, 0);
-	gsl_matrix_set(m, 0, 2, 0.019428762831580126 * eta_i * aux_var + 0.019428762831580126 * R * (1.0 - Zsn) * aux_var);
+	gsl_matrix_set(m, 0, 1, UVB -6.119295380025236e-21 * y[2] * y[4] * rho_C * eta_i * h * aux_var_03 * aux_var_01);
+	gsl_matrix_set(m, 0, 2, 0.019428762831580126 * eta_i * aux_var_03 * aux_var_01 + 0.019428762831580126 * R * (1 - Zsn) * aux_var_01 -6.119295380025236e-21 * y[2] * y[4] * rho_C * eta_i * h * aux_var_03 * aux_var_01);
 	gsl_matrix_set(m, 0, 3, 0);
-	gsl_matrix_set(m, 0, 4, 0);
+	gsl_matrix_set(m, 0, 4, -6.119295380025236e-21 * (y[1] + y[2]) * y[2] * rho_C * eta_i * h * aux_var_03 * aux_var_01);
 	gsl_matrix_set(m, 0, 5, 0);
 
 	gsl_matrix_set(m, 1, 0, 16.409952 * y[0] * rho_C + 17.393952755905513 * y[1] * (-1.27e-5 - y[4] - y[5]) * rho_C);
-	gsl_matrix_set(m, 1, 1, 17.393952755905513 * (y[0] + y[1] + y[2]) * (-1.27e-5 - y[4] - y[5]) * rho_C + 17.393952755905513 * y[1] * (-1.27e-5 - y[4] - y[5]) * rho_C);
-	gsl_matrix_set(m, 1, 2, 0.019428762831580126 * (eta_d - eta_i) * aux_var + 17.393952755905513 * y[1] * (-1.27e-5 - y[4] - y[5]) * rho_C);
+	gsl_matrix_set(m, 1, 1, - UVB + 17.393952755905513 * (y[0] + y[1] + y[2]) * (-1.27e-5 - y[4] - y[5]) * rho_C + 17.393952755905513 * y[1] * (-1.27e-5 - y[4] - y[5]) * rho_C -6.119295380025236e-21 * y[2] * y[4] * rho_C * (- eta_i + eta_d * ((0.2 * aux_var_05) / aux_var_02 + 0.8 / aux_var_04)) * h * aux_var_03 * aux_var_01);
+	gsl_matrix_set(m, 1, 2, 17.393952755905513 * y[1] * (-1.27e-5 - y[4] - y[5]) * rho_C + 0.019428762831580126 * (- eta_i + eta_d * ((0.2 * aux_var_05) / aux_var_02 + 0.8 / aux_var_04)) * aux_var_03 * aux_var_01 -6.119295380025236e-21 * y[2] * y[4] * rho_C * (- eta_i + eta_d * ((0.2 * aux_var_05) / aux_var_02 + 0.8 / aux_var_04)) * h * aux_var_03 * aux_var_01 + 0.019428762831580126 * y[2] * ((-1.7e-19 * rho_C * h * aux_var_05) / (2 * aux_var_06) + (-1.0e-15 * rho_C * h * ((0.2 * aux_var_05) / aux_var_06)) / (2 * aux_var_02) -2.0e-15 * (1.0 + 1.0e-15 * y[2] * rho_C * h) * rho_C * h * (0.8 / aux_var_07)) * eta_d * aux_var_03 * aux_var_01);
 	gsl_matrix_set(m, 1, 3, 0);
-	gsl_matrix_set(m, 1, 4, -17.393952755905513 * (y[0] + y[1] + y[2]) * y[1] * rho_C);
+	gsl_matrix_set(m, 1, 4, -17.393952755905513 * (y[0] + y[1] + y[2]) * y[1] * rho_C -6.119295380025236e-21 * (y[1] + y[2]) * y[2] * rho_C * (- eta_i + eta_d * ((0.2 * aux_var_05) / aux_var_02 + 0.8 / aux_var_04)) * h * aux_var_03 * aux_var_01);
 	gsl_matrix_set(m, 1, 5, -17.393952755905513 * (y[0] + y[1] + y[2]) * y[1] * rho_C);
 
 	gsl_matrix_set(m, 2, 0, 17.393952755905513 * y[1] * (1.27e-5 + y[4] + y[5]) * rho_C);
-	gsl_matrix_set(m, 2, 1, 17.393952755905513 * (y[0] + y[1] + y[2]) * (1.27e-5 + y[4] + y[5]) * rho_C + 17.393952755905513 * y[1] * (1.27e-5 + y[4] + y[5]) * rho_C);
-	gsl_matrix_set(m, 2, 2, -0.019428762831580126 * (1.0 + eta_d) * aux_var + 17.393952755905513 * y[1] * (1.27e-5 + y[4] + y[5]) * rho_C);
+	gsl_matrix_set(m, 2, 1, 17.393952755905513 * (y[0] + y[1] + y[2]) * (1.27e-5 + y[4] + y[5]) * rho_C + 17.393952755905513 * y[1] * (1.27e-5 + y[4] + y[5]) * rho_C + 6.119295380025236e-21 * y[2] * y[4] * rho_C * eta_d * h * ((0.2 * aux_var_05) / aux_var_02 + 0.8 / aux_var_04) * aux_var_03 * aux_var_01);
+	gsl_matrix_set(m, 2, 2, 17.393952755905513 * y[1] * (1.27e-5 + y[4] + y[5]) * rho_C -0.019428762831580126 * (1 + eta_d * ((0.2 * aux_var_05) / aux_var_02 + 0.8 / aux_var_04) * aux_var_03) * aux_var_01 -0.019428762831580126 * y[2] * (-3.149606299212598e-19 * y[4] * rho_C * eta_d * h * ((0.2 * aux_var_05) / aux_var_02 + 0.8 / aux_var_04) * aux_var_03 + ((-1.7e-19 * rho_C * h * aux_var_05) / (2 * aux_var_06) + (-1.0e-15 * rho_C * h * ((0.2 * aux_var_05) / aux_var_06)) / (2 * aux_var_02) -2.0e-15 * (1.0 + 1.0e-15 * y[2] * rho_C * h) * rho_C * h * (0.8 / aux_var_07)) * eta_d * aux_var_03) * aux_var_01);
 	gsl_matrix_set(m, 2, 3, 0);
-	gsl_matrix_set(m, 2, 4, 17.393952755905513 * (y[0] + y[1] + y[2]) * y[1] * rho_C);
+	gsl_matrix_set(m, 2, 4, 17.393952755905513 * (y[0] + y[1] + y[2]) * y[1] * rho_C + 6.119295380025236e-21 * (y[1] + y[2]) * y[2] * rho_C * eta_d * h * ((0.2 * aux_var_05) / aux_var_02 + 0.8 / aux_var_04) * aux_var_03 * aux_var_01);
 	gsl_matrix_set(m, 2, 5, 17.393952755905513 * (y[0] + y[1] + y[2]) * y[1] * rho_C);
 
 	gsl_matrix_set(m, 3, 0, 0);
 	gsl_matrix_set(m, 3, 1, 0);
-	gsl_matrix_set(m, 3, 2, 0.019428762831580126 * (1.0 - R) * aux_var);
+	gsl_matrix_set(m, 3, 2, 0.019428762831580126 * (1 - R) * aux_var_01);
 	gsl_matrix_set(m, 3, 3, 0);
 	gsl_matrix_set(m, 3, 4, 0);
 	gsl_matrix_set(m, 3, 5, 0);
 
 	gsl_matrix_set(m, 4, 0, 0);
 	gsl_matrix_set(m, 4, 1, 0);
-	gsl_matrix_set(m, 4, 2, -0.0005617360725623994 * y[4] * y[5] * rho_C + 0.019428762831580126 * R * Zsn * aux_var);
+	gsl_matrix_set(m, 4, 2, -0.0005617360725623994 * y[4] * y[5] * rho_C + 0.019428762831580126 * R * Zsn * aux_var_01);
 	gsl_matrix_set(m, 4, 3, 0);
 	gsl_matrix_set(m, 4, 4, -0.0005617360725623994 * y[2] * y[5] * rho_C);
 	gsl_matrix_set(m, 4, 5, 0.0004356568364611259 -0.0005617360725623994 * y[2] * y[4] * rho_C);
@@ -481,6 +495,7 @@ static int jacobian(double t, const double y[], double *dfdy, double dfdt[], voi
  * eta_i: Photoionization efficiency of hydrogen atoms       [dimensionless]
  * R:     Mass recycling fraction                            [dimensionless]
  * Zsn:   Metals recycling fraction                          [dimensionless]
+ * h:     Column height                                      [cm]
  *
  *  \param[in] ic Initial conditions.
  *  \param[in] parameters Parameters for the ODEs.
@@ -535,7 +550,7 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
     double rhoC = parameters[0];
 
     gsl_odeiv2_system sys = {sf_ode, jacobian, N_EQU, parameters};
-    gsl_odeiv2_driver *driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_bsimp, it * 1e-3, 1e-8, 0.0);
+    gsl_odeiv2_driver *driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_bsimp, 1e-12, 1e-12, 0.0);
 
     for (size_t i = 0; i < DIVISIONS; ++i)
     {
@@ -594,6 +609,7 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
     fractions[3] /= total;
     fractions[4] /= total;
     fractions[5] /= total;
+
 }
 
 #ifndef TESTING
@@ -609,7 +625,7 @@ static void integrate_ode(const double *ic, double *parameters, double it, doubl
 static double compute_gas_sfr(const int index)
 {
     double integration_time = SphP[index].integration_time * 1000000; // [yr]
-    double cell_mass = P[index].Mass * M_COSMO;                            // [Mₒ]
+    double cell_mass = P[index].Mass * M_COSMO;                       // [Mₒ]
 
     return SphP[index].ODE_fractions[3] * cell_mass / integration_time;
 }
@@ -684,17 +700,25 @@ double rate_of_star_formation(const int index)
     /* Metals recycling fraction [dimensionless] */
     double Zsn = interpolate1D(Z, All.ZSN_TABLE_DATA);
 
-    double parameters[] = {rhoC, All.Time, eta_d, eta_i, R, Zsn};
+    /* UVB photoionization [Myr^-1] */
+    double UVB = interpolate1D(All.cf_redshift, All.UVB_TABLE_DATA);
+
+    /* Column height [cm] */
+    double h = All.ForceSoftening[P[index].SofteningType] * L_CGS;
+
+    double parameters[] = {rhoC, UVB, eta_d, eta_i, R, Zsn, h};
 
     /* Store the ODE parameters */
     SphP[index].parameter_rhoC = rhoC;
     SphP[index].parameter_a = All.Time;
+    SphP[index].parameter_UVB = UVB;
     SphP[index].parameter_eta_d = eta_d;
     SphP[index].parameter_eta_i = eta_i;
     SphP[index].parameter_R = R;
     SphP[index].parameter_Zsn = Zsn;
     SphP[index].parameter_Z = Z;
-    
+    SphP[index].parameter_h = h;
+
     /**********************************************************************************************
      * Compute the initial conditions
      **********************************************************************************************/
@@ -718,7 +742,7 @@ double rate_of_star_formation(const int index)
     fs = 0.0;
 
     /* Dust fraction in the metals [dimensionless] */
-    df = CXD * fa;
+    df = ODE_CXD * fa;
 
     /* Metal mass fraction [dimensionless] */
     fZ = Z * (1 - df);

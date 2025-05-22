@@ -6,34 +6,41 @@
 /* RHO [internal_units] * RHO_COSMO = RHO [cm^(-3)] */
 #define RHO_COSMO (All.UnitDensity_in_cgs * All.HubbleParam * All.HubbleParam * All.cf_a3inv / PROTONMASS)
 /* M [internal_units] * M_COSMO = M [Mₒ] */
-#define M_COSMO (All.UnitMass_in_g / SOLAR_MASS)
+#define M_COSMO (All.UnitMass_in_g / All.HubbleParam / SOLAR_MASS)
+/* L [internal_units] * L_CGS = L [cm] */
+#define L_CGS = (All.UnitLength_in_cm * All.cf_atime / All.HubbleParam)
 
 /* Interpolation tables */
 #define ETA_NROWS 107  // Number of rows in the η tables
 #define ETA_NCOLS 7  // Number of columns in the η tables
 #define R_ZSN_NROWS 7  // Number of rows in the R and Zsn table
 #define R_ZSN_NCOLS 2  // Number of columns in the R and Zsn table
+#define UVB_NROWS 59  // Number of rows in the UVB table
+#define UVB_NCOLS 2  // Number of columns in the UVB table
 
 /* Paths */
 static char *ETA_D_TABLE_PATH = "../code/src/el_sfr/tables/eta_d.txt";
 static char *ETA_I_TABLE_PATH = "../code/src/el_sfr/tables/eta_i.txt";
 static char *R_TABLE_PATH     = "../code/src/el_sfr/tables/R.txt";
 static char *ZSN_TABLE_PATH   = "../code/src/el_sfr/tables/Zsn.txt";
+static char *UVB_TABLE_PATH   = "../code/src/el_sfr/tables/UVB.txt";
 
 /* ODE constants */
 
-/* ϵff  = 1.0000 (stellar formation efficiency) */
 /* Zsun = 0.0127 (solar metallicity) */
 /* Cρ   = 100.0000 (clumping factor) */
 
 #define N_EQU 6 /* Number of equations */
-#define ODE_CS 5.1470081e+01 /* [Myr * cm^(-3/2)] */
-#define ODE_CR 1.2187726e-01 /* [Myr * cm^(-3)] */
-#define ODE_CC 5.7491245e-02 /* [Myr * cm^(-3)] */
-#define ODE_CD 5.617360726e-04 /* [Myr^(-1) * mp^(-1) * cm^3] */
-#define TAU_DD 2.295384615e+03 /* [Myr] */
+#define ODE_CS 5.147008117133e+01 /* [Myr * cm^(-3/2)] */
+#define ODE_CR 1.218772608232e-01 /* [Myr * cm^(-3)] */
+#define ODE_CC 5.749124503402e-02 /* [Myr * cm^(-3)] */
+#define ODE_CD 5.617360725624e-04 /* [Myr^(-1) * mp^(-1) * cm^3] */
+#define ODE_CXD 2.835953313675e-01 /* [dimensionless] */
+#define ODE_CSD -3.149606299213e-19 /* [cm^2 mp^-1] */
+#define ODE_CSH2 1.000000000000e-15 /* [cm^2 mp^-1] */
+#define TAU_DD 2.295384615385e+03 /* [Myr] */
 #define ZEFF 1.2700e-05 /* 1e-3 Zₒ */
-#define CXD 2.8359533e-01 /* [dimensionless] */
+#define WH2 2.0000e-01 /* [dimensionless] */
 
 typedef struct DataTable
 {
