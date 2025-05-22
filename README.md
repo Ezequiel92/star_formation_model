@@ -24,5 +24,3 @@ The notebooks in this repo, can be view as static HTML files [here](https://ezeq
 - `03_testing.jl`: Tests and error calculations.
 - `04_plots.jl`: Plots.
 - `05_montecarlo.jl`: Montecarlo simulation.
-
-
