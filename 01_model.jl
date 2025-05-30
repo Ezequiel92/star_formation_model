@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.9
 
 using Markdown
 using InteractiveUtils
@@ -492,36 +492,6 @@ $\begin{equation}
 """
   ╠═╡ =#
 
-# ╔═╡ 7112c2fc-0cd6-407f-afaf-56a49e02fa57
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"## ODE coefficients"
-  ╠═╡ =#
-
-# ╔═╡ 6b135719-c120-4b69-aed3-28647fc601bf
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### Stiffness coefficient"
-  ╠═╡ =#
-
-# ╔═╡ f036dffd-8aab-4337-9f1a-a1870da284df
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"The model, for a typical set of initial conditions, is very stiff (stiffness ratio >> 1)."
-  ╠═╡ =#
-
-# ╔═╡ fd7e6a35-72a0-4133-b43c-95ee73da5fc4
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### Lyapunov spectrum"
-  ╠═╡ =#
-
-# ╔═╡ 4d09ff8b-fd43-4b4a-ba9d-030e9d2b6cec
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"The model, for a typical set of initial conditions, is not chaotic (maximum lyapunov exponent < 0). But, we note that with a higher density the system can turn chaotic (maximum lyapunov exponent > 0)."
-  ╠═╡ =#
-
 # ╔═╡ 700015f6-aac0-40c5-a455-8d98c1227049
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -549,25 +519,27 @@ md"""
 
 *  $\psi(t)$: Star formation rate.
 
-*  $\tau_\mathrm{rec}$: Time scale of atomic gas formation, from ionized gas, generally called recombination time.
+*  $\tau_\mathrm{rec}$: Time scale of recombination, from ionized gas to atomic gas.
 
-*  $\tau_\mathrm{cond}$: Time scale of molecular gas formation, from atomic gas, generally called condensation (or cloud formation) time.
+*  $\tau_\mathrm{cond}$: Time scale of condensation, from atomic gas to molecular gas.
 
 *  $\tau_\mathrm{dd}$: Time scale of dust destruction into metals.
 
-*  $\tau_\mathrm{dg}$: Time scale of dust growth, from metals.
+*  $\tau_\mathrm{dg}$: Time scale of dust growth from metals.
 
-*  $\eta_\mathrm{diss}$: Rate of molecular gas dissociation by stars per unit of created stellar mass.
+*  $\eta_\mathrm{diss}$: Rate of molecular gas dissociation by stellar radiation per unit of created stellar mass.
 
-*  $\eta_\mathrm{ion}$: Rate of atomic gas ionization by stars per unit of created stellar mass.
+*  $\eta_\mathrm{ion}$: Rate of atomic gas ionization by stellar radiation per unit of created stellar mass.
 
-*  $S_d$: Fractions of ionizing or dissociation flux that reaches the gas, due to dust.
+*  $S_d$: Fractions of ionizing or dissociating flux (stellar radiation) that reaches the neutral gas, due to dust shielding.
 
-*  $S_\mathrm{H_2}$: Fractions of ionizing or dissociation flux that reaches the gas, due to the molecular gas.
+*  $S_\mathrm{H_2}$: Fractions of dissociating flux (stellar radiation) that reaches the molecular gas, due to $\mathrm{H}_2$ self-shielding.
 
-*  $R$: Mass fraction of a stellar population that is returned to the ISM under the instantaneous recycling hypothesis
+*  $R$: Mass fraction of a stellar population that is returned to the ISM as ionzed gas and metals.
 
-*  $Z_\mathrm{SN}$: Fraction of the returned gas that is composed of metals.
+*  $Z_\mathrm{SN}$: Fraction of the returned mass that is metals.
+
+*  $\Gamma_\mathrm{UVB}$: UVB photoionization rate.
 """
   ╠═╡ =#
 
@@ -627,12 +599,12 @@ There is a lot of uncertainty for the parameter $\epsilon_\text{ff}$ ([Lee2016](
 With all the previous definitions, we have
 
 $\begin{equation}
-    \tau_\mathrm{star} = \frac{C_\mathrm{star}}{\sqrt{\rho_g}} \, ,
+    \tau_\mathrm{star} = \frac{1}{C_\mathrm{star} \, \sqrt{\rho_g}} \, ,
 \end{equation}$
 where
 
 $\begin{equation}
-    C_\mathrm{star} = \sqrt{\frac{3\pi}{32 \, G}} \, .
+    C_\mathrm{star} = \sqrt{\frac{32 \, G}{3\pi}} \, .
 \end{equation}$
 
 Given that $\rho_g$ is the density of an individual cold gas cloud, which is unresolved within a cell, we will simply use $\rho_g = \rho_\mathrm{cell}$.
@@ -641,12 +613,12 @@ Given that $\rho_g$ is the density of an individual cold gas cloud, which is unr
 
 # ╔═╡ 0baae21f-71b5-42fd-be33-31de085928d3
 begin
-    const ϵff     = 1.0
-	const C_star  = sqrt(3π / 32u"G") / ϵff
-	const c_star  = ustrip(t_u * l_u^-(3/2), C_star / sqrt(m_u))
+	const C_star  = sqrt(32u"G" / 3π)
+	const cs_unit = m_u^(-1/2) * t_u^-1 * l_u^(3/2)
+	const c_star  = ustrip(Unitful.NoUnits, C_star / cs_unit)
 
-	τ_star(ρ_cell) = c_star / sqrt(ρ_cell)
-	ψ(fm, ρ_cell) = fm / τ_star(ρ_cell)
+	τ_star(ρc) = 1.0 / (c_star * sqrt(ρc))
+	@inline ψ(fm, ρc)  = c_star * fm * sqrt(ρc)
 end;
 
 # ╔═╡ a7c5650c-9bbc-44a1-8d51-d473864faae7
@@ -688,24 +660,27 @@ $\begin{equation}
 where the time scale $\tau_\mathrm{rec}$ is
 
 $\begin{equation}
-    \tau_\mathrm{rec} = \frac{m_p \, x_i^{\,2}}{\alpha_H \, f_i \, \rho_\mathrm{cell} \, x_a} = \frac{C_\mathrm{rec}}{f_i \, \rho_\mathrm{cell}} \, ,
+    \tau_\mathrm{rec} = \frac{m_p \, x_i^{\,2}}{\alpha_H \, f_i \, \rho_\mathrm{cell} \, x_a} = \frac{1}{C_\mathrm{rec} \, f_i \, \rho_\mathrm{cell}} \, ,
 \end{equation}$
 
 with the constant
 
 $\begin{equation}
-	C_\mathrm{rec} = \frac{m_p}{\alpha_H} \, \frac{x_i^{\,2}}{x_a} \, .
+	C_\mathrm{rec} = \frac{\alpha_H}{m_p} \, ,
 \end{equation}$
+
+where we already took $x_i = x_a = 1.0$.
 """
   ╠═╡ =#
 
 # ╔═╡ 49d1a7f7-2bf2-4472-94df-6247b9237ddd
 begin
-	const αH    = 2.6e-13u"cm^3 * s^-1"
-	const C_rec = m_u / αH
-	const c_rec = ustrip(t_u * l_u^-3, C_rec / m_u)
+	const αH      = 2.6e-13u"cm^3 * s^-1"
+	const C_rec   = αH / m_u 
+	const cr_unit = m_u^-1 * t_u^-1 * l_u^3
+	const c_rec   = ustrip(Unitful.NoUnits, C_rec / cr_unit)
 
-	τ_rec(fi, ρ_cell) = c_rec / (fi * ρ_cell)
+	τ_rec(fi, ρ_cell) = 1.0 / (c_rec * fi * ρ_cell)
 end;
 
 # ╔═╡ 4c975b71-a387-49cb-90d9-fc51acefc795
@@ -714,7 +689,7 @@ end;
 md"""
 #### Recombination fits
 
-For completeness we show how from [Seaton1959](https://doi.org/10.1093/mnras/119.2.81), [Black1981](https://doi.org/10.1093/mnras/197.3.553), and [Verner1996](https://doi.org/10.1086/192284), we can compute the case A recombination coefficient, using fits or analytical formulae.
+For completeness we show how from [Seaton1959](https://doi.org/10.1093/mnras/119.2.81), [Black1981](https://doi.org/10.1093/mnras/197.3.553), and [Verner1996](https://doi.org/10.1086/192284), we can compute the case A recombination coefficient, using either a fits or an analytical formula.
 """
   ╠═╡ =#
 
@@ -723,7 +698,7 @@ For completeness we show how from [Seaton1959](https://doi.org/10.1093/mnras/119
 #=╠═╡
 let
 	#################################
-	# From ecu. 36 of Seaton (1959)
+	# From eq. 36 of Seaton (1959)
 	#################################
 
 	D = 5.197e-14u"cm^3*s^-1"
@@ -740,7 +715,7 @@ end
 #=╠═╡
 let
 	##############################
-	# From ecu. 6 of Black (1981)
+	# From eq. 6 of Black (1981)
 	##############################
 
 	αA_black(T) = 4.36e-10u"cm^3*s^-1" * T^(-0.7573)
@@ -754,7 +729,7 @@ end
 #=╠═╡
 let
 	###############################
-	# From ecu. 4 of Verner (1996)
+	# From eq. 4 of Verner (1996)
 	###############################
 
 	a  = 7.982e-11u"cm^3*s^-1"
@@ -840,14 +815,14 @@ So, we finally have
 
 $\begin{align}
     \tau_\mathrm{cond} &= \frac{m_p \, x_a \, Z_\odot}{2 \, R_\odot \, C_\rho \, (Z + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \, x_m \left( \dfrac{f_a}{x_a} + \dfrac{f_m}{x_m} + \dfrac{f_i}{x_i} \right)} \\
-	&= \frac{C_\mathrm{cond}}{(Z + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \left( \dfrac{f_a}{x_a} + \dfrac{f_m}{x_m} + \dfrac{f_i}{x_i} \right)}  \\
-	&= \frac{C_\mathrm{cond}}{(f_Z + f_d + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \, (f_i + f_a + f_m)} \, ,
+	&= \frac{1}{C_\mathrm{cond} \, (Z + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \left( \dfrac{f_a}{x_a} + \dfrac{f_m}{x_m} + \dfrac{f_i}{x_i} \right)}  \\
+	&= \frac{1}{C_\mathrm{cond} \, (f_Z + f_d + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \, (f_i + f_a + f_m)} \, ,
 \end{align}$
 
-where we use that the total metallicity (in the gas and dust) $Z_\mathrm{tot} = f_Z + f_d$ and the simplification $x_i = x_a = x_b = 1.0$.
+where we use that the total metallicity (in the gas and dust) $Z_\mathrm{tot} = f_Z + f_d$ and the simplification $x_i = x_a = x_i = 1.0$.
 
 $\begin{equation}
-	C_\mathrm{cond} = \frac{m_p \, x_a \, Z_\odot}{2 \, R_\odot \, C_\rho \, x_m} \, .
+	C_\mathrm{cond} = \frac{2 \, R_\odot \, C_\rho}{m_p \, Z_\odot} \, .
 \end{equation}$
 
 For the solar metallicity, we find several values in the literature
@@ -870,14 +845,15 @@ We found that we need a $C_\rho \approx 100$ to form a disk, which is a reasonab
 
 # ╔═╡ 568d9fe3-6716-4a9a-ba1d-b9e6fd039150
 begin
-    const Rsun     = 3.5e-17u"cm^3 * s^-1"
-    const Zsun     = 0.0127
-	const Zeff     = 1e-3 * Zsun
-	const Cρ       = 100.0
-	const C_cond   = (m_u * Zsun) / (2 * Rsun * Cρ)
-	const c_cond   = ustrip(t_u * l_u^-3, C_cond / m_u)
+    const Rsun    = 3.5e-17u"cm^3 * s^-1"
+    const Zsun    = 0.0127
+	const Zeff    = 1e-3 * Zsun
+	const Cρ      = 100.0
+	const C_cond  = (2 * Rsun * Cρ) / (m_u * Zsun)
+	const cc_unit = m_u^-1 * t_u^-1 * l_u^3
+	const c_cond  = ustrip(Unitful.NoUnits, C_cond / cc_unit)
 
-	τ_cond(fg, ρ_cell, Ztot) = c_cond / ((Ztot + Zeff) * ρ_cell * fg)
+	τ_cond(ρ_cell, Zt, fg) = 1.0 / (c_cond * ρ_cell * fg * (Zt + Zeff))
 end;
 
 # ╔═╡ 6cab6cb7-a432-40b6-9390-ad0083fe486d
@@ -920,8 +896,11 @@ $\begin{equation}
 
 # ╔═╡ 38e91d0d-1020-44a8-becc-8542fd600104
 begin
-	destruction_time = Measurements.value(weightedmean([3.2 ± 1.4, 2.0 ± 0.8]))
-	τ_dd = ustrip(t_u, destruction_time * u"Gyr")
+	times = [3.2 ± 1.4, 2.0 ± 0.8]
+	destruction_time = Measurements.value(weightedmean(times)) * u"Gyr"
+	
+	τ_dd = ustrip(t_u, destruction_time)
+	inv_τ_dd = ustrip(t_u^-1, 1.0 / destruction_time)
 end;
 
 # ╔═╡ 4b81f302-9637-4161-b745-8ac39b9e31d3
@@ -1181,11 +1160,12 @@ $\begin{align}
 
 # ╔═╡ 2a39d6f8-da49-4976-9aa7-889391e55a5d
 begin
-	const Zdsun = 0.02
-	const C_dg = (a0 * sqrt(T) * S) / (A * a * Zdsun * nH0 * 2 * Unitful.mp * sqrt(T0) * S0)
-	const c_dg = ustrip(t_u^-1 * l_u^3, C_dg * m_u)
+	const Zdsun    = 0.02
+	const C_dg     = (a0 * sqrt(T) * S) / (A * a * Zdsun * nH0 * 2 * Unitful.mp * sqrt(T0) * S0)
+	const cdg_unit = m_u^-1 * t_u^-1 * l_u^3
+	const c_dg     = ustrip(Unitful.NoUnits, C_dg / cdg_unit)
 
-	τ_dg(Z, fm, ρ_cell) = 1 / (c_dg * Z * ρ_cell * fm)
+	τ_dg(ρ_cell, fm, Zt) = 1 / (c_dg * ρ_cell * fm * Zt)
 end;
 
 # ╔═╡ 43ee281f-1a16-445d-894d-23e0319b1fd0
@@ -1222,7 +1202,7 @@ The unit conversion factors are
 # ╔═╡ c8efcb3f-cc6f-4c45-a0f3-55cdb73d5195
 begin
 	const c_diss = ustrip(1.0u"mp" |> u"Msun")
-	const c_ion = ustrip(1.0u"mp" |> u"Msun")
+	const c_ion  = ustrip(1.0u"mp" |> u"Msun")
 end;
 
 # ╔═╡ 4d09ed45-423c-4bd6-802d-59389a966d2e
@@ -1484,7 +1464,7 @@ end;
 md"""
 ### UVB photoionization
 
-We will consider the ionizing effect of the metagalactic ultraviolet background radiation (UVB) using the results from [Rahmati2013](https://doi.org/10.1093/mnras/stt066), where they computed the hydrogen photoionization rate using the UVB model of [Haardt2012](https://doi.org/10.1088/0004-637X/746/2/125).
+We will consider the ionizing effect of the metagalactic ultraviolet background radiation (UVB) using the results from [Haardt2012](https://doi.org/10.1088/0004-637X/746/2/125). This values already consider dust shielding.
 """
   ╠═╡ =#
 
@@ -1496,7 +1476,7 @@ end;
 
 # ╔═╡ 2d27f581-2c53-409e-afde-812e70bba8bf
 ##################################################################################
-# Compute ΓUVB [Myr^-1]
+# Compute ΓUVB [Myr^(-1)]
 #
 # a: scale factor [dimensionless]
 ##################################################################################
@@ -1547,10 +1527,10 @@ $\begin{equation}
 So, the dust term end up being
 
 $\begin{equation}
-    S_d = \exp\left(C_{sd} \, Z \, (f_a + f_m) \, \rho_\mathrm{cell} \, h\right) \, ,
+    S_d = \exp\left(C_{sd} \, (f_Z + f_d) \, (f_a + f_m) \, \rho_\mathrm{cell} \, h\right) \, ,
 \end{equation}$
 
-where
+where we are considering that $Z$ represent the total metallicity in the gas and dust ($Z = f_Z + f_d$) and
 
 $\begin{equation}
     C_{sd} = −\frac{\sigma_{d, eff}}{Z_\odot \, m_p} \, .
@@ -1559,11 +1539,12 @@ $\begin{equation}
 
 # ╔═╡ 805ef471-1bd2-4ce2-bf50-eeb9c6b10e4d
 begin
-	const σdeff = 4.0e-21u"cm^2"
-	const C_sd = -σdeff / (Zsun * u"mp")
-	const c_sd = ustrip(l_u^2, C_sd * m_u)
+	const σdeff    = 4.0e-21u"cm^2"
+	const C_sd     = -σdeff / (Zsun * u"mp")
+	const csd_unit = m_u^-1 * l_u^2
+	const c_sd     = ustrip(Unitful.NoUnits, C_sd / csd_unit)
 
-	Sd(Z, h, ρc, fa, fm) = exp(c_sd * Z * (fa + fm) * ρc * h)
+	Sd(h, fa, fm, fZ, fd, ρc) = exp(c_sd * h * (fZ + fd) * (fa + fm) * ρc)
 end;
 
 # ╔═╡ 6eef3827-1af6-431d-a163-67bb595c337d
@@ -1599,16 +1580,17 @@ $\begin{equation}
 
 # ╔═╡ e14648ff-69f6-47c2-924c-c5ac69e200ed
 begin
-	const ωH2 = 0.2
-	const xnf = 5.0e14u"cm^-2"
-	const exp_fac = -8.5e-4
-	const C_sh2 = 1 / (2u"mp" * xnf)
-	const c_sh2 = ustrip(l_u^2, C_sh2 * m_u)
+	const ωH2      = 0.2
+	const xnf      = 5.0e14u"cm^-2"
+	const exp_fac  = -8.5e-4
+	const C_sh2    = 1.0 / (2u"mp" * xnf)
+	const ch2_unit = m_u^-1 * l_u^2
+	const c_sh2    = ustrip(Unitful.NoUnits, C_sh2 / ch2_unit)
 
-	xp1(h, ρc, fm) = 1.0 + (c_sh2 * fm * ρc * h)
+	xp1(h, ρc, fm)    = 1.0 + (c_sh2 * fm * ρc * h)
 	sq_xpi(h, ρc, fm) = NaNMath.sqrt(xp1(h, ρc, fm))
 
-	SH2(h, ρc, fm) = ((1 - ωH2) / xp1(h, ρc, fm)^2) + (ωH2 * exp(exp_fac * sq_xpi(h, ρc, fm)) / sq_xpi(h, ρc, fm))
+	Sh2(h, ρc, fm) = ((1 - ωH2) / xp1(h, ρc, fm)^2) + (ωH2 * exp(exp_fac * sq_xpi(h, ρc, fm)) / sq_xpi(h, ρc, fm))
 end;
 
 # ╔═╡ 7df63fdf-ef41-44f2-8a55-e5c2c849029c
@@ -1961,7 +1943,7 @@ md"## Equations"
 
 # ╔═╡ bd8743d6-8f21-413d-835a-e543926baa09
 #####################################################################################
-# System of ODEs, where each equation has units of time⁻¹, and
+# System of ODEs, where each equation has units of time^(-1), and
 #
 # Ionized gas fraction:    fi(t) = Mi(t) / M_cell --> y[1]
 # Atomic gas fraction:     fa(t) = Ma(t) / M_cell --> y[2]
@@ -1973,93 +1955,163 @@ md"## Equations"
 
 function system!(dydt, ic, parameters, t)
 
+	##################################################
     # Initial conditions
+	##################################################
+	
     fi, fa, fm, fs, fZ, fd = ic
 
+	##################################################
     # Parameters
+	##################################################
 	#
-	# ρ_cell: Total cell density                                 [mp * cm⁻³]
-	# ΓUVB:   UVB photoionization rate                           [Myr^-1]
-	# η_diss: Photodissociation efficiency of hydrogen molecules [dimensionless]
-	# η_ion:  Photoionization efficiency of hydrogen atoms       [dimensionless]
-	# R:      Mass recycling fraction                            [dimensionless]
-	# Zsn:    Metals recycling fraction                          [dimensionless]
-	# h:      Column height                                      [cm]
+	# ρ_cell: Total cell density           [mp * cm^(-3)]
+	# ΓUVB:   UVB photoionization rate     [Myr^(-1)]
+	# η_diss: Photodissociation efficiency [dimensionless]
+	# η_ion:  Photoionization efficiency   [dimensionless]
+	# R:      Mass recycling fraction      [dimensionless]
+	# Zsn:    Metals recycling fraction    [dimensionless]
+	# h:      Column height                [cm]
+	##################################################
+	
     ρ_cell, ΓUVB, η_diss, η_ion, R, Zsn, h = parameters
 
+	##################################################
     # Auxiliary equations
-	recombination    = fi / τ_rec(fi, ρ_cell)
-    cloud_formation  = fa / τ_cond(fi + fa + fm, ρ_cell, fZ + fd)
-	sfr              = ψ(fm, ρ_cell)
-	dust_destruction = fd / τ_dd
-	dust_growth      = c_dg * fd * fZ * fm * ρ_cell
-	sd               = Sd(fZ, h, ρ_cell, fa, fm)
-	sh2              = SH2(h, ρ_cell, fm)
+	##################################################
+
+	# Star formation rate [Myr^(-1)]
+	ψs = ψ(fm, ρ_cell)
+
+	###################
+	# Particl fraction
+    ###################
+	
+	# Neutral fraction
+	fn = fa + fm
+	
+	# Gas fraction
+	fg = fn + fi
+	
+	# Metal fraction
+	Zt = fZ + fd
+
+	#################
+	# Net ionization
+    #################
+
+	# Recombination [Myr^(-1)]
+	recomb = c_rec * fi * fi * ρ_cell
+	
+	# UVB photoionization [Myr^(-1)]
+	uvb = ΓUVB * fa
+	
+	# Stellar ionization [Myr^(-1)]
+	csd_h       = c_sd * h
+	dust_shield = csd_h * ρ_cell * fn * Zt
+	sd          = exp(dust_shield)
+	s_ion       = sd * η_ion * ψs
+	
+	net_ionization = -recomb + uvb + s_ion
+
+	#########################
+	# Stellar gas production
+    #########################
+
+	# Gas and metals produced at stellar death [Myr^(-1)]
+	R_ψs = R * ψs
+	
+	s_gas_production = fma(R_ψs, -Zsn, R_ψs)
+
+	###################
+	# Net dissociation
+    ###################
+
+	# Condensation [Myr^(-1)]
+	Zt_eff = Zt + Zeff
+	cond   = c_cond * fa * ρ_cell * fg * Zt_eff
+
+	# Stellar dissociation [Myr^(-1)]
+	csh2_h  = c_sh2 * h
+	xp1     = fma(csh2_h, fm * ρ_cell, 1.0)
+	xp1_2   = xp1 * xp1
+	sq_xp1  = NaNMath.sqrt(xp1)
+	exp_xp1 = exp(exp_fac * sq_xp1)
+	sh2     = ((1 - ωH2) / xp1_2) + (ωH2 * exp_xp1 / sq_xp1)
+	s_diss  = sd * sh2 * η_diss * ψs
+
+	net_dissociation = -cond + s_diss
+
+	##################
+	# Net dust growth
+	##################
+
+	# Dust growth  [Myr^(-1)]
+	dg = c_dg * fd * fZ * fm * ρ_cell
+	
+	# Dust destruction [Myr^(-1)]
+	dd = fd * inv_τ_dd
+		
+	net_dust_growth = dg - dd
+
+	##################################################
+    # ODE system
+	##################################################
+	
+	dydt[1] = net_ionization + s_gas_production
+    dydt[2] = -net_ionization + net_dissociation
+    dydt[3] = -net_dissociation - ψs
+    dydt[4] = fma(ψs, -R, ψs)
+	dydt[5] = Zsn * R_ψs - net_dust_growth
+	dydt[6] = net_dust_growth
+
+end;
+
+# ╔═╡ e1d4b7bf-384f-4195-962a-ce750f83558d
+#####################################################################################
+# System of ODEs, written for the computation of the jacobian
+#####################################################################################
+
+function jac_system!(dydt, ic, parameters, t)
+
+    fi, fa, fm, fs, fZ, fd = ic
+    ρ_cell, ΓUVB, η_diss, η_ion, R, Zsn, h = parameters
+	ψs = ψ(fm, ρ_cell)
+	fn = fa + fm
+	fg = fn + fi
+	Zt = fZ + fd
+	recomb = c_rec * fi * fi * ρ_cell
+	uvb = ΓUVB * fa
+	csd_h = c_sd * h
+	dust_shield = csd_h * ρ_cell * fn * Zt
+	sd = exp(dust_shield)
+	s_ion = sd * η_ion * ψs
+	net_ionization = -recomb + uvb + s_ion
+	R_ψs = R * ψs
+	s_gas_production = R_ψs - R_ψs * Zsn
+	Z_eff = Zt + Zeff
+	cond = c_cond * fa * ρ_cell * fg * Z_eff
+	csh2_h = c_sh2 * h
+	xp1 = csh2_h + fm * ρ_cell + 1.0
+	xp1_2 = xp1 * xp1
+	sq_xp1 = NaNMath.sqrt(xp1)
+	exp_xp1 = exp(exp_fac * sq_xp1)
+	sh2 = ((1 - ωH2) / xp1_2) + (ωH2 * exp_xp1 / sq_xp1)
+	s_diss = sd * sh2 * η_diss * ψs
+	net_dissociation = -cond + s_diss
+	dg = c_dg * fd * fZ * fm * ρ_cell
+	dd = fd * inv_τ_dd
+	net_dust_growth = dg - dd
 
     # ODE system
-	dydt[1] = -recombination + sd * η_ion * sfr + ΓUVB * fa + R * sfr * (1 - Zsn)
-    dydt[2] = -cloud_formation + recombination - ΓUVB * fa + sd * (sh2 * η_diss - η_ion) * sfr
-    dydt[3] = cloud_formation - (1 + sd * sh2 * η_diss) * sfr
-    dydt[4] = (1 - R) * sfr
-	dydt[5] = Zsn * R * sfr + dust_destruction - dust_growth
-	dydt[6] = dust_growth - dust_destruction
+	dydt[1] = net_ionization + s_gas_production
+    dydt[2] = -net_ionization + net_dissociation
+    dydt[3] = -net_dissociation - ψs
+    dydt[4] = ψs - R_ψs
+	dydt[5] = Zsn * R_ψs - net_dust_growth
+	dydt[6] = net_dust_growth
 
 end;
-
-# ╔═╡ bae7dbde-0453-472d-bf1f-5171ecbb7967
-#####################################################################################
-# Compute the Lyapunov spectrum
-#
-# ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-# base_parms: Parameters:
-#             (ρ [cm⁻³], Z [dimensionless], it [Myr], a [dimensionless], h [cm])
-#####################################################################################
-
-function lyapunov_spectrum(
-	ic::Vector{Float64},
-	base_params::NTuple{5,Float64},
-)::Vector{Float64}
-
-	# Construct the parameters for the ODEs
-	ρ             = base_params[1]  # Density [cm⁻³]
-	Z             = base_params[2]  # Arepo metallicity [dimensionless]
-	it            = base_params[3]  # Integration time [Myr]
-	a             = base_params[4]  # Scale factor [dimensionless]
-	h             = base_params[5]  # Column height [cm]
-
-	ΓUVB          = photoionization_UVB(a)
-	η_diss, η_ion = photodissociation_efficiency(it, Z)
-	R, Zsn        = recycled_fractions(Z)
-
-	parameters = [ρ, ΓUVB, η_diss, η_ion, R, Zsn, h]
-	ds = CoupledODEs(system!, ic, parameters)
-
-	# Compute the Lyapunov spectrum
-	return lyapunovspectrum(ds, 100)
-
-end;
-
-# ╔═╡ ae2c3c1c-aa3f-4be6-b209-38b9b5b77244
-# ╠═╡ skip_as_script = true
-#=╠═╡
-lyapunov_spectrum(
-	# Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-	[0.7, 0.27, 0.0, 0.0, 0.02, 0.01],
-	# Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr], a [dimensionless], h [cm])
-	(1.0, Zsun, 5.0, 1.0, 3.0e20),
-)
-  ╠═╡ =#
-
-# ╔═╡ 0d4877b6-0659-441e-81a9-43c59635a14f
-# ╠═╡ skip_as_script = true
-#=╠═╡
-lyapunov_spectrum(
-	# Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-	[0.7, 0.27, 0.0, 0.0, 0.02, 0.01],
-	# Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr], a [dimensionless], h [cm])
-	(10.0, Zsun, 5.0, 1.0, 3.0e20)
-)
-  ╠═╡ =#
 
 # ╔═╡ 9ab0a10b-8165-401a-a2b6-c9726526a906
 # ╠═╡ skip_as_script = true
@@ -2086,7 +2138,7 @@ function construct_jacobian(system::Function)::Matrix{Function}
 end;
 
 # ╔═╡ 80005099-7154-4306-9172-c9a168336e14
-const JACOBIAN_FUNCTION = construct_jacobian(system!);
+const JACOBIAN_FUNCTION = construct_jacobian(jac_system!);
 
 # ╔═╡ c291700e-3a84-49a7-85d6-592cfb3b1a11
 #####################################################################################
@@ -2112,56 +2164,6 @@ function jacobian!(
 	end
 
 end;
-
-# ╔═╡ 40da0211-1132-412c-a769-05bd4b22b69b
-#####################################################################################
-# Compute the stiffness ratio
-#
-# ic:         Initial conditions: [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-# base_parms: Parameters:
-#             (ρ [cm⁻³], Z [dimensionless], it [Myr], a [dimensionless], h [cm])
-#####################################################################################
-
-function stiffness_ratio(
-	ic::Vector{Float64},
-	base_params::NTuple{5,Float64},
-)::Float64
-
-	# Construct the parameters for the ODEs
-	ρ             = base_params[1]  # Density [cm⁻³]
-	Z             = base_params[2]  # Arepo metallicity [dimensionless]
-	it            = base_params[3]  # Integration time [Myr]
-	a             = base_params[4]  # Scale factor [dimensionless]
-	h             = base_params[5]  # Column height [cm]
-
-	ΓUVB          = photoionization_UVB(a)
-	η_diss, η_ion = photodissociation_efficiency(it, Z)
-	R, Zsn        = recycled_fractions(Z)
-
-	parameters = [ρ, ΓUVB, η_diss, η_ion, R, Zsn, h]
-	J = Matrix{Float64}(undef, N_EQU, N_EQU)
-
-	# Compute the Jacobian and store it in J
-	jacobian!(J, ic, parameters)
-
-	# Get the norm of the real part of the non-zero eigenvalues
-	eigen_values = filter(x -> x > eps(typeof(x)), eigvals(J) .|> real .|> abs)
-
-	# Compute the stiffness ratio
-	return maximum(eigen_values) / minimum(eigen_values)
-
-end;
-
-# ╔═╡ 61db358f-a57d-485c-9bb3-cfd1297c0ca3
-# ╠═╡ skip_as_script = true
-#=╠═╡
-stiffness_ratio(
-	# Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-	[0.7, 0.27, 0.0, 0.0, 0.02, 0.01],
-	# Parameters, (ρ [cm⁻³], Z [dimensionless], it [Myr], a [dimensionless], h [cm])
-	(1.0, Zsun, 5.0, 1.0, 3.0e20),
-)
-  ╠═╡ =#
 
 # ╔═╡ 1ec99792-905d-4e1b-a413-ef58143d3c68
 # ╠═╡ skip_as_script = true
@@ -2199,21 +2201,18 @@ function integrate_model(
 	base_params::Vector{Float64},
 	tspan::NTuple{2,Float64};
     times::Vector{Float64}=[tspan[2],],
-    args::Tuple=(Rosenbrock23(),),
+	args::Tuple=(),
     kwargs::NamedTuple=(
 		dense=false,
-		force_dtmin=true,
-		dtmin=(tspan[2] - tspan[1]) / 1.0e10,
-		reltol=1.0e-12,
-		maxiters=1.0e12,
+		reltol=1.0e-10,
 		verbose=false,
 	),
 )::Vector{Vector{Float64}}
 
-	ρ_cell        = base_params[1]
-	Z             = base_params[2]
-	a             = base_params[3]
-	h             = base_params[4]
+	ρ_cell = base_params[1]
+	Z      = base_params[2]
+	a      = base_params[3]
+	h      = base_params[4]
 
 	ΓUVB          = photoionization_UVB(a)
 	η_diss, η_ion = photodissociation_efficiency(tspan[2], Z)
@@ -2361,14 +2360,14 @@ end;
 # ╔═╡ 74c82c98-f233-4e72-8f74-17bdfeddf884
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"# Dust initial condition"
+md"## Dust initial condition"
   ╠═╡ =#
 
 # ╔═╡ ab1b7695-3cd6-4e67-9cfd-fbaf2f4d1d15
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-Schematic diagram of the share of mass of each phase in the initial condition.
+Schematic diagram of each phase contribution to the initial condition.
 """
   ╠═╡ =#
 
@@ -2541,247 +2540,218 @@ and set the derivatives to $0$.
 """
   ╠═╡ =#
 
-# ╔═╡ 3ab760f8-57cc-4ab8-af0b-5dd91d53ea91
-# ╠═╡ disabled = true
+# ╔═╡ 245ad10f-4c70-4585-b2e0-dea4cf5d19b8
+#####################################################################################
+# Copy of the ODE system, for testing the equilibrium condition
+#
+# fractions:   Gas fractions, [fi, fa, fm, fs, fZ, fd]
+# parameters: Parameters, [ρ_cell, ΓUVB, η_diss, η_ion, R, Zsn, h]
+#####################################################################################
+
+function odes(
+	fractions::Vector{Float64}, 
+	parameters::Vector{Float64},
+)::Vector{Float64}
+
+	dydt = Vector{Float64}(undef, N_EQU)
+
+    system!(dydt, fractions, parameters, 1.0)
+
+	return dydt
+
+end;
+
+# ╔═╡ e8c51ae9-ded4-450a-80f9-c484c2b991d1
+#####################################################################################
+# Compute the derivatives of the ODE system
+#
+# fractions:   Gas fractions, [fi, fa, fm, fs, fZ, fd]
+# base_params: Parameters for the ODEs, 
+#              [ρ [cm⁻³], Z [dimensionless], a [dimensionless], h [cm], it [Myr]]
+#####################################################################################
+
+function equilibrium(
+    fractions::Vector{Float64},
+	base_params::Vector{Float64};
+)::Vector{Float64}
+
+	ρ_cell = base_params[1]
+	Z      = base_params[2]
+	a      = base_params[3]
+	h      = base_params[4]
+	it     = base_params[5]
+
+	ΓUVB          = photoionization_UVB(a)
+	η_diss, η_ion = photodissociation_efficiency(it, Z)
+	R, Zsn        = recycled_fractions(Z)
+
+	parameters = [ρ_cell, ΓUVB, η_diss, η_ion, R, Zsn, h]
+
+    return odes(fractions, parameters)
+
+end;
+
+# ╔═╡ c96ea0ad-47c3-469e-a2f7-0743e681a6d1
+#####################################################################################
+# Test the equilibrium of the ODE system
+#
+# fractions:   Gas fractions, [fi, fa, fm, fs, fZ, fd]
+# base_params: Parameters for the ODEs, 
+#              [ρ [cm⁻³], Z [dimensionless], a [dimensionless], h [cm], it [Myr]]
+# limit: Equilibrium criteria.
+#####################################################################################
+
+function test_equilibrium(
+    fractions::Vector{Float64},
+	base_params::Vector{Float64};
+	limit::Float64=1e-10,
+)::Vector{Bool}
+
+	time_scale = base_params[5]
+
+    return (equilibrium(fractions, base_params) ./ (1 / time_scale)) .< limit
+
+end;
+
+# ╔═╡ 8fd489b2-620a-40cd-8283-dc88b7f3584f
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"""
-## Molecular equation
-
-From
-
-$\begin{equation}
-	0 = \frac{f_a}{\tau_\mathrm{cond}} - \eta_\text{diss} \, \psi - \psi \, ,
-\end{equation}$
-
-and using
-
-$\begin{align}
-    \tau_\mathrm{cond} &= \frac{C_\mathrm{cond}}{(f_Z + f_d + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \, (f_i + f_a + f_m)} \, , \\
-	\psi &= \frac{f_m}{\tau_\mathrm{star}} \, ,
-\end{align}$
-
-we get
-
-$\begin{equation}
-	(\eta_\text{diss} + 1) \, \frac{f_m}{\tau_\mathrm{star}} = \frac{f_a}{C_\mathrm{cond}} \, (f_Z + f_d + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \, (f_i + f_a + f_m) \, .
-\end{equation}$
-
-Which can be rewritten as
-
-$\begin{equation}
-	\frac{f_a^0}{f_m^0} \, (f_Z^0 + f_d^0 + Z_\mathrm{eff}) \, (f_i^0 + f_a^0 + f_m^0) = \frac{\eta_\text{diss} + 1}{\tau_\mathrm{star}} \, \frac{C_\mathrm{cond}}{\rho_\mathrm{cell}} \, ,
-\end{equation}$
-where we use the notation $f_X^0$ to idicate equilibrium fractions.
-
-This last expresion shows the value of $f_i^0$, $f_a^0$, $f_m^0$, $f_s^0$, $f_Z^0$, and $f_d^0$ (as a function of the parameters of the model) that make the molecular equation have a $0$ derivative (equilibrium point for that particular equation).
-"""
+md"# ODE coefficients"
   ╠═╡ =#
 
-# ╔═╡ 6fd22115-c747-4115-9958-c514952fc101
-# ╠═╡ disabled = true
+# ╔═╡ 59a342e1-930d-40c4-86fc-11ba334d7103
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"""
-## Ionized equation
-
-From
-
-$\begin{equation}
-	0 = - \frac{f_i}{\tau_\mathrm{rec}} + \eta_\text{ion} \, \psi + R \, \psi \, (1 - Z_\mathrm{SN}) \, ,
-\end{equation}$
-
-and using
-
-$\begin{align}
-    \tau_\mathrm{rec} &= \frac{C_\mathrm{rec}}{f_i \, \rho_\mathrm{cell}} \, , \\
-	\psi &= \frac{f_m}{\tau_\mathrm{star}} \, ,
-\end{align}$
-
-we get
-
-$\begin{equation}
-	0 = - \frac{f_i^2 \, \rho_\mathrm{cell}}{C_\mathrm{rec}} + (\eta_\text{ion} + R \, (1 - Z_\mathrm{SN})) \, \frac{f_m}{\tau_\mathrm{star}} \, .
-\end{equation}$
-
-Which can be rewritten as
-
-$\begin{equation}
-	\frac{(f_i^0)^2}{f_m^0} = \frac{\eta_\text{ion} + R \, (1 - Z_\mathrm{SN})}{\tau_\mathrm{star}} \, \frac{C_\mathrm{rec}}{\rho_\mathrm{cell}} \, .
-\end{equation}$
-
-As before, this last expresion shows the value of $f_i^0$ and $f_m^0$ (as a function of the parameters of the model) that make the ionized equation have a $0$ derivative (equilibrium point for that particular equation).
-"""
+md"### Stiffness coefficient"
   ╠═╡ =#
 
-# ╔═╡ da8ecf00-4990-462d-91e2-f8d9f2bb99ab
-# ╠═╡ disabled = true
+# ╔═╡ a2a12511-97d6-4e83-a21d-1c7528f486bc
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"""
-## Atomic equation
+#####################################################################################
+# Compute the stiffness ratio
+#
+# ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+# base_parms: Parameters for the ODEs,
+#             (ρ [cm⁻³], Z [dimensionless], a [dimensionless], h [cm], it [Myr])
+#####################################################################################
 
-From
+function stiffness_ratio(
+	ic::Vector{Float64},
+	base_params::NTuple{5,Float64},
+)::Float64
 
-$\begin{equation}
-	0 = \frac{f_i}{\tau_\mathrm{rec}} - \eta_\text{ion} \, \psi - \frac{f_a}{\tau_\mathrm{cond}} + \eta_\text{diss} \, \psi \, ,
-\end{equation}$
+	# Construct the parameters for the ODEs
+	ρ  = base_params[1]  # Density [cm⁻³]
+	Z  = base_params[2]  # Arepo metallicity [dimensionless]
+	a  = base_params[3]  # Scale factor [dimensionless]
+	h  = base_params[4]  # Column height [cm]
+	it = base_params[5]  # Integration time [Myr]
 
-and using
+	ΓUVB          = photoionization_UVB(a)
+	η_diss, η_ion = photodissociation_efficiency(it, Z)
+	R, Zsn        = recycled_fractions(Z)
 
-$\begin{align}
-    \tau_\mathrm{cond} &= \frac{C_\mathrm{cond}}{(f_Z + f_d + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \, (f_i + f_a + f_m)} \, , \\
-    \tau_\mathrm{rec} &= \frac{C_\mathrm{rec}}{f_i \, \rho_\mathrm{cell}} \, , \\
-	\psi &= \frac{f_m}{\tau_\mathrm{star}} \, .
-\end{align}$
+	parameters = [ρ, ΓUVB, η_diss, η_ion, R, Zsn, h]
+	J = Matrix{Float64}(undef, N_EQU, N_EQU)
 
-We get
+	# Compute the Jacobian and store it in J
+	jacobian!(J, ic, parameters)
 
-$\begin{equation}
-	0 = \frac{f_i^2}{C_\mathrm{rec}} \, \rho_\mathrm{cell} - \frac{f_a}{C_\mathrm{cond}} \, (f_Z + f_d + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \, (f_i + f_a + f_m) + (\eta_\text{diss} - \eta_\text{ion}) \, \frac{f_m}{\tau_\mathrm{star}} \, .
-\end{equation}$
+	# Get the norm of the real part of the non-zero eigenvalues
+	eigen_values = filter(x -> x > eps(typeof(x)), eigvals(J) .|> real .|> abs)
 
-Which can be rewritten as
+	# Compute the stiffness ratio
+	return maximum(eigen_values) / minimum(eigen_values)
 
-$\begin{equation}
-	0 = \frac{(f_i^0)^2}{f_m^0} - \frac{f_a^0}{f_m^0} \, (f_i^0 + f_a^0 + f_m^0) \, (f_Z^0 + f_d^0 + Z_\mathrm{eff}) \, \frac{C_\mathrm{rec}}{C_\mathrm{cond}} + \frac{(\eta_\text{diss} - \eta_\text{ion}) \, C_\mathrm{rec}}{\tau_\mathrm{star} \, \rho_\mathrm{cell}} \, ,
-\end{equation}$
-
-which is only valid for $f_m^0 \neq 0$.
-
-In this case this expresion can't be cleanly separated with the equilibrium fractions in one side and the parameters in the other.
-"""
+end;
   ╠═╡ =#
 
-# ╔═╡ 6879378d-3145-4a48-ae4a-ef49a64336d0
-# ╠═╡ disabled = true
+# ╔═╡ 8ade720c-37b7-4436-8bcd-8e902f52057b
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"""
-## Metals equation
-
-From
-
-$\begin{equation}
-	0 = Z_\mathrm{SN} \, R \, \psi(t) + \frac{f_d}{\tau_\mathrm{dd}} - \left(1 - \frac{f_d}{f_Z + f_d}\right) \frac{f_d}{\tau_\mathrm{dg}} \, ,
-\end{equation}$
-
-and using
-
-$\begin{align}
-	\tau_\mathrm{dg} &= \frac{1}{C_\mathrm{dg} \, (f_Z + f_d) \, \rho_\mathrm{cell}
-\, f_m} \, , \\
-	\psi &= \frac{f_m}{\tau_\mathrm{star}} \, ,
-\end{align}$
-
-we get
-
-$\begin{equation}
-	0 = Z_\mathrm{SN} \, R \, \frac{f_m}{\tau_\mathrm{star}} + \frac{f_d}{\tau_\mathrm{dd}} - C_\mathrm{dg} \, f_d \, f_Z \, f_m \, \rho_\mathrm{cell} \, .
-\end{equation}$
-
-Which can be rewritten as
-
-$\begin{equation}
-	0 = Z_\mathrm{SN} \, R \, \frac{f_m^0}{\tau_\mathrm{star}} + \frac{f_d^0}{\tau_\mathrm{dd}} - C_\mathrm{dg} \, f_d^0 \, f_Z^0 \, f_m^0 \, \rho_\mathrm{cell} \, .
-\end{equation}$
-
-In this case again the expresion can't be cleanly separated with the equilibrium fractions in one side and the parameters in the other.
-"""
+stiffness_ratio(
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	[0.7, 0.27, 0.0, 0.0, 0.02, 0.01],
+	# (ρ [cm⁻³], Z [dimensionless], a [dimensionless], h [cm], it [Myr])
+	(1.0, Zsun, 1.0, 3.0e20, 5.0),
+)
   ╠═╡ =#
 
-# ╔═╡ 0d37601d-46d2-49c0-9225-f4786bd34419
-# ╠═╡ disabled = true
+# ╔═╡ b39e416e-a204-4f6b-a6e4-00f6a71d3b27
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"""
-## Dust equation
-
-From
-
-$\begin{equation}
-	0 = \left(1 - \frac{f_d}{f_Z + f_d}\right) \frac{f_d}{\tau_\mathrm{dg}} - \frac{f_d}{\tau_\mathrm{dd}} \, ,
-\end{equation}$
-
-and using
-
-$\begin{equation}
-    \tau_\mathrm{dg} = \frac{1}{C_\mathrm{dg} \, (f_Z + f_d) \, \rho_\mathrm{cell} \, f_m} \, ,
-\end{equation}$
-
-we get
-
-$\begin{equation}
-	0 = C_\mathrm{dg} \, f_d \, f_Z \, f_m \, \rho_\mathrm{cell} - \frac{f_d}{\tau_\mathrm{dd}} \, .
-\end{equation}$
-
-Which can be rewritten as
-
-$\begin{equation}
-	0 = C_\mathrm{dg} \, f_d^0 \, f_Z^0 \, f_m^0 \, \rho_\mathrm{cell} - \frac{f_d^0}{\tau_\mathrm{dd}} \, .
-\end{equation}$
-
-This expresion has the trivial solution $f_d^0 = 0$. But if we assume $f_d^0 \neq 0.0$, we have
-
-$\begin{equation}
-	f_Z^0 \, f_m^0 = \frac{1}{C_\mathrm{dg} \, \rho_\mathrm{cell} \, \tau_\mathrm{dd}} \, .
-\end{equation}$
-"""
+md"The model, for a typical set of initial conditions, is very stiff (stiffness ratio >> 1)."
   ╠═╡ =#
 
-# ╔═╡ e817ab9c-9091-43aa-a2a0-ee1a7cb74f8e
-# ╠═╡ disabled = true
+# ╔═╡ c414f207-0d4f-4cc4-965c-9b68b5a85400
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"""
-## Stellar equation
+md"### Lyapunov spectrum"
+  ╠═╡ =#
 
-From
+# ╔═╡ ac57dfbe-f19b-4c5f-a753-5f4162e245d4
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Compute the Lyapunov spectrum
+#
+# ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+# base_parms: Parameters for the ODEs,
+#             (ρ [cm⁻³], Z [dimensionless], a [dimensionless], h [cm], it [Myr])
+#####################################################################################
 
-$\begin{equation}
-	0 = \psi - R \, \psi  \, ,
-\end{equation}$
+function lyapunov_spectrum(
+	ic::Vector{Float64},
+	base_params::NTuple{5,Float64},
+)::Vector{Float64}
 
-and using
+	# Construct the parameters for the ODEs
+	ρ  = base_params[1]  # Density [cm⁻³]
+	Z  = base_params[2]  # Arepo metallicity [dimensionless]
+	a  = base_params[3]  # Scale factor [dimensionless]
+	h  = base_params[4]  # Column height [cm]
+	it = base_params[5]  # Integration time [Myr]
 
-$\begin{equation}
-	\psi = \frac{f_m}{\tau_\mathrm{star}} \, .
-\end{equation}$
+	ΓUVB          = photoionization_UVB(a)
+	η_diss, η_ion = photodissociation_efficiency(it, Z)
+	R, Zsn        = recycled_fractions(Z)
 
-We trivially get
+	parameters = [ρ, ΓUVB, η_diss, η_ion, R, Zsn, h]
+	ds = CoupledODEs(system!, ic, parameters)
 
-$\begin{equation}
-	f_m^0 = 0 \, ,
-\end{equation}$
-if $R \neq 1$, which for our particular model is always true.
+	# Compute the Lyapunov spectrum
+	return lyapunovspectrum(ds, 100; Δt=1e-4)
 
-With this result we can compute the global equilibrium. Using $f_m^0 = 0$ in the ionized equation we get $f_i^0 = 0$, and using it in the metals or dust equation we get $f_d^0 = 0$.
+end;
+  ╠═╡ =#
 
-Using $f_m^0 = f_i^0 = f_d^0 = 0$ in either the molecular or atomic equation we have
+# ╔═╡ b1e67fcd-f70b-4dd2-87e5-74bef1fa201e
+# ╠═╡ skip_as_script = true
+#=╠═╡
+lyapunov_spectrum(
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	[0.7, 0.27, 0.0, 0.0, 0.02, 0.01],
+	# (ρ [cm⁻³], Z [dimensionless], a [dimensionless], h [cm], it [Myr])
+	(10.0, Zsun, 1.0, 3.0e20, 10.0),
+)
+  ╠═╡ =#
 
-$\begin{equation}
-	\frac{(f_a^0)^2}{C_\mathrm{cond}} \, \rho_\mathrm{cell} \, (f_Z^0 + Z_\mathrm{eff}) = 0 \, .
-\end{equation}$
+# ╔═╡ d1f3d076-b9d6-4b92-b25c-4155b5fc464b
+# ╠═╡ skip_as_script = true
+#=╠═╡
+lyapunov_spectrum(
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	[0.7, 0.27, 0.0, 0.0, 0.02, 0.01],
+	# (ρ [cm⁻³], Z [dimensionless], a [dimensionless], h [cm], it [Myr])
+	(100.0, Zsun, 1.0, 3.0e20, 10.0)
+)
+  ╠═╡ =#
 
-From which we have $f_a^0 = 0$. Finally, when we add the global restriction of mass conservation.
-
-$\begin{equation}
-	f_i^0 + f_a^0 + f_m^0 + f_s^0 + f_Z^0 + f_d^0 = 1 \, .
-\end{equation}$
-
-It reduces to
-
-$\begin{equation}
-	f_s^0 + f_Z^0 = 1 \, .
-\end{equation}$
-
-So the global equilibrium space it is given by the equations
-
-$\begin{align}
-	0 &= f_i^0 = f_a^0 = f_m^0 = f_d^0 \, , \\
-	1 &= f_s^0 + f_Z^0 \, ,
-\end{align}$
-"""
+# ╔═╡ f336b083-99c7-4345-8ada-78b166a98abe
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"The model, for a typical set of initial conditions, is not chaotic (maximum lyapunov exponent < 0). But, we note that with certain initial conditions the system can turn chaotic (maximum lyapunov exponent > 0)."
   ╠═╡ =#
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -5486,16 +5456,6 @@ version = "0.13.1+0"
 # ╟─8dcc45e1-192a-4007-9d6e-6e4149b563d7
 # ╟─d12b4a5f-a6ad-4c91-8795-fe8f93f5c93d
 # ╟─c7eee8bb-b03d-4679-a51e-36fc629294e1
-# ╟─7112c2fc-0cd6-407f-afaf-56a49e02fa57
-# ╟─6b135719-c120-4b69-aed3-28647fc601bf
-# ╠═40da0211-1132-412c-a769-05bd4b22b69b
-# ╠═61db358f-a57d-485c-9bb3-cfd1297c0ca3
-# ╟─f036dffd-8aab-4337-9f1a-a1870da284df
-# ╟─fd7e6a35-72a0-4133-b43c-95ee73da5fc4
-# ╠═bae7dbde-0453-472d-bf1f-5171ecbb7967
-# ╠═ae2c3c1c-aa3f-4be6-b209-38b9b5b77244
-# ╠═0d4877b6-0659-441e-81a9-43c59635a14f
-# ╟─4d09ff8b-fd43-4b4a-ba9d-030e9d2b6cec
 # ╟─700015f6-aac0-40c5-a455-8d98c1227049
 # ╠═207305eb-4496-4518-a5bc-be85173314a5
 # ╟─a6fdec29-3438-4ebc-af81-7a3baf0175ae
@@ -5553,6 +5513,7 @@ version = "0.13.1+0"
 # ╠═f863d68f-590e-4b96-8433-dc6b5177539f
 # ╟─f5a983bf-ef3a-4d5d-928d-da1097b91ee8
 # ╠═bd8743d6-8f21-413d-835a-e543926baa09
+# ╠═e1d4b7bf-384f-4195-962a-ce750f83558d
 # ╟─9ab0a10b-8165-401a-a2b6-c9726526a906
 # ╠═1b8af600-56eb-4508-bc52-aa4e138b4c7e
 # ╠═80005099-7154-4306-9172-c9a168336e14
@@ -5578,11 +5539,18 @@ version = "0.13.1+0"
 # ╟─08e05c65-06a2-4560-92eb-b014dc7c3d70
 # ╟─2235689d-9c83-4907-aa17-c2624fbeb68d
 # ╟─df8a9449-851c-4546-97a7-7fd4a270a867
-# ╟─3ab760f8-57cc-4ab8-af0b-5dd91d53ea91
-# ╟─6fd22115-c747-4115-9958-c514952fc101
-# ╟─da8ecf00-4990-462d-91e2-f8d9f2bb99ab
-# ╟─6879378d-3145-4a48-ae4a-ef49a64336d0
-# ╟─0d37601d-46d2-49c0-9225-f4786bd34419
-# ╟─e817ab9c-9091-43aa-a2a0-ee1a7cb74f8e
+# ╠═245ad10f-4c70-4585-b2e0-dea4cf5d19b8
+# ╠═e8c51ae9-ded4-450a-80f9-c484c2b991d1
+# ╠═c96ea0ad-47c3-469e-a2f7-0743e681a6d1
+# ╟─8fd489b2-620a-40cd-8283-dc88b7f3584f
+# ╟─59a342e1-930d-40c4-86fc-11ba334d7103
+# ╠═a2a12511-97d6-4e83-a21d-1c7528f486bc
+# ╠═8ade720c-37b7-4436-8bcd-8e902f52057b
+# ╟─b39e416e-a204-4f6b-a6e4-00f6a71d3b27
+# ╟─c414f207-0d4f-4cc4-965c-9b68b5a85400
+# ╠═ac57dfbe-f19b-4c5f-a753-5f4162e245d4
+# ╠═b1e67fcd-f70b-4dd2-87e5-74bef1fa201e
+# ╠═d1f3d076-b9d6-4b92-b25c-4155b5fc464b
+# ╟─f336b083-99c7-4345-8ada-78b166a98abe
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

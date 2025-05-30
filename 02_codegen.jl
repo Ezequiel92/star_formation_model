@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.9
 
 using Markdown
 using InteractiveUtils
@@ -43,18 +43,11 @@ begin
 	const GEN_FILES = mkpath("./generated_files")
 	const C_FILES   = mkpath(joinpath(GEN_FILES, "c_files"))
 
-	# Cosmology
-	const HUBBLE_CONSTANT = 0.102201 # Hubble constant in Gyr^-1
-	const OMEGA_0 = 0.307            # The cosmological density parameter for matter
-	const OMEGA_L = 0.693            # The cosmological density parameter for the cosmological constant
-	const H0 = 0.6777                # Hubble constant ("little h")
-
 	# Paths to the interpolation tables
 	const ETA_D_TABLE = joinpath(GEN_FILES, "interpolation_tables/eta_d.txt")
 	const ETA_I_TABLE = joinpath(GEN_FILES, "interpolation_tables/eta_i.txt")
 	const R_TABLE     = joinpath(GEN_FILES, "interpolation_tables/R.txt")
 	const ZSN_TABLE   = joinpath(GEN_FILES, "interpolation_tables/Zsn.txt")
-	const TIME_TABLE  = joinpath(GEN_FILES, "interpolation_tables/times.txt")
 
 	# Paths to the C libraries (DLLs or SOs)
 	@static if Sys.iswindows()
@@ -62,6 +55,9 @@ begin
 	elseif Sys.islinux()
 	    const lib_path = joinpath(C_FILES, "lib.so")
 	end
+
+	# If we will use an ODE solver that need the jacobian
+	const JACOBIAN = false
 end;
 
 # ╔═╡ 73503ce5-c8b4-4f1d-a95c-cc7a307fdb8f
@@ -90,39 +86,38 @@ function write_header_file(path::Union{String,Nothing})::Union{String,Nothing}
 /* M [internal_units] * M_COSMO = M [Mₒ] */
 #define M_COSMO (All.UnitMass_in_g / All.HubbleParam / SOLAR_MASS)
 /* L [internal_units] * L_CGS = L [cm] */
-#define L_CGS = (All.UnitLength_in_cm * All.cf_atime / All.HubbleParam)
+#define L_CGS (All.UnitLength_in_cm * All.cf_atime / All.HubbleParam)
 
 /* Interpolation tables */
-#define ETA_NROWS $(length(MODEL.Q_ages) + 1)  // Number of rows in the η tables
-#define ETA_NCOLS $(length(MODEL.Q_metals) + 1)  // Number of columns in the η tables
-#define R_ZSN_NROWS $(length(MODEL.sy_metals))  // Number of rows in the R and Zsn table
-#define R_ZSN_NCOLS 2  // Number of columns in the R and Zsn table
+#define ETA_NROWS $(length(MODEL.Q_ages) + 1) // Number of rows in the η tables
+#define ETA_NCOLS $(length(MODEL.Q_metals) + 1)   // Number of columns in the η tables
+#define R_ZSN_NROWS $(length(MODEL.sy_metals)) // Number of rows in the R and Zsn table
+#define R_ZSN_NCOLS 2 // Number of columns in the R and Zsn table
 #define UVB_NROWS $(size(MODEL.UVB_TABLE, 1))  // Number of rows in the UVB table
-#define UVB_NCOLS 2  // Number of columns in the UVB table
+#define UVB_NCOLS 2   // Number of columns in the UVB table
 
 /* Paths */
 static char *ETA_D_TABLE_PATH = "../code/src/el_sfr/tables/eta_d.txt";
 static char *ETA_I_TABLE_PATH = "../code/src/el_sfr/tables/eta_i.txt";
-static char *R_TABLE_PATH     = "../code/src/el_sfr/tables/R.txt";
-static char *ZSN_TABLE_PATH   = "../code/src/el_sfr/tables/Zsn.txt";
-static char *UVB_TABLE_PATH   = "../code/src/el_sfr/tables/UVB.txt";
+static char *R_TABLE_PATH = "../code/src/el_sfr/tables/R.txt";
+static char *ZSN_TABLE_PATH = "../code/src/el_sfr/tables/Zsn.txt";
+static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 
 /* ODE constants */
 
-/* Zsun = $(@sprintf("%.4f", MODEL.Zsun)) (solar metallicity) */
-/* Cρ   = $(@sprintf("%.4f", MODEL.Cρ)) (clumping factor) */
+/* Cρ = $(@sprintf("%.1f", MODEL.Cρ)) (clumping factor) */
 
-#define N_EQU $(MODEL.N_EQU) /* Number of equations */
-#define ODE_CS $(@sprintf("%.12e", MODEL.c_star)) /* [Myr * cm^(-3/2)] */
-#define ODE_CR $(@sprintf("%.12e", MODEL.c_rec)) /* [Myr * cm^(-3)] */
-#define ODE_CC $(@sprintf("%.12e", MODEL.c_cond)) /* [Myr * cm^(-3)] */
-#define ODE_CD $(@sprintf("%.12e", MODEL.c_dg)) /* [Myr^(-1) * mp^(-1) * cm^3] */
-#define ODE_CXD $(@sprintf("%.12e", MODEL.c_xd)) /* [dimensionless] */
-#define ODE_CSD $(@sprintf("%.12e", MODEL.c_sd)) /* [cm^2 mp^-1] */
-#define ODE_CSH2 $(@sprintf("%.12e", MODEL.c_sh2)) /* [cm^2 mp^-1] */
-#define TAU_DD $(@sprintf("%.12e", MODEL.τ_dd)) /* [Myr] */
-#define ZEFF $(@sprintf("%.4e", MODEL.Zeff)) /* 1e-3 Zₒ */
-#define WH2 $(@sprintf("%.4e", MODEL.ωH2)) /* [dimensionless] */
+#define N_EQU $(MODEL.N_EQU)                        /* Number of equations */
+#define ODE_CR $(@sprintf("%.15e", MODEL.c_rec))   /* Recombination constant [Myr^(-1) * cm^3 * mp^(-1)] */
+#define ODE_CC $(@sprintf("%.15e", MODEL.c_cond))   /* Condensation constant [Myr^(-1) * cm^3 * mp^(-1)] */
+#define ODE_CS $(@sprintf("%.15e", MODEL.c_star))   /* Star formation constant [Myr^(-1) * cm^(3/2) * mp^(-1/2)] */
+#define INV_T_DD $(@sprintf("%.15e", MODEL.inv_τ_dd)) /* Inverse of the dust loss timescale [Myr^-1] */
+#define ODE_CD $(@sprintf("%.15e", MODEL.c_dg))   /* Dust growth constant [Myr^(-1) * mp^(-1) * cm^3] */
+#define ODE_CSD $(@sprintf("%.15e", MODEL.c_sd)) /* Dust shielding constant [cm^2 * mp^(-1)] */
+#define ODE_CSH2 $(@sprintf("%.4e", MODEL.c_sh2))            /* Molecular self-shielding constant [cm^2 * mp^(-1)] */
+#define ODE_CXD $(@sprintf("%.15e", MODEL.c_xd))  /* Dust initial condition constant [dimensionless] */
+#define ZEFF $(@sprintf("%.4e", MODEL.Zeff))                /* Effective metallicity 1e-3 Zₒ */
+#define WH2 $(@sprintf("%.4e", MODEL.ωH2))                 /* Molecular shielding parameter [dimensionless] */
 
 typedef struct DataTable
 {
@@ -130,57 +125,6 @@ typedef struct DataTable
 	int n_rows;    // Number of rows in the table
 	int n_cols;    // Number of columns in the table
 } data_table;
-
-#ifdef RHO_PDF
-
-/*
- * Density PDF according to Burkhart (2018)
- * https://doi.org/10.3847/1538-4357/aad002
- *
- * We used the following parameters (all dimensionless):
- *
- * divisions = $(MODEL.PDF_PARAMS.divisions)
- * range of ln(rho/rho_0) = $(MODEL.PDF_PARAMS.deviation)
- * α (power law slope) = $(MODEL.PDF_PARAMS.α)
- * b (turbulent forcing parameter) = $(MODEL.PDF_PARAMS.b)
- * Ms (mach number) = $(MODEL.PDF_PARAMS.Ms)
- */
-
-#define DIVISIONS $(MODEL.PDF_PARAMS.divisions)
-
-/* Integrated PDF of the interstellar gas density */
-static const double PDF[] = {
-$(
-	[
-		"\t$(@sprintf("%.10f", MODEL.MASS_FRAC[i])),\n" for
-		i in 1:MODEL.PDF_PARAMS.divisions
-	]...
-)
-};
-
-/* Density factor: ρ = ρ₀ * F_RHO */
-static const double F_RHO[] = {
-$(
-	[
-		"\t$(@sprintf("%.10f", MODEL.F_POINTS[i])),\n" for
-		i in 1:MODEL.PDF_PARAMS.divisions
-	]...
-)
-};
-
-#else /* #ifdef RHO_PDF */
-
-#define DIVISIONS 1
-
-static const double PDF[] = {
-    1.0,
-};
-
-static const double F_RHO[] = {
-    1.0,
-};
-
-#endif /* #ifdef RHO_PDF */
 
 void *read_ftable(const char *file_path, const int n_rows, const int n_cols);
 double rate_of_star_formation(const int index);
@@ -218,14 +162,15 @@ md"## Jacobian"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 #####################################################################################
-# Write the Jacobian to the el_sfr.c file in `path`
+# Write the jacobian to the el_sfr.c file in `path`
 #####################################################################################
 
 function write_jacobian(path::String)::Nothing
 
 	# Boilerplate
 	head = """
-	\n*
+	\n/*! \\brief Evaluate the Jacobian of the systems of equations.
+	*
 	*  Evaluate the Jacobian matrix of the model, using the following variables:
 	*
 	*  Ionized gas fraction:    fi(t) = Mi(t) / MC --> y[0]
@@ -249,18 +194,18 @@ function write_jacobian(path::String)::Nothing
 	static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
 	{
 		(void)(t);
-
+		
 		/*
-		* Destructure the parameters
-		*
-		* rho_C: Total cell density                                 [mp * cm⁻³]
-		* UVB:   UVB photoionization rate                           [Myr^-1]
-		* eta_d: Photodissociation efficiency of Hydrogen molecules [dimensionless]
-		* eta_i: Photoionization efficiency of Hydrogen atoms       [dimensionless]
-		* R:     Mass recycling fraction                            [dimensionless]
-		* Zsn:   Metals recycling fraction                          [dimensionless]
-		* h:     Column height                                      [cm]
-		*/
+		 * Destructure the parameters
+		 *
+		 * rho_C: Total cell density           [mp * cm⁻³]
+		 * UVB:   UVB photoionization rate     [Myr^-1]
+		 * eta_d: Photodissociation efficiency [dimensionless]
+		 * eta_i: Photoionization efficiency   [dimensionless]
+		 * R:     Mass recycling fraction      [dimensionless]
+		 * Zsn:   Metals recycling fraction    [dimensionless]
+		 * h:     Column height                [cm]
+		 */
 		double *p    = (double *)parameters;
 		double rho_C = p[0];
 		double UVB   = p[1];
@@ -292,96 +237,124 @@ function write_jacobian(path::String)::Nothing
 		dfdt[5] = 0;
 
 		return GSL_SUCCESS;
+	}
 	"""
 
-	# Create C version of the jacobian
-	@variables S_t S_ic[1:MODEL.N_EQU] S_parameters[1:MODEL.N_PAR]
-    S_dydt = Vector{Num}(undef, MODEL.N_EQU)
-    MODEL.system!(S_dydt, S_ic, S_parameters, S_t)
+	c_file_str = read(path, String)
 
-	# Compute the Jacobian symbolically
-    jac = Symbolics.jacobian(S_dydt, S_ic)
+	# Main regex patterns
+	jac_block    = r"(?<=// JACOBIAN_START)((?s:.)*?)(?=// JACOBIAN_END)"
+	solver_block = r"(?<=gsl_odeiv2_driver_alloc_y_new\(\&sys)((?s:.)*?)(?=;)"
+	sys_block    = r"(?<=gsl_odeiv2_system sys = )((?s:.)*?)(?=;)"
 
-	# Regex patterns
-	block_ptr = r"(?<=\{\n  )(.*?)(?=\n\}\n)"
-	jacobian_ptr = r"(?<=Evaluate the Jacobian of the systems of equations.)((?s:.)*?)(?=\})"
+	if JACOBIAN
 
-	matrix = ""
-	@inbounds for i in 1:MODEL.N_EQU
-
-		@inbounds for j in 1:MODEL.N_EQU
-
-			# Transform the symbolic expresions into C functions
-			c_function = build_function(
-				jac[i, j],
-				S_ic,
-				S_parameters,
-				S_t;
-				target=Symbolics.CTarget(),
-			)
-
-			# Replacements for correct formatting
-			matrix *= replace(
-				 match(block_ptr, c_function).match,
-				"du[0] =" => "\tgsl_matrix_set(m, $(i-1), $(j-1),",
-				 ";"       => ");\n",
-			)
-
+		# Create the C version of the jacobian
+		@variables S_t S_ic[1:MODEL.N_EQU] S_parameters[1:MODEL.N_PAR]
+	    S_dydt = Vector{Num}(undef, MODEL.N_EQU)
+	    MODEL.jac_system!(S_dydt, S_ic, S_parameters, S_t)
+	
+		# Compute the Jacobian symbolically
+	    jac = Symbolics.jacobian(S_dydt, S_ic)
+	
+		# Function block regex pattern
+		func_block = r"(?<=\{\n  )(.*?)(?=\n\}\n)"
+		
+		matrix = ""
+		
+		for i in 1:MODEL.N_EQU
+			
+			for j in 1:MODEL.N_EQU
+	
+				# Transform the symbolic expresions into C functions
+				c_function = build_function(
+					jac[i, j],
+					S_ic,
+					S_parameters,
+					S_t;
+					target=Symbolics.CTarget(),
+				)
+	
+				# Replacements for correct formatting
+				matrix *= replace(
+					 match(func_block, c_function).match,
+					"du[0] =" => "\tgsl_matrix_set(m, $(i-1), $(j-1),",
+					 ";"      => ");\n",
+				)
+	
+			end
+			
 		end
+	
+		aux_var_01 = "sqrt(rho_C)"
+		aux_var_02 = "sqrt(1.0 + 1.0e-15 * y[2] * rho_C * h)"
+		aux_var_03 = "exp(-3.149606299212598e-19 * (y[1] + y[2]) * y[4] * rho_C * h)"
+		aux_var_04 = "pow(1.0 + 1.0e-15 * y[2] * rho_C * h, 2)"
+		aux_var_05 = "exp(-0.00085 * aux_var_02)"
+		aux_var_06 = "pow(aux_var_02, 2)"
+		aux_var_07 = "pow(1.0 + 1.0e-15 * y[2] * rho_C * h, 4)"
+	
+		jacobian_string = head * matrix * "\n" * tail
 
-		matrix = replace(
-			matrix,
+		# Replacements for correct formatting
+		jacobian_string = replace(
+			jacobian_string,
 			"RHS1"    => "y",
 			"RHS2[0]" => "rho_C",
 			"RHS2[1]" => "UVB",
-  			"RHS2[2]" => "eta_d",
-  			"RHS2[3]" => "eta_i",
+			"RHS2[2]" => "eta_d",
+			"RHS2[3]" => "eta_i",
 			"RHS2[4]" => "R",
 			"RHS2[5]" => "Zsn",
 			"RHS2[6]" => "h",
 			"+ -"     => "-",
-			"-1 *"    => "-",
-		) * "\n"
+		)
+
+		# Replacements for correct formatting
+		jacobian_string = replace(
+			jacobian_string,
+			"-1 *"       => "-",
+			aux_var_01   => "aux_var_01",
+			aux_var_02   => "aux_var_02",
+			aux_var_03   => "aux_var_03",
+			aux_var_04   => "aux_var_04",
+			"AUX_VAR_01" => aux_var_01,
+			"AUX_VAR_02" => aux_var_02,
+			"AUX_VAR_03" => aux_var_03,
+			"AUX_VAR_04" => aux_var_04,
+		)
+
+		# Replacements for correct formatting
+		jacobian_string = replace(
+			jacobian_string,
+			aux_var_05   => "aux_var_05",
+			aux_var_06   => "aux_var_06",
+			aux_var_07   => "aux_var_07",
+			"AUX_VAR_05" => aux_var_05,
+			"AUX_VAR_06" => "aux_var_02 * aux_var_02",
+			"AUX_VAR_07" => "aux_var_04 * aux_var_04",
+		)
+
+		# Write the jacobian in the C file string
+		file_with_jacobian = replace(
+			c_file_str, 
+			jac_block    => jacobian_string,
+			solver_block => ", gsl_odeiv2_step_msbdf, it * 1e-6, 1e-15, 0.0)",
+			sys_block    => "{sf_ode, jacobian, N_EQU, parameters}",
+		)
+
+	else
+
+		file_with_jacobian = replace(
+			c_file_str, 
+			jac_block    => "\n",
+			solver_block => ", gsl_odeiv2_step_msadams, it * 1e-6, 1e-15, 0.0)",
+			sys_block    => "{sf_ode, NULL, N_EQU, parameters}",
+		)
 
 	end
 
-	aux_var_01 = "sqrt(rho_C)"
-	aux_var_02 = "sqrt(1.0 + 1.0e-15 * y[2] * rho_C * h)"
-	aux_var_03 = "exp(-3.149606299212598e-19 * (y[1] + y[2]) * y[4] * rho_C * h)"
-	aux_var_04 = "pow(1.0 + 1.0e-15 * y[2] * rho_C * h, 2)"
-	aux_var_05 = "exp(-0.00085 * aux_var_02)"
-	aux_var_06 = "pow(aux_var_02, 2)"
-	aux_var_07 = "pow(1.0 + 1.0e-15 * y[2] * rho_C * h, 4)"
-
-	jacobian_string = head * matrix * tail
-
-	jacobian_string = replace(
-		jacobian_string,
-		aux_var_01   => "aux_var_01",
-		aux_var_02   => "aux_var_02",
-		aux_var_03   => "aux_var_03",
-		aux_var_04   => "aux_var_04",
-		"AUX_VAR_01" => aux_var_01,
-		"AUX_VAR_02" => aux_var_02,
-		"AUX_VAR_03" => aux_var_03,
-		"AUX_VAR_04" => aux_var_04,
-	)
-
-	jacobian_string = replace(
-		jacobian_string,
-		aux_var_05   => "aux_var_05",
-		aux_var_06   => "aux_var_06",
-		aux_var_07   => "aux_var_07",
-		"AUX_VAR_05" => aux_var_05,
-		"AUX_VAR_06" => "aux_var_02 * aux_var_02",
-		"AUX_VAR_07" => "aux_var_04 * aux_var_04",
-	)
-
-	file_with_jacobian = replace(
-		read(path, String),
-		jacobian_ptr => jacobian_string,
-	)
-
+	# Write the C file 
 	write(path, file_with_jacobian)
 
 	return nothing
@@ -410,7 +383,7 @@ md"## Dynamic libraries"
 
 function compile_libraries(path::String)::Nothing
 
-	opt_cmd = `C:/msys64/mingw64/bin/gcc.exe -Wall -Wno-unused-variable -fpic -shared -Ofast -march=native -mtune=native -flto`
+	opt_cmd = `C:/msys64/mingw64/bin/gcc.exe -Wall -Wno-unused-variable -fpic -shared -O3 -march=native -mtune=native -flto`
 	in_out_cmd = `$(path)/el_sfr.c -o $(lib_path)`
 	gsl_cmd = `-IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib -lgsl -lgslcblas -lm`
 
@@ -479,13 +452,21 @@ function integrate_with_c(
 		it::Float64,
 	)::Vector{Float64}
 
-		fractions = zeros(Float64, MODEL.N_EQU)
+		fractions = copy(ic)
 
 		ρ_cell  = base_params[1]
 		Z       = base_params[2]
 		a       = base_params[3]
 		h       = base_params[4]
 		log_age = log10(it * 10^6)
+		z       = (1.0 / a) - 1.0
+
+		UVB = @ccall $interpolate1D(
+			z::Cdouble,
+			UVB_table::Cstring,
+			size(MODEL.UVB_TABLE, 1)::Cint,
+			2::Cint,
+		)::Cdouble
 
 		η_diss = @ccall $interpolate2D(
 			log_age::Cdouble,
@@ -513,23 +494,12 @@ function integrate_with_c(
 			2::Cint,
 		)::Cdouble
 
-		# Redshift
-		z = (1 / a) - 1
-
-		UVB = @ccall $interpolate1D(
-			z::Cdouble,
-			UVB_table::Cstring,
-			size(MODEL.UVB_TABLE, 1)::Cint,
-			2::Cint,
-		)::Cdouble
-
 		parameters = [ρ_cell, UVB, η_diss, η_ion, R, Zsn, h]
 
 		@ccall $integrate_ode(
-		    ic::Ptr{Cdouble},
+		    fractions::Ptr{Cdouble},
 			parameters::Ptr{Cdouble},
 		    it::Cdouble,
-			fractions::Ptr{Cdouble},
 		)::Cvoid
 
 		return fractions
@@ -748,71 +718,6 @@ end;
 #=╠═╡
 write_R_Zsn_table(joinpath(GEN_FILES, "interpolation_tables"))
   ╠═╡ =#
-
-# ╔═╡ 451d1da4-e7f9-4e49-921f-ed5c83d7c0ad
-md"### Times"
-
-# ╔═╡ b944291c-b596-44ac-8d05-9ea7f95debd1
-function energyIntegrand(
-	a::Real,
-	omega_0::Float64,
-	omega_l::Float64,
-	h0::Float64,
-)::Float64
-
-    # Return 0 if `a` = 0, as the integrand goes to 0 in the limit a -> 0.
-    !iszero(a) || return 0.0
-
-    # Compute Ω_K (curvature)
-    omega_K = 1.0 - omega_0 - omega_l
-
-    # Compute the energy function
-    E = omega_0 / (a * a * a) + omega_K / (a * a) + omega_l
-
-    # Compute the hubble constant in Gyr^-1
-    H = h0 * HUBBLE_CONSTANT * a
-
-    # Return the integrand, in Gyr
-    return 1.0 / (H * sqrt(E))
-
-end;
-
-# ╔═╡ 3ffec921-db42-4e4e-b840-0109c61f2a84
-#####################################################################################
-# Write a table to interpolate t(a)
-# where t is the physical time in Myr and a the scale factor
-#
-# The columns are : a  |  t
-#
-# path: Where to store the resulting file
-#####################################################################################
-
-function write_time_table(
-	path::String;
-	ai::Float64=0.0209400379,
-	af::Float64=1.0,
-	steps::Int=500,
-	time_unit::Unitful.Units=u"Myr",
-)::Nothing
-
-	f = x -> energyIntegrand(x, OMEGA_0, OMEGA_L, H0)
-
-	scale_factors = range(ai, af, steps)
-
-    times = ustrip.(
-		time_unit,
-		[quadgk(f, 0.0, a)[1] * u"Gyr" for a in scale_factors],
-	)
-
-	dir = mkpath(path)
-	writedlm(joinpath(dir, "times.txt"), [scale_factors;; times])
-
-	return nothing
-
-end;
-
-# ╔═╡ 12857745-dec7-4204-a9a5-2ca68ee6eaf9
-write_time_table(joinpath(GEN_FILES, "interpolation_tables"))
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -3575,9 +3480,5 @@ version = "0.13.1+0"
 # ╟─5db32b26-0485-4929-89ec-34c09450555e
 # ╠═871a53c5-82aa-4a4e-9627-c759901e7a89
 # ╠═d85d8c28-7475-4c26-8bcc-5331fcd06a50
-# ╟─451d1da4-e7f9-4e49-921f-ed5c83d7c0ad
-# ╠═b944291c-b596-44ac-8d05-9ea7f95debd1
-# ╠═3ffec921-db42-4e4e-b840-0109c61f2a84
-# ╠═12857745-dec7-4204-a9a5-2ca68ee6eaf9
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

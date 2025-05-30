@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.8
+# v0.20.9
 
 using Markdown
 using InteractiveUtils
@@ -32,7 +32,7 @@ md"### Load the model"
 # ╔═╡ 03b38919-9384-4a69-88a3-c2f4cb251c5e
 begin
     const CODEGEN = @ingredients("./02_codegen.jl")
-    const MODEL = CODEGEN.MODEL
+    const MODEL   = CODEGEN.MODEL
 end;
 
 # ╔═╡ 37d6dce2-6ff5-41c4-af26-4abe29c79b8b
@@ -49,13 +49,13 @@ begin
     # ρ_cell: log10(Total cell density [mp * cm⁻³])
     # Z:      log10(Metallicity [dimensionless] / Zsun)
     # it:     Integration time [Myr]
-    const fi_r      = (0.4, 1.0)   # Linear range
-    const ρ_cell_lr = (-0.1, 2.0)  # Log range
-	const Z_lr      = (-3.0, -1.0) # Log range
-	const it_r      = (0.5, 10.0)  # Linear range
+    const fi_r      = (0.1, 0.9)  # Linear range
+    const ρ_cell_lr = (-0.1, 2.0) # Log range
+	const Z_lr      = (-2.0, 0.0) # Log range
+	const it_r      = (0.5, 10.0) # Linear range
 
     # Random points to compute the errors
-    const N_ERR  = 3000
+    const N_ERR  = 2000
     const errors = Vector{Float64}(undef, N_ERR)
 
 	function rand_list(range::NTuple{2,Float64})::Vector{Float64}
@@ -74,12 +74,9 @@ end;
 md"## C function"
   ╠═╡ =#
 
-# ╔═╡ 842deca9-917c-4ace-949c-d1e69d024a00
+# ╔═╡ 409aa356-dbf0-4b35-ab11-d82366fef73f
 #####################################################################################
 # Integrate the ODEs using the C routines in `el_sfr.c`
-#
-# phase: Which phase of the ODEs will the returned function solve for
-#        The options are given by the dictionary `MODEL.phase_name_to_index`
 #
 # The returned function accepts three arguments:
 #
@@ -104,12 +101,12 @@ md"## C function"
 #     Integration time in Myr
 #####################################################################################
 
-function integrate_with_c(; phase::String="stellar")::Function
+function c_solver_generator()::Function
 
 	# Set the path to the C library
     library = Libdl.dlopen(CODEGEN.lib_path)
 
-	func = CODEGEN.integrate_with_c(
+	return CODEGEN.integrate_with_c(
 		CODEGEN.ETA_D_TABLE,
 		CODEGEN.ETA_I_TABLE,
 		CODEGEN.R_TABLE,
@@ -117,6 +114,20 @@ function integrate_with_c(; phase::String="stellar")::Function
 		MODEL.UVB_TABLE_PATH,
 		library,
 	)
+
+end;
+
+# ╔═╡ 56e869cd-c371-4141-9e4d-ed8420990ede
+#####################################################################################
+# Integrate the ODEs using the C routines in `el_sfr.c`
+#
+# phase: Which phase of the ODEs will the returned function solve for
+#        The options are given by the dictionary `MODEL.phase_name_to_index`
+#####################################################################################
+
+function integrate_with_c(; phase::String="stellar")::Function
+
+	func = c_solver_generator()
 
 	# Index in the ODE solution
     idx = MODEL.phase_name_to_index[phase]
@@ -154,7 +165,7 @@ md"## Julia function"
 #     rho_C: Total cell density [mp * cm⁻³]
 #     Z:     Arepo metallicity  [dimensionless]
 #     a:     Scale factor       [dimensionless]
-#     h:      Column height      [cm]
+#     h:     Column height      [cm]
 #
 #   it::Float64
 #
@@ -227,9 +238,9 @@ function test_integration(; phase::String="stellar")::Nothing
 	mad_err = mad(error)
 
 	# Report results
-	println("Valid computations: $(length(error)) (of $(N_ERR))")
-    println("Maximum error:      $(@sprintf("%.2e", maximum(error) * 100)) %")
-    println("Relative error:     $((median_err ± mad_err) * 100Unitful.percent)")
+	println("Valid computations:     $(length(error)) (of $(N_ERR))")
+    println("Maximum relative error: $(@sprintf("%.2e", maximum(error) * 100)) %")
+    println("Median relative error:  $((median_err ± mad_err) * 100Unitful.percent)")
 
     return nothing
 
@@ -237,10 +248,146 @@ end;
   ╠═╡ =#
 
 # ╔═╡ 06dba542-6b7c-426a-8d76-bec153f1eeae
-# ╠═╡ disabled = true
 # ╠═╡ skip_as_script = true
 #=╠═╡
 test_integration(; phase="stellar")
+  ╠═╡ =#
+
+# ╔═╡ 0d6bf055-337a-4a02-a832-7d08a3853e9c
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"# Benchmarks"
+  ╠═╡ =#
+
+# ╔═╡ 5a31770d-8a52-4aa7-8874-ab3a5c98623d
+# ╠═╡ skip_as_script = true
+#=╠═╡
+begin
+	# ODE solver methods
+	const methods = [
+		(nothing,        "default"),
+		(Rodas4(),       "Rodas4"),
+		(Rodas42(),      "Rodas42"),
+		(Rodas4P(),      "Rodas4P"),
+		(Rodas4P2(),     "Rodas4P2"),
+		(Rodas5(),       "Rodas5"),
+		(KenCarp4(),     "KenCarp4"),
+		(Rosenbrock23(), "Rosenbrock23"),
+		(TRBDF2(),       "TRBDF2"),
+		(QNDF(),         "QNDF"),
+		(FBDF(),         "FBDF"),
+		(Kvaerno5(),     "Kvaerno5"),
+	    (RadauIIA5(),    "RadauIIA5"),
+		(AN5(),          "AN5"),
+	];
+end;
+  ╠═╡ =#
+
+# ╔═╡ 59a06a84-6070-41d3-b615-c8348adf91ab
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Convenience wrapper around MODEL.integrate_model() to catch errors,
+# and print its runtime
+#####################################################################################
+
+function benchmark_solve(params::Vector{Float64}, method::Tuple)::Nothing
+
+	args = (method[1],)
+	name = method[2]
+
+	# fi: Ionized gas fraction (Mi / MC) [dimensionless]
+	# ρ_cell: Total cell density         [mp * cm⁻³]
+	# Z: Metallicity                     [dimensionless]
+	# a: Scale factor                    [dimensionless]
+	# h: Column height                   [cm]
+	# it: Integration time               [Myr]
+	fi, ρ_cell, Z, a, h, it = params
+
+	benchmark = try
+		@timed MODEL.integrate_model(
+		    [fi - Z, 1.0 - fi, 0.0, 0.0, 0.9 * Z, 0.1 * Z],
+			[ρ_cell, Z, a, h],
+			(0.0, it);
+		    args,
+		)[end][MODEL.phase_name_to_index["stellar"]]
+	catch
+		nothing
+	end
+
+	m_str = "Method: $(name)"
+	padding = 20 - length(m_str)
+	print(m_str * " "^padding * "  -  ")
+
+	if isnothing(benchmark)
+		println("Failed.\n")
+	else
+		time = @sprintf("%.3g", benchmark.time * exp10(6.0))
+		value = @sprintf("%.3g", benchmark.value)
+		println("Time: $(time) μs  -  Result = $(value).")
+	end
+
+	return nothing
+
+end;
+  ╠═╡ =#
+
+# ╔═╡ 0b9f68f8-9911-44bd-8c98-779d83e20732
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Convinience wrapper around TESTING.integrate_with_c() to catch errors,
+# and print its runtime
+#####################################################################################
+
+function benchmark_csolve(params::Vector{Float64})::Nothing
+
+	integr_func = integrate_with_c()
+
+	# fi: Ionized gas fraction (Mi / MC) [dimensionless]
+	# ρ_cell: Total cell density         [mp * cm⁻³]
+	# Z: Metallicity                     [dimensionless]
+	# a: Scale factor                    [dimensionless]
+	# h: Column height                   [cm]
+	# it: Integration time               [Myr]
+	fi, ρ_cell, Z, a, h, it = params
+
+	benchmark = @timed integr_func(
+		[fi - Z, 1.0 - fi, 0.0, 0.0, 0.9 * Z, 0.1 * Z], 
+		[ρ_cell, Z, a, h], 
+		it,
+	)
+
+	print("Method: C library     -  ")
+
+	time = @sprintf("%.3g", benchmark.time * exp10(6.0))
+	value = @sprintf("%.3g", benchmark.value)
+	println("Time: $(time) μs  -  Result = $(value).")
+
+	return nothing
+
+end;
+  ╠═╡ =#
+
+# ╔═╡ 33298a96-8183-4ebf-a4f4-2859f5f9cbdc
+# ╠═╡ skip_as_script = true
+#=╠═╡
+begin
+	params = [
+		0.2,              # Ionized gas fraction (Mi / MC) [dimensionless]
+		10.0,             # Total cell density             [mp * cm⁻³]
+		1.0 * MODEL.Zsun, # Metallicity                    [dimensionless]
+		1.0,              # Scale factor                   [dimensionless]
+		3.0e20,           # Column height                  [cm]
+		10.0,             # Integration time               [Myr]
+	]
+	benchmark_csolve(params)
+
+	for method in methods
+		println()
+		benchmark_solve(params, method)
+	end
+end
   ╠═╡ =#
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -2988,11 +3135,17 @@ version = "0.13.1+0"
 # ╟─37d6dce2-6ff5-41c4-af26-4abe29c79b8b
 # ╠═86937c80-bd66-4718-86af-9d9b73f01a3d
 # ╟─161c897d-a7a1-4528-b201-571c17761ce4
-# ╠═842deca9-917c-4ace-949c-d1e69d024a00
+# ╠═409aa356-dbf0-4b35-ab11-d82366fef73f
+# ╠═56e869cd-c371-4141-9e4d-ed8420990ede
 # ╟─16184946-3492-4e74-9ed6-8fe7fadea504
 # ╠═6f0a8708-284e-4ddc-9ecf-5fc87b252117
 # ╟─61f83aec-0137-40ea-a9b8-b89b2daefe2b
 # ╠═e6aec66b-dd6a-4483-84a9-8a18975d1735
 # ╠═06dba542-6b7c-426a-8d76-bec153f1eeae
+# ╟─0d6bf055-337a-4a02-a832-7d08a3853e9c
+# ╠═5a31770d-8a52-4aa7-8874-ab3a5c98623d
+# ╠═59a06a84-6070-41d3-b615-c8348adf91ab
+# ╠═0b9f68f8-9911-44bd-8c98-779d83e20732
+# ╠═33298a96-8183-4ebf-a4f4-2859f5f9cbdc
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
