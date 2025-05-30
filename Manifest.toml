@@ -99,9 +99,9 @@ version = "1.11.0"
 
 [[deps.GracefulPkg]]
 deps = ["Compat", "Pkg", "TOML"]
-git-tree-sha1 = "ec6d498af5b39005fc458bfcc41a780169abccc9"
+git-tree-sha1 = "08e7c5a21fc7983388b532442408f04157190475"
 uuid = "828d9ff0-206c-6161-646e-6576656f7244"
-version = "2.1.0"
+version = "2.2.0"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "PrecompileTools", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
@@ -253,9 +253,9 @@ weakdeps = ["REPL"]
 
 [[deps.Pluto]]
 deps = ["Base64", "Configurations", "Dates", "Downloads", "ExpressionExplorer", "FileWatching", "GracefulPkg", "HTTP", "HypertextLiteral", "InteractiveUtils", "LRUCache", "Logging", "LoggingExtras", "MIMEs", "Malt", "Markdown", "MsgPack", "Pkg", "PlutoDependencyExplorer", "PrecompileSignatures", "PrecompileTools", "REPL", "RegistryInstances", "RelocatableFolders", "Scratch", "Sockets", "TOML", "Tables", "URIs", "UUIDs"]
-git-tree-sha1 = "a105834e8c86157bba9def667dde7ed79cb405b4"
+git-tree-sha1 = "b8d8418bb773f073ad350effe8f2079205753e05"
 uuid = "c3e4b0f8-55cb-11ea-2926-15256bba5781"
-version = "0.20.8"
+version = "0.20.9"
 
 [[deps.PlutoDependencyExplorer]]
 deps = ["ExpressionExplorer", "InteractiveUtils", "Markdown"]
