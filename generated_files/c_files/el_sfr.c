@@ -72,9 +72,11 @@ double *normalize_vector(double *vec, int size)
         sum += vec[i];
     }
 
+    double factor = 1.0 / sum;
+
     for (int i = 0; i < size; i++)
     {
-        vec[i] /= sum;
+        vec[i] *= factor;
     }
 
     return vec;
@@ -389,21 +391,32 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
      * Initial conditions
      **********************************************************************************************/
 
-    double fi = fmax(y[0], 0.0);
-    double fa = fmax(y[1], 0.0);
-    double fm = fmax(y[2], 0.0);
-    double fs = fmax(y[3], 0.0);
-    double fZ = fmax(y[4], 0.0);
-    double fd = fmax(y[5], 0.0);
+    double fi = y[0];
+    double fa = y[1];
+    double fm = y[2];
+    double fs = y[3];
+    double fZ = y[4];
+    double fd = y[5];
 
-    double total = fi + fa + fm + fs + fZ + fd;
+    if (has_negative(y, N_EQU))
+    {
+        fi = fmax(fi, 0.0);
+        fa = fmax(fa, 0.0);
+        fm = fmax(fm, 0.0);
+        fs = fmax(fs, 0.0);
+        fZ = fmax(fZ, 0.0);
+        fd = fmax(fd, 0.0);
 
-    fi /= total;
-    fa /= total;
-    fm /= total;
-    fs /= total;
-    fZ /= total;
-    fd /= total;
+        double total = fi + fa + fm + fs + fZ + fd;
+        double factor = 1.0 / total;
+
+        fi *= factor;
+        fa *= factor;
+        fm *= factor;
+        fs *= factor;
+        fZ *= factor;
+        fd *= factor;
+    }
 
     /**********************************************************************************************
      * Parameters
