@@ -398,26 +398,6 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     double fZ = y[4];
     double fd = y[5];
 
-    if (has_negative(y, N_EQU))
-    {
-        fi = fmax(fi, 0.0);
-        fa = fmax(fa, 0.0);
-        fm = fmax(fm, 0.0);
-        fs = fmax(fs, 0.0);
-        fZ = fmax(fZ, 0.0);
-        fd = fmax(fd, 0.0);
-
-        double total = fi + fa + fm + fs + fZ + fd;
-        double factor = 1.0 / total;
-
-        fi *= factor;
-        fa *= factor;
-        fm *= factor;
-        fs *= factor;
-        fZ *= factor;
-        fd *= factor;
-    }
-
     /**********************************************************************************************
      * Parameters
      **********************************************************************************************
