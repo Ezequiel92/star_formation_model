@@ -52,8 +52,10 @@ begin
 	# Paths to the C libraries (DLLs or SOs)
 	@static if Sys.iswindows()
 	    const lib_path = joinpath(C_FILES, "lib.dll")
+		const gcc_path = "C:/msys64/mingw64/bin/gcc.exe"
 	elseif Sys.islinux()
 	    const lib_path = joinpath(C_FILES, "lib.so")
+		const gcc_path = "gcc"
 	end
 
 	# If we will use an ODE solver that need the jacobian
@@ -118,6 +120,10 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 #define ODE_CXD $(@sprintf("%.15e", MODEL.c_xd))  /* Dust initial condition constant [dimensionless] */
 #define ZEFF $(@sprintf("%.4e", MODEL.Zeff))                /* Effective metallicity 1e-3 Zₒ */
 #define WH2 $(@sprintf("%.4e", MODEL.ωH2))                 /* Molecular shielding parameter [dimensionless] */
+#define LWB_A $(@sprintf("%.4e", MODEL.lwb_A))               /* LWB dissociation cte. [dimensionless] */
+#define LWB_B $(@sprintf("%.4e", MODEL.lwb_B))              /* LWB dissociation cte. [dimensionless] */
+#define LWB_C $(@sprintf("%.4e", MODEL.lwb_C))              /* LWB dissociation cte. [dimensionless] */
+#define LWB_D $(@sprintf("%.4e", MODEL.lwb_D))               /* LWB dissociation cte. [Myr^(-1)] */
 
 typedef struct DataTable
 {
@@ -200,6 +206,7 @@ function write_jacobian(path::String)::Nothing
 		 *
 		 * rho_C: Total cell density           [mp * cm⁻³]
 		 * UVB:   UVB photoionization rate     [Myr^-1]
+		 * LWB:   LWB Photodissociation  rate  [Myr^-1]
 		 * eta_d: Photodissociation efficiency [dimensionless]
 		 * eta_i: Photoionization efficiency   [dimensionless]
 		 * R:     Mass recycling fraction      [dimensionless]
@@ -209,11 +216,12 @@ function write_jacobian(path::String)::Nothing
 		double *p    = (double *)parameters;
 		double rho_C = p[0];
 		double UVB   = p[1];
-		double eta_d = p[2];
-		double eta_i = p[3];
-		double R     = p[4];
-		double Zsn   = p[5];
-		double h     = p[6];
+		double LWB   = p[2];
+		double eta_d = p[3];
+		double eta_i = p[4];
+		double R     = p[5];
+		double Zsn   = p[6];
+		double h     = p[7];
 
 		gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, $(MODEL.N_EQU), $(MODEL.N_EQU));
 		gsl_matrix *m = &dfdy_mat.matrix;
@@ -302,11 +310,12 @@ function write_jacobian(path::String)::Nothing
 			"RHS1"    => "y",
 			"RHS2[0]" => "rho_C",
 			"RHS2[1]" => "UVB",
-			"RHS2[2]" => "eta_d",
-			"RHS2[3]" => "eta_i",
-			"RHS2[4]" => "R",
-			"RHS2[5]" => "Zsn",
-			"RHS2[6]" => "h",
+			"RHS2[2]" => "LWB",
+			"RHS2[3]" => "eta_d",
+			"RHS2[4]" => "eta_i",
+			"RHS2[5]" => "R",
+			"RHS2[6]" => "Zsn",
+			"RHS2[7]" => "h",
 			"+ -"     => "-",
 		)
 
@@ -383,7 +392,7 @@ md"## Dynamic libraries"
 
 function compile_libraries(path::String)::Nothing
 
-	opt_cmd = `C:/msys64/mingw64/bin/gcc.exe -Wall -Wno-unused-variable -fpic -shared -O3 -march=native -mtune=native -flto`
+	opt_cmd = `$(gcc_path) -Wall -Wno-unused-variable -fpic -shared -O3 -march=native -mtune=native -flto`
 	in_out_cmd = `$(path)/el_sfr.c -o $(lib_path)`
 	gsl_cmd = `-IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib -lgsl -lgslcblas -lm`
 
@@ -424,6 +433,7 @@ function integrate_with_c(
 	integrate_ode = Libdl.dlsym(library, :integrate_ode)
 	interpolate1D = Libdl.dlsym(library, :interpolate1D)
 	interpolate2D = Libdl.dlsym(library, :interpolate2D)
+	lwb_photodissociation_rate = Libdl.dlsym(library, :lwb_photodissociation_rate)
 
 	# Construct main Julia function
 	#
@@ -468,6 +478,8 @@ function integrate_with_c(
 			2::Cint,
 		)::Cdouble
 
+		LWB = @ccall $lwb_photodissociation_rate(z::Cdouble)::Cdouble
+
 		η_diss = @ccall $interpolate2D(
 			log_age::Cdouble,
 			Z::Cdouble,
@@ -494,7 +506,7 @@ function integrate_with_c(
 			2::Cint,
 		)::Cdouble
 
-		parameters = [ρ_cell, UVB, η_diss, η_ion, R, Zsn, h]
+		parameters = [ρ_cell, UVB, LWB, η_diss, η_ion, R, Zsn, h]
 
 		@ccall $integrate_ode(
 		    fractions::Ptr{Cdouble},

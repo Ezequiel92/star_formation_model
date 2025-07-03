@@ -40,6 +40,10 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 #define ODE_CXD 2.835953313674557e-01  /* Dust initial condition constant [dimensionless] */
 #define ZEFF 1.2700e-05                /* Effective metallicity 1e-3 Zₒ */
 #define WH2 2.0000e-01                 /* Molecular shielding parameter [dimensionless] */
+#define LWB_A 2.1190e+00               /* LWB dissociation cte. [dimensionless] */
+#define LWB_B -1.1170e-01              /* LWB dissociation cte. [dimensionless] */
+#define LWB_C -2.7820e-03              /* LWB dissociation cte. [dimensionless] */
+#define LWB_D 4.3549e+01               /* LWB dissociation cte. [Myr^(-1)] */
 
 typedef struct DataTable
 {

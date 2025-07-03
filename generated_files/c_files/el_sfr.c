@@ -17,6 +17,7 @@
  *                void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
  *                static double interpolate1D(double x, const void *dtable)
  *                static double interpolate2D(double x, double y, const void *dtable)
+ *                static double lwb_photodissociation_rate(double z)
  *                static int sf_ode(double t, const double y[], double f[], void *parameters)
  *                static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
  *                static void integrate_ode(double *ic, double *parameters, double it)
@@ -358,6 +359,25 @@ static double interpolate2D(double x, double y, const void *dtable)
     return coeff * (term_01 + term_02 + term_03 + term_04);
 }
 
+/*! \brief Compute the LW background photodissociation rate.
+ *
+ *  \param[in] z Redshift.
+ *
+ *  \return The LW background photodissociation rate in [Myr^-1].
+ */
+#ifdef TESTING
+double lwb_photodissociation_rate(double z)
+#else  /* #ifdef TESTING */
+static double lwb_photodissociation_rate(double z)
+#endif /* #ifdef TESTING */
+{
+    double z1 = 1.0 + z;
+    double logJ21 = LWB_A + LWB_B * z1 + LWB_C * z1 * z1;
+
+    return LWB_D * pow(10, logJ21);
+
+}
+
 /***************************************************************************************************
  * ODE functions
  ***************************************************************************************************/
@@ -404,6 +424,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
      *
      * rho_c: Total cell density           [mp * cm^(-3)]
      * UVB:   UVB photoionization rate     [Myr^(-1)]
+     * LWB:   LWB photodissociation rate   [Myr^(-1)]
      * eta_d: Photodissociation efficiency [dimensionless]
      * eta_i: Photoionization efficiency   [dimensionless]
      * R:     Mass recycling fraction      [dimensionless]
@@ -414,11 +435,12 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     double *p = (double *)parameters;
     double rho_c = p[0];
     double UVB = p[1];
-    double eta_d = p[2];
-    double eta_i = p[3];
-    double R = p[4];
-    double Zsn = p[5];
-    double h = p[6];
+    double LWB = p[2];
+    double eta_d = p[3];
+    double eta_i = p[4];
+    double R = p[5];
+    double Zsn = p[6];
+    double h = p[7];
 
     /**********************************************************************************************
      * Auxiliary equations
@@ -484,7 +506,10 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     double sh2 = ((1 - WH2) / xp1_2) + (WH2 * exp_xp1 / sq_xp1);
     double s_diss = sd * sh2 * eta_d * psi;
 
-    double net_dissociation = s_diss - cond;
+    /* LW background dissociation [Myr^(-1)] */
+	double lwb = LWB * sh2 * fm;
+
+    double net_dissociation = lwb + s_diss - cond;
 
     /******************
      * Net dust growth
@@ -530,6 +555,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
  *
  *  rho_C: Total cell density           [mp * cm^(-3)]
  *  UVB:   UVB photoionization rate     [Myr^(-1)]
+ *  LWB:   LWB photodissociation rate   [Myr^(-1)]
  *  eta_d: Photodissociation efficiency [dimensionless]
  *  eta_i: Photoionization efficiency   [dimensionless]
  *  R:     Mass recycling fraction      [dimensionless]
@@ -647,6 +673,7 @@ double rate_of_star_formation(const int index)
      *
      * rho_C: Total cell density           [mp * cm^(-3)]
      * UVB:   UVB photoionization rate     [Myr^(-1)]
+     * LWB:   LWB photodissociation rate   [Myr^(-1)]
      * eta_d: Photodissociation efficiency [dimensionless]
      * eta_i: Photoionization efficiency   [dimensionless]
      * R:     Mass recycling fraction      [dimensionless]
@@ -659,6 +686,9 @@ double rate_of_star_formation(const int index)
 
     /* UVB photoionization rate [Myr^(-1)] */
     double UVB = interpolate1D(All.cf_redshift, All.UVB_TABLE_DATA);
+
+    /* LWB photodissociation rate   [Myr^(-1)] */
+    double LWB = lwb_photodissociation_rate(All.cf_redshift);
 
     /* Metallicity [dimensionless] */
     double Z = fmax(0.0, SphP[index].Metallicity);
@@ -678,13 +708,14 @@ double rate_of_star_formation(const int index)
     /* Column height [cm] */
     double h = All.ForceSoftening[P[index].SofteningType] * L_CGS;
 
-    double parameters[] = {rhoC, UVB, eta_d, eta_i, R, Zsn, h};
+    double parameters[] = {rhoC, UVB, LWB, eta_d, eta_i, R, Zsn, h};
 
     /* Store the ODE parameters */
     SphP[index].tau_S = ODE_CS / sqrt(rhoC);
     SphP[index].parameter_a = All.Time;
     SphP[index].parameter_rhoC = rhoC;
     SphP[index].parameter_UVB = UVB;
+    SphP[index].parameter_LWB = LWB;
     SphP[index].parameter_Z = Z;
     SphP[index].parameter_eta_d = eta_d;
     SphP[index].parameter_eta_i = eta_i;

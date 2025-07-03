@@ -308,7 +308,7 @@ TikzPictures.TikzPicture(
 		\node[box, white, text width=2em] (dust) at (180:10cm) {Dust};
 		\draw[line, white, ->]
 		(ion) edge [bend left, "$\textcolor{d_pink}{\dfrac{f_i(t)}{\tau_\mathrm{rec}(t)}} - \textcolor{d_blue}{S_d \, \eta_\mathrm{ion} \, \psi(t)} - \textcolor{d_blue}{\Gamma_\mathrm{UVB} \, f_a}$"] (atom)
-		(atom) edge [bend left, "$\textcolor{d_orange}{\dfrac{f_a(t)}{\tau_\mathrm{cond}(t)}} - \textcolor{d_green}{S_d \, S_\mathrm{H_2} \, \eta_\mathrm{diss} \, \psi(t)}$"] (molecule)
+		(atom) edge [bend left, "$\textcolor{d_orange}{\dfrac{f_a(t)}{\tau_\mathrm{cond}(t)}} - \textcolor{d_green}{S_d \, S_\mathrm{H_2} \, \eta_\mathrm{diss} \, \psi(t)} - \textcolor{d_green}{S_\mathrm{H_2} \, \Gamma_\mathrm{LWB} \, f_m}$"] (molecule)
 		(stars) edge [bend left, "$\textcolor{d_yellow}{R \, \psi(t) \, (1 - Z_\mathrm{SN})}$"] (ion)
 		(molecule) edge [bend left, "$\textcolor{red}{\psi(t)}$"] (stars)
 		(stars) edge node[midway, yshift=-10mm] {$\textcolor{d_yellow}{R \, \psi(t) \, Z_\mathrm{SN}}$} (metals)
@@ -402,10 +402,10 @@ The atomic component grows through the dissociation of hydrogen molecules and th
 The former, as with the ionized gas, is given by
 
 $\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_a(t)\right|_{\mathrm{diss.}} = S_d \, \eta_\mathrm{diss} \, \psi(t) \, ,
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_a(t)\right|_{\mathrm{diss.}} = S_d \, S_\mathrm{H_2} \, \eta_\mathrm{diss} \, \psi(t) + \Gamma_\mathrm{LWB} \, f_m \, ,
 \end{equation}$
 
-where $\eta_\mathrm{diss}$ is the disassociated mass rate per unit of created stellar mass, also assumed constant during the ODEs integration, and $S_\mathrm{H_2}$ self shielding factor of molecular gas.
+where $\eta_\mathrm{diss}$ is the disassociated mass rate per unit of created stellar mass, also assumed constant during the ODEs integration, $S_\mathrm{H_2}$ self shielding factor of molecular gas, and $\Gamma_\mathrm{LWB}$ is disassociation rate due to LW backgound radiation.
 
 The latter will depend on the mass of ionized gas and the time scale of recombination ($\tau_\mathrm{rec}$), so it is given by
 
@@ -456,8 +456,8 @@ TikzPictures.TikzPicture(
   	${\boldmath
 	\begin{aligned}
 		\dv{}{t}f_i(t) &= - \textcolor{d_pink}{\frac{f_i(t)}{\tau_\mathrm{rec}(t)}} + \textcolor{d_blue}{S_d \, \eta_\mathrm{ion} \, \psi(t)} + \textcolor{d_blue}{\Gamma_\mathrm{UVB} \, f_a} + \textcolor{d_yellow}{R \, \psi(t) \, (1 - Z_\mathrm{SN})} \, , \\
-		\dv{}{t}f_a(t) &= \textcolor{d_pink}{\frac{f_i(t)}{\tau_\mathrm{rec}(t)}} - \textcolor{d_blue}{S_d \, \eta_\mathrm{ion} \, \psi(t)} - \textcolor{d_blue}{\Gamma_\mathrm{UVB} \, f_a} - \textcolor{d_orange}{\frac{f_a(t)}{\tau_\mathrm{cond}(t)}} + \textcolor{d_green}{S_d \, S_\mathrm{H_2} \, \eta_\mathrm{diss} \, \psi(t)} \, , \\
-		\dv{}{t}f_m(t) &= \textcolor{d_orange}{\frac{f_a(t)}{\tau_\mathrm{cond}(t)}} - \textcolor{d_green}{S_d \, S_\mathrm{H_2} \, \eta_\mathrm{diss} \, \psi(t)} - \textcolor{red}{\psi(t)} \, , \\
+		\dv{}{t}f_a(t) &= \textcolor{d_pink}{\frac{f_i(t)}{\tau_\mathrm{rec}(t)}} - \textcolor{d_blue}{S_d \, \eta_\mathrm{ion} \, \psi(t)} - \textcolor{d_blue}{\Gamma_\mathrm{UVB} \, f_a} - \textcolor{d_orange}{\frac{f_a(t)}{\tau_\mathrm{cond}(t)}} + \textcolor{d_green}{S_d \, S_\mathrm{H_2} \, \eta_\mathrm{diss} \, \psi(t)} + \textcolor{d_green}{S_\mathrm{H_2} \, \Gamma_\mathrm{LWB} \, f_m} \, , \\
+		\dv{}{t}f_m(t) &= \textcolor{d_orange}{\frac{f_a(t)}{\tau_\mathrm{cond}(t)}} - \textcolor{d_green}{S_d \, S_\mathrm{H_2} \, \eta_\mathrm{diss} \, \psi(t)} - \textcolor{d_green}{S_\mathrm{H_2} \, \Gamma_\mathrm{LWB} \, f_m} - \textcolor{red}{\psi(t)} \, , \\
 		\dv{}{t}f_s(t) &= \textcolor{red}{\psi(t)} - \textcolor{d_yellow}{R \, \psi(t)} \, , \\
 		\dv{}{t}f_Z(t) &= \textcolor{d_yellow}{Z_\mathrm{SN} \, R \, \psi(t)} + \textcolor{g_red}{\frac{f_d}{\tau_\mathrm{dd}}} - \textcolor{g_green}{\left(1 - \frac{f_d}{f_Z + f_d}\right) \frac{f_d}{\tau_\mathrm{dg}}} \, , \\
 		\dv{}{t}f_d(t) &= \textcolor{g_green}{\left(1 - \frac{f_d}{f_Z + f_d}\right) \frac{f_d}{\tau_\mathrm{dg}}} - \textcolor{g_red}{\frac{f_d}{\tau_\mathrm{dd}}} \, ,
@@ -540,6 +540,8 @@ md"""
 *  $Z_\mathrm{SN}$: Fraction of the returned mass that is metals.
 
 *  $\Gamma_\mathrm{UVB}$: UVB photoionization rate.
+
+*  $\Gamma_\mathrm{LWB}$: LWB photodissociation rate.
 """
   ╠═╡ =#
 
@@ -1599,11 +1601,14 @@ md"""
 
 The photodissociation of molecular hydrogen ($H_2$) by Lyman-Werner photons is a two-step process, known as the Solomon process ([Incatasciato2023](https://doi.org/10.1093/mnras/stad1008)).
 
-1.  **Absorption:** An $H_2$ molecule absorbs a UV photon in the Lyman-Werner bands, which are a series of absorption lines in the energy range of $11 \, \mathrm{eV} < E < 13.6 \, \mathrm{eV}$. This excites the molecule to a higher electronic state.
-    $H_2 + \gamma_{LW} \rightarrow H_2^*$.
+1.  **Absorption:** An $H_2$ molecule absorbs a UV photon in the Lyman-Werner bands (absorption lines in the energy range of $11 \, \mathrm{eV} < E < 13.6 \, \mathrm{eV}$). This excites the molecule to a higher electronic state.
+
+$H_2 + \gamma_{LW} \rightarrow H_2^*$
+
 2.  **Decay:** The excited molecule ($H_2^*$) quickly decays. About 85% of the time, it decays back to a stable vibrational state of the ground electronic level, emitting a photon. However, about 15% of the time, it decays to the vibrational continuum of the ground state, meaning the molecule dissociates into two hydrogen atoms.
-    $H_2^* \rightarrow H + H$ (dissociation, $\sim 15\%$ probability)
-    $H_2^* \rightarrow H_2 + \gamma$ (radiative decay, $\sim 85\%$ probability).
+
+$H_2^* \rightarrow H + H \,\, \mathrm{(dissociation, \,\, \sim 15\% \,\, probability)}$
+$H_2^* \rightarrow H_2 + \gamma \,\, \mathrm{(radiative \,\, decay, \,\, \sim 85\% \,\, probability)}$
 
 The overall rate of this dissociation process depends on how many LW photons are available and the probability that a molecule will absorb one.
 
@@ -1614,10 +1619,10 @@ $\frac{\mathrm{d}}{\mathrm{d}t} \rho_m(t) = \rho_m(t) \int_{LW \text{ bands}} \s
 where 
 
  *  $F_\nu$ is the energy flux of photons per unit area per unit frequency $[\mathrm{erg \, s^{-1} \, cm^{-2} \, Hz^{-1}}]$,
- *  $h \, \nu$ is the energy of a single photon ($F_\nu / (h \, \nu)$ is therefore the number flux of photons $[\mathrm{photons \, s^{-1} \, cm^{-2} \, Hz^{-1}}]$),
+ *  $h \, \nu$ is the energy of a single photon, $F_\nu / (h \, \nu)$ is therefore the number flux of photons $[\mathrm{photons \, s^{-1} \, cm^{-2} \, Hz^{-1}}]$,
  *  $\sigma_{pd}(\nu)$ is the photodissociation cross-section $[\mathrm{cm^{-2}}]$.
 
-We can write the energy flux as 
+Assuming an homogeneous background field we can write the energy flux as 
 
 $F_\nu = 4\pi \, J_\nu$
 
@@ -1627,43 +1632,49 @@ $J_\nu(z) = J_{21}(z) \times 10^{-21} \, \mathrm{erg \, s^{-1} \, cm^{-2} \, Hz^
 
 Putting all together we can write the photodissociation rate as
 
-$k_{pd}(z) = J_{21}(z) \, (4\pi \times 10^{-21}) \int_{LW \mathrm{bands}} \frac{\sigma_{pd}(\nu)}{h \, \nu} \mathrm{d}\nu$
+$\Gamma_\mathrm{LWB}(z) = \left(\frac{4\pi}{h} \times 10^{-21}\right) J_{21}(z) \int_{LW \mathrm{bands}} \frac{\sigma_{pd}(\nu)}{\nu} \mathrm{d}\nu$
 
-The integral part contains all the complex quantum mechanics of the $H_2$ molecule's many absorption lines. This integral has been numerically calculated and is treated as a constant value in astrophysics. From [Abel1997](https://doi.org/10.1016/S1384-1076(97)00010-9) we have (in the optically thin limit)
+The integral part contains all the complex quantum mechanics of the $H_2$ molecule's many absorption lines. This integral has been numerically calculated and is treated as a constant value. 
 
-$k_{pd}^{ot}(z) = 1.38 \times 10^{-12} \, \mathrm{s^{-1}} \, J_{21}(z)$
+From [Abel1997](https://doi.org/10.1016/S1384-1076(97)00010-9) we have (in the optically thin limit)
 
-Now, If we want to connsider self shielding we simply use the term previously computed
+$\Gamma_\mathrm{LWB}(z) = (1.38 \times 10^{-12} \, \mathrm{s^{-1}}) \, J_{21}(z)$
 
-$k_{pd}(z) = 1.38 \times 10^{-12} \, \mathrm{s^{-1}} \, S_\mathrm{H_2} \, J_{21}(z)$
+Now, If we want to connsider self shielding we simply use the term $S_\mathrm{H_2}$ previously computed
 
-There are several model for $J_{21}(z)$ in the literature (Fig. 8 in [Ahn2009](https://doi.org/10.1088/0004-637X/695/2/1430), Eq. 6 in [Visbal2014](https://doi.org/10.1093/mnras/stu1710), and Eq. 9 in [Incatasciato2023](https://doi.org/10.1093/mnras/stad1008))
+$k_{pd}(z) = \Gamma_\mathrm{LWB} \, S_\mathrm{H_2}$
 
+where $k_{pd}$ is the final photodissociation rate.
+
+For $J_{21}(z)$ we will use the model from Eq. 9 in [Incatasciato2023](https://doi.org/10.1093/mnras/stad1008)
+
+$\log_{10} J_{21}(z) = A + B \, (1 + z) + C \, (1 + z)^2$
+
+where $A = 2.119$, $B = -1.117 \times 10^{-1}$, and $C = -2.782 \times 10^{-3}$.
 """
 
 # ╔═╡ 5ce798b5-4366-4cc1-8d2d-881a827d6dc9
 begin
-	lwb_cte = ustrip(t_u^-1, 1.38e-12u"s^-1")
-	A_lwb = 2.119
-	B_lwb = −1.117e-1
-	C_lwb = −2.782e-3
+	lwb_D = ustrip(t_u^-1, 1.38e-12u"s^-1")
+	lwb_A   = 2.119
+	lwb_B   = −1.117e-1
+	lwb_C   = −2.782e-3
 
-	J21(z) = A_lwb + B_lwb * (1 + z) + C_lwb * (1 + z)^2
+	J21(z) = exp10(lwb_A + lwb_B * (1 + z) + lwb_C * (1 + z)^2)
 end;
 
 # ╔═╡ 400b6787-f2b5-40ef-be11-cc5d60d19b9f
 ##################################################################################
-# Compute the background LW photodissociation [Myr^(-1)]
+# Compute ΓLWB [Myr^(-1)]
 #
 # a:   scale factor [dimensionless]
-# Sh2: Self shielding factor [dimensionless]
 ##################################################################################
 
-function photodissociation_LWB(a::Float64, Sh2::Float64)::Float64
+function photodissociation_LWB(a::Float64)::Float64
 
 	z = (1 / a) - 1
 
-	return lwb_cte * Sh2 * J21(z)
+	return lwb_D * J21(z)
 
 end;
 
@@ -1996,7 +2007,7 @@ md"## Constants"
 # ╔═╡ f863d68f-590e-4b96-8433-dc6b5177539f
 begin
 	const N_EQU = 6  # Number of equations
-	const N_PAR = 7  # Number of parameters
+	const N_PAR = 8  # Number of parameters
 
 	# Index of each phase in the ODE solution  matrix
 	const phase_name_to_index = Dict(
@@ -2014,6 +2025,38 @@ end;
 #=╠═╡
 md"## Equations"
   ╠═╡ =#
+
+# ╔═╡ 9ab0a10b-8165-401a-a2b6-c9726526a906
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"## Jacobian"
+  ╠═╡ =#
+
+# ╔═╡ 1b8af600-56eb-4508-bc52-aa4e138b4c7e
+function construct_jacobian(system::Function)::Matrix{Function}
+
+	@variables S_t S_ic[1:N_EQU] S_parameters[1:N_PAR]
+    S_dydt = Vector{Num}(undef, N_EQU)
+    system(S_dydt, S_ic, S_parameters, S_t)
+
+	# Compute the Jacobian symbolically
+    jac = Symbolics.jacobian(S_dydt, S_ic)
+
+    # Transform the symbolic expresions into julia functions
+    return [
+        build_function(jac[i, j], S_ic, S_parameters, S_t, expression=Val{false}) for
+        i in 1:N_EQU, j in 1:N_EQU
+    ]
+
+end;
+
+# ╔═╡ 9958610a-3384-4410-beae-8f4ce657846d
+#####################################################################################
+# Personalized method of fma() for the computation of the jacobian
+#####################################################################################
+function Base.fma(x::Symbolics.Num, y::Symbolics.Num, z::Symbolics.Num)
+	return x * y + z
+end;
 
 # ╔═╡ bd8743d6-8f21-413d-835a-e543926baa09
 #####################################################################################
@@ -2041,6 +2084,7 @@ function system!(dydt, ic, parameters, t)
 	#
 	# ρ_cell: Total cell density           [mp * cm^(-3)]
 	# ΓUVB:   UVB photoionization rate     [Myr^(-1)]
+	# ΓLWB:   LWB photodissociation rate   [Myr^(-1)]
 	# η_diss: Photodissociation efficiency [dimensionless]
 	# η_ion:  Photoionization efficiency   [dimensionless]
 	# R:      Mass recycling fraction      [dimensionless]
@@ -2048,7 +2092,7 @@ function system!(dydt, ic, parameters, t)
 	# h:      Column height                [cm]
 	##################################################
 	
-    ρ_cell, ΓUVB, η_diss, η_ion, R, Zsn, h = parameters
+    ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h = parameters
 
 	##################################################
     # Auxiliary equations
@@ -2114,7 +2158,10 @@ function system!(dydt, ic, parameters, t)
 	sh2     = ((1 - ωH2) / xp1_2) + (ωH2 * exp_xp1 / sq_xp1)
 	s_diss  = sd * sh2 * η_diss * ψs
 
-	net_dissociation = -cond + s_diss
+	# LW background dissociation [Myr^(-1)]
+	lwb = ΓLWB * sh2 * fm
+
+	net_dissociation = -cond + s_diss + lwb
 
 	##################
 	# Net dust growth
@@ -2141,78 +2188,8 @@ function system!(dydt, ic, parameters, t)
 
 end;
 
-# ╔═╡ e1d4b7bf-384f-4195-962a-ce750f83558d
-#####################################################################################
-# System of ODEs, written for the computation of the jacobian
-#####################################################################################
-
-function jac_system!(dydt, ic, parameters, t)
-
-    fi, fa, fm, fs, fZ, fd = ic
-    ρ_cell, ΓUVB, η_diss, η_ion, R, Zsn, h = parameters
-	ψs = ψ(fm, ρ_cell)
-	fn = fa + fm
-	fg = fn + fi
-	Zt = fZ + fd
-	recomb = c_rec * fi * fi * ρ_cell
-	uvb = ΓUVB * fa
-	csd_h = c_sd * h
-	dust_shield = csd_h * ρ_cell * fn * Zt
-	sd = exp(dust_shield)
-	s_ion = sd * η_ion * ψs
-	net_ionization = -recomb + uvb + s_ion
-	R_ψs = R * ψs
-	s_gas_production = R_ψs - R_ψs * Zsn
-	Z_eff = Zt + Zeff
-	cond = c_cond * fa * ρ_cell * fg * Z_eff
-	csh2_h = c_sh2 * h
-	xp1 = csh2_h + fm * ρ_cell + 1.0
-	xp1_2 = xp1 * xp1
-	sq_xp1 = NaNMath.sqrt(xp1)
-	exp_xp1 = exp(exp_fac * sq_xp1)
-	sh2 = ((1 - ωH2) / xp1_2) + (ωH2 * exp_xp1 / sq_xp1)
-	s_diss = sd * sh2 * η_diss * ψs
-	net_dissociation = -cond + s_diss
-	dg = c_dg * fd * fZ * fm * ρ_cell
-	dd = fd * inv_τ_dd
-	net_dust_growth = dg - dd
-
-    # ODE system
-	dydt[1] = net_ionization + s_gas_production
-    dydt[2] = -net_ionization + net_dissociation
-    dydt[3] = -net_dissociation - ψs
-    dydt[4] = ψs - R_ψs
-	dydt[5] = Zsn * R_ψs - net_dust_growth
-	dydt[6] = net_dust_growth
-
-end;
-
-# ╔═╡ 9ab0a10b-8165-401a-a2b6-c9726526a906
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"## Jacobian"
-  ╠═╡ =#
-
-# ╔═╡ 1b8af600-56eb-4508-bc52-aa4e138b4c7e
-function construct_jacobian(system::Function)::Matrix{Function}
-
-	@variables S_t S_ic[1:N_EQU] S_parameters[1:N_PAR]
-    S_dydt = Vector{Num}(undef, N_EQU)
-    system(S_dydt, S_ic, S_parameters, S_t)
-
-	# Compute the Jacobian symbolically
-    jac = Symbolics.jacobian(S_dydt, S_ic)
-
-    # Transform the symbolic expresions into julia functions
-    return [
-        build_function(jac[i, j], S_ic, S_parameters, S_t, expression=Val{false}) for
-        i in 1:N_EQU, j in 1:N_EQU
-    ]
-
-end;
-
 # ╔═╡ 80005099-7154-4306-9172-c9a168336e14
-const JACOBIAN_FUNCTION = construct_jacobian(jac_system!);
+const JACOBIAN_FUNCTION = construct_jacobian(system!);
 
 # ╔═╡ c291700e-3a84-49a7-85d6-592cfb3b1a11
 #####################################################################################
@@ -2289,10 +2266,11 @@ function integrate_model(
 	h      = base_params[4]
 
 	ΓUVB          = photoionization_UVB(a)
+	ΓLWB          = photodissociation_LWB(a)
 	η_diss, η_ion = photodissociation_efficiency(tspan[2], Z)
 	R, Zsn        = recycled_fractions(Z)
 
-	parameters = [ρ_cell, ΓUVB, η_diss, η_ion, R, Zsn, h]
+	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h]
 
     sol = solve(ODEProblem(
 		ode_function,
@@ -2403,7 +2381,11 @@ function pBurkhart2018(s::Float64, params::PDF_params)::Float64
     s0 = -0.5 * σs2
     st = (α - 0.5) * σs2
     C = exp((α - 1) * 0.5 * α * σs2) / sqrt(2π * σs2)
-    N = 1 / ((C * exp(-α * st)) / α + 0.5 + 0.5 * erf((2 * st + σs2) / sqrt(8 * σs2)))
+
+	A_B18 = C * exp(-α * st) / α
+	B_B18 = 0.5
+	C_B18 = 0.5 * erf((2 * st + σs2) / sqrt(8 * σs2))
+    N = 1 / (A_B18 + B_B18 + C_B18)
 
     if s < st
         return (N / sqrt(2π * σs2)) * exp(-((s - s0)^2) / (2 * σs2))
@@ -2604,8 +2586,8 @@ To find the per-equation and global equilibrium we take que ODEs
 
 $\begin{align}
 	\frac{\mathrm{d}}{\mathrm{d}t} f_i(t) &= - \frac{f_i(t)}{\tau_\mathrm{rec}(t)} + S_d \, \eta_\mathrm{ion \, \psi(t)} + \Gamma_\mathrm{UVB} \, f_a + R \, \psi(t) \, (1 - Z_\mathrm{SN}) \, , \\
-	\frac{\mathrm{d}}{\mathrm{d}t} f_a(t) &= \frac{f_i(t)}{\tau_\mathrm{rec}(t)} - S_d \, \eta_\mathrm{ion} \, \psi(t) - \Gamma_\mathrm{UVB} \, f_a - \frac{f_a(t)}{\tau_\mathrm{cond}(t)} + S_d \, S_\mathrm{H_2} \, \eta_\mathrm{diss} \, \psi(t) \, , \\
-	\frac{\mathrm{d}}{\mathrm{d}t} f_m(t) &= \frac{f_a(t)}{\tau_\mathrm{cond}(t)} - S_d \, S_\mathrm{H_2} \, \eta_\mathrm{diss} \, \psi(t) - \psi(t) \, , \\
+	\frac{\mathrm{d}}{\mathrm{d}t} f_a(t) &= \frac{f_i(t)}{\tau_\mathrm{rec}(t)} - S_d \, \eta_\mathrm{ion} \, \psi(t) - \Gamma_\mathrm{UVB} \, f_a - \frac{f_a(t)}{\tau_\mathrm{cond}(t)} + S_d \, S_\mathrm{H_2} \, \eta_\mathrm{diss} \, \psi(t) + \Gamma_\mathrm{LWB} \, S_\mathrm{H_2} \, f_m \, , \\
+	\frac{\mathrm{d}}{\mathrm{d}t} f_m(t) &= \frac{f_a(t)}{\tau_\mathrm{cond}(t)} - S_d \, S_\mathrm{H_2} \, \eta_\mathrm{diss} \, \psi(t) - \Gamma_\mathrm{LWB} \, S_\mathrm{H_2} \, f_m - \psi(t) \, , \\
 	\frac{\mathrm{d}}{\mathrm{d}t} f_s(t) &= \psi(t) - R \, \psi(t) \, , \\
 	\frac{\mathrm{d}}{\mathrm{d}t} f_Z(t) &= Z_\mathrm{SN} \, R \, \psi(t) + \frac{f_d}{\tau_\mathrm{dd}} - \left(1 - \frac{f_d}{f_Z + f_d}\right) \frac{f_d}{\tau_\mathrm{dg}} \, , \\
 	\frac{\mathrm{d}}{\mathrm{d}t} f_d(t) &= \left(1 - \frac{f_d}{f_Z + f_d}\right) \frac{f_d}{\tau_\mathrm{dg}} - \frac{f_d}{\tau_\mathrm{dd}} \, ,
@@ -2619,7 +2601,7 @@ and set the derivatives to $0$.
 # Copy of the ODE system, for testing the equilibrium condition
 #
 # fractions:   Gas fractions, [fi, fa, fm, fs, fZ, fd]
-# parameters: Parameters, [ρ_cell, ΓUVB, η_diss, η_ion, R, Zsn, h]
+# parameters: Parameters, [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h]
 #####################################################################################
 
 function odes(
@@ -2656,10 +2638,11 @@ function equilibrium(
 	it     = base_params[5]
 
 	ΓUVB          = photoionization_UVB(a)
+	ΓLWB          = photodissociation_LWB(a)
 	η_diss, η_ion = photodissociation_efficiency(it, Z)
 	R, Zsn        = recycled_fractions(Z)
 
-	parameters = [ρ_cell, ΓUVB, η_diss, η_ion, R, Zsn, h]
+	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h]
 
     return odes(fractions, parameters)
 
@@ -2723,10 +2706,11 @@ function stiffness_ratio(
 	it = base_params[5]  # Integration time [Myr]
 
 	ΓUVB          = photoionization_UVB(a)
+	ΓLWB          = photodissociation_LWB(a)
 	η_diss, η_ion = photodissociation_efficiency(it, Z)
 	R, Zsn        = recycled_fractions(Z)
 
-	parameters = [ρ, ΓUVB, η_diss, η_ion, R, Zsn, h]
+	parameters = [ρ, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h]
 	J = Matrix{Float64}(undef, N_EQU, N_EQU)
 
 	# Compute the Jacobian and store it in J
@@ -2788,10 +2772,11 @@ function lyapunov_spectrum(
 	it = base_params[5]  # Integration time [Myr]
 
 	ΓUVB          = photoionization_UVB(a)
+	ΓLWB          = photodissociation_LWB(a)
 	η_diss, η_ion = photodissociation_efficiency(it, Z)
 	R, Zsn        = recycled_fractions(Z)
 
-	parameters = [ρ, ΓUVB, η_diss, η_ion, R, Zsn, h]
+	parameters = [ρ, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h]
 	ds = CoupledODEs(system!, ic, parameters)
 
 	# Compute the Lyapunov spectrum
@@ -2818,14 +2803,14 @@ lyapunov_spectrum(
 	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
 	[0.7, 0.27, 0.0, 0.0, 0.02, 0.01],
 	# (ρ [cm⁻³], Z [dimensionless], a [dimensionless], h [cm], it [Myr])
-	(100.0, Zsun, 1.0, 3.0e20, 10.0)
+	(1000.0, Zsun, 1.0, 3.0e20, 10.0)
 )
   ╠═╡ =#
 
 # ╔═╡ f336b083-99c7-4345-8ada-78b166a98abe
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"The model, for a typical set of initial conditions, is not chaotic (maximum lyapunov exponent < 0). But, we note that with certain initial conditions the system can turn chaotic (maximum lyapunov exponent > 0)."
+md"The model, for a typical set of initial conditions, is not chaotic (maximum lyapunov exponent < 0)."
   ╠═╡ =#
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -5584,9 +5569,9 @@ version = "0.13.1+0"
 # ╠═f863d68f-590e-4b96-8433-dc6b5177539f
 # ╟─f5a983bf-ef3a-4d5d-928d-da1097b91ee8
 # ╠═bd8743d6-8f21-413d-835a-e543926baa09
-# ╠═e1d4b7bf-384f-4195-962a-ce750f83558d
 # ╟─9ab0a10b-8165-401a-a2b6-c9726526a906
 # ╠═1b8af600-56eb-4508-bc52-aa4e138b4c7e
+# ╠═9958610a-3384-4410-beae-8f4ce657846d
 # ╠═80005099-7154-4306-9172-c9a168336e14
 # ╠═c291700e-3a84-49a7-85d6-592cfb3b1a11
 # ╟─1ec99792-905d-4e1b-a413-ef58143d3c68

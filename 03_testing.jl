@@ -182,8 +182,11 @@ function integrate_with_julia(; phase::String="stellar")::Function
 		base_params::Vector{Float64},
 		it::Float64,
 	)::Float64
+		
         solution = MODEL.integrate_model(ic, base_params, (0.0, it))
+		
         return solution[end][idx]
+		
     end
 
     return integration
@@ -248,7 +251,6 @@ end;
   ╠═╡ =#
 
 # ╔═╡ 06dba542-6b7c-426a-8d76-bec153f1eeae
-# ╠═╡ disabled = true
 # ╠═╡ skip_as_script = true
 #=╠═╡
 test_integration(; phase="stellar")
