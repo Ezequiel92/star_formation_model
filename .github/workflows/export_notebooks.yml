@@ -19,6 +19,9 @@ jobs:
             - name: Install lualatex
               run: sudo apt-get update && sudo apt-get install -y texlive-full
               
+            - name: Install GSL
+              run: sudo apt-get install -y libgsl-dev
+              
             - name: Checkout this repository
               uses: actions/checkout@v4
 
