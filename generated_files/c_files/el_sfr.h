@@ -29,21 +29,18 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 
 /* Cρ = 100.0 (clumping factor) */
 
-#define N_EQU 6                        /* Number of equations */
-#define ODE_CR 8.204976000000000e+00   /* Recombination constant [Myr^(-1) * cm^3 * mp^(-1)] */
-#define ODE_CC 1.739395275590551e+01   /* Condensation constant [Myr^(-1) * cm^3 * mp^(-1)] */
-#define ODE_CS 1.942876283158012e-02   /* Star formation constant [Myr^(-1) * cm^(3/2) * mp^(-1/2)] */
-#define INV_T_DD 4.356568364611260e-04 /* Inverse of the dust loss timescale [Myr^-1] */
-#define ODE_CD 5.617360725623994e-04   /* Dust growth constant [Myr^(-1) * mp^(-1) * cm^3] */
-#define ODE_CSD -3.149606299212598e-19 /* Dust shielding constant [cm^2 * mp^(-1)] */
-#define ODE_CSH2 1.0000e-15            /* Molecular self-shielding constant [cm^2 * mp^(-1)] */
-#define ODE_CXD 2.835953313674557e-01  /* Dust initial condition constant [dimensionless] */
-#define ZEFF 1.2700e-05                /* Effective metallicity 1e-3 Zₒ */
-#define WH2 2.0000e-01                 /* Molecular shielding parameter [dimensionless] */
-#define LWB_A 2.1190e+00               /* LWB dissociation cte. [dimensionless] */
-#define LWB_B -1.1170e-01              /* LWB dissociation cte. [dimensionless] */
-#define LWB_C -2.7820e-03              /* LWB dissociation cte. [dimensionless] */
-#define LWB_D 4.3549e+01               /* LWB dissociation cte. [Myr^(-1)] */
+#define N_EQU 6                         /* Number of equations */
+#define ODE_CREC 8.204976000000000e+00  /* Recombination constant [Myr^(-1) * cm^3 * mp^(-1)] */
+#define ODE_CCOND 1.739395275590551e+01 /* Condensation constant [Myr^(-1) * cm^3 * mp^(-1)] */
+#define ODE_CS 1.942876283158012e-02    /* Star formation constant [Myr^(-1) * cm^(3/2) * mp^(-1/2)] */
+#define INV_T_DD 4.356568364611260e-04  /* Inverse of the dust loss timescale [Myr^-1] */
+#define ODE_CDG 5.286958738546130e-02   /* Dust growth constant [Myr^(-1) * mp^(-1) * cm^3] */
+#define ODE_CSD -3.149606299212598e-19  /* Dust shielding constant [cm^2 * mp^(-1)] */
+#define ODE_CSH2 1.0000e-15             /* Molecular self-shielding constant [cm^2 * mp^(-1)] */
+#define ODE_CXD 2.835953313674557e-01   /* Dust initial condition constant [dimensionless] */
+#define ZEFF 1.2700e-05                 /* Effective metallicity 1e-3 Zₒ */
+#define WH2 2.0000e-01                  /* Molecular shielding parameter [dimensionless] */
+#define ABEL97 4.3549e+01               /* LWB dissociation constant [Myr^(-1)] */
 
 typedef struct DataTable
 {

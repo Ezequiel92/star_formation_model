@@ -17,7 +17,7 @@
  *                void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
  *                static double interpolate1D(double x, const void *dtable)
  *                static double interpolate2D(double x, double y, const void *dtable)
- *                static double lwb_photodissociation_rate(double z)
+ *                static double J21(double z)
  *                static int sf_ode(double t, const double y[], double f[], void *parameters)
  *                static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
  *                static void integrate_ode(double *ic, double *parameters, double it)
@@ -131,7 +131,19 @@ void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
     double *data = (double *)malloc(count * sizeof(double));
     for (int i = 0; i < count; i++)
     {
-        fscanf(file_ptr, "%lf", &data[i]);
+        if (fscanf(file_ptr, "%lf", &data[i]) != 1)
+        {
+            #ifndef TESTING
+            terminate("Error in read_ftable(): failed to read data at index %d\n", i);
+            #else /* #ifndef TESTING */
+            fprintf(stderr, "Error in read_ftable(): failed to read data at index %d\n", i);
+            #endif /* #ifndef TESTING */
+
+            free(data);
+            fclose(file_ptr);
+
+            return NULL;
+        }
     }
 
     fclose(file_ptr);
@@ -359,23 +371,26 @@ static double interpolate2D(double x, double y, const void *dtable)
     return coeff * (term_01 + term_02 + term_03 + term_04);
 }
 
-/*! \brief Compute the LW background photodissociation rate.
+/*! \brief Compute the LW background radiation intensity.
  *
  *  \param[in] z Redshift.
  *
- *  \return The LW background photodissociation rate in [Myr^-1].
+ *  \return The LW background radiation intensity in [10^(-21) erg s^(-1) cm^(-2) Hz^(-1) sr^(-1)].
  */
 #ifdef TESTING
-double lwb_photodissociation_rate(double z)
+double J21(double z)
 #else  /* #ifdef TESTING */
-static double lwb_photodissociation_rate(double z)
+static double J21(double z)
 #endif /* #ifdef TESTING */
 {
+    double LWB_A = 2.119;
+    double LWB_B = -1.117e-1;
+    double LWB_C = -2.782e-3;
+
     double z1 = 1.0 + z;
     double logJ21 = LWB_A + LWB_B * z1 + LWB_C * z1 * z1;
 
-    return LWB_D * pow(10, logJ21);
-
+    return pow(10, logJ21);
 }
 
 /***************************************************************************************************
@@ -450,7 +465,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     double psi = ODE_CS * fm * sqrt(rho_c);
 
     /*******************
-     * Particl fraction
+     * Partial fraction
      *******************/
 
     /* Neutral fraction */
@@ -462,21 +477,35 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     /* Metal fraction */
     double Zt = fZ + fd;
 
+    /************
+	 * Shielding
+     ************/
+
+	/* Dust shielding */
+    double csd_h = ODE_CSD * h;
+    double dust_shield = csd_h * rho_c * fn * Zt;
+    double sd = exp(dust_shield);
+
+    /* Molecular self-shielding */
+    double csh2_h = ODE_CSH2 * h;
+    double xp1 = fma(csh2_h, fm * rho_c, 1.0);
+    double xp1_2 = xp1 * xp1;
+    double sq_xp1 = sqrt(xp1);
+    double exp_xp1 = exp(-8.5e-4 * sq_xp1);
+    double sh2 = ((1 - WH2) / xp1_2) + (WH2 * exp_xp1 / sq_xp1);
+
     /*****************
      * Net ionization
      *****************/
 
     /* Recombination [Myr^(-1)] */
-    double recomb = ODE_CR * fi * fi * rho_c;
-
-    /* UVB photoionization [Myr^(-1)] */
-    double uvb = UVB * fa;
+    double recomb = ODE_CREC * fi * fi * rho_c;
 
     /* Stellar ionization [Myr^(-1)] */
-    double csd_h = ODE_CSD * h;
-    double dust_shield = csd_h * rho_c * fn * Zt;
-    double sd = exp(dust_shield);
     double s_ion = sd * eta_i * psi;
+
+    /* UVB photoionization [Myr^(-1)] */
+    double uvb = sd * UVB * fa;
 
     double net_ionization = -recomb + uvb + s_ion;
 
@@ -495,19 +524,14 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
 
     /* Condensation [Myr^(-1)] */
     double Zt_eff = Zt + ZEFF;
-    double cond = ODE_CC * fa * rho_c * fg * Zt_eff;
+    double cond = ODE_CCOND * fa * rho_c * fg * Zt_eff;
 
     /* Stellar dissociation [Myr^(-1)] */
-    double csh2_h = ODE_CSH2 * h;
-    double xp1 = fma(csh2_h, fm * rho_c, 1.0);
-    double xp1_2 = xp1 * xp1;
-    double sq_xp1 = sqrt(xp1);
-    double exp_xp1 = exp(-8.5e-4 * sq_xp1);
-    double sh2 = ((1 - WH2) / xp1_2) + (WH2 * exp_xp1 / sq_xp1);
-    double s_diss = sd * sh2 * eta_d * psi;
+    double e_diss = sd * sh2;
+    double s_diss = e_diss * eta_d * psi;
 
     /* LW background dissociation [Myr^(-1)] */
-	double lwb = LWB * sh2 * fm;
+	double lwb = e_diss * LWB * fm;
 
     double net_dissociation = lwb + s_diss - cond;
 
@@ -516,7 +540,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
      ******************/
 
     /* Dust growth  [Myr^(-1)] */
-    double dg = ODE_CSD * fd * fZ * fm * rho_c;
+    double dg = ODE_CDG * fd * fZ * fm * fm * rho_c;
 
     /* Dust destruction [Myr^(-1)] */
     double dd = fd * INV_T_DD;
@@ -531,7 +555,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     f[1] = -net_ionization + net_dissociation;
     f[2] = -net_dissociation - psi;
     f[3] = fma(psi, -R, psi);
-    f[4] = -net_dust_growth + Zsn * R_psi;
+    f[4] = Zsn * R_psi - net_dust_growth;
     f[5] = net_dust_growth;
 
     return GSL_SUCCESS;
@@ -687,8 +711,8 @@ double rate_of_star_formation(const int index)
     /* UVB photoionization rate [Myr^(-1)] */
     double UVB = interpolate1D(All.cf_redshift, All.UVB_TABLE_DATA);
 
-    /* LWB photodissociation rate   [Myr^(-1)] */
-    double LWB = lwb_photodissociation_rate(All.cf_redshift);
+    /* LWB photodissociation rate [Myr^(-1)] */
+    double LWB = ABEL97 * J21(All.cf_redshift);
 
     /* Metallicity [dimensionless] */
     double Z = fmax(0.0, SphP[index].Metallicity);
