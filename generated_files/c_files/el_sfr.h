@@ -34,7 +34,7 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 #define ODE_CCOND 1.739395275590551e+01 /* Condensation constant [Myr^(-1) * cm^3 * mp^(-1)] */
 #define ODE_CS 1.942876283158012e-02    /* Star formation constant [Myr^(-1) * cm^(3/2) * mp^(-1/2)] */
 #define INV_T_DD 4.356568364611260e-04  /* Inverse of the dust loss timescale [Myr^-1] */
-#define ODE_CDG 5.286958738546130e-02   /* Dust growth constant [Myr^(-1) * mp^(-1) * cm^3] */
+#define ODE_CDG 1.057391747709226e-01   /* Dust growth constant [Myr^(-1) * mp^(-1) * cm^3] */
 #define ODE_CSD -3.149606299212598e-19  /* Dust shielding constant [cm^2 * mp^(-1)] */
 #define ODE_CSH2 1.0000e-15             /* Molecular self-shielding constant [cm^2 * mp^(-1)] */
 #define ODE_CXD 2.835953313674557e-01   /* Dust initial condition constant [dimensionless] */

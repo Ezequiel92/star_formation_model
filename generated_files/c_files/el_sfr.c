@@ -540,7 +540,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
      ******************/
 
     /* Dust growth  [Myr^(-1)] */
-    double dg = ODE_CDG * fd * fZ * fm * fm * rho_c;
+    double dg = ODE_CDG * fZ * fd * fn * fn * rho_c;
 
     /* Dust destruction [Myr^(-1)] */
     double dd = fd * INV_T_DD;
@@ -552,7 +552,7 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
      **********************************************************************************************/
 
     f[0] = net_ionization + s_gas_production;
-    f[1] = -net_ionization + net_dissociation;
+    f[1] = net_dissociation - net_ionization;
     f[2] = -net_dissociation - psi;
     f[3] = fma(psi, -R, psi);
     f[4] = Zsn * R_psi - net_dust_growth;
