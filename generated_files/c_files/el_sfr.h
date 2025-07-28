@@ -11,12 +11,12 @@
 #define L_CGS (All.UnitLength_in_cm * All.cf_atime / All.HubbleParam)
 
 /* Interpolation tables */
-#define ETA_NROWS 107 // Number of rows in the η tables
-#define ETA_NCOLS 7   // Number of columns in the η tables
-#define R_ZSN_NROWS 7 // Number of rows in the R and Zsn table
-#define R_ZSN_NCOLS 2 // Number of columns in the R and Zsn table
-#define UVB_NROWS 59  // Number of rows in the UVB table
-#define UVB_NCOLS 2   // Number of columns in the UVB table
+#define ETA_NROWS 107   // Number of rows in the η tables
+#define ETA_NCOLS 101   // Number of columns in the η tables
+#define R_ZSN_NROWS 100 // Number of rows in the R and Zsn tables
+#define R_ZSN_NCOLS 2   // Number of columns in the R and Zsn tables
+#define UVB_NROWS 59    // Number of rows in the UVB table
+#define UVB_NCOLS 2     // Number of columns in the UVB table
 
 /* Paths */
 static char *ETA_D_TABLE_PATH = "../code/src/el_sfr/tables/eta_d.txt";
@@ -28,16 +28,20 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 /* ODE constants */
 
 /* Cρ = 100.0 (clumping factor) */
+/* IMF: Chabrier2003 */
+/* Yield model: Portinari1998 */
 
 #define N_EQU 6                         /* Number of equations */
 #define ODE_CREC 8.204976000000000e+00  /* Recombination constant [Myr^(-1) * cm^3 * mp^(-1)] */
 #define ODE_CCOND 1.739395275590551e+01 /* Condensation constant [Myr^(-1) * cm^3 * mp^(-1)] */
 #define ODE_CS 1.942876283158012e-02    /* Star formation constant [Myr^(-1) * cm^(3/2) * mp^(-1/2)] */
 #define INV_T_DD 4.356568364611260e-04  /* Inverse of the dust loss timescale [Myr^-1] */
-#define ODE_CDG 1.057391747709226e-01   /* Dust growth constant [Myr^(-1) * mp^(-1) * cm^3] */
-#define ODE_CSD -3.149606299212598e-19  /* Dust shielding constant [cm^2 * mp^(-1)] */
+#define ODE_CDG 2.463402488765494e+00   /* Dust growth constant [Myr^(-1) * mp^(-1) * cm^3] */
+#define ODE_CSD 3.149606299212598e-19  /* Dust shielding constant [cm^2 * mp^(-1)] */
 #define ODE_CSH2 1.0000e-15             /* Molecular self-shielding constant [cm^2 * mp^(-1)] */
 #define ODE_CXD 2.835953313674557e-01   /* Dust initial condition constant [dimensionless] */
+#define ODE_CTION 6.3000e-18   /* Photoionization optical depth constant [cm^2 * mp^(-1)] */
+#define ODE_CTDISS 1.0500e-19   /* Photodissociation optical depth constant [cm^2 * mp^(-1)] */
 #define ZEFF 1.2700e-05                 /* Effective metallicity 1e-3 Zₒ */
 #define WH2 2.0000e-01                  /* Molecular shielding parameter [dimensionless] */
 #define ABEL97 4.3549e+01               /* LWB dissociation constant [Myr^(-1)] */

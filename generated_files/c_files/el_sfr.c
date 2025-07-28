@@ -108,7 +108,6 @@ int has_negative(double *vec, int size)
 /*! \brief Load a text file into memory as a C array.
  *
  *  Read a text file with space separated values and store the numbers as doubles in a C array.
- *  Each line in the file must be at most 1024 characters long.
  *
  *  The value on row i and column j will be stored as element i * n_cols + j in the array.
  *
@@ -158,7 +157,7 @@ void *read_ftable(const char *file_path, const int n_rows, const int n_cols)
 
 /*! \brief Use linear interpolation to approximate f(x).
  *
- *  If the value is out of range, the boundaries of the function are used (constant extrapolation).
+ *  If the value is out of range, the boundaries of the function are used (flat extrapolation).
  *
  *  \param[in] x Value at which the interpolation function will be evaluated.
  *  \param[in] dtable Path to the table containing the values of f(xi), for several xi.
@@ -239,13 +238,13 @@ static double interpolate1D(double x, const void *dtable)
     return coeff * (term_01 + term_02);
 }
 
-/*! \brief Use bilinear interpolation to approximate f(x,y).
+/*! \brief Use bilinear interpolation to approximate f(x, y).
  *
- *  If the values are out of range, the boundaries of the function are used (constant extrapolation).
+ *  If the values are out of range, the boundaries of the function are used (flat extrapolation).
  *
  *  \param[in] x X coordinate at which the interpolation function will be evaluated.
  *  \param[in] y Y coordinate at which the interpolation function will be evaluated.
- *  \param[in] dtable Path to the table containing the values of f(xi,yi), for many xi and yi.
+ *  \param[in] dtable Path to the table containing the values of f(xi, yi), for many xi and yi.
  *
  *  \return The interpolation function evaluated at `x` and `y`.
  */
@@ -481,18 +480,24 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
 	 * Shielding
      ************/
 
-	/* Dust shielding */
-    double csd_h = ODE_CSD * h;
-    double dust_shield = csd_h * rho_c * fn * Zt;
-    double sd = exp(dust_shield);
+    /* Dust optical depth */
+    double tau_d = ODE_CSD * h * rho_c * fn * Zt;
 
-    /* Molecular self-shielding */
-    double csh2_h = ODE_CSH2 * h;
-    double xp1 = fma(csh2_h, fm * rho_c, 1.0);
+	/* Dust shielding */
+    double sd = exp(-tau_d);
+
+    /* Molecular self-shielding optical depth */
+    double xp1 = ODE_CSH2 * h * fm * rho_c + 1.0;
     double xp1_2 = xp1 * xp1;
     double sq_xp1 = sqrt(xp1);
-    double exp_xp1 = exp(-8.5e-4 * sq_xp1);
+    double tau_sh = 8.5e-4 * sq_xp1;
+
+    /* Molecular self-shielding */
+    double exp_xp1 = exp(-tau_sh);
     double sh2 = ((1 - WH2) / xp1_2) + (WH2 * exp_xp1 / sq_xp1);
+
+    /* Combined shielding  */
+	double e_diss = sd * sh2;
 
     /*****************
      * Net ionization
@@ -501,13 +506,17 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     /* Recombination [Myr^(-1)] */
     double recomb = ODE_CREC * fi * fi * rho_c;
 
+    /* Ionization optical depth */
+	double tau_ion = ODE_CTION * fa * rho_c * h;
+
     /* Stellar ionization [Myr^(-1)] */
-    double s_ion = sd * eta_i * psi;
+	double ion_prob = -expm1(-tau_ion);
+    double s_ion = sd * eta_i * ion_prob * psi;
 
     /* UVB photoionization [Myr^(-1)] */
     double uvb = sd * UVB * fa;
 
-    double net_ionization = -recomb + uvb + s_ion;
+    double net_ionization = uvb + s_ion - recomb;
 
     /*************************
      * Stellar gas production
@@ -526,9 +535,12 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     double Zt_eff = Zt + ZEFF;
     double cond = ODE_CCOND * fa * rho_c * fg * Zt_eff;
 
+    /* Dissociation optical depth */
+    double tau_diss = ODE_CTDISS * fm * rho_c * h;
+
     /* Stellar dissociation [Myr^(-1)] */
-    double e_diss = sd * sh2;
-    double s_diss = e_diss * eta_d * psi;
+	double diss_prob = -expm1(-tau_diss);
+    double s_diss = e_diss * eta_d * diss_prob * psi;
 
     /* LW background dissociation [Myr^(-1)] */
 	double lwb = e_diss * LWB * fm;
@@ -554,8 +566,8 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     f[0] = net_ionization + s_gas_production;
     f[1] = net_dissociation - net_ionization;
     f[2] = -net_dissociation - psi;
-    f[3] = fma(psi, -R, psi);
-    f[4] = Zsn * R_psi - net_dust_growth;
+    f[3] = fma(R, -psi, psi);
+    f[4] = fma(Zsn, R_psi, -net_dust_growth);
     f[5] = net_dust_growth;
 
     return GSL_SUCCESS;
@@ -689,7 +701,10 @@ double rate_of_star_formation(const int index)
     }
     integration_time *= T_MYR * All.cf_atime / All.cf_time_hubble_a;
 
-    /* Store the integration time parameters */
+    /* Integration time as log10(it [yr]) for the interpolation tables */
+    double log_it = log10(integration_time * 1.0e6);
+
+    /* Store the integration time */
     SphP[index].integration_time = integration_time;
 
     /**********************************************************************************************
@@ -718,10 +733,10 @@ double rate_of_star_formation(const int index)
     double Z = fmax(0.0, SphP[index].Metallicity);
 
     /* Photodissociation efficiency [dimensionless] */
-    double eta_d = interpolate2D(integration_time, Z, All.ETA_D_TABLE_DATA);
+    double eta_d = interpolate2D(log_it, Z, All.ETA_D_TABLE_DATA);
 
     /* Photoionization efficiency [dimensionless] */
-    double eta_i = interpolate2D(integration_time, Z, All.ETA_I_TABLE_DATA);
+    double eta_i = interpolate2D(log_it, Z, All.ETA_I_TABLE_DATA);
 
     /* Mass recycling fraction [dimensionless] */
     double R = interpolate1D(Z, All.R_TABLE_DATA);
