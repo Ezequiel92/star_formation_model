@@ -23,7 +23,7 @@ jobs:
               run: sudo apt-get install -y libgsl-dev
               
             - name: Checkout this repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             - name: Install Julia
               uses: julia-actions/setup-julia@v2
