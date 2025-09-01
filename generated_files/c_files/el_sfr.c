@@ -4,7 +4,7 @@
  * \copyright   and contributing authors.
  *
  * \file        src/el_sfr/el_sfr.c
- * \date        05/2025
+ * \date        08/2025
  * \author      Ezequiel Lozano
  * \brief       Compute the star formation rate for a given gas cell.
  * \details     This file contains the routines to compute the star formation rate, according to our
@@ -383,8 +383,8 @@ static double J21(double z)
 #endif /* #ifdef TESTING */
 {
     double LWB_A = 2.119;
-    double LWB_B = -1.117e-1;
-    double LWB_C = -2.782e-3;
+    double LWB_B = -0.1117;
+    double LWB_C = -0.002782;
 
     double z1 = 1.0 + z;
     double logJ21 = LWB_A + LWB_B * z1 + LWB_C * z1 * z1;
@@ -574,117 +574,6 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
 }
 
 // JACOBIAN_START
-/*! \brief Evaluate the Jacobian of the systems of equations.
-*
-*  Evaluate the Jacobian matrix of the model, using the following variables:
-*
-*  Ionized gas fraction:    fi(t) = Mi(t) / MC --> y[0]
-*  Atomic gas fraction:     fa(t) = Ma(t) / MC --> y[1]
-*  Molecular gas fraction:  fm(t) = Mm(t) / MC --> y[2]
-*  Stellar fraction:        fs(t) = Ms(t) / MC --> y[3]
-*  Metal fraction:          fZ(t) = MZ(t) / MC --> y[4]
-*  Dust fraction:           fd(t) = Md(t) / MC --> y[5]
-*
-*  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) + MZ(t) + Md(t) is the total density of the gas cell,
-*  and each equation has units of Myr^(-1).
-*
-*  \param[in] t Unused variable to comply with the `gsl_odeiv2_driver_alloc_y_new()` API.
-*  \param[in] y Values of the variables at which the Jacobian will be evaluated.
-*  \param[out] dfdy Where the results of evaluating the Jacobian will be stored.
-*  \param[out] dfdt Where the results of evaluating the time derivatives will be stored.
-*  \param[in] parameters Parameters for the Jacobian.
-*
-*  \return Constant `GSL_SUCCESS`, to confirm that the computation was successful.
-*/
-static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
-{
-	(void)(t);
-
-	/*
-	 * Destructure the parameters
-	 *
-	 * rho_C: Total cell density           [mp * cm^(-3)]
-	 * UVB:   UVB photoionization rate     [Myr^(-1)]
-	 * LWB:   LWB Photodissociation  rate  [Myr^(-1)]
-	 * eta_d: Photodissociation efficiency [dimensionless]
-	 * eta_i: Photoionization efficiency   [dimensionless]
-	 * R:     Mass recycling fraction      [dimensionless]
-	 * Zsn:   Metals recycling fraction    [dimensionless]
-	 * h:     Column height                [cm]
-	 */
-	double *p    = (double *)parameters;
-	double rho_C = p[0];
-	double UVB   = p[1];
-	double LWB   = p[2];
-	double eta_d = p[3];
-	double eta_i = p[4];
-	double R     = p[5];
-	double Zsn   = p[6];
-	double h     = p[7];
-
-	gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, 6, 6);
-	gsl_matrix *m = &dfdy_mat.matrix;
-
-	double aux_var_01 = sqrt(rho_C);
-	double aux_var_02 = sqrt(1.0 + 9.999999999999999e-16 * y[2] * rho_C * h);
-	double aux_var_03 = exp(-3.149606299212598e-19 * (y[1] + y[2]) * (y[4] + y[5]) * rho_C * h);
-	double aux_var_04 = expm1(-6.2999999999999996e-18 * y[1] * rho_C * h);
-	double aux_var_05 = pow(1.0 + 9.999999999999999e-16 * y[2] * rho_C * h, 2);
-	double aux_var_06 = expm1(-1.05e-19 * y[2] * rho_C * h);
-	double aux_var_07 = exp(-0.00085 * aux_var_02);
-	double aux_var_08 = aux_var_02 * aux_var_02;
-	double aux_var_09 = pow(1.0 + 9.999999999999999e-16 * y[2] * rho_C * h, 4);
-	double aux_var_10 = rho_C * eta_i * h * aux_var_04 * aux_var_01 * aux_var_03;
-	double aux_var_11 = exp(-6.2999999999999996e-18 * y[1] * rho_C * h);
-	double aux_var_12 = pow(y[1] + y[2], 2);
-	double aux_var_13 = exp(-1.05e-19 * y[2] * rho_C * h) * aux_var_03;
-
-	gsl_matrix_set(m, 0, 0, -16.409952 * y[0] * rho_C);
-	gsl_matrix_set(m, 0, 1, UVB * aux_var_03 -3.149606299212598e-19 * y[1] * (y[4] + y[5]) * rho_C * UVB * h * aux_var_03 + 1.2240120583895476e-19 * y[2] * rho_C * eta_i * h * aux_var_01 * aux_var_11 * aux_var_03 + 6.119295380025235e-21 * y[2] * (y[4] + y[5]) * aux_var_10);
-	gsl_matrix_set(m, 0, 2, 0.019428762831580123 * R * aux_var_01 -0.019428762831580123 * R * Zsn * aux_var_01 -0.019428762831580123 * eta_i * aux_var_04 * aux_var_01 * aux_var_03 -3.149606299212598e-19 * y[1] * (y[4] + y[5]) * rho_C * UVB * h * aux_var_03 + 6.119295380025235e-21 * y[2] * (y[4] + y[5]) * aux_var_10);
-	gsl_matrix_set(m, 0, 3, 0);
-	gsl_matrix_set(m, 0, 4, -3.149606299212598e-19 * y[1] * (y[1] + y[2]) * rho_C * UVB * h * aux_var_03 + 6.119295380025235e-21 * (y[1] + y[2]) * y[2] * aux_var_10);
-	gsl_matrix_set(m, 0, 5, -3.149606299212598e-19 * y[1] * (y[1] + y[2]) * rho_C * UVB * h * aux_var_03 + 6.119295380025235e-21 * (y[1] + y[2]) * y[2] * aux_var_10);
-	gsl_matrix_set(m, 1, 0, 16.409952 * y[0] * rho_C -17.39395275590551 * y[1] * (1.27e-5 + y[4] + y[5]) * rho_C);
-	gsl_matrix_set(m, 1, 1, - UVB * aux_var_03 -17.39395275590551 * (y[0] + y[1] + y[2]) * (1.27e-5 + y[4] + y[5]) * rho_C -17.39395275590551 * y[1] * (1.27e-5 + y[4] + y[5]) * rho_C + 3.149606299212598e-19 * y[1] * (y[4] + y[5]) * rho_C * UVB * h * aux_var_03 -3.149606299212598e-19 * y[2] * (y[4] + y[5]) * rho_C * LWB * h * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_03 -1.2240120583895476e-19 * y[2] * rho_C * eta_i * h * aux_var_01 * aux_var_11 * aux_var_03 -6.119295380025235e-21 * y[2] * (y[4] + y[5]) * aux_var_10 + 6.119295380025235e-21 * y[2] * (y[4] + y[5]) * rho_C * eta_d * h * aux_var_01 * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_06 * aux_var_03);
-	gsl_matrix_set(m, 1, 2, -17.39395275590551 * y[1] * (1.27e-5 + y[4] + y[5]) * rho_C + LWB * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_03 + y[2] * LWB * ((-1.6999999999999996e-19 * rho_C * h * aux_var_07) / (2 * aux_var_08) + (-9.999999999999999e-16 * rho_C * h * ((0.2 * aux_var_07) / aux_var_08)) / (2 * aux_var_02) -1.9999999999999998e-15 * (0.8 / aux_var_09) * (1.0 + 9.999999999999999e-16 * y[2] * rho_C * h) * rho_C * h) * aux_var_03 + 0.019428762831580123 * eta_i * aux_var_04 * aux_var_01 * aux_var_03 -0.019428762831580123 * eta_d * aux_var_01 * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_06 * aux_var_03 + 3.149606299212598e-19 * y[1] * (y[4] + y[5]) * rho_C * UVB * h * aux_var_03 -0.019428762831580123 * y[2] * eta_d * aux_var_01 * ((-1.6999999999999996e-19 * rho_C * h * aux_var_07) / (2 * aux_var_08) + (-9.999999999999999e-16 * rho_C * h * ((0.2 * aux_var_07) / aux_var_08)) / (2 * aux_var_02) -1.9999999999999998e-15 * (0.8 / aux_var_09) * (1.0 + 9.999999999999999e-16 * y[2] * rho_C * h) * rho_C * h) * aux_var_06 * aux_var_03 -3.149606299212598e-19 * y[2] * (y[4] + y[5]) * rho_C * LWB * h * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_03 -6.119295380025235e-21 * y[2] * (y[4] + y[5]) * aux_var_10 + 2.040020097315913e-21 * y[2] * rho_C * eta_d * h * aux_var_01 * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_13 + 6.119295380025235e-21 * y[2] * (y[4] + y[5]) * rho_C * eta_d * h * aux_var_01 * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_06 * aux_var_03);
-	gsl_matrix_set(m, 1, 3, 0);
-	gsl_matrix_set(m, 1, 4, -17.39395275590551 * (y[0] + y[1] + y[2]) * y[1] * rho_C + 3.149606299212598e-19 * y[1] * (y[1] + y[2]) * rho_C * UVB * h * aux_var_03 -3.149606299212598e-19 * (y[1] + y[2]) * y[2] * rho_C * LWB * h * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_03 -6.119295380025235e-21 * (y[1] + y[2]) * y[2] * aux_var_10 + 6.119295380025235e-21 * (y[1] + y[2]) * y[2] * rho_C * eta_d * h * aux_var_01 * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_06 * aux_var_03);
-	gsl_matrix_set(m, 1, 5, -17.39395275590551 * (y[0] + y[1] + y[2]) * y[1] * rho_C + 3.149606299212598e-19 * y[1] * (y[1] + y[2]) * rho_C * UVB * h * aux_var_03 -3.149606299212598e-19 * (y[1] + y[2]) * y[2] * rho_C * LWB * h * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_03 -6.119295380025235e-21 * (y[1] + y[2]) * y[2] * aux_var_10 + 6.119295380025235e-21 * (y[1] + y[2]) * y[2] * rho_C * eta_d * h * aux_var_01 * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_06 * aux_var_03);
-	gsl_matrix_set(m, 2, 0, 17.39395275590551 * y[1] * (1.27e-5 + y[4] + y[5]) * rho_C);
-	gsl_matrix_set(m, 2, 1, 17.39395275590551 * (y[0] + y[1] + y[2]) * (1.27e-5 + y[4] + y[5]) * rho_C + 17.39395275590551 * y[1] * (1.27e-5 + y[4] + y[5]) * rho_C -3.149606299212598e-19 * y[2] * (y[4] + y[5]) * rho_C * LWB * h * ((-0.2 * aux_var_07) / aux_var_02 -0.8 / aux_var_05) * aux_var_03 -6.119295380025235e-21 * y[2] * (y[4] + y[5]) * rho_C * eta_d * h * aux_var_01 * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_06 * aux_var_03);
-	gsl_matrix_set(m, 2, 2, -0.019428762831580123 * aux_var_01 + 17.39395275590551 * y[1] * (1.27e-5 + y[4] + y[5]) * rho_C - LWB * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_03 - y[2] * LWB * ((-1.6999999999999996e-19 * rho_C * h * aux_var_07) / (2 * aux_var_08) + (-9.999999999999999e-16 * rho_C * h * ((0.2 * aux_var_07) / aux_var_08)) / (2 * aux_var_02) -1.9999999999999998e-15 * (0.8 / aux_var_09) * (1.0 + 9.999999999999999e-16 * y[2] * rho_C * h) * rho_C * h) * aux_var_03 + 0.019428762831580123 * eta_d * aux_var_01 * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_06 * aux_var_03 + 0.019428762831580123 * y[2] * eta_d * aux_var_01 * ((-1.6999999999999996e-19 * rho_C * h * aux_var_07) / (2 * aux_var_08) + (-9.999999999999999e-16 * rho_C * h * ((0.2 * aux_var_07) / aux_var_08)) / (2 * aux_var_02) -1.9999999999999998e-15 * (0.8 / aux_var_09) * (1.0 + 9.999999999999999e-16 * y[2] * rho_C * h) * rho_C * h) * aux_var_06 * aux_var_03 -3.149606299212598e-19 * y[2] * (y[4] + y[5]) * rho_C * LWB * h * ((-0.2 * aux_var_07) / aux_var_02 -0.8 / aux_var_05) * aux_var_03 -2.040020097315913e-21 * y[2] * rho_C * eta_d * h * aux_var_01 * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_13 -6.119295380025235e-21 * y[2] * (y[4] + y[5]) * rho_C * eta_d * h * aux_var_01 * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_06 * aux_var_03);
-	gsl_matrix_set(m, 2, 3, 0);
-	gsl_matrix_set(m, 2, 4, 17.39395275590551 * (y[0] + y[1] + y[2]) * y[1] * rho_C -3.149606299212598e-19 * (y[1] + y[2]) * y[2] * rho_C * LWB * h * ((-0.2 * aux_var_07) / aux_var_02 -0.8 / aux_var_05) * aux_var_03 -6.119295380025235e-21 * (y[1] + y[2]) * y[2] * rho_C * eta_d * h * aux_var_01 * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_06 * aux_var_03);
-	gsl_matrix_set(m, 2, 5, 17.39395275590551 * (y[0] + y[1] + y[2]) * y[1] * rho_C -3.149606299212598e-19 * (y[1] + y[2]) * y[2] * rho_C * LWB * h * ((-0.2 * aux_var_07) / aux_var_02 -0.8 / aux_var_05) * aux_var_03 -6.119295380025235e-21 * (y[1] + y[2]) * y[2] * rho_C * eta_d * h * aux_var_01 * ((0.2 * aux_var_07) / aux_var_02 + 0.8 / aux_var_05) * aux_var_06 * aux_var_03);
-	gsl_matrix_set(m, 3, 0, 0);
-	gsl_matrix_set(m, 3, 1, 0);
-	gsl_matrix_set(m, 3, 2, 0.019428762831580123 * aux_var_01 -0.019428762831580123 * R * aux_var_01);
-	gsl_matrix_set(m, 3, 3, 0);
-	gsl_matrix_set(m, 3, 4, 0);
-	gsl_matrix_set(m, 3, 5, 0);
-	gsl_matrix_set(m, 4, 0, 0);
-	gsl_matrix_set(m, 4, 1, -4.9268049775309875 * (y[1] + y[2]) * y[4] * y[5] * rho_C);
-	gsl_matrix_set(m, 4, 2, 0.019428762831580123 * R * Zsn * aux_var_01 -4.9268049775309875 * (y[1] + y[2]) * y[4] * y[5] * rho_C);
-	gsl_matrix_set(m, 4, 3, 0);
-	gsl_matrix_set(m, 4, 4, -2.4634024887654937 * aux_var_12 * y[5] * rho_C);
-	gsl_matrix_set(m, 4, 5, 0.000435656836461126 -2.4634024887654937 * aux_var_12 * y[4] * rho_C);
-	gsl_matrix_set(m, 5, 0, 0);
-	gsl_matrix_set(m, 5, 1, 4.9268049775309875 * (y[1] + y[2]) * y[4] * y[5] * rho_C);
-	gsl_matrix_set(m, 5, 2, 4.9268049775309875 * (y[1] + y[2]) * y[4] * y[5] * rho_C);
-	gsl_matrix_set(m, 5, 3, 0);
-	gsl_matrix_set(m, 5, 4, 2.4634024887654937 * aux_var_12 * y[5] * rho_C);
-	gsl_matrix_set(m, 5, 5, -0.000435656836461126 + 2.4634024887654937 * aux_var_12 * y[4] * rho_C);
-
-	dfdt[0] = 0;
-	dfdt[1] = 0;
-	dfdt[2] = 0;
-	dfdt[3] = 0;
-	dfdt[4] = 0;
-	dfdt[5] = 0;
-
-	return GSL_SUCCESS;
-}
 // JACOBIAN_END
 
 /*! \brief Solve the system of ODEs, using numerical integration.
@@ -723,8 +612,8 @@ static void integrate_ode(double *ic, double *parameters, double it)
 {
     /* Setup and run ODE integration */
     double t0 = 0.0;
-    gsl_odeiv2_system sys = {sf_ode, jacobian, N_EQU, parameters};
-    gsl_odeiv2_driver *driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_msbdf, it * 1e-6, 1e-15, 0.0);
+    gsl_odeiv2_system sys = {sf_ode, NULL, N_EQU, parameters};
+    gsl_odeiv2_driver *driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_msadams, it * 1e-4, 1e-10, 0.0);
 
     int status = gsl_odeiv2_driver_apply(driver, &t0, it, ic);
 
