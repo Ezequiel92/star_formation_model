@@ -684,7 +684,7 @@ For completeness we show how we can compute the case A recombination coefficient
 """
   ╠═╡ =#
 
-# ╔═╡ cea20293-a562-4b30-94c1-aabad784fbfc
+# ╔═╡ d431eb6d-429a-49d6-83b8-b6f21831ec86
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
@@ -698,28 +698,16 @@ let
 
 	αA_seaton(T) = D * sqrt(λ(T)) * (0.4288 + 0.5 * log(λ(T)) + 0.469 * λ(T)^(-1/3))
 
-	αA_seaton(1e4u"K")
-end
-  ╠═╡ =#
+	αA_seaton59 = αA_seaton(1e4u"K")
 
-# ╔═╡ 5b08171f-5ee3-431c-8fc8-f666a4f6ee5d
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
 	#############################
 	# From eq. 6 of Black (1981)
 	#############################
 
 	αA_black(T) = 4.36e-10u"cm^3*s^-1" * T^(-0.7573)
 
-	αA_black(1e4)
-end
-  ╠═╡ =#
+	αA_black81 = αA_black(1e4)
 
-# ╔═╡ 6c533a69-6d71-4fea-8aad-224c0bf7d53c
-# ╠═╡ skip_as_script = true
-#=╠═╡
-let
 	#####################################
 	# From eq. 4 of Verner et al. (1996)
 	#####################################
@@ -734,8 +722,27 @@ let
 
 	αA_verner(T) = a / (sqT0(T) * (1 + sqT0(T))^(1-b) * (1 + sqT1(T))^(1+b))
 
-	αA_verner(1e4u"K")
-end
+	αA_verner96 = αA_verner(1e4u"K")
+
+	###########################
+	# Mean case A recobination
+	###########################
+
+	mean_case_A = (αA_seaton(1e4u"K") + αA_black(1e4) + αA_verner(1e4u"K")) / 3.0
+end;
+  ╠═╡ =#
+
+# ╔═╡ 98610902-dfff-4fd1-8ffa-8484405aee20
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+$\begin{align}
+	\alpha_\text{A}^\text{Seaton59} &= 4.1206 \times 10^{-13} \, \mathrm{cm^3 \, s^{-1}} \, , \\
+	\alpha_\text{A}^\text{Black81} &= 4.0765 \times 10^{-13} \, \mathrm{cm^3 \, s^{-1}} \, , \\
+	\alpha_\text{A}^\text{Verner96} &= 4.1923 \times 10^{-13} \, \mathrm{cm^3 \, s^{-1}} \, , \\
+	\alpha_\text{A}^\text{Mean} &= 4.1298 \times 10^{-13} \, \mathrm{cm^3 \, s^{-1}} \, 
+\end{align}$
+"""
   ╠═╡ =#
 
 # ╔═╡ 2d6fcef9-df4b-4eec-be5c-a8865c3a1b76
@@ -896,6 +903,18 @@ $\begin{equation}
 This approximation allows us to model dust destruction consistently while minimizing complexity, aligning with the assumptions in previous literature.
 """
   ╠═╡ =#
+
+# ╔═╡ 8da961c9-2ef0-4df5-b7b4-8d0cacea6909
+md"""
+
+$\begin{align}
+    R_\odot &= [1.0, \, 3.5, \, 5.0] \times 10^{-17} \, \mathrm{cm^3 \, s^{-1}} \, , \\
+	Z_\mathrm{eff} &= [10^{-4}, \, 10^{-3}, \, 10^{-2}] \, Z_\odot \, , \\
+	C_\rho &= [1, 50, 100, 200] \, , \\
+	\tau_\mathrm{dd} &= [2.0, 2.3, 3.2] \, \mathrm{Gyr} \, .
+\end{align}$ 
+
+"""
 
 # ╔═╡ 38e91d0d-1020-44a8-becc-8542fd600104
 begin
@@ -6049,10 +6068,9 @@ version = "17.4.0+2"
 # ╟─a7c5650c-9bbc-44a1-8d51-d473864faae7
 # ╠═49d1a7f7-2bf2-4472-94df-6247b9237ddd
 # ╟─4c975b71-a387-49cb-90d9-fc51acefc795
-# ╠═cea20293-a562-4b30-94c1-aabad784fbfc
-# ╠═5b08171f-5ee3-431c-8fc8-f666a4f6ee5d
-# ╠═6c533a69-6d71-4fea-8aad-224c0bf7d53c
-# ╟─2d6fcef9-df4b-4eec-be5c-a8865c3a1b76
+# ╠═d431eb6d-429a-49d6-83b8-b6f21831ec86
+# ╟─98610902-dfff-4fd1-8ffa-8484405aee20
+# ╠═2d6fcef9-df4b-4eec-be5c-a8865c3a1b76
 # ╠═568d9fe3-6716-4a9a-ba1d-b9e6fd039150
 # ╟─6cab6cb7-a432-40b6-9390-ad0083fe486d
 # ╠═38e91d0d-1020-44a8-becc-8542fd600104
@@ -6093,6 +6111,7 @@ version = "17.4.0+2"
 # ╟─64c2a3ee-e7a0-4e03-b9a8-86239e1ca81e
 # ╟─0895d464-a029-410d-9e7d-89cfac2d1615
 # ╟─07cd9aad-029f-42c6-abe8-ab4a9a2a910c
+# ╟─8da961c9-2ef0-4df5-b7b4-8d0cacea6909
 # ╟─0bdf9dbf-479c-46f6-bd86-50576095cba0
 # ╟─6fe43e3a-2e8f-4708-a3ec-6f5a8088060e
 # ╠═f863d68f-590e-4b96-8433-dc6b5177539f
