@@ -904,18 +904,6 @@ This approximation allows us to model dust destruction consistently while minimi
 """
   ╠═╡ =#
 
-# ╔═╡ 8da961c9-2ef0-4df5-b7b4-8d0cacea6909
-md"""
-
-$\begin{align}
-    R_\odot &= [1.0, \, 3.5, \, 5.0] \times 10^{-17} \, \mathrm{cm^3 \, s^{-1}} \, , \\
-	Z_\mathrm{eff} &= [10^{-4}, \, 10^{-3}, \, 10^{-2}] \, Z_\odot \, , \\
-	C_\rho &= [1, 50, 100, 200] \, , \\
-	\tau_\mathrm{dd} &= [2.0, 2.3, 3.2] \, \mathrm{Gyr} \, .
-\end{align}$ 
-
-"""
-
 # ╔═╡ 38e91d0d-1020-44a8-becc-8542fd600104
 begin
 	# Dust destruction time-scales from Slavin et al. (2015)
@@ -1257,6 +1245,9 @@ $\begin{align}
 begin
 	# Dust-phase solar metallicity
 	const Zdsun = 0.02
+
+	# Alternative factor for a different way of writing τdg
+	const κ_d = uconvert(u"Myr", (ca * A * a * sqrt(T0) * S0) / (a0 * sqrt(T) * S))
 
 	# Dust growth constant
 	const C_dg = (a0 * sqrt(T) * S) / (ca * A * a * Zdsun * nH0 * Unitful.mp * sqrt(T0) * S0)
@@ -2365,6 +2356,18 @@ function compute_recycled_fractions(Z::Float64)
 	return R, Zsn
 
 end;
+
+# ╔═╡ 8da961c9-2ef0-4df5-b7b4-8d0cacea6909
+md"""
+
+$\begin{align}
+    R_\odot &= [1.0, \, 3.5, \, 5.0] \times 10^{-17} \, \mathrm{cm^3 \, s^{-1}} \, , \\
+	Z_\mathrm{eff} &= [10^{-4}, \, 10^{-3}, \, 10^{-2}] \, Z_\odot \, , \\
+	C_\rho &= [1, 50, 100, 200] \, , \\
+	\tau_\mathrm{dd} &= [2.0, 2.3, 3.2] \, \mathrm{Gyr} \, .
+\end{align}$ 
+
+"""
 
 # ╔═╡ 0bdf9dbf-479c-46f6-bd86-50576095cba0
 # ╠═╡ skip_as_script = true
