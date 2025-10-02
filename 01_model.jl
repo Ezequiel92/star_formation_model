@@ -775,7 +775,7 @@ $\begin{align}
 where the time scale $\tau_\mathrm{cond}$ is
 
 $\begin{equation}
-    \tau_\mathrm{cond} = \frac{m_p}{2 \, R_d \, \rho_\mathrm{cell} \, x_m \, (f_a + f_m + f_i)} \, .
+    \tau_\mathrm{cond} = \frac{m_p}{2 \, R_d \, \rho_\mathrm{cell} \, (f_a + f_m + f_i)} \, .
 \end{equation}$
 
 A table with several values for $R_d$ is presented below. We note that more than one value for $R_d$ and its dependence on other parameters may be discussed within each reference. In the table, we reflect the fiducial value used by each author
@@ -6050,6 +6050,7 @@ version = "17.4.0+2"
 
 # ╔═╡ Cell order:
 # ╠═fed88caa-1520-41f7-adb3-785e5c9529c6
+# ╟─8da961c9-2ef0-4df5-b7b4-8d0cacea6909
 # ╟─734b3b08-061e-4f93-8574-468d824815da
 # ╟─800dc762-ce0b-463f-858f-6e8eabbc26b0
 # ╟─b842e98e-34e2-40f2-84b6-c180815c2df3
@@ -6071,9 +6072,9 @@ version = "17.4.0+2"
 # ╟─a7c5650c-9bbc-44a1-8d51-d473864faae7
 # ╠═49d1a7f7-2bf2-4472-94df-6247b9237ddd
 # ╟─4c975b71-a387-49cb-90d9-fc51acefc795
-# ╠═d431eb6d-429a-49d6-83b8-b6f21831ec86
+# ╟─d431eb6d-429a-49d6-83b8-b6f21831ec86
 # ╟─98610902-dfff-4fd1-8ffa-8484405aee20
-# ╠═2d6fcef9-df4b-4eec-be5c-a8865c3a1b76
+# ╟─2d6fcef9-df4b-4eec-be5c-a8865c3a1b76
 # ╠═568d9fe3-6716-4a9a-ba1d-b9e6fd039150
 # ╟─6cab6cb7-a432-40b6-9390-ad0083fe486d
 # ╠═38e91d0d-1020-44a8-becc-8542fd600104
@@ -6114,7 +6115,6 @@ version = "17.4.0+2"
 # ╟─64c2a3ee-e7a0-4e03-b9a8-86239e1ca81e
 # ╟─0895d464-a029-410d-9e7d-89cfac2d1615
 # ╟─07cd9aad-029f-42c6-abe8-ab4a9a2a910c
-# ╟─8da961c9-2ef0-4df5-b7b4-8d0cacea6909
 # ╟─0bdf9dbf-479c-46f6-bd86-50576095cba0
 # ╟─6fe43e3a-2e8f-4708-a3ec-6f5a8088060e
 # ╠═f863d68f-590e-4b96-8433-dc6b5177539f
