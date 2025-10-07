@@ -296,7 +296,7 @@ TikzPictures.TikzPicture(
         \node[box, white, text width=2em] (metals) at (270:4.5cm) {Z};
         \node[box, white, text width=2em] (dust) at (270:7cm) {Dust};
         \draw[line, white, ->]
-        (ion) edge [bend left, "$\textcolor{d_pink}{\dfrac{f_i}{\tau_\mathrm{rec}}} - \textcolor{d_blue}{S_d \, \eta_\mathrm{ion}^* \, \psi} - \textcolor{d_blue}{S_d \, \Gamma_\mathrm{UVB} \, f_a}$"] (atom)
+        (ion) edge [bend left, "$\textcolor{d_pink}{\dfrac{f_i}{\tau_\mathrm{rec}}} - \textcolor{d_blue}{e_\mathrm{ion} \, \eta_\mathrm{ion}^* \, \psi} - \textcolor{d_blue}{e_\mathrm{ion} \, \Gamma_\mathrm{UVB} \, f_a}$"] (atom)
         (atom) edge [bend left, "$\textcolor{d_orange}{\dfrac{f_a}{\tau_\mathrm{cond}}} - \textcolor{d_green}{e_\mathrm{diss} \, \eta_\mathrm{diss}^* \, \psi} - \textcolor{d_green}{e_\mathrm{diss} \, \Gamma_\mathrm{LWB} \, f_m}$"] (molecule)
         (stars) edge [bend left, "$\textcolor{d_yellow}{R \, (1 - Z_\mathrm{SN}) \, \psi(t)}$"] (ion)
         (molecule) edge [bend left, "$\textcolor{red}{\psi}$"] (stars)
@@ -370,10 +370,10 @@ The ionized component grows through the ionization of atomic gas and from the re
 The former is produced by the radiation of newborn stars (within the cell) and from the metagalactic ultraviolet background radiation (UVB), so it can be written as
 
 $\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_i\right|_{\mathrm{ionization}} = S_d \, \eta_\mathrm{ion}^* \, \psi + S_d \, \Gamma_\mathrm{UVB} \, f_a \, ,
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_i\right|_{\mathrm{ionization}} = e_\mathrm{ion} \, \eta_\mathrm{ion}^* \, \psi + e_\mathrm{ion} \, \Gamma_\mathrm{UVB} \, f_a \, ,
 \end{equation}$
 
-where $S_d$ is the dust shielding factor, $\eta_\mathrm{ion}$ is the ionized mass rate per unit of created stellar mass, and $\Gamma_\mathrm{UVB}$ is the UVB photoionization rate.
+where $e_\mathrm{ion} = S_d$ is the ionization shielding factor, $\eta_\mathrm{ion}$ is the ionized mass rate per unit of created stellar mass, and $\Gamma_\mathrm{UVB}$ is the UVB photoionization rate.
 
 The latter, under the instantaneous recycling hypothesis, can be written as
 
@@ -931,10 +931,10 @@ md"""
 Following [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), we model dust formation as the accretion of metals from the gas phase onto existing dust grains. Based on the formulations in [Dwek1998](https://doi.org/10.1086/305829) (eq. 32) and [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259) (eq. 2), the rate of change of the dust mass fraction due to accretion is given by
 
 $\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\mathrm{accretion}} = \frac{f_Z}{f_Z + f_d} \, \frac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m) \, ,
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\mathrm{accretion}} = \frac{f_Z}{f_Z + f_d} \, \frac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m) = \frac{f_d}{\tau_\mathrm{dc}} \, ,
 \end{equation}$
 
-where $\tau_\mathrm{dg}$ is the dust growth timescale, defined by this expression. The term $f_a + f_m$ represents the neutral gas fraction, and is chosen here as a proxy for the cold gas mass fraction $X_\mathrm{cold}$, consistent with the definition in [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259), eq. 29.
+where $\tau_\mathrm{dg}$ is the dust growth timescale and $\tau_\mathrm{dc}$ is the dust creation time scale, both defined by this expression. The term $f_a + f_m$ represents the neutral gas fraction, and is chosen here as a proxy for the cold gas mass fraction $X_\mathrm{cold}$, consistent with the definition in [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259), eq. 29.
 
 The formulation used here differs slightly from that in [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), where the denominator includes only $f_Z$. By instead using $f_Z + f_d$, we explicitly account for the total mass fraction of metals -- both in gas and dust form. This choice is consistent with interpretations in [Dwek1998](https://doi.org/10.1086/305829), [Hirashita1998](https://doi.org/10.1086/311806), and [Hirashita2018](https://doi.org/10.1093/mnras/sty2838), where the ratio
 
@@ -1205,7 +1205,7 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-### Final form of $\tau_\mathrm{dg}$
+### Final form of $\tau_\mathrm{dg}$ and $\tau_\mathrm{dc}$
 
 Using all the components derived above, the dust growth time scale
 
@@ -1228,16 +1228,23 @@ $\begin{align}
 
 Note that $Z_\odot^d$ here is the dust-phase solar metallicity used in [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) and [Hirashita2018](https://doi.org/10.1093/mnras/sty2838), and not the solar metallicity used elsewhere in our framework.
 
-### Dust accretion term
-
-Following [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x), the total metallicity is given by $Z = f_Z + f_d$. With this, and substituting in the form of $\tau_\mathrm{dg}$ derived above, the dust growth source term becomes
+The dust creation time scale is then
 
 $\begin{align}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\text{accretion}} &= \frac{f_Z}{f_Z + f_d} \, \frac{f_d}{\tau_\mathrm{dg}} \, f_n \\
-	&= \frac{f_Z \, f_d \, f_n}{f_Z + f_d} \, C_\mathrm{dg} \, Z \, \rho_\mathrm{cell} \, f_n  \\
-	&= C_\mathrm{dg} \, \frac{f_Z \, f_d \, f_n^2}{f_Z + f_d} \, (f_Z + f_d) \, \rho_\mathrm{cell} \\
-	&= C_\mathrm{dg} \, f_Z \, f_d \, f_n^2 \, \rho_\mathrm{cell} \, .
+	\tau_\mathrm{dc} &= \frac{f_Z + f_d}{f_Z \, f_n} \, \tau_\mathrm{dg} \\
+	&= \frac{f_Z + f_d}{f_Z \, f_n} \, \frac{1}{C_\mathrm{dg} \, Z \, \rho_\mathrm{cell} \, f_n} \\
+	&= \frac{1}{C_\mathrm{dg} \, f_Z \, f_n^2 \, \rho_\mathrm{cell}} \, ,
 \end{align}$
+
+where, following [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x), we took the total metallicity as $Z = f_Z + f_d$.
+
+### Dust accretion term
+
+The dust growth source term becomes
+
+$\begin{equation}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\text{accretion}} = \frac{f_d}{\tau_\mathrm{dc}} = C_\mathrm{dg} \, f_Z \, f_d \, f_n^2 \, \rho_\mathrm{cell} \, .
+\end{equation}$
 """
   ╠═╡ =#
 
@@ -2357,18 +2364,6 @@ function compute_recycled_fractions(Z::Float64)
 
 end;
 
-# ╔═╡ 8da961c9-2ef0-4df5-b7b4-8d0cacea6909
-md"""
-
-$\begin{align}
-    R_\odot &= [1.0, \, 3.5, \, 5.0] \times 10^{-17} \, \mathrm{cm^3 \, s^{-1}} \, , \\
-	Z_\mathrm{eff} &= [10^{-4}, \, 10^{-3}, \, 10^{-2}] \, Z_\odot \, , \\
-	C_\rho &= [1, 50, 100, 200] \, , \\
-	\tau_\mathrm{dd} &= [2.0, 2.3, 3.2] \, \mathrm{Gyr} \, .
-\end{align}$ 
-
-"""
-
 # ╔═╡ 0bdf9dbf-479c-46f6-bd86-50576095cba0
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -3096,8 +3091,8 @@ md"""
 To find the per-equation and global equilibrium we take que ODEs
 
 $\begin{align}
-	\frac{\mathrm{d}}{\mathrm{d}t} f_i &= S_d \, (\eta_\mathrm{ion}^* \, \psi + \Gamma_\mathrm{UVB} \, f_a) + R \, (1 - Z_\mathrm{SN}) \, \psi - \frac{f_i}{\tau_\mathrm{rec}} \, , \\
-	\frac{\mathrm{d}}{\mathrm{d}t} f_a &= \, \frac{f_i}{\tau_\mathrm{rec}} + e_\mathrm{diss} \, (\eta_\mathrm{diss}^* \, \psi + \Gamma_\mathrm{LWB} \, f_m) \, - S_d \, (\eta_\mathrm{ion}^* \, \psi + \Gamma_\mathrm{UVB} \, f_a) - \frac{f_a}{\tau_\mathrm{cond}} \, , \\
+	\frac{\mathrm{d}}{\mathrm{d}t} f_i &= e_\mathrm{ion} \, (\eta_\mathrm{ion}^* \, \psi + \Gamma_\mathrm{UVB} \, f_a) + R \, (1 - Z_\mathrm{SN}) \, \psi - \frac{f_i}{\tau_\mathrm{rec}} \, , \\
+	\frac{\mathrm{d}}{\mathrm{d}t} f_a &= \, \frac{f_i}{\tau_\mathrm{rec}} + e_\mathrm{diss} \, (\eta_\mathrm{diss}^* \, \psi + \Gamma_\mathrm{LWB} \, f_m) \, - e_\mathrm{ion} \, (\eta_\mathrm{ion}^* \, \psi + \Gamma_\mathrm{UVB} \, f_a) - \frac{f_a}{\tau_\mathrm{cond}} \, , \\
 	\frac{\mathrm{d}}{\mathrm{d}t} f_m &= \frac{f_a}{\tau_\mathrm{cond}} - e_\mathrm{diss}  \, \eta_\mathrm{diss}^* \, \psi - e_\mathrm{diss} \, \Gamma_\mathrm{LWB} \, f_m - \psi \, , \\
 	\frac{\mathrm{d}}{\mathrm{d}t} f_s &= \psi - R \, \psi \, , \\
 	\frac{\mathrm{d}}{\mathrm{d}t} f_Z &= R \, Z_\mathrm{SN} \, \psi + \frac{f_d}{\tau_\mathrm{dd}} - \frac{f_Z}{f_Z + f_d} \, \frac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m) \, , \\
@@ -3341,7 +3336,7 @@ Measurements = "~2.14.0"
 NaNMath = "~1.1.3"
 PlutoUI = "~0.7.71"
 QuadGK = "~2.11.2"
-SpecialFunctions = "~2.5.1"
+SpecialFunctions = "~2.6.1"
 Symbolics = "~6.55.0"
 TikzPictures = "~3.4.2"
 Unitful = "~1.25.0"
@@ -3354,7 +3349,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.7"
 manifest_format = "2.0"
-project_hash = "41818f8ba2127505e8a30d74c5181784a767ba2e"
+project_hash = "c912407c15f0a0997eb41e64545d6f6da7c482e1"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "27cecae79e5cc9935255f90c53bb831cc3c870d7"
@@ -3482,9 +3477,9 @@ version = "7.20.0"
 
 [[deps.ArrayLayouts]]
 deps = ["FillArrays", "LinearAlgebra", "StaticArrays"]
-git-tree-sha1 = "120e392af69350960b1d3b89d41dcc1d66543858"
+git-tree-sha1 = "355ab2d61069927d4247cd69ad0e1f140b31e30d"
 uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
-version = "1.11.2"
+version = "1.12.0"
 weakdeps = ["SparseArrays"]
 
     [deps.ArrayLayouts.extensions]
@@ -3502,9 +3497,9 @@ version = "1.1.0"
 
 [[deps.BandedMatrices]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "PrecompileTools"]
-git-tree-sha1 = "e35c672b239c5105f597963c33e740eeb46cf0ab"
+git-tree-sha1 = "d5133c6b1326fe10042e41ddf1d46b0a1a4011f4"
 uuid = "aae01518-5342-5314-be14-df237901396f"
-version = "1.9.4"
+version = "1.9.5"
 
     [deps.BandedMatrices.extensions]
     BandedMatricesSparseArraysExt = "SparseArrays"
@@ -3584,9 +3579,9 @@ version = "1.9.0"
 
 [[deps.BracketingNonlinearSolve]]
 deps = ["CommonSolve", "ConcreteStructs", "NonlinearSolveBase", "PrecompileTools", "Reexport", "SciMLBase"]
-git-tree-sha1 = "90740f16aef91d898424bc11c1cabada475435e0"
+git-tree-sha1 = "57f9f59bec88ce80cd3e46efc39f126395789bb0"
 uuid = "70df07ce-3d50-431d-a3e7-ca6ddb60ac1e"
-version = "1.4.0"
+version = "1.5.0"
 weakdeps = ["ChainRulesCore", "ForwardDiff"]
 
     [deps.BracketingNonlinearSolve.extensions]
@@ -3947,9 +3942,9 @@ version = "1.11.0"
 
 [[deps.Distributions]]
 deps = ["AliasTables", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "3e6d038b77f22791b8e3472b7c633acea1ecac06"
+git-tree-sha1 = "3bc002af51045ca3b47d2e1787d6ce02e68b943a"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.120"
+version = "0.25.122"
 
     [deps.Distributions.extensions]
     DistributionsChainRulesCoreExt = "ChainRulesCore"
@@ -4207,9 +4202,9 @@ version = "0.2.0"
 
 [[deps.GenericSchur]]
 deps = ["LinearAlgebra", "Printf"]
-git-tree-sha1 = "f88e0ba1f6b42121a7c1dfe93a9687d8e164c91b"
+git-tree-sha1 = "a694e2a57394e409f7a11ee0977362a9fafcb8c7"
 uuid = "c145ed77-6b09-5dd9-b285-bf645a82121e"
-version = "0.5.5"
+version = "0.5.6"
 
 [[deps.GettextRuntime_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll"]
@@ -4473,9 +4468,9 @@ version = "0.1.17"
 
 [[deps.LazyArrays]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "MacroTools", "SparseArrays"]
-git-tree-sha1 = "21057b6f4f5db1475e653735fda7d1de1c267b46"
+git-tree-sha1 = "79ee64f6ba0a5a49930f51c86f60d7526b5e12c8"
 uuid = "5078a376-72f3-5289-bfd5-ec5146d43c02"
-version = "2.6.3"
+version = "2.8.0"
 
     [deps.LazyArrays.extensions]
     LazyArraysBandedMatricesExt = "BandedMatrices"
@@ -4582,9 +4577,9 @@ version = "1.11.0"
 
 [[deps.LinearSolve]]
 deps = ["ArrayInterface", "ChainRulesCore", "ConcreteStructs", "DocStringExtensions", "EnumX", "GPUArraysCore", "InteractiveUtils", "Krylov", "LazyArrays", "Libdl", "LinearAlgebra", "MKL_jll", "Markdown", "OpenBLAS_jll", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLOperators", "Setfield", "StaticArraysCore", "UnPack"]
-git-tree-sha1 = "6c22b14a5ea7fbcc140ea1f52f3cfe20d3da32e0"
+git-tree-sha1 = "c4167314fda6da28522599b904bcd3f44709161f"
 uuid = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
-version = "3.40.2"
+version = "3.42.0"
 
     [deps.LinearSolve.extensions]
     LinearSolveAMDGPUExt = "AMDGPU"
@@ -4811,9 +4806,9 @@ version = "1.2.0"
 
 [[deps.NonlinearSolve]]
 deps = ["ADTypes", "ArrayInterface", "BracketingNonlinearSolve", "CommonSolve", "ConcreteStructs", "DifferentiationInterface", "FastClosures", "FiniteDiff", "ForwardDiff", "LineSearch", "LinearAlgebra", "LinearSolve", "NonlinearSolveBase", "NonlinearSolveFirstOrder", "NonlinearSolveQuasiNewton", "NonlinearSolveSpectralMethods", "PrecompileTools", "Preferences", "Reexport", "SciMLBase", "SimpleNonlinearSolve", "StaticArraysCore", "SymbolicIndexingInterface"]
-git-tree-sha1 = "627967f6e36aac9f5afb2fb285e33b676a6892f9"
+git-tree-sha1 = "1d091cfece012662b06d25c792b3a43a0804c47b"
 uuid = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
-version = "4.11.0"
+version = "4.12.0"
 
     [deps.NonlinearSolve.extensions]
     NonlinearSolveFastLevenbergMarquardtExt = "FastLevenbergMarquardt"
@@ -4844,9 +4839,9 @@ version = "4.11.0"
 
 [[deps.NonlinearSolveBase]]
 deps = ["ADTypes", "Adapt", "ArrayInterface", "CommonSolve", "Compat", "ConcreteStructs", "DifferentiationInterface", "EnzymeCore", "FastClosures", "LinearAlgebra", "Markdown", "MaybeInplace", "Preferences", "Printf", "RecursiveArrayTools", "SciMLBase", "SciMLJacobianOperators", "SciMLOperators", "SciMLStructures", "Setfield", "StaticArraysCore", "SymbolicIndexingInterface", "TimerOutputs"]
-git-tree-sha1 = "f05e5f3d0f280598ecdc26b06ec9acd71dcaef31"
+git-tree-sha1 = "9dba8e7ccfaf4c10b3a3b4cc52abf639f8558efd"
 uuid = "be0214bd-f91f-a760-ac4e-3421ce2b2da0"
-version = "1.16.1"
+version = "2.0.0"
 
     [deps.NonlinearSolveBase.extensions]
     NonlinearSolveBaseBandedMatricesExt = "BandedMatrices"
@@ -4876,15 +4871,15 @@ version = "1.16.1"
 
 [[deps.NonlinearSolveFirstOrder]]
 deps = ["ADTypes", "ArrayInterface", "CommonSolve", "ConcreteStructs", "FiniteDiff", "ForwardDiff", "LineSearch", "LinearAlgebra", "LinearSolve", "MaybeInplace", "NonlinearSolveBase", "PrecompileTools", "Reexport", "SciMLBase", "SciMLJacobianOperators", "Setfield", "StaticArraysCore"]
-git-tree-sha1 = "b9702235120d1161f8041b326eccebd334340de2"
+git-tree-sha1 = "01c48c37ba47721ec6489a1668ab3bb1f5b603c0"
 uuid = "5959db7a-ea39-4486-b5fe-2dd0bf03d60d"
-version = "1.8.0"
+version = "1.9.0"
 
 [[deps.NonlinearSolveQuasiNewton]]
 deps = ["ArrayInterface", "CommonSolve", "ConcreteStructs", "LinearAlgebra", "LinearSolve", "MaybeInplace", "NonlinearSolveBase", "PrecompileTools", "Reexport", "SciMLBase", "SciMLOperators", "StaticArraysCore"]
-git-tree-sha1 = "4e0e34601c6c9890aa9443003180967f75c6929d"
+git-tree-sha1 = "a233b7bbb32426170b238e2e2b82b0f9f1c5caba"
 uuid = "9a2c21bd-3a47-402d-9113-8faf9a0ee114"
-version = "1.9.0"
+version = "1.10.0"
 weakdeps = ["ForwardDiff"]
 
     [deps.NonlinearSolveQuasiNewton.extensions]
@@ -4892,9 +4887,9 @@ weakdeps = ["ForwardDiff"]
 
 [[deps.NonlinearSolveSpectralMethods]]
 deps = ["CommonSolve", "ConcreteStructs", "LineSearch", "MaybeInplace", "NonlinearSolveBase", "PrecompileTools", "Reexport", "SciMLBase"]
-git-tree-sha1 = "6c613302febe2bb408a888105d07073cf6824911"
+git-tree-sha1 = "139bf9211930a829703481b3ffd86b1ab309cd07"
 uuid = "26075421-4e9a-44e1-8bd1-420ed7ad02b2"
-version = "1.4.0"
+version = "1.5.0"
 weakdeps = ["ForwardDiff"]
 
     [deps.NonlinearSolveSpectralMethods.extensions]
@@ -5198,9 +5193,9 @@ version = "0.7.71"
 
 [[deps.PoissonRandom]]
 deps = ["LogExpFunctions", "Random"]
-git-tree-sha1 = "c1ea45aa9f209fe97192afa233907bc4e551c8aa"
+git-tree-sha1 = "67afbcbe9e184d6729a92a022147ed4cf972ca7b"
 uuid = "e409e4f3-bfea-5376-8464-e040bb5c01ab"
-version = "0.4.6"
+version = "0.4.7"
 
 [[deps.Polyester]]
 deps = ["ArrayInterface", "BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "ManualMemory", "PolyesterWeave", "Static", "StaticArrayInterface", "StrideArraysCore", "ThreadingUtilities"]
@@ -5553,9 +5548,9 @@ version = "1.11.0"
 
 [[deps.SimpleNonlinearSolve]]
 deps = ["ADTypes", "ArrayInterface", "BracketingNonlinearSolve", "CommonSolve", "ConcreteStructs", "DifferentiationInterface", "FastClosures", "FiniteDiff", "ForwardDiff", "LineSearch", "LinearAlgebra", "MaybeInplace", "NonlinearSolveBase", "PrecompileTools", "Reexport", "SciMLBase", "Setfield", "StaticArraysCore"]
-git-tree-sha1 = "782c67176b473abf62a6786399c4b7ddcc1a2d77"
+git-tree-sha1 = "8825064775bf4ae0f22d04ea63979d8c868fd510"
 uuid = "727e6d20-b764-4bd8-a329-72de5adea6c7"
-version = "2.8.0"
+version = "2.9.0"
 
     [deps.SimpleNonlinearSolve.extensions]
     SimpleNonlinearSolveChainRulesCoreExt = "ChainRulesCore"
@@ -5631,9 +5626,9 @@ version = "0.4.21"
 
 [[deps.SpecialFunctions]]
 deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "41852b8679f78c8d8961eeadc8f62cef861a52e3"
+git-tree-sha1 = "f2685b435df2613e25fc10ad8c26dddb8640f547"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.5.1"
+version = "2.6.1"
 weakdeps = ["ChainRulesCore"]
 
     [deps.SpecialFunctions.extensions]
@@ -5713,9 +5708,9 @@ weakdeps = ["ChainRulesCore", "InverseFunctions"]
 
 [[deps.SteadyStateDiffEq]]
 deps = ["ConcreteStructs", "DiffEqBase", "DiffEqCallbacks", "LinearAlgebra", "NonlinearSolveBase", "Reexport", "SciMLBase"]
-git-tree-sha1 = "66a028f9a2bb44d0f6de0814a2b9840af548143a"
+git-tree-sha1 = "0a297695b71f24b4158c9c4c1eaaec976a86e87d"
 uuid = "9672c7b4-1e72-59bd-8a11-6ac3964bc41f"
-version = "2.5.0"
+version = "2.7.0"
 
 [[deps.StochasticDiffEq]]
 deps = ["ADTypes", "Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DiffEqNoiseProcess", "DocStringExtensions", "FastPower", "FiniteDiff", "ForwardDiff", "JumpProcesses", "LevyArea", "LinearAlgebra", "Logging", "MuladdMacro", "NLsolve", "OrdinaryDiffEqCore", "OrdinaryDiffEqDifferentiation", "OrdinaryDiffEqNonlinearSolve", "Random", "RandomNumbers", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLOperators", "SparseArrays", "StaticArrays", "UnPack"]
@@ -6050,7 +6045,6 @@ version = "17.4.0+2"
 
 # ╔═╡ Cell order:
 # ╠═fed88caa-1520-41f7-adb3-785e5c9529c6
-# ╟─8da961c9-2ef0-4df5-b7b4-8d0cacea6909
 # ╟─734b3b08-061e-4f93-8574-468d824815da
 # ╟─800dc762-ce0b-463f-858f-6e8eabbc26b0
 # ╟─b842e98e-34e2-40f2-84b6-c180815c2df3

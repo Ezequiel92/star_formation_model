@@ -7,6 +7,8 @@
 #define RHO_COSMO (All.UnitDensity_in_cgs * All.HubbleParam * All.HubbleParam * All.cf_a3inv / PROTONMASS)
 /* M [internal_units] * M_COSMO = M [Mₒ] */
 #define M_COSMO (All.UnitMass_in_g / All.HubbleParam / SOLAR_MASS)
+/* M [internal_units] * M_CGS = M [mp] */
+#define M_CGS (All.UnitMass_in_g / All.HubbleParam / PROTONMASS)
 /* L [internal_units] * L_CGS = L [cm] */
 #define L_CGS (All.UnitLength_in_cm * All.cf_atime / All.HubbleParam)
 
@@ -28,6 +30,8 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 /* ODE constants */
 
 /* Cρ = 100.0 (clumping factor) */
+/* R⊙ = 3.500e-17 cm^3 * s^-1 (formation rate coefficient of H2 on dust grain, at solar metallicity) */
+/* τdd = 2.295e+03 Myr (dust destruction time-scale) */
 /* IMF: Chabrier2003 */
 /* Yield model: Portinari1998 */
 /* Stellar luminosity model: Millán-Irigoyen2021 */

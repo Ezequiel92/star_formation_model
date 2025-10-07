@@ -708,6 +708,28 @@ double rate_of_star_formation(const int index)
     SphP[index].integration_time = integration_time;
 
     /**********************************************************************************************
+     * Redshift
+     **********************************************************************************************/
+
+    double redshift = All.cf_redshift;
+
+    if (!All.ComovingIntegrationOn)
+    {
+        double t = All.Time; // Gyr
+        double t2 = t * t;
+        double t3 = t2 * t;
+        double at_01 = 0.0185084;
+        double at_02 = 0.00151085;
+        double at_03 = -0.0207921;
+        double at_04 = 0.149462;
+
+        double a = at_01 + at_02 * t3 + at_03 * t2 + at_04 * t;
+
+        /* Scale factor to redshift */
+        redshift = (1.0 / a) - 1.0;
+    }
+    
+    /**********************************************************************************************
      * Compute the ODE parameters
      *
      * rho_C: Total cell density           [mp * cm^(-3)]
@@ -724,10 +746,10 @@ double rate_of_star_formation(const int index)
     double rhoC = SphP[index].Density * RHO_COSMO;
 
     /* UVB photoionization rate [Myr^(-1)] */
-    double UVB = interpolate1D(All.cf_redshift, All.UVB_TABLE_DATA);
+    double UVB = interpolate1D(redshift, All.UVB_TABLE_DATA);
 
     /* LWB photodissociation rate [Myr^(-1)] */
-    double LWB = ABEL97 * J21(All.cf_redshift);
+    double LWB = ABEL97 * J21(redshift);
 
     /* Metallicity [dimensionless] */
     double Z = fmax(0.0, SphP[index].Metallicity);
@@ -745,13 +767,20 @@ double rate_of_star_formation(const int index)
     double Zsn = interpolate1D(Z, All.ZSN_TABLE_DATA);
 
     /* Column height [cm] */
-    double h = All.ForceSoftening[P[index].SofteningType] * L_CGS;
+    double M = P[index].Mass * M_CGS;
+    
+    /* Cell volume [cm^3] */
+    double V = M / rhoC;
+
+    /* Column height [cm] */
+    double h = cbrt(V / (4 * M_PI / 3));
 
     double parameters[] = {rhoC, UVB, LWB, eta_d, eta_i, R, Zsn, h};
 
     /* Store the ODE parameters */
     SphP[index].tau_S = ODE_CS / sqrt(rhoC);
     SphP[index].parameter_a = All.Time;
+    SphP[index].parameter_z = redshift;
     SphP[index].parameter_rhoC = rhoC;
     SphP[index].parameter_UVB = UVB;
     SphP[index].parameter_LWB = LWB;
