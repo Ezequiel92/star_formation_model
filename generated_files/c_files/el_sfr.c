@@ -772,8 +772,8 @@ double rate_of_star_formation(const int index)
     /* Cell volume [cm^3] */
     double V = M / rhoC;
 
-    /* Column height [cm] */
-    double h = cbrt(V / (4 * M_PI / 3));
+    /* Column height [cm] (diameter of the sphere with the same volume as the cell) */
+    double h = 2.0 * cbrt(V / (4 * M_PI / 3));
 
     double parameters[] = {rhoC, UVB, LWB, eta_d, eta_i, R, Zsn, h};
 
