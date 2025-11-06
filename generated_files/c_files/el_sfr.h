@@ -29,7 +29,7 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 
 /* ODE constants */
 
-/* Cρ = 100.0 (clumping factor) */
+/* Cρ = 50.0 (clumping factor) */
 /* R⊙ = 3.500e-17 cm^3 * s^-1 (formation rate coefficient of H2 on dust grain, at solar metallicity) */
 /* τdd = 2.295e+03 Myr (dust destruction time-scale) */
 /* IMF: Chabrier2003 */
@@ -39,7 +39,7 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 
 #define N_EQU 6                         /* Number of equations */
 #define ODE_CREC 8.204976000000000e+00  /* Recombination constant [Myr^(-1) * cm^3 * mp^(-1)] */
-#define ODE_CCOND 1.739395275590551e+01 /* Condensation constant [Myr^(-1) * cm^3 * mp^(-1)] */
+#define ODE_CCOND 8.696976377952755e+00 /* Condensation constant [Myr^(-1) * cm^3 * mp^(-1)] */
 #define ODE_CS 1.942876283158012e-02    /* Star formation constant [Myr^(-1) * cm^(3/2) * mp^(-1/2)] */
 #define INV_T_DD 4.356568364611260e-04  /* Inverse of the dust loss timescale [Myr^-1] */
 #define ODE_CDG 2.463402488765494e+00   /* Dust growth constant [Myr^(-1) * mp^(-1) * cm^3] */
