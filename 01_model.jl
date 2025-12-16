@@ -1896,8 +1896,6 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-The molecular term (eq. 9 from [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x)) is
-
 The molecular shielding factor is given in eq. 9 of [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) as
 
 $\begin{equation}
