@@ -1959,7 +1959,7 @@ These rates correspond to the optically thin limit, as discussed in Section 9.1 
 The resulting contribution to the time evolution of the atomic hydrogen fraction is
 
 $\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_i(t)\right|_{\mathrm{UVB}} = S_d \, \Gamma_\mathrm{UVB} \, f_a \, .
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_a(t)\right|_{\mathrm{UVB}} = -\left. \frac{\mathrm{d}}{\mathrm{d}t}f_i(t)\right|_{\mathrm{UVB}} = -S_d \, \Gamma_\mathrm{UVB} \, f_a \, .
 \end{equation}$
 """
   ╠═╡ =#
@@ -2005,10 +2005,10 @@ md"""
 
 The overall rate of photodissociation of molecular hydrogen depends on how many LW photons are available and the probability that a molecule will absorb one.
 
-Then, the photodissosiation rate can be written as ([Abel1997](https://doi.org/10.1016/S1384-1076(97)00010-9))
+Then, the photodissosiation rate can be modeled as (eq. 7 in [Abel1997](https://doi.org/10.1016/S1384-1076(97)00010-9) and eq. 3 in [Incatasciato2023](https://doi.org/10.1093/mnras/stad1008))
 
 $\begin{equation}
-	\frac{\mathrm{d}}{\mathrm{d}t} \rho_m(t) = \rho_m(t) \int_{LW \text{ bands}} \sigma_{pd}(\nu) \, \frac{F_\nu}{h \, \nu} \, \mathrm{d}\nu \, ,
+	\frac{\mathrm{d}}{\mathrm{d}t} \rho_m(t) = -\rho_m(t) \int_{LW} \sigma_{pd}(\nu) \, \frac{F_\nu}{h \, \nu} \, \mathrm{d}\nu \, ,
 \end{equation}$
 
 where
@@ -2017,13 +2017,19 @@ where
  *  $h \, \nu$ is the energy of a single photon, $F_\nu / (h \, \nu)$ is therefore the number flux of photons $[\mathrm{photons \, s^{-1} \, cm^{-2} \, Hz^{-1}}]$,
  *  $\sigma_{pd}(\nu)$ is the photodissociation cross-section $[\mathrm{cm^{-2}}]$.
 
+Dividing both sides by the constant $\rho_\text{cell}$ we get the LWB photodissociation term for our equations
+
+$\begin{equation}
+	\frac{\mathrm{d}}{\mathrm{d}t} f_m(t) = -f_m(t) \int_{LW} \sigma_{pd}(\nu) \, \frac{F_\nu}{h \, \nu} \, \mathrm{d}\nu =: -f_m(t) \, \Gamma_\mathrm{LWB}(z) \, .
+\end{equation}$
+
 Assuming an homogeneous background field we can write the energy flux as
 
 $\begin{equation}
 	F_\nu = 4\pi \, J_\nu \, ,
 \end{equation}$
 
-where $J_\nu$ is the radiation intensity and is generally parametrized as
+where $J_\nu$ is the radiation intensity, wich is generally parametrized as
 
 $\begin{equation}
 	J_\nu(z) = J_{21}(z) \times 10^{-21} \, \mathrm{erg \, s^{-1} \, cm^{-2} \, Hz^{-1} \, sr^{-1}} \, .
@@ -2043,13 +2049,11 @@ $\begin{equation}
 	\Gamma_\mathrm{LWB}(z) = (1.38 \times 10^{-12} \, \mathrm{s^{-1}}) \, J_{21}(z) \, .
 \end{equation}$
 
-Now, If we want to consider the shielding effects of dust and the self-shielding of molecular hydrogen we simply use the term $S_d \, S_{\mathrm{H}_2}$ previously computed
+Now, If we want to consider the shielding effects of dust and the self-shielding of molecular hydrogen we simply add the terms $S_d \, S_{\mathrm{H}_2}$ previously computed
 
 $\begin{equation}
-	k_{pd}(z) = S_d \, S_{\mathrm{H}_2} \, \Gamma_\mathrm{LWB} \, ,
+	\frac{\mathrm{d}}{\mathrm{d}t} f_m(t) = -\frac{\mathrm{d}}{\mathrm{d}t} f_a(t) = -f_m(t) \, S_d \, S_{\mathrm{H}_2} \, \Gamma_\mathrm{LWB} \, .
 \end{equation}$
-
-where $k_{pd}$ is the final photodissociation rate.
 
 For $J_{21}(z)$ we will use the fit in eq. 9 of [Incatasciato2023](https://doi.org/10.1093/mnras/stad1008)
 
@@ -3347,7 +3351,7 @@ UnitfulAstro = "~1.2.2"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.12.2"
+julia_version = "1.12.3"
 manifest_format = "2.0"
 project_hash = "32a78f60b8b8782a0447e7958a746f22b8ad8438"
 
@@ -5045,7 +5049,7 @@ version = "0.44.2+0"
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.12.0"
+version = "1.12.1"
 weakdeps = ["REPL"]
 
     [deps.Pkg.extensions]
