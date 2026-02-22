@@ -34,7 +34,7 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 /* τdd = 2.295e+03 Myr (dust destruction time-scale) */
 /* IMF: Chabrier2003 */
 /* Yield model: Portinari1998 */
-/* Stellar luminosity model: Millán-Irigoyen2021 */
+/* Stellar luminosity model: Mollá2009 */
 /* LW background model: Incatasciato2023 */
 
 #define N_EQU 6                         /* Number of equations */
