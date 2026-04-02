@@ -349,6 +349,9 @@ write_magnitude_table(
 md"## Header file"
   ╠═╡ =#
 
+# ╔═╡ 694290a2-893b-4736-b5ce-6c2ce7a904da
+MODEL.HR_LUMINOSITY
+
 # ╔═╡ 2017166e-2932-48f3-a9e2-f5423f018742
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -3685,6 +3688,7 @@ version = "0.15.0+0"
 # ╠═5fa18c9e-0ae1-402c-aa28-7396a4973105
 # ╠═22361146-afa5-40a5-ad79-9b7b91cba8db
 # ╟─73503ce5-c8b4-4f1d-a95c-cc7a307fdb8f
+# ╠═694290a2-893b-4736-b5ce-6c2ce7a904da
 # ╠═2017166e-2932-48f3-a9e2-f5423f018742
 # ╠═be89676f-0e5a-48c5-b8e3-61b2d7b892a5
 # ╟─7e5980f4-2bcc-4c42-a244-5a8e45df9ae1
