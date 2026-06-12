@@ -4,7 +4,7 @@
  * \copyright   and contributing authors.
  *
  * \file        src/el_sfr/el_sfr.c
- * \date        08/2025
+ * \date        06/2026
  * \author      Ezequiel Lozano
  * \brief       Compute the star formation rate for a given gas cell.
  * \details     This file contains the routines to compute the star formation rate, according to our
@@ -382,11 +382,21 @@ double J21(double z)
 static double J21(double z)
 #endif /* #ifdef TESTING */
 {
+    double zeff;
+    if (z > 6.0)
+    {
+        zeff = z;
+    }
+    else
+    {
+        zeff = 6.0;
+    }
+
     double LWB_A = 2.119;
     double LWB_B = -0.1117;
     double LWB_C = -0.002782;
 
-    double z1 = 1.0 + z;
+    double z1 = 1.0 + zeff;
     double logJ21 = LWB_A + LWB_B * z1 + LWB_C * z1 * z1;
 
     return pow(10, logJ21);
@@ -551,13 +561,23 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
      * Net dust growth
      ******************/
 
-    /* Dust growth  [Myr^(-1)] */
-    double dg = ODE_CDG * fZ * fd * fn * fn * rho_c;
+    /* Dust yield by SNe [Myr^(-1)] */
+    double dg_SNe = DELTA_DUST * Zsn * R_psi;
+
+    /* Dust accretion [Myr^(-1)] */
+    double dg_acc = ODE_CDG * fZ * fd * fn * fn * rho_c;
+
+    /* Value of inverse of T_dd = 1 / (C_sw_mass * SNII_FRACTION) */
+#ifdef TESTING
+    double inv_T_dd = SNII_FRAC_TEST * ODE_CSWMASS;
+#else  /* #ifdef TESTING */
+    double inv_T_dd = All.SNII_FRACTION * ODE_CSWMASS;
+#endif /* #ifdef TESTING */
 
     /* Dust destruction [Myr^(-1)] */
-    double dd = fd * INV_T_DD;
+    double dd = fd * inv_T_dd * psi;
 
-    double net_dust_growth = dg - dd;
+    double net_dust_growth = dg_SNe + dg_acc - dd;
 
     /**********************************************************************************************
      * Evaluate the ODE system
@@ -646,12 +666,12 @@ static void integrate_ode(double *ic, double *parameters, double it)
  *
  *  \param[in] index Index of the gas cell in question.
  *
- *  \return The star formation rate in [Mₒ yr^(-1)].
+ *  \return The star formation rate in [M☉ yr^(-1)].
  */
 static double compute_gas_sfr(const int index)
 {
     double integration_time = SphP[index].integration_time * 1000000; // [yr]
-    double cell_mass = P[index].Mass * M_COSMO;                       // [Mₒ]
+    double cell_mass = P[index].Mass * M_COSMO;                       // [M☉]
 
     return SphP[index].ODE_fractions[3] * cell_mass / integration_time;
 }
@@ -662,7 +682,7 @@ static double compute_gas_sfr(const int index)
  *
  *  \param[in] index Index of the gas cell in question.
  *
- *  \return The star formation rate in [Mₒ yr^(-1)].
+ *  \return The star formation rate in [M☉ yr^(-1)].
  */
 double rate_of_star_formation(const int index)
 {
@@ -712,23 +732,7 @@ double rate_of_star_formation(const int index)
      **********************************************************************************************/
 
     double redshift = All.cf_redshift;
-
-    if (!All.ComovingIntegrationOn)
-    {
-        double t = All.Time; // Gyr
-        double t2 = t * t;
-        double t3 = t2 * t;
-        double at_01 = 0.0185084;
-        double at_02 = 0.00151085;
-        double at_03 = -0.0207921;
-        double at_04 = 0.149462;
-
-        double a = at_01 + at_02 * t3 + at_03 * t2 + at_04 * t;
-
-        /* Scale factor to redshift */
-        redshift = (1.0 / a) - 1.0;
-    }
-    
+  
     /**********************************************************************************************
      * Compute the ODE parameters
      *
@@ -766,7 +770,7 @@ double rate_of_star_formation(const int index)
     /* Metals recycling fraction [dimensionless] */
     double Zsn = interpolate1D(Z, All.ZSN_TABLE_DATA);
 
-    /* Column height [cm] */
+    /* Cell mass [mp] */
     double M = P[index].Mass * M_CGS;
     
     /* Cell volume [cm^3] */
@@ -780,6 +784,7 @@ double rate_of_star_formation(const int index)
     /* Store the ODE parameters */
     SphP[index].tau_S = ODE_CS / sqrt(rhoC);
     SphP[index].parameter_a = All.Time;
+    SphP[index].parameter_SNII = All.SNII_FRACTION;
     SphP[index].parameter_z = redshift;
     SphP[index].parameter_rhoC = rhoC;
     SphP[index].parameter_UVB = UVB;
@@ -836,7 +841,7 @@ double rate_of_star_formation(const int index)
         SphP[index].ODE_fractions[i] = ic[i];
     }
 
-    /* Return the star formation rate in [Mₒ yr^(-1)] */
+    /* Return the star formation rate in [M☉ yr^(-1)] */
     return compute_gas_sfr(index);
 }
 
