@@ -758,6 +758,16 @@ double rate_of_star_formation(const int index)
     /* Metallicity [dimensionless] */
     double Z = fmax(0.0, SphP[index].Metallicity);
 
+    /* Dust metallicity [dimensionless] */
+    double Zd = 0.0;
+    for(size_t channel = 0; channel < GFM_DUST_N_CHANNELS; channel++)
+    {
+      for(size_t element = 0; element < GFM_N_CHEM_ELEMENTS; element++)
+        {
+          Zd += SphP[index].MetalsDustFraction[channel][element];
+        }
+    }
+
     /* Photodissociation efficiency [dimensionless] */
     double eta_d = interpolate2D(log_it, Z, All.ETA_D_TABLE_DATA);
 
@@ -800,32 +810,32 @@ double rate_of_star_formation(const int index)
      * Compute the initial conditions
      **********************************************************************************************/
 
-    double fi, fa, fm, fs, fZ, fd;
+    double fi, fa, fm, fs, fZ, fd, fg;
 
     double nhp, nh, df;
 
     get_arepo_fraction(index, &nhp, &nh);
 
+    /* Dust mass fraction [dimensionless] */
+    fd = fmax(0.0, Zd);
+
+    /* Metal mass fraction [dimensionless] */
+    fZ = Z;
+
+    /* Gas mass fraction [dimensionless] */
+    fg = 1.0 - fd - fZ;
+
     /* Ionized gas mass fraction [dimensionless] */
-    fi = (1 - Z) * nhp / (nhp + nh);
+    fi = fg * nhp / (nhp + nh);
 
     /* Atomic gas mass fraction [dimensionless] */
-    fa = (1 - Z) * nh / (nhp + nh);
+    fa = fg * nh / (nhp + nh);
 
     /* Molecular gas mass fraction [dimensionless] */
     fm = 0.0;
 
     /* Stellar mass fraction [dimensionless] */
     fs = 0.0;
-
-    /* Dust fraction in the metals [dimensionless] */
-    df = ODE_CXD * fa;
-
-    /* Metal mass fraction [dimensionless] */
-    fZ = Z * (1 - df);
-
-    /* Dust mass fraction [dimensionless] */
-    fd = Z * df;
 
     double ic[] = {fi, fa, fm, fs, fZ, fd};
 

@@ -9,8 +9,6 @@
 #define M_COSMO (All.UnitMass_in_g / All.HubbleParam / SOLAR_MASS)
 /* M [internal_units] * M_CGS = M [mp] */
 #define M_CGS (All.UnitMass_in_g / All.HubbleParam / PROTONMASS)
-/* L [internal_units] * L_CGS = L [cm] */
-#define L_CGS (All.UnitLength_in_cm * All.cf_atime / All.HubbleParam)
 
 /* Interpolation tables */
 #define ETA_NROWS 107   // Number of rows in the η tables
@@ -43,7 +41,6 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 #define ODE_CDG 1.101667084164361e+00      /* Dust growth constant [Myr^(-1) * mp^(-1) * cm^3] */
 #define ODE_CSD 3.149606299212598e-19      /* Dust shielding constant [cm^2 * mp^(-1)] */
 #define ODE_CSH2 1.0000e-15                /* Molecular self-shielding constant [cm^2 * mp^(-1)] */
-#define ODE_CXD 2.835953313674557e-01      /* Dust initial condition constant [dimensionless] */
 #define ODE_CTION 6.3000e-18               /* Photoionization optical depth constant [cm^2 * mp^(-1)] */
 #define ODE_CTDISS 1.0500e-19              /* Photodissociation optical depth constant [cm^2 * mp^(-1)] */
 #define ZEFF 1.2700e-05                    /* Effective metallicity 1e-3 Zₒ */
