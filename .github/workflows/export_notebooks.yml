@@ -23,20 +23,20 @@ jobs:
               run: sudo apt-get install -y libgsl-dev
               
             - name: Checkout this repository
-              uses: actions/checkout@v5
+              uses: actions/checkout@v7
 
             - name: Install Julia
-              uses: julia-actions/setup-julia@v2
+              uses: julia-actions/setup-julia@v3
               with:
                   version: '1'
 
             - name: Cache Julia artifacts
-              uses: julia-actions/cache@v2
+              uses: julia-actions/cache@v3
               with:
                 cache-registries: "true"
 
             - name: Set up notebook state cache
-              uses: actions/cache@v4
+              uses: actions/cache@v6
               with:
                   path: pluto_state_cache
                   key: ${{ runner.os }}-pluto_state_cache-v2-${{ hashFiles('**/Project.toml', '**/Manifest.toml', '.github/workflows/*' ) }}-${{ hashFiles('**/*jl') }}
@@ -63,7 +63,7 @@ jobs:
                   )'
 
             - name: Deploy to gh-pages
-              uses: JamesIves/github-pages-deploy-action@releases/v4
+              uses: JamesIves/github-pages-deploy-action@v4
               with:
                   token: ${{ secrets.GITHUB_TOKEN }}
                   branch: gh-pages
