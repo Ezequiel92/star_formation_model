@@ -6,24 +6,22 @@ on:
     workflow_dispatch:
 
 concurrency:
-    group: pages
-    cancel-in-progress: false
+    group: pluto-export
+    cancel-in-progress: true
 
 permissions:
-    contents: read
-    pages: write
-    id-token: write
+    contents: write
 
 jobs:
-    build:
+    build-and-deploy:
         runs-on: ubuntu-latest
         steps:
             - name: Install lualatex
               run: sudo apt-get update && sudo apt-get install -y texlive-full
-
+              
             - name: Install GSL
               run: sudo apt-get install -y libgsl-dev
-
+              
             - name: Checkout this repository
               uses: actions/checkout@v7
 
@@ -45,6 +43,9 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-pluto_state_cache-v2-${{ hashFiles('**/Project.toml', '**/Manifest.toml', '.github/workflows/*' ) }}
 
+            - name: Ignore notebook state cache in export
+              run: echo 'pluto_state_cache' >> .gitignore
+
             - name: Run & export Pluto notebooks
               run: |
                 julia -e 'using Pkg
@@ -61,21 +62,14 @@ jobs:
                     Export_baked_state=false,
                   )'
 
-            - name: Remove notebook state cache from artifact
-              run: rm -rf pluto_state_cache
-
-            - name: Upload Pages artifact
-              uses: actions/upload-pages-artifact@v5
+            - name: Deploy to gh-pages
+              uses: JamesIves/github-pages-deploy-action@v4
               with:
-                  path: .
-
-    deploy:
-        needs: build
-        runs-on: ubuntu-latest
-        environment:
-            name: github-pages
-            url: ${{ steps.deployment.outputs.page_url }}
-        steps:
-            - name: Deploy to GitHub Pages
-              id: deployment
-              uses: actions/deploy-pages@v5
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  branch: gh-pages
+                  folder: .
+                  single-commit: true
+                  clean-exclude: |
+                      _config.yml
+                      index.md
+                      index.html
