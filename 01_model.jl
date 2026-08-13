@@ -1153,7 +1153,7 @@ The $\langle a \rangle$ terms arise because Hirashita distinguishes between
 
 These are then related by integrals over the grain-size distribution (see eq. 26 in [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x)).
 
-We adopt model C and F models, which are equivalent for our purposes. Their characteristic values are
+We adopt model C and F, which are equivalent for our purposes. Their characteristic values are
 
 | Parameter                                       | Value                      |
 |:-----------------------------------------------:|:--------------------------:|
