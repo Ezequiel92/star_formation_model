@@ -35,15 +35,13 @@ begin
 		:hexagon,
 	]
 
-	LINE_STYLES=[:solid, :dash, :dot, :dashdot, :dashdotdot]
-
 	CYCLE = Cycle([:color, :linestyle, :marker])
 
 	DEFAULT_THEME = Theme(
 	    size=(880, 880),
 	    fontsize=35,
 	    figure_padding=(1, 15, 5, 15),
-	    palette=(color=Makie.wong_colors(), marker=MARKERS, linestyle=LINE_STYLES),
+	    palette=(color=Makie.wong_colors(), marker=MARKERS),
 	    CairoMakie=(px_per_unit=2.3622, pt_per_unit=0.283466),
 	    Axis=(
 	        xlabelpadding=15,
