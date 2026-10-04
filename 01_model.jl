@@ -909,7 +909,7 @@ begin
 	const Zeff = 1e-3 * Zsun
 
 	# Clumping factor
-	const Cρ = 200.0
+	const Cρ = 100.0
 
 	# Condensation constant
 	const C_cond = (2 * Rsun * Cρ) / (m_u * Zsun)
@@ -1253,6 +1253,43 @@ We will adopt the formulation and fiducial values from [Hirashita2012](https://d
 # ╔═╡ 9c5b30d5-08aa-48a8-9ae2-c3b6c432ab89
 # Normalization constant
 const A = 1.3e8u"yr";
+
+# ╔═╡ 002cfcdd-41a5-43e5-8cbe-8a1d8b6d5793
+let
+	###############################################
+	# Normalization constant from Hirashita (2012)
+	###############################################
+
+	# Parameters
+	a0    = 0.1u"μm"
+	S0    = 0.3
+	T0    = 10.0u"K"
+	nH0   = 1000.0u"cm^-3"
+	Zdsun = 0.02
+
+	# Silicate
+	f_Si  = 0.166
+	m_Si  = 28.1u"u"
+	XH_Si = 3.55e-5
+	s_Si  = 3.3u"g * cm^-3"
+
+	# Graphite
+	f_C  = 1.0
+	m_C  = 12.0u"u"
+	XH_C = 3.63e-4
+	s_C  = 2.26u"g * cm^-3"
+	
+	# Normalization constant
+	A(; fx, mx, XH, sx) = sqrt( (2 * π * mx) / (1.0u"k" * T0) ) * (fx * sx * a0) / (S0 * XH * nH0 * mx)
+
+	# Silicate
+	A_Si = uconvert(u"yr", A(; fx=f_Si, mx=m_Si, XH=XH_Si, sx=s_Si))
+	# Graphite
+	A_C = uconvert(u"yr", A(; fx=f_C, mx=m_C, XH=XH_C, sx=s_C))
+
+	@show A_Si
+	@show A_C
+end;
 
 # ╔═╡ ce2383dc-c34f-4b56-8501-42ce0539c95c
 # ╠═╡ skip_as_script = true
@@ -6145,6 +6182,7 @@ version = "0.15.0+0"
 # ╠═c01cf078-c0cb-4000-bf76-a90cbeb10b89
 # ╟─46c5bd5a-21b1-4f92-8eb1-a11ec2a0c94a
 # ╠═9c5b30d5-08aa-48a8-9ae2-c3b6c432ab89
+# ╠═002cfcdd-41a5-43e5-8cbe-8a1d8b6d5793
 # ╟─ce2383dc-c34f-4b56-8501-42ce0539c95c
 # ╠═a3d1e1bf-c513-4d6b-a43b-3dab0106f1a5
 # ╟─5680e62b-973b-4a60-bb3f-8785ce07e581
