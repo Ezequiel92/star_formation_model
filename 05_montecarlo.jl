@@ -8,7 +8,7 @@ using InteractiveUtils
 let
 	using CairoMakie, ColorSchemes, Measurements, Libdl, Printf, PlutoLinks, Statistics, StatsBase, OrdinaryDiffEqRosenbrock, OrdinaryDiffEqSDIRK, OrdinaryDiffEqBDF, OrdinaryDiffEqNordsieck
 
-	using DataFrames, ChaosTools, CSV, DifferentialEquations, Interpolations, LinearAlgebra, Measurements, NaNMath, PlutoUI, QuadGK, SciMLLogging, SpecialFunctions, Symbolics, TikzPictures, Unitful, UnitfulAstro
+	using DataFrames, ChaosTools, CSV, DifferentialEquations, Interpolations, LinearAlgebra, NaNMath, PlutoUI, QuadGK, SciMLLogging, SpecialFunctions, Symbolics, TikzPictures, Unitful, UnitfulAstro
 end
 
 # ╔═╡ 53faa843-2056-4c76-bc8b-31bb602d475c
