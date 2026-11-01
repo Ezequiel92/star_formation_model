@@ -4,7 +4,7 @@
  * \copyright   and contributing authors.
  *
  * \file        src/el_sfr/el_sfr.c
- * \date        06/2026
+ * \date        10/2026
  * \author      Ezequiel Lozano
  * \brief       Compute the star formation rate for a given gas cell.
  * \details     This file contains the routines to compute the star formation rate, according to our
@@ -19,8 +19,8 @@
  *                static double interpolate2D(double x, double y, const void *dtable)
  *                static double J21(double z)
  *                static int sf_ode(double t, const double y[], double f[], void *parameters)
- *                static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
- *                static void integrate_ode(double *ic, double *parameters, double it)
+ *                static int integrate_ode(double *ic, double *parameters, double it)
+ *                static void two_phase_fractions(const int index, double *fi_gas, double *fn_gas)
  *                static double compute_gas_sfr(const int index)
  *                double rate_of_star_formation(const int index)
  *
@@ -439,32 +439,35 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     double fa = y[1];
     double fm = y[2];
     double fs = y[3];
-    double fZ = y[4];
     double fd = y[5];
 
     /**********************************************************************************************
      * Parameters
      **********************************************************************************************
      *
-     * rho_c: Total cell density           [mp * cm^(-3)]
-     * UVB:   UVB photoionization rate     [Myr^(-1)]
-     * LWB:   LWB photodissociation rate   [Myr^(-1)]
-     * eta_d: Photodissociation efficiency [dimensionless]
-     * eta_i: Photoionization efficiency   [dimensionless]
-     * R:     Mass recycling fraction      [dimensionless]
-     * Zsn:   Metals recycling fraction    [dimensionless]
-     * h:     Column height                [cm]
+     * rho_c:  Total cell density           [mp * cm^(-3)]
+     * UVB:    UVB photoionization rate     [Myr^(-1)]
+     * LWB:    LWB photodissociation rate   [Myr^(-1)]
+     * eta_d:  Photodissociation efficiency [dimensionless]
+     * eta_i:  Photoionization efficiency   [dimensionless]
+     * R:      Mass recycling fraction      [dimensionless]
+     * Zsn:    Metals recycling fraction    [dimensionless]
+     * h:      Cell size                    [cm]
+     * fd_max: Maximum dust fraction        [dimensionless]
+     * c_dg:   Dust growth constant         [Myr^(-1) * mp^(-1) * cm^3]
      **********************************************************************************************/
 
-    double *p = (double *)parameters;
-    double rho_c = p[0];
-    double UVB = p[1];
-    double LWB = p[2];
-    double eta_d = p[3];
-    double eta_i = p[4];
-    double R = p[5];
-    double Zsn = p[6];
-    double h = p[7];
+    double *p     = (double *)parameters;
+    double rho_c  = p[0];
+    double UVB    = p[1];
+    double LWB    = p[2];
+    double eta_d  = p[3];
+    double eta_i  = p[4];
+    double R      = p[5];
+    double Zsn    = p[6];
+    double h      = p[7];
+    double fd_max = p[8];
+    double c_dg   = p[9];
 
     /**********************************************************************************************
      * Auxiliary equations
@@ -480,31 +483,29 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     /* Neutral fraction */
     double fn = fa + fm;
 
-    /* Gas fraction */
-    double fg = fn + fi;
-
-    /* Metal fraction */
-    double Zt = fZ + fd;
-
     /************
 	 * Shielding
      ************/
 
+    /* Shielding length [cm] */
+    double Lsh = ODE_CLSH / sqrt(rho_c);
+
     /* Dust optical depth */
-    double tau_d = ODE_CSD * h * rho_c * fn * Zt;
+    double tau_d = ODE_CSD * Lsh * rho_c * fd;
 
 	/* Dust shielding */
     double sd = exp(-tau_d);
 
     /* Molecular self-shielding optical depth */
-    double xp1 = ODE_CSH2 * h * fm * rho_c + 1.0;
-    double xp1_2 = xp1 * xp1;
+    /* (fm clamped at 0, so trial steps of the solver with fm < 0 do not give xp1 <= 0) */
+    double xp1    = ODE_CSH2 * Lsh * fmax(fm, 0.0) * rho_c + 1.0;
+    double xp1_2  = xp1 * xp1;
     double sq_xp1 = sqrt(xp1);
     double tau_sh = 8.5e-4 * sq_xp1;
 
     /* Molecular self-shielding */
     double exp_xp1 = exp(-tau_sh);
-    double sh2 = ((1 - WH2) / xp1_2) + (WH2 * exp_xp1 / sq_xp1);
+    double sh2     = ((1 - WH2) / xp1_2) + (WH2 * exp_xp1 / sq_xp1);
 
     /* Combined shielding  */
 	double e_diss = sd * sh2;
@@ -514,14 +515,15 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
      *****************/
 
     /* Recombination [Myr^(-1)] */
-    double recomb = ODE_CREC * fi * fi * rho_c;
+    /* (fi * fi written as fi * max(fi, 0), so recombination stops for fi < 0 instead of running away) */
+    double recomb = ODE_CREC * fi * fmax(fi, 0.0) * rho_c;
 
     /* Ionization optical depth */
 	double tau_ion = ODE_CTION * fa * rho_c * h;
 
     /* Stellar ionization [Myr^(-1)] */
 	double ion_prob = -expm1(-tau_ion);
-    double s_ion = sd * eta_i * ion_prob * psi;
+    double s_ion    = sd * eta_i * ion_prob * psi;
 
     /* UVB photoionization [Myr^(-1)] */
     double uvb = sd * UVB * fa;
@@ -542,15 +544,14 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
      *******************/
 
     /* Condensation [Myr^(-1)] */
-    double Zt_eff = Zt + ZEFF;
-    double cond = ODE_CCOND * fa * rho_c * fg * Zt_eff;
+    double cond = ODE_CCOND * fa * rho_c * (fd + FD_EFF);
 
     /* Dissociation optical depth */
     double tau_diss = ODE_CTDISS * fm * rho_c * h;
 
     /* Stellar dissociation [Myr^(-1)] */
 	double diss_prob = -expm1(-tau_diss);
-    double s_diss = e_diss * eta_d * diss_prob * psi;
+    double s_diss    = e_diss * eta_d * diss_prob * psi;
 
     /* LW background dissociation [Myr^(-1)] */
 	double lwb = e_diss * LWB * fm;
@@ -564,8 +565,12 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
     /* Dust yield by SNe [Myr^(-1)] */
     double dg_SNe = DELTA_DUST * Zsn * R_psi;
 
+    /* Gas-phase fraction of the key elements [dimensionless] */
+    /* (0 above the maximum dust fraction: accretion can only add metals to the grains) */
+    double xi = fmax(0.0, 1.0 - fd / fd_max);
+
     /* Dust accretion [Myr^(-1)] */
-    double dg_acc = ODE_CDG * fZ * fd * fn * fn * rho_c;
+    double dg_acc = c_dg * xi * fd * fn * rho_c;
 
     /* Value of inverse of T_dd = 1 / (C_sw_mass * SNII_FRACTION) */
 #ifdef TESTING
@@ -609,38 +614,66 @@ static int sf_ode(double t, const double y[], double f[], void *parameters)
  *
  *  Parameters
  *
- *  rho_C: Total cell density           [mp * cm^(-3)]
- *  UVB:   UVB photoionization rate     [Myr^(-1)]
- *  LWB:   LWB photodissociation rate   [Myr^(-1)]
- *  eta_d: Photodissociation efficiency [dimensionless]
- *  eta_i: Photoionization efficiency   [dimensionless]
- *  R:     Mass recycling fraction      [dimensionless]
- *  Zsn:   Metals recycling fraction    [dimensionless]
- *  h:     Column height                [cm]
+ *  rho_C:  Total cell density           [mp * cm^(-3)]
+ *  UVB:    UVB photoionization rate     [Myr^(-1)]
+ *  LWB:    LWB photodissociation rate   [Myr^(-1)]
+ *  eta_d:  Photodissociation efficiency [dimensionless]
+ *  eta_i:  Photoionization efficiency   [dimensionless]
+ *  R:      Mass recycling fraction      [dimensionless]
+ *  Zsn:    Metals recycling fraction    [dimensionless]
+ *  h:      Cell size                    [cm]
+ *  fd_max: Maximum dust fraction        [dimensionless]
+ *  c_dg:   Dust growth constant         [Myr^(-1) * mp^(-1) * cm^3]
  *
  *  \param[in] ic Initial conditions.
  *  \param[in] parameters Parameters for the ODEs.
  *  \param[in] it Integration time in Myr.
  *
- *  \return void.
+ *  \return The status of the GSL integration (GSL_SUCCESS if it was successful). Outside of
+ *          TESTING, a failed integration terminates the run, printing its inputs.
  */
 #ifdef TESTING
-void integrate_ode(double *ic, double *parameters, double it)
+int integrate_ode(double *ic, double *parameters, double it)
 #else  /* #ifdef TESTING */
-static void integrate_ode(double *ic, double *parameters, double it)
+static int integrate_ode(double *ic, double *parameters, double it)
 #endif /* #ifdef TESTING */
 {
+#ifndef TESTING
+    /* Copy of the initial conditions, to report them if the integration fails */
+    double ic0[N_EQU];
+    for (size_t i = 0; i < N_EQU; ++i)
+    {
+        ic0[i] = ic[i];
+    }
+#endif /* #ifndef TESTING */
+
     /* Setup and run ODE integration */
     double t0 = 0.0;
     gsl_odeiv2_system sys = {sf_ode, NULL, N_EQU, parameters};
-    gsl_odeiv2_driver *driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_msadams, it * 1e-4, 1e-10, 0.0);
+    gsl_odeiv2_driver *driver = gsl_odeiv2_driver_alloc_y_new(
+        &sys,
+        gsl_odeiv2_step_msadams,
+        it * 1e-4,
+        1e-10,
+        0.0
+    );
 
     int status = gsl_odeiv2_driver_apply(driver, &t0, it, ic);
 
 #ifndef TESTING
     if (status != GSL_SUCCESS)
     {
-        terminate("GSL ERROR: Could not integrate, status = %d\n", status);
+        double *p = (double *)parameters;
+        terminate(
+            "GSL ERROR: Could not integrate, status = %d, reached t = %.17g of it = %.17g [Myr]\n"
+            "ic = {%.17g, %.17g, %.17g, %.17g, %.17g, %.17g}\n"
+            "parameters = {%.17g, %.17g, %.17g, %.17g, %.17g, %.17g, %.17g, %.17g, %.17g, %.17g}\n"
+            "state at failure = {%.17g, %.17g, %.17g, %.17g, %.17g, %.17g}\n",
+            status, t0, it,
+            ic0[0], ic0[1], ic0[2], ic0[3], ic0[4], ic0[5],
+            p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9],
+            ic[0], ic[1], ic[2], ic[3], ic[4], ic[5]
+        );
     }
 #endif /* #ifndef TESTING */
 
@@ -656,9 +689,60 @@ static void integrate_ode(double *ic, double *parameters, double it)
         normalize_vector(ic, N_EQU);
     }
 #endif /* #ifndef TESTING */
+
+    return status;
 }
 
 #ifndef TESTING
+
+/*! \brief Compute the ionized and neutral fractions of the gas in a star-forming cell.
+ *
+ *  In AREPO a star-forming cell follows the two-phase ISM model of Springel & Hernquist
+ *  (2003, https://doi.org/10.1046/j.1365-8711.2003.06206.x, SH03): cold clouds (T_c = TempClouds)
+ *  with mass fraction x, embedded in a hot phase with mass fraction 1 - x.
+ *
+ *  \param[in] index Index of the gas cell in question.
+ *  \param[out] fi_gas Ionized fraction of the gas [dimensionless].
+ *  \param[out] fn_gas Neutral fraction of the gas [dimensionless].
+ *
+ *  \return void
+ */
+static void two_phase_fractions(const int index, double *fi_gas, double *fn_gas)
+{
+    /* Physical density [internal units] */
+    double rho = SphP[index].Density * All.cf_a3inv;
+
+    /* Electron abundance guess for the iteration in `GetCoolingTime()` */
+    double ne = SphP[index].Ne;
+
+    /**********************************************************************************************
+    * Cold mass fraction x of SH03
+    ***********************************************************************************************/
+
+    double x, tsfr, factorEVP;
+    calc_egyeff(index, rho, &ne, &x, &tsfr, &factorEVP);
+    x = fmin(fmax(x, 0.0), 1.0);
+
+    /**********************************************************************************************
+    * Ionized hydrogen abundance of the hot phase
+    ***********************************************************************************************/
+
+    double nhp_hot;
+    getHp(&nhp_hot);
+    nhp_hot = fmin(fmax(nhp_hot, 0.0), 1.0);
+
+    /**********************************************************************************************
+    * Neutral and ionized fractions of the star forming gas
+    ***********************************************************************************************/
+
+    /* Ionized fraction of the gas */
+    /* Assuming the cold phase is fully neutral (T_c ~ 1e3 K) */
+    *fi_gas = (1.0 - x) * nhp_hot;
+
+    /* Neutral fraction of the gas */
+    /* Assuming the cold phase is fully neutral (T_c ~ 1e3 K) */
+    *fn_gas = x + (1.0 - x) * (1.0 - nhp_hot);
+}
 
 /*! \brief Compute the star formation rate.
  *
@@ -732,18 +816,20 @@ double rate_of_star_formation(const int index)
      **********************************************************************************************/
 
     double redshift = All.cf_redshift;
-  
+
     /**********************************************************************************************
      * Compute the ODE parameters
      *
-     * rho_C: Total cell density           [mp * cm^(-3)]
-     * UVB:   UVB photoionization rate     [Myr^(-1)]
-     * LWB:   LWB photodissociation rate   [Myr^(-1)]
-     * eta_d: Photodissociation efficiency [dimensionless]
-     * eta_i: Photoionization efficiency   [dimensionless]
-     * R:     Mass recycling fraction      [dimensionless]
-     * Zsn:   Metals recycling fraction    [dimensionless]
-     * h:     Column height                [cm]
+     * rho_C:  Total cell density           [mp * cm^(-3)]
+     * UVB:    UVB photoionization rate     [Myr^(-1)]
+     * LWB:    LWB photodissociation rate   [Myr^(-1)]
+     * eta_d:  Photodissociation efficiency [dimensionless]
+     * eta_i:  Photoionization efficiency   [dimensionless]
+     * R:      Mass recycling fraction      [dimensionless]
+     * Zsn:    Metals recycling fraction    [dimensionless]
+     * h:      Cell size                    [cm]
+     * fd_max: Maximum dust fraction        [dimensionless]
+     * c_dg:   Dust growth constant         [Myr^(-1) * mp^(-1) * cm^3]
      **********************************************************************************************/
 
     /* Cell density [mp * cm^(-3)] */
@@ -758,21 +844,60 @@ double rate_of_star_formation(const int index)
     /* Metallicity [dimensionless] */
     double Z = fmax(0.0, SphP[index].Metallicity);
 
-    /* Dust metallicity [dimensionless] */
-    double Zd = 0.0;
-    for(size_t channel = 0; channel < GFM_DUST_N_CHANNELS; channel++)
+    /* Silicon mass fraction [dimensionless] */
+    double X_Si = fmax(0.0, SphP[index].MetalsFraction[element_index("Silicon")]);
+
+    /* Carbon mass fraction [dimensionless] */
+    double X_C = fmax(0.0, SphP[index].MetalsFraction[element_index("Carbon")]);
+
+    /* Clean the metal fractions from numerical noise */
+    if (Z < Z_FLOOR)
     {
-      for(size_t element = 0; element < GFM_N_CHEM_ELEMENTS; element++)
-        {
-          Zd += SphP[index].MetalsDustFraction[channel][element];
-        }
+        /* Pristine gas: below the floor, the values are numerical noise */
+        Z = 0.0;
+        X_Si = 0.0;
+        X_C = 0.0;
     }
+    else if (X_Si + X_C > Z)
+    {
+        /* Si and C cannot be more than all the metals */
+        double X_scale = Z / (X_Si + X_C);
+        X_Si *= X_scale;
+        X_C *= X_scale;
+    }
+
+    /* Maximum silicate and graphite mass fractions [dimensionless] */
+    double y_Si = ODE_CMAXSI * X_Si;
+    double y_C  = ODE_CMAXC * X_C;
+
+    /* Maximum dust mass fraction [dimensionless] (capped at Z) */
+    double fd_max = fmin(y_Si + y_C, Z);
+
+    /* Dust growth constant [Myr^(-1) * mp^(-1) * cm^3] */
+    /* (0 if there is no Si nor C, i.e. no accretion) */
+    double c_dg = 0.0;
+    if (fd_max > 0.0)
+    {
+        c_dg = (ODE_CACCSI * X_Si * y_Si + ODE_CACCC * X_C * y_C) / (y_Si + y_C);
+    }
+
+    /* Maximum dust mass fraction for the ODEs [dimensionless] */
+    double fd_max_ode = (fd_max > 0.0) ? fd_max : 1.0;
 
     /* Photodissociation efficiency [dimensionless] */
     double eta_d = interpolate2D(log_it, Z, All.ETA_D_TABLE_DATA);
 
     /* Photoionization efficiency [dimensionless] */
     double eta_i = interpolate2D(log_it, Z, All.ETA_I_TABLE_DATA);
+
+    /* Below the first age of the η tables, the photon rates Q are constant (as in the model),
+       so η = c * ∫ Q dt is proportional to the integration time */
+    if (log_it < ETA_LOG_AGE_MIN)
+    {
+        double eta_scale = pow(10.0, log_it - ETA_LOG_AGE_MIN);
+        eta_d *= eta_scale;
+        eta_i *= eta_scale;
+    }
 
     /* Mass recycling fraction [dimensionless] */
     double R = interpolate1D(Z, All.R_TABLE_DATA);
@@ -782,60 +907,73 @@ double rate_of_star_formation(const int index)
 
     /* Cell mass [mp] */
     double M = P[index].Mass * M_CGS;
-    
+
     /* Cell volume [cm^3] */
     double V = M / rhoC;
 
-    /* Column height [cm] (diameter of the sphere with the same volume as the cell) */
+    /* Cell size [cm] (diameter of the sphere with the same volume as the cell) */
     double h = 2.0 * cbrt(V / (4 * M_PI / 3));
 
-    double parameters[] = {rhoC, UVB, LWB, eta_d, eta_i, R, Zsn, h};
+    /* Ionized and neutral fractions of the gas, from the two-phase ISM model of AREPO (SH03) */
+    double fi_gas, fn_gas;
+    two_phase_fractions(index, &fi_gas, &fn_gas);
+
+    double parameters[] = {rhoC, UVB, LWB, eta_d, eta_i, R, Zsn, h, fd_max_ode, c_dg};
 
     /* Store the ODE parameters */
-    SphP[index].tau_S = ODE_CS / sqrt(rhoC);
-    SphP[index].parameter_a = All.Time;
-    SphP[index].parameter_SNII = All.SNII_FRACTION;
-    SphP[index].parameter_z = redshift;
-    SphP[index].parameter_rhoC = rhoC;
-    SphP[index].parameter_UVB = UVB;
-    SphP[index].parameter_LWB = LWB;
-    SphP[index].parameter_Z = Z;
-    SphP[index].parameter_eta_d = eta_d;
-    SphP[index].parameter_eta_i = eta_i;
-    SphP[index].parameter_R = R;
-    SphP[index].parameter_Zsn = Zsn;
-    SphP[index].parameter_h = h;
+    SphP[index].tau_S            = ODE_CS / sqrt(rhoC);
+    SphP[index].parameter_a      = All.Time;
+    SphP[index].parameter_SNII   = All.SNII_FRACTION;
+    SphP[index].parameter_z      = redshift;
+    SphP[index].parameter_rhoC   = rhoC;
+    SphP[index].parameter_UVB    = UVB;
+    SphP[index].parameter_LWB    = LWB;
+    SphP[index].parameter_Z      = Z;
+    SphP[index].parameter_eta_d  = eta_d;
+    SphP[index].parameter_eta_i  = eta_i;
+    SphP[index].parameter_R      = R;
+    SphP[index].parameter_Zsn    = Zsn;
+    SphP[index].parameter_h      = h;
+    SphP[index].parameter_fi_gas = fi_gas;
+    SphP[index].parameter_fn_gas = fn_gas;
+    SphP[index].parameter_fd_max = fd_max;
+    SphP[index].parameter_c_dg   = c_dg;
 
     /**********************************************************************************************
      * Compute the initial conditions
      **********************************************************************************************/
 
-    double fi, fa, fm, fs, fZ, fd, fg;
-
-    double nhp, nh, df;
-
-    get_arepo_fraction(index, &nhp, &nh);
-
-    /* Dust mass fraction [dimensionless] */
-    fd = fmax(0.0, Zd);
-
-    /* Metal mass fraction [dimensionless] */
-    fZ = Z;
-
-    /* Gas mass fraction [dimensionless] */
-    fg = 1.0 - fd - fZ;
+    double fi, fa, fm, fs, fZ, fd;
 
     /* Ionized gas mass fraction [dimensionless] */
-    fi = fg * nhp / (nhp + nh);
+    fi = (1 - Z) * fi_gas;
 
-    /* Atomic gas mass fraction [dimensionless] */
-    fa = fg * nh / (nhp + nh);
+    /* Atomic gas mass fraction [dimensionless] (all the neutral gas starts as atomic) */
+    fa = (1 - Z) * fn_gas;
 
     /* Molecular gas mass fraction [dimensionless] */
     fm = 0.0;
 
     /* Stellar mass fraction [dimensionless] */
     fs = 0.0;
+
+    /* Dust mass fraction [dimensionless] */
+    double fZ_prev = SphP[index].ODE_fractions[4];
+    double fd_prev = SphP[index].ODE_fractions[5];
+
+    if (isnan(fZ_prev) || isnan(fd_prev) || fZ_prev + fd_prev <= 0.0)
+    {
+        /* First entry: Hirashita 2012, eq. 18, silicate + graphite, capped at Z */
+    	fd = fmin(Z, ODE_CXSI * X_Si + ODE_CXC * X_C);
+    }
+    else
+    {
+        /* Later entries: dust-to-metal ratio of the previous integration, capped at fd_max */
+        fd = fmin(fd_prev / (fZ_prev + fd_prev) * Z, fd_max);
+    }
+
+    /* Metal mass fraction [dimensionless] */
+    fZ = Z - fd;
 
     double ic[] = {fi, fa, fm, fs, fZ, fd};
 

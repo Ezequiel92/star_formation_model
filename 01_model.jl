@@ -1,11 +1,11 @@
 ### A Pluto.jl notebook ###
-# v1.0.4
+# v1.1.0
 
 using Markdown
 using InteractiveUtils
 
 # ╔═╡ fed88caa-1520-41f7-adb3-785e5c9529c6
-using DataFrames, ChaosTools, CSV, DifferentialEquations, Interpolations, LinearAlgebra, Measurements, NaNMath, PlutoUI, QuadGK, SciMLLogging, SpecialFunctions, Symbolics, TikzPictures, Unitful, UnitfulAstro
+using DataFrames, ChaosTools, CSV, DifferentialEquations, Interpolations, LinearAlgebra, Measurements, NaNMath, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Unitful, UnitfulAstro
 
 # ╔═╡ 734b3b08-061e-4f93-8574-468d824815da
 # ╠═╡ skip_as_script = true
@@ -303,7 +303,7 @@ TikzPictures.TikzPicture(
         (molecule) edge [bend left, "$\textcolor{red}{\psi}$"] (stars)
         (stars) edge node[midway, xshift=-16mm] {$\textcolor{d_yellow}{R \, Z_\mathrm{SN} \, (1 - \delta_\text{d}) \, \psi}$} (metals)
 		(stars) edge node[midway, xshift=12mm] {$\textcolor{d_yellow}{R \, Z_\mathrm{SN} \, \delta_\text{d} \, \psi}$} (dust)
-        (metals) edge node[midway, yshift=-10mm] {$\textcolor{g_red}{\dfrac{f_d}{T_\mathrm{dd}} \, \psi} - \textcolor{g_green}{\dfrac{f_Z}{f_Z + f_d}\, \dfrac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m)}$} (dust);
+        (metals) edge node[midway, yshift=-10mm] {$\textcolor{g_red}{\dfrac{f_d}{T_\mathrm{dd}} \, \psi} - \textcolor{g_green}{\xi \, \dfrac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m)}$} (dust);
     """,
     width="70em",
     preamble = """
@@ -436,10 +436,10 @@ where $\delta_\text{d}$ is the dust condensation efficiency.
 The dust growth from the accretion of metals onto existing dust grains is
 
 $\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d\right|_{\mathrm{accretion}} = \frac{f_Z}{f_Z + f_d} \, \frac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m) \, ,
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d\right|_{\mathrm{accretion}} = \xi \, \frac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m) \, ,
 \end{equation}$
 
-where $\tau_\mathrm{dg}$ is the characteristic time scale of dust growth.
+where $\tau_\mathrm{dg}$ is the characteristic time scale of dust growth, and $\xi$ is the fraction of the key elements of the grains (Si and C) in the gas phase.
 
 #### Condensation
 
@@ -465,8 +465,8 @@ TikzPictures.TikzPicture(
 		\dv{}{t}f_a &= \textcolor{d_pink}{\frac{f_i}{\tau_\mathrm{rec}}} + \textcolor{d_green}{e_\mathrm{diss} \, \Gamma_\mathrm{LWB} \, f_m} + \textcolor{d_green}{e_\mathrm{diss} \, \eta_\mathrm{diss}^* \, \psi} - \textcolor{d_blue}{S_d \, \eta_\mathrm{ion}^* \, \psi} - \textcolor{d_blue}{S_d \, \Gamma_\mathrm{UVB} \, f_a} - \textcolor{d_orange}{\frac{f_a}{\tau_\mathrm{cond}}} \, , \\
 		\dv{}{t}f_m &= \textcolor{d_orange}{\frac{f_a}{\tau_\mathrm{cond}}} - \textcolor{d_green}{e_\mathrm{diss}  \, \eta_\mathrm{diss}^* \, \psi} - \textcolor{d_green}{e_\mathrm{diss}  \, \Gamma_\mathrm{LWB} \, f_m} - \textcolor{red}{\psi} \, , \\
 		\dv{}{t}f_s &= \textcolor{red}{\psi} - \textcolor{d_yellow}{R \, \psi} \, , \\
-		\dv{}{t}f_Z &= \textcolor{d_yellow}{R \, Z_\mathrm{SN} \, (1 - \delta_\text{d}) \, \psi} + \textcolor{g_red}{\frac{f_d}{T_\mathrm{dd}} \, \psi} - \textcolor{g_green}{\frac{f_Z}{f_Z + f_d} \, \frac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m)} \, , \\
-		\dv{}{t}f_d &= \textcolor{d_yellow}{R \, Z_\mathrm{SN} \, \delta_\text{d} \, \psi} + \textcolor{g_green}{\frac{f_Z}{f_Z + f_d} \, \frac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m)} - \textcolor{g_red}{\frac{f_d}{T_\mathrm{dd}} \, \psi} \, .
+		\dv{}{t}f_Z &= \textcolor{d_yellow}{R \, Z_\mathrm{SN} \, (1 - \delta_\text{d}) \, \psi} + \textcolor{g_red}{\frac{f_d}{T_\mathrm{dd}} \, \psi} - \textcolor{g_green}{\xi \, \frac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m)} \, , \\
+		\dv{}{t}f_d &= \textcolor{d_yellow}{R \, Z_\mathrm{SN} \, \delta_\text{d} \, \psi} + \textcolor{g_green}{\xi \, \frac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m)} - \textcolor{g_red}{\frac{f_d}{T_\mathrm{dd}} \, \psi} \, .
 	\end{aligned}}$
 	};
 	""",
@@ -504,7 +504,7 @@ $\begin{equation}
 md"""
 ## Units
 
-We have the freedom to choose three independent units in this model. Time, mass, and length. The choice is reflected in the constants $C_\mathrm{star}$, $C_\mathrm{rec}$, $C_\mathrm{cond}$, $C_\mathrm{dg}$, $C_\mathrm{sd}$, $C_\mathrm{sh2}$, and $C_\text{sw mass}$.
+We have the freedom to choose three independent units in this model. Time, mass, and length. The choice is reflected in the constants $C_\mathrm{star}$, $C_\mathrm{rec}$, $C_\mathrm{cond}$, $C_\mathrm{acc,Si}$, $C_\mathrm{acc,C}$, $C_\mathrm{sd}$, $C_\mathrm{sh2}$, and $C_\text{sw mass}$.
 
 We will use $\mathrm{[T] = Myr}$, $\mathrm{[M] = mp}$ (proton mass) and $\mathrm{[L] = cm}$.
 """
@@ -532,7 +532,7 @@ Below is a list of physical constants that appear explicitly in the equations
 *  $\Gamma_\mathrm{UVB}$: Photoionization rate due to the ultraviolet background (UVB).
 *  $\Gamma_\mathrm{LWB}$: Photodissociation rate due to the Lyman-Werner background (LWB).
 
-In contrast, the parameters $C_\mathrm{star}$, $C_\mathrm{rec}$, $C_\mathrm{cond}$, $C_\mathrm{dg}$, $C_\mathrm{sd}$, $C_\mathrm{sh2}$, and $C_\text{sw mass}$ do not have physical meaning; they are included solely for convenience.
+In contrast, the parameters $C_\mathrm{star}$, $C_\mathrm{rec}$, $C_\mathrm{cond}$, $C_\mathrm{acc,Si}$, $C_\mathrm{acc,C}$, $C_\mathrm{sd}$, $C_\mathrm{sh2}$, and $C_\text{sw mass}$ do not have physical meaning; they are included solely for convenience.
 """
   ╠═╡ =#
 
@@ -753,7 +753,7 @@ $\begin{align}
 	\alpha_\text{A}^\text{Seaton59} &= 4.1206 \times 10^{-13} \, \mathrm{cm^3 \, s^{-1}} \, , \\
 	\alpha_\text{A}^\text{Black81} &= 4.0765 \times 10^{-13} \, \mathrm{cm^3 \, s^{-1}} \, , \\
 	\alpha_\text{A}^\text{Verner96} &= 4.1923 \times 10^{-13} \, \mathrm{cm^3 \, s^{-1}} \, , \\
-	\alpha_\text{A}^\text{Mean} &= 4.1298 \times 10^{-13} \, \mathrm{cm^3 \, s^{-1}} \,
+	\alpha_\text{A}^\text{Mean} &= 4.1298 \times 10^{-13} \, \mathrm{cm^3 \, s^{-1}} \, 
 \end{align}$
 """
   ╠═╡ =#
@@ -767,59 +767,67 @@ md"""
 From [Hollenbach1971a](https://doi.org/10.1086/150754) and [Hollenbach1971b](https://doi.org/10.1086/150755) we know that the rate of molecular hydrogen formation due to the condensation of atomic gas in the surface of dust grains is
 
 $\begin{equation}
-    \frac{\mathrm{d}}{\mathrm{d}t} n_m \biggr\rvert_\mathrm{condensation} = R_d \, n_\mathrm{H} \, n_a  \, ,
+    \frac{\mathrm{d}}{\mathrm{d}t} n_m \biggr\rvert_\mathrm{condensation} = R_d = \frac{1}{2} \, \gamma \, \langle v_a \rangle \, n_d \, n_a \, \langle \sigma_d \rangle \, ,
+\end{equation}$
+where $\langle v_a \rangle$ is the average thermal velocity of hydrogen atoms, $\langle \sigma_d \rangle$ is the mean geometric cross-section of a dust grain, $n_a$ and $n_d$ are the number densities of atomic hydrogen and dust grains respectively, and $\gamma$ is the recombination coefficient, defined as that fraction of atoms, striking a grain, which eventually forms a molecule on that grain.
+
+Following [Hollenbach1971b](https://doi.org/10.1086/150755) (see Section II) we will use
+
+$\begin{equation}
+    \gamma \, \langle v_a \rangle = 5 \times 10^4 \, \mathrm{cm \, s^{-1}} \, ,
 \end{equation}$
 
-where $R_d$ is the formation rate coefficient of $\mathrm{H}_2$ on dust grain, $n_\mathrm{H}$ is the hydrogen nucleus number density, and $n_a$ is the atomic hydrogen number density. $n_\mathrm{H}$ comes from the assumption that the number density of dust grains is proportional to it (see Section II of [Hollenbach1971b](https://doi.org/10.1086/150755)).
+which they find to be valid within a factor of 2 for gas temperatures between $4$ and $200 \, \mathrm{K}$.
 
-In the literature, $n_\mathrm{H}$ is generally taken as $n_\mathrm{H} = n_a + 2 \, n_m$, because most studies consider cold gas clouds ($T \sim 100 \, \mathrm{K}$) dominated by molecular and atomic hydrogen. In contrast, we consider atomic, molecular, and ionized gas within our gas cells; so, we will use $n_\mathrm{H} = n_a + 2 \, n_m + n_i$.
-
-We also note that the expression for $\mathrm{d}n_m / \mathrm{d}t$ is only used in equilibrium equations in most of the early works ([Hollenbach1971a](https://doi.org/10.1086/150754), [Hollenbach1971b](https://doi.org/10.1086/150755), [Jura1974](https://doi.org/10.1086/152975), [Jura1975](https://doi.org/10.1086/153545), [Black1987](https://doi.org/10.1086/165740), [Sternberg1988](https://doi.org/10.1086/166664), [Goldshmidt1995](https://doi.org/10.1086/175168)), while first appearing in an actual differential equation that does not assume equilibrium in [Draine1996](https://doi.org/10.1086/177689).
-
-Using the conversion factor already mentioned we can write
+We assume spherical grains of material density $s$, following a size distribution with moments $\langle a^2 \rangle$ and $\langle a^3 \rangle$. Then, the total grain cross-section and the dust mass per unit volume are
 
 $\begin{align}
-    \frac{\mathrm{d}}{\mathrm{d}t} f_m \biggr\rvert_\mathrm{condensation} &= \frac{2 \, m_p}{\rho_\mathrm{cell}} \, R_d \, \left( n_a + 2\, n_m + n_i \right) \, n_a \\
-	&= \frac{2 \, m_p}{\rho_\mathrm{cell}} \, R_d \left( f_a \, \frac{\rho_\mathrm{cell}}{m_p} + 2 \, f_m \, \frac{\rho_\mathrm{cell}}{2 \, m_p} + f_i \, \frac{\rho_\mathrm{cell}}{m_p} \right) \, f_a \, \frac{\rho_\mathrm{cell}}{m_p} \\
-	&= 2 \, R_d \left( f_a + f_m + f_i \right) \, f_a \, \frac{\rho_\mathrm{cell}}{m_p} \\
-	&= \frac{f_a}{\tau_\mathrm{cond}} \, ,
+    n_d \, \langle \sigma_d \rangle &= \pi \, \langle a^2 \rangle \, n_d \, , \\
+    f_d \, \rho_\mathrm{cell} &= \frac{4}{3} \, \pi \, s \, \langle a^3 \rangle \, n_d \, ,
 \end{align}$
 
+so
+
+$\begin{equation}
+    n_d \, \langle \sigma_d \rangle = \frac{3}{4} \, \frac{f_d \, \rho_\mathrm{cell}}{s \, a_\mathrm{eff}} \, ,
+\end{equation}$
+
+where $a_\mathrm{eff} = \langle a^3 \rangle / \langle a^2 \rangle$ is the effective grain radius (the ratio of grain volume to grain surface, times 3). We use
+
+$\begin{align}
+    a_\mathrm{eff} &= \frac{\langle a^3 \rangle_0}{\langle a^2 \rangle_0} = 0.0159 \, \mathrm{μm} \, , \\
+    s &= 3 \, \mathrm{g \, cm^{-3}} \, ,
+\end{align}$
+
+where $a_\mathrm{eff}$ comes from models C and F of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Table 2), the same size distribution we use for dust growth (see the section Dust accretion), and $s$ is taken from footnote 5 of [Ragone-Figueroa2024](https://doi.org/10.1051/0004-6361/202451344), which lies between the values for silicate ($3.3 \, \mathrm{g \, cm^{-3}}$) and graphite ($2.26 \, \mathrm{g \, cm^{-3}}$) in Table 1 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x). Notice that the number-weighted mean radius of the same distribution, $\langle a \rangle = 0.00167 \, \mathrm{μm}$, is not the relevant quantity here: it is dominated by the smallest grains, and using it would overestimate the grain surface per unit dust mass by a factor of $\sim 9.5$.
+
+With a fixed size distribution, the grain surface per unit volume is proportional to the dust mass density. This is an assumption of our single-variable dust model. The rate coefficient for $\mathrm{H}_2$ formation depends on the grain surface area per hydrogen nucleus ([Wolfire2008](https://doi.org/10.1086/587688), Section 3.2), and processes such as accretion and coagulation change the grain size distribution, and hence the surface area per unit dust mass ([Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x)).
+
+We note that the expression for $\mathrm{d}n_m / \mathrm{d}t$ is only used in equilibrium equations in most of the early works ([Hollenbach1971a](https://doi.org/10.1086/150754), [Hollenbach1971b](https://doi.org/10.1086/150755), [Jura1974](https://doi.org/10.1086/152975), [Jura1975](https://doi.org/10.1086/153545), [Black1987](https://doi.org/10.1086/165740), [Sternberg1988](https://doi.org/10.1086/166664), [Goldshmidt1995](https://doi.org/10.1086/175168)), while first appearing in an actual differential equation that does not assume equilibrium in [Draine1996](https://doi.org/10.1086/177689).
+
+Using $f_m = 2 \, m_p \, n_m / \rho_\mathrm{cell}$ and $n_a = f_a \, \rho_\mathrm{cell} / m_p$, we can write
+
+$\begin{align}
+    \frac{\mathrm{d}}{\mathrm{d}t} f_m \biggr\rvert_\mathrm{condensation} &= \frac{2 \, m_p}{\rho_\mathrm{cell}} \, \frac{1}{2} \, \gamma \, \langle v_a \rangle \, n_d \, n_a \, \langle \sigma_d \rangle \\
+	&= \frac{m_p}{\rho_\mathrm{cell}} \, \gamma \, \langle v_a \rangle \, f_a \, \frac{\rho_\mathrm{cell}}{m_p} \, \frac{3}{4} \, \frac{f_d \, \rho_\mathrm{cell}}{s \, a_\mathrm{eff}} \\
+	&= \frac{3}{4} \, \frac{\gamma \, \langle v_a \rangle \, \rho_\mathrm{cell}}{s \, a_\mathrm{eff}} \, f_d \, f_a \\
+	&= \frac{f_a}{\tau_\mathrm{cond}} \, ,
+\end{align}$
 where the time scale $\tau_\mathrm{cond}$ is
 
 $\begin{equation}
-    \tau_\mathrm{cond} = \frac{m_p}{2 \, R_d \, \rho_\mathrm{cell} \, (f_a + f_m + f_i)} \, .
+    \tau_\mathrm{cond} = \frac{4 \, s \, a_\mathrm{eff}}{3 \, \gamma \, \langle v_a \rangle \, \rho_\mathrm{cell} \, f_d} \, .
 \end{equation}$
 
-A table with several values for $R_d$ is presented below. We note that more than one value for $R_d$ and its dependence on other parameters may be discussed within each reference. In the table, we reflect the fiducial value used by each author
+#### Consistency check
 
-| $R_d \,\, [10^{-17} \, \mathrm{cm^3 \, s^{-1}}]$ | Reference          |
-|:-----:|:-------------------------------------------------------------:|
-| $1$   | eq. 3 in [Hollenbach1971b](https://doi.org/10.1086/150755)    |
-| $5$   | section III in [Jura1974](https://doi.org/10.1086/152975)     |
-| $3$   | section V in [Jura1975](https://doi.org/10.1086/153545)       |
-| $0.9$ | eq. 6 in [Black1987](https://doi.org/10.1086/165740)          |
-| $3$   | section 3 in [Goldshmidt1995](https://doi.org/10.1086/175168) |
-| $0.6$ | eq. 18 in [Draine1996](https://doi.org/10.1086/177689)        |
-| $3.5$ | section 4.2 in [Wolfire2008](https://doi.org/10.1086/587688)  |
-
-Theoretical and experimental studies have shown that $R_d$ scales with the square root of temperature, $R_d \propto T^{1/2}$ (see eq. 6 in [Black1987](https://doi.org/10.1086/165740)), and is directly proportional to the dust number density, $R_d \propto n_\mathrm{dust}$ ([Hollenbach1971b](https://doi.org/10.1086/150755)). Assuming the simplest dust model, in which $n_\mathrm{dust} \propto Z$, this leads to the scaling relation $R_d \propto T^{1/2} Z$ ([Pelupessy2006](https://doi.org/10.1086/504366), [Wolfire2008](https://doi.org/10.1086/587688)).
-
-Following previous approaches ([Pelupessy2006](https://doi.org/10.1086/504366), [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), [Molla2017](https://doi.org/10.1093/mnras/stx419), [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635)), we adopt a simplified model where $R_d$ scales only with metallicity, and we fix the cold neutral gas temperature at approximately $100 \, \mathrm{K}$.
-
-Our reference value for $R_d$ at solar metallicity is taken from [Wolfire2008](https://doi.org/10.1086/587688)
+The empirical rate coefficient $R$ is defined by a formation rate per unit volume $R \, n_\mathrm{H} \, n_a$, where $n_\mathrm{H}$ is the hydrogen nucleus density ([Wolfire2008](https://doi.org/10.1086/587688), Section 3.2). Our expression corresponds to
 
 $\begin{equation}
-    R_\odot = R_d(Z = Z_\odot) = 3.5 \times 10^{-17} \, \mathrm{cm^3 \, s^{-1}} \, ,
+    R = \frac{1}{2} \, \gamma \, \langle v_a \rangle \, \frac{n_d \, \langle \sigma_d \rangle}{n_\mathrm{H}} = \frac{3}{8} \, \frac{\gamma \, \langle v_a \rangle \, \mathcal{D} \, m_p}{s \, a_\mathrm{eff}} \, ,
 \end{equation}$
 
-yielding the following relation
-
-$\begin{equation}
-    R_d = Z \, \frac{R_\odot}{Z_\odot} \, .
-\end{equation}$
-
-Variations of $R_\odot$ within one dex are not expected to significantly affect the results.
+where $\mathcal{D}$ is the dust-to-hydrogen mass ratio. For the Milky Way reference value $\mathcal{D}_\mathrm{ref} = 8.15 \times 10^{-3}$ (see the section Shielding) we get $R = 5.4 \times 10^{-17} \, \mathrm{cm^3 \, s^{-1}}$, within a factor of $1.5$ of the best fit of [Wolfire2008](https://doi.org/10.1086/587688) for Galactic sight lines with $0.25 < A_V < 2.13$, $R \simeq 3.5 \times 10^{-17} \, \mathrm{cm^3 \, s^{-1}}$ (they find $R \simeq 10^{-17} \, \mathrm{cm^3 \, s^{-1}}$ for $A_V < 0.25$). This agreement involves no adjustable parameter (the clumping factor, introduced below, is not included in either value). For comparison, the "typical" grains of [Hollenbach1971b](https://doi.org/10.1086/150755) give $R \simeq 10^{-17} \, \mathrm{cm^3 \, s^{-1}}$ (their eq. 3).
 """
   ╠═╡ =#
 
@@ -841,7 +849,7 @@ Historically The clumping factor is used in two contexts: the formation of molec
 | [Jeeson-Daniel2014](https://doi.org/10.1093/mnras/stu1365) | Section 3 | $1.5$ – $3$ (total gas at $z = 8 - 15$) and up to $\sim 100$ (ionized species at high $z$) |
 | [Davies2024](https://doi.org/10.48550/arXiv.2406.18186) | Section 3.2 | $\sim 12$ (for $z = 5 - 6$) and between $10$ and $15$ (for $z = 2 - 6$) |
 
-
+ 
 
 #### Clumping factor values for condensation
 
@@ -851,8 +859,8 @@ Historically The clumping factor is used in two contexts: the formation of molec
 | [Gnedin2011](https://doi.org/10.1088/0004-637X/728/2/88) | Section A.7 | $10 - 30$ | Section 2.1 |
 | [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) | Section 2.2.1 | $10$ (taken from [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55)) | Section 2.4 |
 | [Micic2012](https://doi.org/10.1111/j.1365-2966.2012.20477.x) | Section 3.3 | $\sim 1-100$ (See $C_\mathrm{\rho, \, eff}$ in Fig. 7 and 8) | -- |
-| [Davé2016](https://doi.org/10.1093/mnras/stw1862) | Section 2.3 | $30$ | Section 2.10 |
-| [Trayford2025](https://doi.org/10.1093/mnras/staf2040) | Section 3.8 | $1$ to $100$ (density-dependent) | Section 2.5 |
+| [Davé2016](https://doi.org/10.1093/mnras/stw1862) | Section 2.3 | $30$ | Section 2.10 | 
+| [Trayford2025](https://doi.org/10.1093/mnras/staf2040) | Section 3.8 | $1$ to $100$ (density-dependent) | Section 2.5 | 
 
 We find that a clumping factor of $C_\rho \approx 100$ is required to have a well formed disk.
 """
@@ -862,26 +870,31 @@ We find that a clumping factor of $C_\rho \approx 100$ is required to have a wel
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-A known issue with this formulation is that $R_d \to 0$ as $Z \to 0$, leading to a divergence in $\tau_\mathrm{cond}$. This results from the oversimplified assumption that molecular hydrogen forms exclusively on dust grains. To address this, we follow [Glover2007](https://doi.org/10.1086/519445) and modify the metallicity dependence as $Z \rightarrow Z + Z_\mathrm{eff}$, where $Z_\mathrm{eff} = 10^{-3} \, Z_\odot$. This correction both eliminates the divergence and accounts for molecular hydrogen formation in environments with metallicities below $10^{-3} \, Z_\odot$.
+A known issue with this formulation is that the condensation rate goes to $0$ as $f_d \to 0$, leading to a divergence in $\tau_\mathrm{cond}$. This results from the oversimplified assumption that molecular hydrogen forms exclusively on dust grains. To address this, we follow [Glover2007](https://doi.org/10.1086/519445), who modify the metallicity dependence as $Z \rightarrow Z + Z_\mathrm{eff}$, with $Z_\mathrm{eff} = 10^{-3} \, Z_\odot$. As our rate depends on the dust instead of the metallicity, we use the equivalent floor $f_d \rightarrow f_d + f_d^\mathrm{eff}$, with
 
-So, we finally have
+$\begin{equation}
+    f_d^\mathrm{eff} = 10^{-3} \, \mathcal{D}_\mathrm{ref} \, ,
+\end{equation}$
+
+i.e. $10^{-3}$ of the Milky Way dust abundance (the difference between dust per unit hydrogen mass and per unit cell mass, a factor $\sim 0.74$, is irrelevant for this floor). This correction both eliminates the divergence and accounts for molecular hydrogen formation in environments with very low dust content.
+
+Including the clumping factor, we finally have
 
 $\begin{align}
-    \tau_\mathrm{cond} &= \frac{m_p \, Z_\odot}{2 \, R_\odot \, C_\rho \, (Z + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \, (f_a + f_m + f_i)} \\
-	&= \frac{1}{C_\mathrm{cond} \, (Z + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \, (f_a + f_m + f_i)}  \\
-	&= \frac{1}{C_\mathrm{cond} \, (f_Z + f_d + Z_\mathrm{eff}) \, \rho_\mathrm{cell} \, (f_i + f_a + f_m)} \, ,
+    \tau_\mathrm{cond} &= \frac{4 \, s \, a_\mathrm{eff}}{3 \, C_\rho \, \gamma \, \langle v_a \rangle \, \rho_\mathrm{cell} \, (f_d + f_d^\mathrm{eff})} \\
+	&= \frac{1}{C_\mathrm{cond} \, \rho_\mathrm{cell} \, (f_d + f_d^\mathrm{eff})} \, ,
 \end{align}$
 
-where we use that the total metallicity can be written as $Z = f_Z + f_d$ and
+where
 
 $\begin{equation}
     \begin{split}
-        C_\mathrm{cond} &= \frac{2 \, R_\odot \, C_\rho}{m_p \, Z_\odot} \\
-        &= 17.394 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, .
+        C_\mathrm{cond} &= \frac{3 \, C_\rho \, \gamma \, \langle v_a \rangle}{4 \, s \, a_\mathrm{eff}} \\
+        &= 41.497 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, .
     \end{split}
 \end{equation}$
 
-For the solar metallicity, we find several values in the literature
+For the solar metallicity, used elsewhere in this notebook, we find several values in the literature
 
 | $Z_\odot$ | Reference                                                            |
 |:--------:|:---------------------------------------------------------------------:|
@@ -896,33 +909,6 @@ For the solar metallicity, we find several values in the literature
 To keep it consistent with $\texttt{AREPO}$, we will use $Z_\odot = 0.0127$, noting that is only $35\%$ off the largest value in the list ([Steiger2015](https://doi.org/10.3847/0004-637X/816/1/13)).
 """
   ╠═╡ =#
-
-# ╔═╡ 568d9fe3-6716-4a9a-ba1d-b9e6fd039150
-begin
-	# Solar metallicity
-    const Zsun = 0.0127
-
-	# Formation rate coefficient of H2 on dust grain, at solar metallicity
-    const Rsun = 3.5e-17u"cm^3 * s^-1"
-
-	# Effective metallicity
-	const Zeff = 1e-3 * Zsun
-
-	# Clumping factor
-	const Cρ = 100.0
-
-	# Condensation constant
-	const C_cond = (2 * Rsun * Cρ) / (m_u * Zsun)
-
-	# Our choice of units for C_cond
-	const cc_unit = m_u^-1 * t_u^-1 * l_u^3
-
-	# Nominal value of C_cond in our choice of units
-	const c_cond = ustrip(Unitful.NoUnits, C_cond / cc_unit)
-
-	# Condensation time-scale
-	τ_cond(ρc, Z, fg) = 1.0 / (c_cond * (Z + Zeff) * ρc * fg)
-end;
 
 # ╔═╡ 6cab6cb7-a432-40b6-9390-ad0083fe486d
 # ╠═╡ skip_as_script = true
@@ -961,7 +947,7 @@ Alternatively, we can follow [McKinnon2016](https://doi.org/10.1093/mnras/stw253
 $\begin{equation}
 	\tau_\mathrm{dd} = \frac{M_\mathrm{cell}}{\epsilon \, \gamma \, M_s(100)} \, ,
 \end{equation}$
-where $M_\mathrm{cell}$ is the mass of the gas cell, $\epsilon$ is the efficiency with which grains are destroyed in SN shocks, $\gamma$ is the local Type II SN rate, and $M_s(100)$ is the mass of gas shocked to at least $100 \, \mathrm{km \, s^{−1}}$. As in [McKinnon2016](https://doi.org/10.1093/mnras/stw253) we will take $\epsilon = 0.3$.
+where $M_\mathrm{cell}$ is the mass of the gas cell, $\epsilon$ is the efficiency with which grains are destroyed in SN shocks, $\gamma$ is the local Type II SN rate, and $M_s(100)$ is the mass of gas shocked to at least $100 \, \mathrm{km \, s^{−1}}$. [McKinnon2016](https://doi.org/10.1093/mnras/stw253) take $\epsilon = 0.3$, but they note that there is a range of physically plausible values. We adopt $\epsilon = 0.1$, the empirical value estimated by [McKee1989](https://doi.org/10.1017/S0074180900125434) and used by [Aoyama2017](https://doi.org/10.1093/mnras/stw3061), [Hirashita2018](https://doi.org/10.1093/mnras/sty2838) (Section 2.2), and [Granato2021](https://doi.org/10.1093/mnras/stab362) (Section 2.3.4). These are the same works on which we base our dust condensation efficiency for SNe, $\delta_\text{d}$ (see the section Dust production by stars), so dust production and destruction by SNe come from a consistent set of parameters.
 
 The swept-up mass, $M_s(100)$, can be obtained from the Taylor-von Neumann-Sedov theory:
 
@@ -999,15 +985,16 @@ $\begin{equation}
 Using $E = 1.09 \times 10^{51} \, \mathrm{erg}$ (Table 2 in [McKinnon2016](https://doi.org/10.1093/mnras/stw253)) and the fiducial velocity $v_s = 100 \, \mathrm{km \, s^{−1}}$ we get
 
 $\begin{equation}
-	M_s = 7443.3 \, \mathrm{M_\odot} \, .
+	M_s = 7443.3 \, \mathrm{M_\odot} \, ,
 \end{equation}$
+i.e. $6829 \, \mathrm{M_\odot}$ per $10^{51} \, \mathrm{erg}$, which reproduces the value $M_s(100) = E / (\sigma \, v_s^2) = 6800 \, \mathrm{M_\odot} \, (E / 10^{51} \, \mathrm{erg})$ of [McKee1989](https://doi.org/10.1017/S0074180900125434) (eq. 6, with $\sigma = 0.736$; our derivation gives $\sigma = 16 \pi \, \xi^5 / 75 = 0.736$), used in [McKinnon2016](https://doi.org/10.1093/mnras/stw253) (eq. 8), [Hirashita2018](https://doi.org/10.1093/mnras/sty2838), and [Granato2021](https://doi.org/10.1093/mnras/stab362).
 
 Now, in the $\texttt{AREPO}$ code we have acces to the number of SNII progenitors formed per unit stellar mass formed, lets call this value $\mathrm{SNII\_FRACTION}$. Then, $\gamma$ (number of SN per unit time) can be written as
 
 $\begin{equation}
 	\gamma \, [\mathrm{yr^{-1}}] = \mathrm{SFR} \, [\mathrm{M_\odot \, yr^{-1}}] \times \mathrm{SNII\_FRACTION} \, [\mathrm{M_\odot^{-1}}] \, ,
 \end{equation}$
-where, as we have seen before, $\mathrm{SFR} = \psi \, M_\mathrm{cell}$.
+where, as we have seen before, $\mathrm{SFR} = \psi \, M_\mathrm{cell}$. For the IMF of single stars of [Chabrier2003](https://doi.org/10.1086/374879) ($m_c = 0.079 \, \mathrm{M_\odot}$, $\sigma = 0.69$) between $0.1$ and $100 \, \mathrm{M_\odot}$, and SNII progenitors above $8 \, \mathrm{M_\odot}$ (the same threshold $m_\mathrm{ir}$ we use for $R$ and $Z_\mathrm{SN}$), we get $\mathrm{SNII\_FRACTION} = 0.0118 \, \mathrm{M_\odot^{-1}}$, which we use for testing. In the simulations, its value is taken from $\texttt{AREPO}$.
 
 So, $\tau_\mathrm{dd}$ is
 
@@ -1020,6 +1007,8 @@ Where we have defined the run-time constant
 $\begin{equation}
 	T_\mathrm{dd} = \frac{1}{\epsilon \, M_s \, \mathrm{SNII\_FRACTION}} = \frac{1}{C_\text{sw mass} \, \mathrm{SNII\_FRACTION}} \, .
 \end{equation}$
+
+With these values $1 / T_\mathrm{dd} = \epsilon \, M_s \, \mathrm{SNII\_FRACTION} = 8.8$, i.e. the dust is removed from $\epsilon \, M_s = 744 \, \mathrm{M_\odot}$ of gas per SN, or $\sim 9 \, \mathrm{M_\odot}$ of gas per solar mass of stars formed.
 """
   ╠═╡ =#
 
@@ -1061,13 +1050,19 @@ begin
 	const Ms = C_SNII * ξ_SNII^5 * E_SNII * vs^-2
 
 	# Efficiency with which grains are destroyed in SN shocks
-    const ϵ_SNII = 0.3
+	# Value at a shock velocity of 100 km/s in McKee (1989), as used in Aoyama2017, Hirashita2018, and Granato2021
+	# https://doi.org/10.1093/mnras/stw3061
+	# https://doi.org/10.1093/mnras/sty2838
+	# https://doi.org/10.1093/mnras/stab362
+    const ϵ_SNII = 0.1
 
 	# Nominal value of the swept-up mass in solar masses times the efficiency
 	const c_sw_mass = ustrip(u"Msun", ϵ_SNII * Ms)
 
 	# Characteristic value for testing purposes [M⊙⁻¹]
-	const SNII_FRAC = 0.01
+	# Number of SNII (8 - 100 M⊙) per unit stellar mass formed (0.1 - 100 M⊙),
+	# for the single star IMF of Chabrier (2003)
+	const SNII_FRAC = 0.0118
 
 	# Nominal value of inverse of T_dd = 1 / (C_sw_mass * SNII_FRACTION)
 	const inv_T_dd = c_sw_mass * SNII_FRAC
@@ -1081,261 +1076,287 @@ md"""
 
 ### Dust accretion
 
-Following [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), we model dust formation as the accretion of metals from the gas phase onto existing dust grains. Based on the formulations in [Dwek1998](https://doi.org/10.1086/305829) (eq. 32) and [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259) (eq. 2), the rate of change of the dust mass fraction due to accretion is given by
+Following [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), dust grows by the accretion of gas-phase metals onto pre-existing grains. Here we derive the accretion term step by step, based on [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) (Section 2.1), [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Section 2), and [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259). We use $\mathrm{X}$ for the key element of each grain species, $X_\mathrm{X}$ for its mass fraction in the cell, $n_\mathrm{X}$ for its gas-phase number density, and $\mathcal{N}_\mathrm{X}(a)$ for the grain size distribution.
 
-$\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\mathrm{accretion}} = \frac{f_Z}{f_Z + f_d} \, \frac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m) = \frac{f_d}{\tau_\mathrm{dc}} \, ,
-\end{equation}$
+#### Microscopic relations
 
-where $\tau_\mathrm{dg}$ is the dust growth timescale and $\tau_\mathrm{dc}$ is the dust creation time scale, both defined by this expression. The term $f_a + f_m$ represents the neutral gas fraction, and is chosen here as a proxy for the cold gas mass fraction $X_\mathrm{cold}$, consistent with the definition in [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259), eq. 29.
-
-The formulation used here differs slightly from that in [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), where the denominator includes only $f_Z$. By instead using $f_Z + f_d$, we explicitly account for the total mass fraction of metals -- both in gas and dust form. This choice is consistent with interpretations in [Dwek1998](https://doi.org/10.1086/305829), [Hirashita1998](https://doi.org/10.1086/311806), and [Hirashita2018](https://doi.org/10.1093/mnras/sty2838), where the ratio
-
-$\begin{equation}
-	\frac{f_Z}{f_Z + f_d} = 1 - \frac{f_d}{f_Z + f_d} \, ,
-\end{equation}$
-
-represents the fraction of metals that remain in the gas phase (i.e., not yet incorporated into dust).
-
-The timescale $\tau_\mathrm{dg}$ can be estimated using the expression from [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) (eqs. 19 and 20)
-
-$\begin{equation}
-	\tau_\mathrm{dg} = c_a \, A \, \frac{a}{a^0} \, \frac{Z_\odot^d}{Z} \, \frac{n_\mathrm{H}^0}{n_\mathrm{H}} \, \sqrt{\frac{T^0}{T}} \, \frac{S^0}{S} \, ,
-\end{equation}$
-
-where
-
-| Parameter        | Description                         |
-|:----------------:|:-----------------------------------:|
-| $c_a$            | Geometric and integral factor       |
-| $A$              | Normalization constant              |
-| $a$              | Mean grain radius                   |
-| $Z$              | Metallicity                         |
-| $n_\mathrm{H}$   | Hydrogen number density             |
-| $T$              | Gas temperature                     |
-| $S$              | Sticking coefficient                |
-| $a^0$            | Fiducial grain radius               |
-| $Z_\odot^d$      | Fiducial solar metallicity          |
-| $n_\mathrm{H}^0$ | Fiducial hydrogen number density    |
-| $T^0$            | Fiducial gas temperature            |
-| $S^0$            | Fiducial sticking coefficient       |
-
-Among these parameters, only $Z$ and $n_\mathrm{H}$ vary across simulation cells; all others are treated as fixed constants in our model.
-"""
-  ╠═╡ =#
-
-# ╔═╡ f525b379-b5e2-48bc-af1a-e57436f6176e
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"""
-#### $c_a$ -- Geometric and integral factor
-
-In contrast to eqs. 19 and 20 from [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x), our formulation includes an additional geometric factor $c_a$. To understand its origin, we need to translate the notation from the Hirashita et al. papers into our own.
-
-From [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x), eq. 30 we can deduce that
-
-$\begin{equation}
-	\tau_\mathrm{grow} \equiv \tau_\mathrm{dg} \, ,
-\end{equation}$
-
-Then, eq. 33 gives
-
-$\begin{equation}
-	\tau_\mathrm{dg} \equiv \tau_\mathrm{grow} \approx \frac{\langle a^3 \rangle_0}{3 \, \langle a^2 \rangle_0 \, a_0} \, \tau \, ,
-\end{equation}$
-
-where $\langle a^3 \rangle_0$, $\langle a^2 \rangle_0$, and $a_0$ are the moments of $a$ and can be taken from Table 2, and $\tau$ is a microscopic timescale from eqs. 23 and 24 of the same paper (though we adopt constants from [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x), as explained below).
-
-The $\langle a \rangle$ terms arise because Hirashita distinguishes between
-
-*  $\tau$, a microscopic (local) grain-growth timescale for a single dust grain, and
-*  $\tau_\mathrm{grow}$, the macroscopic timescale for growth across an entire cloud.
-
-These are then related by integrals over the grain-size distribution (see eq. 26 in [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x)).
-
-We adopt model C and F, which are equivalent for our purposes. Their characteristic values are
-
-| Parameter                                       | Value                      |
-|:-----------------------------------------------:|:--------------------------:|
-| $\langle a^3 \rangle_0 / \langle a^2 \rangle_0$ | $0.0159 \, \mathrm{\mu m}$ |
-| $a_0$                                           | $0.1 \, \mathrm{\mu m}$    |
-
-So we define
-
-$\begin{equation}
-	c_a = \frac{\langle a^3 \rangle_0}{3 \, \langle a^2 \rangle_0 \, a_0} = 0.053 \, ,
-\end{equation}$
-
-The factor of 3 arises when converting from radial growth to mass growth, as shown in [Hirashita2018](https://doi.org/10.1093/mnras/sty2838), eqs. 12 and 13.
-
-Letting
+We consider two grain species, silicate and graphite, each characterized by a key element $\mathrm{X}$ (Si for silicate, C for graphite). A grain of species $\mathrm{X}$ is a sphere of radius $a$ and constant material density $s_\mathrm{X}$, so
 
 $\begin{align}
-	\frac{\mathrm{d} a}{\mathrm{d} t} &= \xi \, \frac{a}{\tau^a} \, , \\
-	\frac{\mathrm{d} m}{\mathrm{d} t} &= \xi \, \frac{m}{\tau^m} \, ,
+	m &= \frac{4}{3} \, \pi \, a^3 \, s_\mathrm{X} \, , \\
+	\sigma_d &= \pi \, a^2 \, ,
 \end{align}$
 
-where $a$ is the grain radius, $m$ its mass, and $\xi$ a dimensionless proportionality factor. Assuming spherical grains with uniform density $s$
+where $m$ is the mass of the grain and $\sigma_d$ its cross-section.
+
+The atoms of $\mathrm{X}$ (mass $m_\mathrm{X}$, gas-phase number density $n_\mathrm{X}$) follow a Maxwellian distribution at temperature $T$, so the number of collisions per unit time on a grain is
 
 $\begin{equation}
-	m = \frac{4}{3} \, \pi \, a^3 \, s \, ,
+	\dot{N}_\mathrm{col} = \pi \, a^2 \, n_\mathrm{X} \, \bar{v} = \pi \, a^2 \, n_\mathrm{X} \left( \frac{8 \, k \, T}{\pi \, m_\mathrm{X}} \right)^{\!1/2} \, ,
 \end{equation}$
 
-we find
+where we used the mean thermal speed $\bar{v} = (8 \, k \, T / \pi \, m_\mathrm{X})^{1/2}$ (eq. 3 of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x)).
+
+Only a fraction $S$ of the collisions (the sticking coefficient) incorporate the atom permanently into the grain, and the growth is limited by the arrival of the key element $\mathrm{X}$. Each atom of $\mathrm{X}$ that sticks is accompanied by the other elements of the grain in stoichiometric proportion, and adds a total mass $m_\mathrm{X} / f_\mathrm{X}$ to the grain, where $f_\mathrm{X}$ is the mass fraction of $\mathrm{X}$ in the grain material (Section 2.2 of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x), Section 2.1 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x)). Then, the mass of a grain grows as (eq. 4 of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x))
 
 $\begin{equation}
-	\tau^m = \frac{\tau^a}{3} \, .
+	\dot{m} = \frac{m_\mathrm{X}}{f_\mathrm{X}} \, S \, \dot{N}_\mathrm{col} = \frac{m_\mathrm{X}}{f_\mathrm{X}} \, S \, \pi \, a^2 \, n_\mathrm{X} \left( \frac{8 \, k \, T}{\pi \, m_\mathrm{X}} \right)^{\!1/2} \, .
 \end{equation}$
+
+As the grains are spheres of constant density,
+
+$\begin{equation}
+	\dot{m} = \dot{V} \, s_\mathrm{X} = 4 \, \pi \, s_\mathrm{X} \, a^2 \, \dot{a} \, ,
+\end{equation}$
+
+and equating both expressions we get (eq. 5 of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x))
+
+$\begin{equation}
+	\dot{a} = \frac{S \, m_\mathrm{X} \, n_\mathrm{X}}{f_\mathrm{X} \, s_\mathrm{X}} \left( \frac{k \, T}{2 \, \pi \, m_\mathrm{X}} \right)^{\!1/2} \, ,
+\end{equation}$
+
+which does not depend on $a$.
+
+Let $n_\mathrm{X,tot}$ be the number density of $\mathrm{X}$ in gas and dust, and
+
+$\begin{equation}
+	\xi_\mathrm{X} := \frac{n_\mathrm{X}}{n_\mathrm{X,tot}} = 1 - \delta_\mathrm{X}
+\end{equation}$
+
+the fraction of $\mathrm{X}$ in the gas phase ($\delta_\mathrm{X}$ is the depletion). We define the time scale $\tau_\mathrm{X}(a)$ as
+
+$\begin{equation}
+	\tau_\mathrm{X}(a) := \xi_\mathrm{X} \, \frac{a}{\dot{a}} \, ,
+\end{equation}$
+
+i.e. $a$ divided by the growth rate the grain would have if all of $\mathrm{X}$ were in the gas phase, $\dot{a} / \xi_\mathrm{X}$. So, $\tau_\mathrm{X}(a)$ does not depend on the depletion, which enters only through $\dot{a} = \xi_\mathrm{X} \, a / \tau_\mathrm{X}(a)$. Using the expression for $\dot{a}$ with $n_\mathrm{X} = \xi_\mathrm{X} \, n_\mathrm{X,tot}$
+
+$\begin{equation}
+	\frac{\dot{a}}{\xi_\mathrm{X}} = \frac{S \, m_\mathrm{X} \, n_\mathrm{X,tot}}{f_\mathrm{X} \, s_\mathrm{X}} \left( \frac{k \, T}{2 \, \pi \, m_\mathrm{X}} \right)^{\!1/2} \, ,
+\end{equation}$
+
+and replacing in the definition of $\tau_\mathrm{X}(a)$ we get
+
+$\begin{equation}
+	\tau_\mathrm{X}(a) = \frac{a \, f_\mathrm{X} \, s_\mathrm{X}}{n_\mathrm{X,tot} \, m_\mathrm{X} \, S} \left( \frac{2 \, \pi \, m_\mathrm{X}}{k \, T} \right)^{\!1/2} \, ,
+\end{equation}$
+
+which is eq. 19 of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) with $a = a_0$.
+
+Let $\rho_\mathrm{cell}$ be the density of the cell and $X_\mathrm{X}$ the mass fraction of element $\mathrm{X}$ in the cell, counting gas and dust ($\texttt{AREPO}$ tracks it for Si and C). By definition
+
+$\begin{equation}
+	n_\mathrm{X,tot} = \frac{X_\mathrm{X} \, \rho_\mathrm{cell}}{m_\mathrm{X}} \quad \Longrightarrow \quad n_\mathrm{X,tot} \, m_\mathrm{X} = X_\mathrm{X} \, \rho_\mathrm{cell} \, ,
+\end{equation}$
+
+and replacing in the expression for $\tau_\mathrm{X}(a)$
+
+$\begin{equation}
+	\tau_\mathrm{X}(a) = \frac{a \, f_\mathrm{X} \, s_\mathrm{X}}{X_\mathrm{X} \, \rho_\mathrm{cell} \, S} \left( \frac{2 \, \pi \, m_\mathrm{X}}{k \, T} \right)^{\!1/2} \, .
+\end{equation}$
+
+This expression does not require a solar abundance pattern, a solar abundance scale, or fiducial values, as the abundance of the key element of each cell enters directly. The properties of each species ($f_\mathrm{X}$, $s_\mathrm{X}$, and $m_\mathrm{X}$), and a consistency check with [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x), are given in the section Grain properties below.
+
+#### Macroscopic relations
+
+Let $\mathcal{N}_\mathrm{X}(a) \, \mathrm{d}a$ be the number density of grains of species $\mathrm{X}$ with radii in $[a, a + \mathrm{d}a]$, and
+
+$\begin{equation}
+	\langle a^k \rangle := \frac{1}{N_\mathrm{X}} \int_0^\infty a^k \, \mathcal{N}_\mathrm{X}(a) \, \mathrm{d}a
+\end{equation}$
+
+the moments weighted by the number of grains, where
+
+$\begin{equation}
+	N_\mathrm{X} = \int_0^\infty \mathcal{N}_\mathrm{X}(a) \, \mathrm{d}a
+\end{equation}$
+
+is the total number density of grains. We assume that both species have the same size distribution, so the moments $\langle a^k \rangle$ do not depend on $\mathrm{X}$.
+
+The macroscopic dust density of species $\mathrm{X}$ is
+
+$\begin{align}
+	\rho_{d,\mathrm{X}} &= \int_0^\infty m(a) \, \mathcal{N}_\mathrm{X}(a) \, \mathrm{d}a \\
+	&= \frac{4 \, \pi}{3} \, s_\mathrm{X} \int_0^\infty a^3 \, \mathcal{N}_\mathrm{X}(a) \, \mathrm{d}a \\
+	&= \frac{4 \, \pi}{3} \, s_\mathrm{X} \, N_\mathrm{X} \langle a^3 \rangle \, ,
+\end{align}$
+
+and its time derivative is
+
+$\begin{align}
+	\frac{\mathrm{d}\rho_{d,\mathrm{X}}}{\mathrm{d}t} &= \int_0^\infty \dot{m}(a) \, \mathcal{N}_\mathrm{X}(a) \, \mathrm{d}a \\
+	&= \int_0^\infty 4 \, \pi \, a^2 \, s_\mathrm{X} \, \dot{a} \, \mathcal{N}_\mathrm{X}(a) \, \mathrm{d}a \\
+	&= 4 \, \pi \, s_\mathrm{X} \, \dot{a} \int_0^\infty a^2 \, \mathcal{N}_\mathrm{X}(a) \, \mathrm{d}a \\
+	&= 4 \, \pi \, s_\mathrm{X} \, \dot{a} \, N_\mathrm{X} \langle a^2 \rangle \, ,
+\end{align}$
+
+where we used that $\dot{a}$ does not depend on $a$. So
+
+$\begin{align}
+	\frac{\dot{\rho}_{d,\mathrm{X}}}{\rho_{d,\mathrm{X}}} &= \dfrac{4 \, \pi \, s_\mathrm{X} \, \dot{a} \, N_\mathrm{X} \langle a^2 \rangle}{\dfrac{4 \, \pi}{3} \, s_\mathrm{X} \, N_\mathrm{X} \langle a^3 \rangle} \\
+	&= 3 \, \dot{a} \, \frac{\langle a^2 \rangle}{\langle a^3 \rangle} \, ,
+\end{align}$
+
+and defining $\bar{a} := \langle a^3 \rangle / \langle a^2 \rangle$
+
+$\begin{equation}
+	\dot{\rho}_{d,\mathrm{X}} = \frac{3 \, \dot{a}}{\bar{a}} \, \rho_{d,\mathrm{X}} \, .
+\end{equation}$
+
+As $\tau_\mathrm{X}(a) \propto a$, $a / \tau_\mathrm{X}(a)$ does not depend on $a$, so $\dot{a} = \xi_\mathrm{X} \, a / \tau_\mathrm{X}(a)$ holds for any $a$, in particular for $\bar{a}$. Then
+
+$\begin{equation}
+	\dot{\rho}_{d,\mathrm{X}} = \frac{3 \, \xi_\mathrm{X}}{\tau_\mathrm{X}(\bar{a})} \, \rho_{d,\mathrm{X}} = \frac{\xi_\mathrm{X} \, \rho_{d,\mathrm{X}}}{\tau_{\mathrm{dg},\mathrm{X}}} \, ,
+\end{equation}$
+
+where $\tau_{\mathrm{dg},\mathrm{X}} = \tau_\mathrm{X}(\bar{a}) / 3$ is the dust growth time scale of species $\mathrm{X}$. Using the expression for $\tau_\mathrm{X}(a)$ evaluated at $a = \bar{a}$
+
+$\begin{equation}
+	\tau_{\mathrm{dg},\mathrm{X}} = \frac{\tau_\mathrm{X}(\bar{a})}{3} = \frac{\bar{a} \, f_\mathrm{X} \, s_\mathrm{X}}{3 \, X_\mathrm{X} \, \rho_\mathrm{cell} \, S} \left( \frac{2 \, \pi \, m_\mathrm{X}}{k \, T} \right)^{\!1/2} \, .
+\end{equation}$
+
+We adopt models C and F of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Table 2), which are equivalent for our purposes. Both give
+
+$\begin{equation}
+	\bar{a} = \frac{\langle a^3 \rangle_0}{\langle a^2 \rangle_0} = 0.0159 \, \mathrm{\mu m} \, ,
+\end{equation}$
+
+the same value $a_\mathrm{eff}$ we use for the condensation of molecular hydrogen.
+
+#### From the grain species to a single dust component
+
+In our model we follow a single dust fraction $f_d$, which adds silicate and graphite. The mass of $\mathrm{X}$ in dust is $(1 - \xi_\mathrm{X}) \, X_\mathrm{X} \, M_\mathrm{cell}$, and the mass of the grains built on $\mathrm{X}$ is that mass divided by $f_\mathrm{X}$. Dividing by the mass of the cell, the dust fraction of species $\mathrm{X}$ is
+
+$\begin{equation}
+	f_{d,\mathrm{X}} = (1 - \xi_\mathrm{X}) \, \frac{X_\mathrm{X}}{f_\mathrm{X}} \, ,
+\end{equation}$
+
+and the total dust fraction is
+
+$\begin{equation}
+	f_d = (1 - \xi_\mathrm{Si}) \, \frac{X_\mathrm{Si}}{f_\mathrm{Si}} + (1 - \xi_\mathrm{C}) \, \frac{X_\mathrm{C}}{f_\mathrm{C}} \, .
+\end{equation}$
+
+This only restates the definitions, so it holds at any time. As we follow a single dust fraction, we can only follow one depletion, so we assume $\xi_\mathrm{Si} = \xi_\mathrm{C} = \xi$. Then
+
+$\begin{equation}
+	f_d = (1 - \xi) \, f_d^\mathrm{max} \, , \qquad f_d^\mathrm{max} = \frac{X_\mathrm{Si}}{f_\mathrm{Si}} + \frac{X_\mathrm{C}}{f_\mathrm{C}} \, ,
+\end{equation}$
+
+where $f_d^\mathrm{max}$ is the dust fraction for $\xi = 0$, i.e. with all the Si and C in grains (see the section Dust initial condition). So
+
+$\begin{equation}
+	\xi = 1 - \frac{f_d}{f_d^\mathrm{max}} \, ,
+\end{equation}$
+
+and accretion stops when $f_d$ reaches $f_d^\mathrm{max}$.
+
+Notice that the fraction of all the metals in the gas phase, $f_Z / (f_Z + f_d) = 1 - f_d / Z$, is the same expression for $\xi$ with $f_d^\mathrm{max} = Z$, i.e. assuming that all the metals can end up in dust, including the oxygen not bound in silicates and elements that do not condense into these grains (e.g. N and Ne).
+
+Summing $\dot{\rho}_{d,\mathrm{X}}$ over both species, with $\xi_\mathrm{X} = \xi$ and $w_\mathrm{X} := \rho_{d,\mathrm{X}} / \rho_d$,
+
+$\begin{equation}
+	\dot{\rho}_d = \sum_\mathrm{X} \frac{\xi \, w_\mathrm{X} \, \rho_d}{\tau_{\mathrm{dg},\mathrm{X}}} = \frac{\xi \, \rho_d}{\tau_\mathrm{dg}} \, ,
+\end{equation}$
+
+where the dust growth time scale is given by the mean of the rates of each species, weighted by the composition of the dust
+
+$\begin{equation}
+	\frac{1}{\tau_\mathrm{dg}} = \sum_\mathrm{X} \frac{w_\mathrm{X}}{\tau_{\mathrm{dg},\mathrm{X}}} \, .
+\end{equation}$
+
+Using the expression for $\tau_{\mathrm{dg},\mathrm{X}}$ we finally get
+
+$\begin{equation}
+	\frac{1}{\tau_\mathrm{dg}} = \frac{3 \, S \, \rho_\mathrm{cell}}{\bar{a}} \left( \frac{k \, T}{2 \, \pi} \right)^{\!1/2} \sum_\mathrm{X} \frac{w_\mathrm{X} \, X_\mathrm{X}}{f_\mathrm{X} \, s_\mathrm{X} \, m_\mathrm{X}^{1/2}} \, .
+\end{equation}$
+
+The weights $w_\mathrm{X}$ can be written in terms of the known quantities $X_\mathrm{X}$ and $f_\mathrm{X}$
+
+$\begin{align}
+	w_\mathrm{X} &:= \frac{\rho_{d,\mathrm{X}}}{\rho_d} = \frac{f_{d,\mathrm{X}}}{f_d} \\
+	&= \frac{(1 - \xi_\mathrm{X}) \, \dfrac{X_\mathrm{X}}{f_\mathrm{X}}}{\sum_\mathrm{Y} (1 - \xi_\mathrm{Y}) \, \dfrac{X_\mathrm{Y}}{f_\mathrm{Y}}} \\
+	&= \frac{\dfrac{X_\mathrm{X}}{f_\mathrm{X}}}{\dfrac{X_\mathrm{Si}}{f_\mathrm{Si}} + \dfrac{X_\mathrm{C}}{f_\mathrm{C}}} \, ,
+\end{align}$
+
+where we used $\xi_\mathrm{Si} = \xi_\mathrm{C} = \xi$. So
+
+$\begin{align}
+	w_\mathrm{Si} &= \frac{X_\mathrm{Si} \, f_\mathrm{C}}{X_\mathrm{Si} \, f_\mathrm{C} + X_\mathrm{C} \, f_\mathrm{Si}} \, , \\
+	w_\mathrm{C} &= \frac{X_\mathrm{C} \, f_\mathrm{Si}}{X_\mathrm{Si} \, f_\mathrm{C} + X_\mathrm{C} \, f_\mathrm{Si}} \, .
+\end{align}$
+
+#### From the grain population to the cell
+
+Dust and depletion are uniform across phases (Section 2 of [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259), citing McKee 1989), so the mass of dust exposed to accretion is $M_d \, X_\mathrm{cold}$, where $X_\mathrm{cold}$ is the mass fraction of cold gas. For this reason, [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259) (eq. 2) writes the accretion term as
+
+$\begin{equation}
+	\left[ \frac{\mathrm{d}M_d}{\mathrm{d}t} \right]_\mathrm{acc} = \frac{M_d \, X_\mathrm{cold} \, \xi}{\tau_\mathrm{dg}} \, .
+\end{equation}$
+
+With $X_\mathrm{cold} \simeq f_a + f_m$, and the expression for $\xi$, we get
+
+$\begin{equation}
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\mathrm{accretion}} = \left( 1 - \frac{f_d}{f_d^\mathrm{max}} \right) (f_a + f_m) \, \frac{f_d}{\tau_\mathrm{dg}} = \frac{f_d}{\tau_\mathrm{dc}} \, ,
+\end{equation}$
+
+where $\tau_\mathrm{dc}$ is the dust creation time scale, defined by this expression. The abundances $X_\mathrm{Si}$ and $X_\mathrm{C}$ (and so $f_d^\mathrm{max}$, $w_\mathrm{X}$, and $\tau_\mathrm{dg} \, \rho_\mathrm{cell}$) are taken from the cell at the start of the integration and kept constant during it.
 """
   ╠═╡ =#
-
-# ╔═╡ c01cf078-c0cb-4000-bf76-a90cbeb10b89
-# Geometric and integral factor
-const ca = 0.053;
 
 # ╔═╡ 46c5bd5a-21b1-4f92-8eb1-a11ec2a0c94a
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-#### $A$ -- Normalization constant
+#### Grain properties
 
-The parameter $A$ depends on the physical properties of the dust grains (composition, size distribution, etc.). In principle, it is determined by microphysics, but in practice its value also depends on the fiducial parameters used in the expression for $\tau_\mathrm{dg}$.
+The properties of each species are taken from Table 1 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x)
 
-From [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x), the fiducial parameters are
+| Species  | $\mathrm{X}$ | $f_\mathrm{X}$ | $s_\mathrm{X}$                 | $m_\mathrm{X}$         |
+|:--------:|:------------:|:--------------:|:------------------------------:|:----------------------:|
+| Silicate | Si           | $0.166$        | $3.3 \, \mathrm{g \, cm^{-3}}$  | $28.1 \, \mathrm{u}$   |
+| Graphite | C            | $1$            | $2.26 \, \mathrm{g \, cm^{-3}}$ | $12 \, \mathrm{u}$     |
 
-| Parameter        | Fiducial value             |
-|:----------------:|:--------------------------:|
-| $a^0$            | $0.1 \, \mathrm{\mu m}$    |
-| $Z_\odot^d$      | $0.015$                    |
-| $n_\mathrm{H}^0$ | $1000 \, \mathrm{cm^{-3}}$ |
-| $T^0$            | $50 \, \mathrm{K}$         |
-| $S^0$            | $0.3$                      |
-
-Resulting in $A$ values
-
-| Composition | $A$                               |
-|:-----------:|:---------------------------------:|
-| Silicate    | $6.30 \times 10^7 \, \mathrm{yr}$ |
-| Graphite    | $5.59 \times 10^7 \, \mathrm{yr}$ |
-
-Instead, in [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) and [Hirashita2018](https://doi.org/10.1093/mnras/sty2838) we have
-
-| Parameter        | Fiducial value             |
-|:----------------:|:--------------------------:|
-| $a^0$            | $0.1 \, \mathrm{\mu m}$    |
-| $Z_\odot^d$      | $0.02$                     |
-| $n_\mathrm{H}^0$ | $1000 \, \mathrm{cm^{-3}}$ |
-| $T^0$            | $10 \, \mathrm{K}$         |
-| $S^0$            | $0.3$                      |
-
-With corresponding $A$ values
-
-| Composition | $A$                                |
-|:-----------:|:----------------------------------:|
-| Silicate    | $1.61 \times 10^8 \, \mathrm{yr}$  |
-| Graphite    | $0.993 \times 10^8 \, \mathrm{yr}$ |
-
-While one might expect the differences in $A$ to be due solely to the choice of fiducial values, comparing the results reveals discrepancies beyond parameter scaling -- indicating differences in how $A$ itself is computed in each paper.
-
-We will adopt the formulation and fiducial values from [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) and [Hirashita2018](https://doi.org/10.1093/mnras/sty2838), and use the mean of the two compositions
-
-| Parameter        | Fiducial value                   |
-|:----------------:|:--------------------------------:|
-| $A$              | $1.3 \times 10^8 \, \mathrm{yr}$ |
-| $a^0$            | $0.1 \, \mathrm{\mu m}$          |
-| $Z_\odot^d$      | $0.02$                           |
-| $n_\mathrm{H}^0$ | $1000 \, \mathrm{cm^{-3}}$       |
-| $T^0$            | $10 \, \mathrm{K}$               |
-| $S^0$            | $0.3$                            |
+As a consistency check, evaluating $\tau_\mathrm{X}(a)$ with the fiducial values of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) ($a = 0.1 \, \mathrm{\mu m}$, $T = 10 \, \mathrm{K}$, $S = 0.3$, and $n_\mathrm{H} = 1000 \, \mathrm{cm^{-3}}$), and their solar abundances ($n_\mathrm{X,tot} = (\mathrm{X/H})_\odot \, n_\mathrm{H}$, with $(\mathrm{Si/H})_\odot = 3.55 \times 10^{-5}$ and $(\mathrm{C/H})_\odot = 3.63 \times 10^{-4}$ from their Table 1), gives $\tau_\mathrm{Si} = 1.61 \times 10^8 \, \mathrm{yr}$ and $\tau_\mathrm{C} = 0.994 \times 10^8 \, \mathrm{yr}$ (computed in the cell below), the normalization constants $A_\mathrm{X}$ of eqs. 19 and 20 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x).
 """
   ╠═╡ =#
 
-# ╔═╡ 9c5b30d5-08aa-48a8-9ae2-c3b6c432ab89
-# Normalization constant
-const A = 1.3e8u"yr";
-
-# ╔═╡ 002cfcdd-41a5-43e5-8cbe-8a1d8b6d5793
+# ╔═╡ 866df30a-7a45-4821-a4ef-fa886040d9c0
+# ╠═╡ skip_as_script = true
+#=╠═╡
 let
-	###############################################
-	# Normalization constant from Hirashita (2012)
-	###############################################
+	###############################################################################
+	# Consistency check: τ_X(a) with the fiducial values and solar abundances of
+	# Hirashita (2012) reproduces the normalization constants A_X of their eqs. 19-20
+	###############################################################################
 
-	# Parameters
-	a0    = 0.1u"μm"
-	S0    = 0.3
-	T0    = 10.0u"K"
-	nH0   = 1000.0u"cm^-3"
-	Zdsun = 0.02
+	# Fiducial values of Hirashita (2012)
+	a  = 0.1u"μm"
+	T  = 10.0u"K"
+	S  = 0.3
+	nH = 1000.0u"cm^-3"
 
 	# Silicate
 	f_Si  = 0.166
 	m_Si  = 28.1u"u"
-	XH_Si = 3.55e-5
 	s_Si  = 3.3u"g * cm^-3"
 
 	# Graphite
 	f_C  = 1.0
 	m_C  = 12.0u"u"
-	XH_C = 3.63e-4
 	s_C  = 2.26u"g * cm^-3"
 	
-	# Normalization constant
-	A(; fx, mx, XH, sx) = sqrt( (2 * π * mx) / (1.0u"k" * T0) ) * (fx * sx * a0) / (S0 * XH * nH0 * mx)
+	# Growth time scale, with n_X,tot = (X/H) * nH
+	τ(; fx, mx, sx, XH) = (a * fx * sx) / (XH * nH * mx * S) * sqrt((2 * π * mx) / (1.0u"k" * T))
 
-	# Silicate
-	A_Si = uconvert(u"yr", A(; fx=f_Si, mx=m_Si, XH=XH_Si, sx=s_Si))
-	# Graphite
-	A_C = uconvert(u"yr", A(; fx=f_C, mx=m_C, XH=XH_C, sx=s_C))
+	τ_Si = ustrip(u"yr", τ(; fx=f_Si, mx=m_Si, sx=s_Si, XH=3.55e-5))
+	τ_C  = ustrip(u"yr", τ(; fx=f_C, mx=m_C, sx=s_C, XH=3.63e-4))
 
-	@show A_Si
-	@show A_C
+	println("Hirashita (2012):\n")
+	println("\tA_Si = $(round(τ_Si; sigdigits=3)) yr")
+	println("\tA_C = $(round(τ_C; sigdigits=3)) yr")
 end;
-
-# ╔═╡ ce2383dc-c34f-4b56-8501-42ce0539c95c
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"""
-#### $a$ -- Mean grain radius
-
-The mean grain radius $\langle a \rangle$ is set by the adopted grain-size distribution. Following [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x), and again using models C and F, we have
-
-$\begin{equation}
-	\langle a \rangle =  0.00167 \, \mathrm{\mu m} \, .
-\end{equation}$
-"""
   ╠═╡ =#
-
-# ╔═╡ a3d1e1bf-c513-4d6b-a43b-3dab0106f1a5
-begin
-	# Mean grain radius
-	const a = 0.00167u"μm"
-
-	# Fiducial mean grain radius
-	# We use the fiducial value of McKinnon et al. (2017), Table 1
-	# https://doi.org/10.1093/mnras/stx467
-	# As this is the dust model used in Arepo
-	const a0 = 0.1u"μm"
-end;
-
-# ╔═╡ 5680e62b-973b-4a60-bb3f-8785ce07e581
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"""
-#### $n_\mathrm{H}$ -- Hydrogen number density
-
-The hydrogen number density depends on the phase of the gas surrounding the dust-forming regions (e.g., molecular, atomic, or a mixture of both). For consistency with the previous assumptions, we consider the neutral fraction of the gas
-
-$\begin{equation}
-    n_\mathrm{H} = n_a + 2 \, n_m = f_a \, \frac{\rho_\mathrm{cell}}{m_p} + 2 \, f_m \, \frac{\rho_\mathrm{cell}}{2 \, m_p} = f_n \, \frac{\rho_\mathrm{cell}}{m_p} \, ,
-\end{equation}$
-
-where $m_p$ is the proton mass, and $f_n = f_a + f_m$ represents the total neutral fraction of hydrogen (atomic + molecular).
-"""
-  ╠═╡ =#
-
-# ╔═╡ 47bf94da-1368-41bd-ba46-c9c1f75cf44e
-# Fiducial hydrogen number density
-const nH0 = 1000.0u"cm^-3";
 
 # ╔═╡ 9af6ce74-5678-4b48-8758-37b0d5a6f0e4
 # ╠═╡ skip_as_script = true
@@ -1343,7 +1364,7 @@ const nH0 = 1000.0u"cm^-3";
 md"""
 #### $T$ -- Gas temperature
 
-As with $n_\mathrm{H}$, the gas temperature depends on the phase. For consistency with the assumption of a neutral medium, we adopt
+The gas temperature depends on the phase. For consistency with the assumption that accretion happens in the cold neutral gas, we adopt
 
 $\begin{equation}
     T = 100 \, \mathrm{K} \, .
@@ -1355,12 +1376,6 @@ $\begin{equation}
 begin
 	# Gas temperature
 	const T = 100.0u"K"
-
-	# Fiducial gas temperature.
-	# We use the fiducial value of McKinnon et al. (2017), Table 1
-	# https://doi.org/10.1093/mnras/stx467
-	# As this is the dust model used in Arepo
-	const T0 = 50.0u"K"
 end;
 
 # ╔═╡ 5890b699-b7de-47a3-bee7-1e7dd7663fbe
@@ -1369,7 +1384,7 @@ end;
 md"""
 #### $S$ -- Sticking coefficient
 
-For the sticking coefficient we adopt the fit of the results in [Leitch-Devlin1985](https://doi.org/10.1093/mnras/213.2.295) presented by [Grassi2011](https://doi.org/10.1051/0004-6361/200913779), which reads
+For the sticking coefficient we adopt the [Grassi2011](https://doi.org/10.1051/0004-6361/200913779) fit of the [Leitch-Devlin1985](https://doi.org/10.1093/mnras/213.2.295) results, which reads
 
 $\begin{equation}
     S(T_g, T_d) = 0.019 \, T_g \, (0.0017 \, T_d + 0.4) \, \exp(-0.007 \, T_g) \, .
@@ -1377,10 +1392,10 @@ $\begin{equation}
 
 where $T_g$ and $T_d$ are the gas and dust temperatures, respectively, in Kelvin.
 
-Assuming the simplest case with $T_g = T_d = 100 \, \mathrm{K}$, we obtain
+We use the gas temperature $T_g = T = 100 \, \mathrm{K}$, and a dust temperature $T_d = 10 \, \mathrm{K}$ (as assumed by [SafranekShrader2017](https://doi.org/10.1093/mnras/stw2647), Section 2.4), since grains in neutral gas are much colder than the gas. We obtain
 
 $\begin{equation}
-    S = 0.538 \, .
+    S = 0.393 \, .
 \end{equation}$
 """
   ╠═╡ =#
@@ -1390,11 +1405,13 @@ begin
 	# Fit for the sticking coefficient from Grassi et al. (2011)
     Se(Tg, Td) = 0.019 * Tg * (0.0017 * Td + 0.4) * exp(-0.007 * Tg)
 
-	# Sticking coefficient at 100 K
-	const S = Se(ustrip(u"K", T), ustrip(u"K", T))
+	# Dust temperature
+	# Safranek-Shrader et al. (2017), Section 2.4
+	# https://doi.org/10.1093/mnras/stw2647
+	const Td = 10.0u"K"
 
-	# Fiducial sticking coefficient
-	const S0 = 0.3
+	# Sticking coefficient for a gas at T and dust at Td
+	const S = Se(ustrip(u"K", T), ustrip(u"K", Td))
 end;
 
 # ╔═╡ 8c9ab125-2acb-4732-a9bf-7838e819e4f7
@@ -1403,70 +1420,52 @@ end;
 md"""
 #### Final form of $\tau_\mathrm{dg}$ and $\tau_\mathrm{dc}$
 
-Using all the components derived above, the dust growth time scale
+From the expression for $1 / \tau_\mathrm{dg}$ derived above, the dust growth time scale can be written as
 
 $\begin{equation}
-	\tau_\mathrm{dg} = c_a \, A \, \frac{a}{a^0} \, \frac{Z_\odot^d}{Z} \, \frac{n_\mathrm{H}^0}{n_\mathrm{H}} \, \sqrt{\frac{T^0}{T}} \, \frac{S^0}{S} \, ,
+	\tau_\mathrm{dg} = \frac{1}{C_\mathrm{dg} \, \rho_\mathrm{cell}} \, ,
 \end{equation}$
 
-can be rearranged into the more useful form
+where
 
 $\begin{equation}
-	\tau_\mathrm{dg} = \frac{1}{C_\mathrm{dg} \, Z \, \rho_\mathrm{cell} \, f_n} \, ,
+	C_\mathrm{dg} = \sum_\mathrm{X} w_\mathrm{X} \, C_\mathrm{acc,X} \, X_\mathrm{X} \, , \qquad C_\mathrm{acc,X} = \frac{3 \, S}{\bar{a} \, f_\mathrm{X} \, s_\mathrm{X}} \left( \frac{k \, T}{2 \, \pi \, m_\mathrm{X}} \right)^{\!1/2} \, ,
 \end{equation}$
 
-where the coefficient $C_\mathrm{dg}$ encapsulates all constants and fiducial parameters
+with 
 
 $\begin{align}
-	C_\mathrm{dg} &= \frac{a^0 \, \sqrt{T} \, S}{c_a \, A \, a \, Z_\odot^d \, n_\mathrm{H}^0 \, m_p \, \sqrt{T^0} \, S^0} \\
-    &= 2.463 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, .
+	C_\mathrm{acc,Si} &= 0.4909 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, , \\
+	C_\mathrm{acc,C} &= 0.1821 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, .
 \end{align}$
 
-Note that $Z_\odot^d$ here is the dust-phase solar metallicity used in [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) and [Hirashita2018](https://doi.org/10.1093/mnras/sty2838), and not the solar metallicity used elsewhere in our framework.
+Unlike the other constants of the model, $C_\mathrm{dg}$ depends on the cell, through the abundances $X_\mathrm{Si}$ and $X_\mathrm{C}$ (which also set the weights $w_\mathrm{X}$), so it is computed at the start of each integration. For the present-day solar photosphere of [Asplund2009](https://doi.org/10.1146/annurev.astro.46.060407.145222) ($Z = 0.0134$), $C_\mathrm{dg} = 3.65 \times 10^{-4} \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3}$, i.e. $\tau_\mathrm{dg} = 2.7 \, \mathrm{Gyr} \, (\rho_\mathrm{cell} / 1 \, \mathrm{mp \, cm^{-3}})^{-1}$.
 
-The dust creation time scale is then
+The accretion term can be written as $f_d / \tau_\mathrm{dc}$, which defines the dust creation time scale
 
-$\begin{align}
-	\tau_\mathrm{dc} &= \frac{f_Z + f_d}{f_Z \, f_n} \, \tau_\mathrm{dg} \\
-	&= \frac{f_Z + f_d}{f_Z \, f_n} \, \frac{1}{C_\mathrm{dg} \, Z \, \rho_\mathrm{cell} \, f_n} \\
-	&= \frac{1}{C_\mathrm{dg} \, f_Z \, f_n^2 \, \rho_\mathrm{cell}} \, ,
-\end{align}$
+$\begin{equation}
+	\tau_\mathrm{dc} = \frac{\tau_\mathrm{dg}}{\xi \, f_n} = \frac{1}{C_\mathrm{dg} \, (1 - f_d / f_d^\mathrm{max}) \, f_n \, \rho_\mathrm{cell}} \, ,
+\end{equation}$
 
-where, following [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x), we took the total metallicity as $Z = f_Z + f_d$.
+where $f_n = f_a + f_m$.
 
 #### Dust accretion term
 
 The dust growth source term becomes
 
 $\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\text{accretion}} = \frac{f_d}{\tau_\mathrm{dc}} = C_\mathrm{dg} \, f_Z \, f_d \, f_n^2 \, \rho_\mathrm{cell} \, .
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\text{accretion}} = C_\mathrm{dg} \left( 1 - \frac{f_d}{f_d^\mathrm{max}} \right) f_d \, f_n \, \rho_\mathrm{cell} \, .
 \end{equation}$
+
+Cells without Si and C have no dust and no accretion, so we set $C_\mathrm{dg} = 0$, and $f_d^\mathrm{max} = 1$ in the ODEs (any positive value works) to avoid dividing by zero.
+
+As $f_d^\mathrm{max}$ is kept constant during the integration, dust produced by SNe can exceed it in cells with very low metallicity. Accretion can only add metals to the grains, so in the ODEs we use $\xi = \max(0, 1 - f_d / f_d^\mathrm{max})$: above $f_d^\mathrm{max}$ there is nothing left to accrete, and the term is $0$ instead of turning dust back into metals. For $0 \leq f_d \leq f_d^\mathrm{max}$ this is the expression above.
+
+The metallicity and the Si and C abundances computed by $\texttt{AREPO}$ can have unphysical values (e.g. slightly negative, or inconsistent with each other) when they are close to $0$. So, before computing the initial conditions and the accretion parameters, they are clamped at $0$, cells with $Z < 10^{-10}$ (about $10^{-8} \, Z_\odot$) are considered pristine ($Z = X_\mathrm{Si} = X_\mathrm{C} = 0$), and $X_\mathrm{Si}$ and $X_\mathrm{C}$ are scaled down if their sum exceeds $Z$.
 """
   ╠═╡ =#
 
-# ╔═╡ e74e6af3-7c28-4836-a7a7-db65cca302dc
-# Alternative factor for a different way of writing τdg
-const κ_d = uconvert(u"Myr", (ca * A * a * sqrt(T0) * S0) / (a0 * sqrt(T) * S))
-
-# ╔═╡ 2a39d6f8-da49-4976-9aa7-889391e55a5d
-begin
-	# Dust-phase solar metallicity
-	const Zdsun = 0.02
-
-	# Dust growth constant
-	const C_dg = (a0 * sqrt(T) * S) / (ca * A * a * Zdsun * nH0 * Unitful.mp * sqrt(T0) * S0)
-
-	# Our choice of units for C_dg
-	const cdg_unit = m_u^-1 * t_u^-1 * l_u^3
-
-	# Nominal value of C_dg in our choice of units
-	const c_dg = ustrip(Unitful.NoUnits, C_dg / cdg_unit)
-
-	# Dust growth time-scale
-	τ_dg(ρc, fn, Z) = 1 / (c_dg * Z * ρc * fn)
-end;
-
-# ╔═╡ c3d163c4-dfb2-48e3-bb91-4edcb823de56
+# ╔═╡ b5ede1bb-8361-4380-b943-c9780d4a6253
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
@@ -1481,7 +1480,7 @@ The value of the dust condensation efficiency, $\delta_\text{d}$, depends on bot
 """
   ╠═╡ =#
 
-# ╔═╡ 2522ab4b-0397-4897-a1ce-9e752efac7c1
+# ╔═╡ 027dbe5e-4993-41c2-983d-289101c118fb
 # Dust condensation efficiency
 const δ_d = 0.1
 
@@ -1514,17 +1513,17 @@ In what follows we will use the IMF of [Chabrier2003](https://doi.org/10.1086/37
 # ╔═╡ 6a59ed2e-f040-4e10-bc55-91d2c1dcc97e
 #####################################################################################
 # Initial mass functions
-#
-# The mass range [m_low, m_high] will depend on the application,
+# 
+# The mass range [m_low, m_high] will depend on the application, 
 # but a general mass range for every model is 0.1 <= m / M⊙ <= 100.0
-#
+# 
 # In the following implementations, a specific normalization is not assumed, when
 # possible, A = 1 is used for simplicity. To model a population with a specific total
 # mass M, the IMF must be rescaled using the appropriate normalization constant
 # derived from the integral above
-#
+# 
 # Sources:
-#
+# 
 #     Original papers
 #     eqs. 6 to 14 in Mollá et al. (2015)
 #     eqs. A1 to A4 in Appendix A of Millán-Irigoyen et al. (2021)
@@ -1536,7 +1535,7 @@ begin
 
     # Miller et al. (1979) eq. 30 and Table 7
 	# https://doi.org/10.1086/190629
-    function ϕMIL(m::Float64)::Float64
+    function ϕMIL(m::Float64)::Float64 
 		C1 = 1.09
     	C2 = -1.02
 		logm = log10(m)
@@ -2064,7 +2063,7 @@ $\begin{align}
     e_\mathrm{diss} &= S_d \, S_{\mathrm{H}_2} \, ,
 \end{align}$
 
-where $S_d$ accounts for attenuation by dust, and $S_{\mathrm{H}_2}$ accounts for molecular self-shielding. Both terms depend on the local metallicity and gas column density.
+where $S_d$ accounts for attenuation by dust, and $S_{\mathrm{H}_2}$ accounts for molecular self-shielding. $S_d$ depends on the local dust column density, and $S_{\mathrm{H}_2}$ on the molecular column density.
 
 From eq. 8 in [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), the dust shielding term is given by
 
@@ -2072,45 +2071,75 @@ $\begin{equation}
     S_d = \exp(-\sigma_\mathrm{d, eff} \, Z^* \, (N_\mathrm{HI} + 2 \, N_{\mathrm{H}_2})) \, ,
 \end{equation}$
 
-where $\sigma_\mathrm{d, eff} = 4 \times 10^{-21} \, \mathrm{cm^{-2}}$ is the effective dust cross-section per hydrogen atom, $Z^*$ is the metallicity in solar units, and $N_i$ represents the column density of species $i$. Notice that this parameter is based on the empirical fits from [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) (Section 2.2) which is different from the fits in [Draine1996](https://doi.org/10.1086/177689) and [Glover2007](https://doi.org/10.1086/512238).
+where $\sigma_\mathrm{d, eff} = 4 \times 10^{-21} \, \mathrm{cm^2}$ is the effective dust cross-section per hydrogen atom, $Z^*$ is the metallicity in solar units, and $N_i$ represents the column density of species $i$. Notice that this parameter is based on the empirical fits from [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) (Section 2.2) which is different from the fits in [Draine1996](https://doi.org/10.1086/177689) and [Glover2007](https://doi.org/10.1086/512238).
 
-To estimate the column density, we use a characteristic length scale $h$, which we take as the smoothing length of the gas cell -- i.e., the force softening length in $\texttt{AREPO}$, following [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x).
-
-Using the relation between number density and fractions, we can write
+Both [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) (Section 2.2) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) (Section 2.2.1) assume that the dust-to-gas ratio is proportional to the gas metallicity, so $Z^*$ is a proxy for the dust abundance relative to that of the gas against which $\sigma_\mathrm{d, eff}$ was calibrated (Milky Way sight lines, Figure 6 of [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55)). Since we follow the dust explicitly, we undo that substitution
 
 $\begin{equation}
-    N_\mathrm{HI} + 2 \, N_{\mathrm{H}_2} = (f_a + f_m) \, \frac{\rho_\mathrm{cell} \, h}{m_p} \, .
+    Z^* \rightarrow \frac{\mathcal{D}}{\mathcal{D}_\mathrm{ref}} \, ,
+\end{equation}$
+
+where $\mathcal{D}$ is the dust-to-hydrogen mass ratio, and $\mathcal{D}_\mathrm{ref}$ its value in the calibration gas. The dust optical depth is then
+
+$\begin{equation}
+    \tau_d = \sigma_\mathrm{d, eff} \, \frac{\mathcal{D}}{\mathcal{D}_\mathrm{ref}} \, N_\mathrm{H} = \frac{\sigma_\mathrm{d, eff}}{\mathcal{D}_\mathrm{ref} \, m_p} \, \Sigma_d \, ,
+\end{equation}$
+
+where $\Sigma_d = \mathcal{D} \, m_p \, N_\mathrm{H}$ is the dust mass column density, and $\sigma_\mathrm{d, eff} / (\mathcal{D}_\mathrm{ref} \, m_p)$ is the effective opacity per unit dust mass. So, only the dust column matters, independently of the state of the hydrogen around it.
+
+To estimate the column density, we use the shielding length $L_\mathrm{sh}$ (see the section Shielding length), assuming that the shielding material has the density and composition of the cell. As the phases are well mixed and fill the whole cell ($x_i = x_a = x_m = 1$), the dust column density is
+
+$\begin{equation}
+    \Sigma_d = f_d \, \rho_\mathrm{cell} \, L_\mathrm{sh} \, .
 \end{equation}$
 
 Substituting, the dust shielding term becomes
 
 $\begin{equation}
-    S_d = \exp\left(-C_{sd} \, (f_Z + f_d) \, (f_a + f_m) \, \rho_\mathrm{cell} \, h\right) \, ,
+    S_d = \exp\left(-C_{sd} \, f_d \, \rho_\mathrm{cell} \, L_\mathrm{sh}\right) \, ,
 \end{equation}$
 
-where we used $Z = f_Z + f_d$ and
+where
 
-$\begin{align}
-    C_{sd} &= \frac{\sigma_\mathrm{d, eff}}{Z_\odot \, m_p} \\
-	&= 3.150 \times 10^{-19} \, \mathrm{mp^{-1} \, cm^2} \, .
-\end{align}$
+$\begin{equation}
+    C_{sd} = \frac{\sigma_\mathrm{d, eff}}{\mathcal{D}_\mathrm{ref} \, m_p} \, .
+\end{equation}$
+
+For the reference value we use eq. 18 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x), with the same $f_\mathrm{X}$ and $\xi_\mathrm{X}$ as in our dust initial condition, and the abundances of their Table 1 ($(\mathrm{Si/H})_\odot = 3.55 \times 10^{-5}$, $(\mathrm{C/H})_\odot = 3.63 \times 10^{-4}$, $m_\mathrm{Si} = 28.1 \, \mathrm{u}$, $m_\mathrm{C} = 12 \, \mathrm{u}$), summing silicate and graphite
+
+$\begin{equation}
+    \mathcal{D}_\mathrm{ref} = \frac{\rho_d}{m_p \, n_\mathrm{H}} = c_\mathrm{Si} \, \frac{m_\mathrm{Si}}{m_p} \left( \mathrm{\frac{Si}{H}} \right)_{\!\odot} + c_\mathrm{C} \, \frac{m_\mathrm{C}}{m_p} \left( \mathrm{\frac{C}{H}} \right)_{\!\odot} = 8.15 \times 10^{-3} \, ,
+\end{equation}$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+i.e. $1.363 \times 10^{-26} \, \mathrm{g}$ of dust per hydrogen nucleus. [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) (Section 4.1) chose these $\xi_\mathrm{X}$ so that the grains reproduce the mean extinction curve of the Milky Way (per hydrogen nucleus), so $\mathcal{D}_\mathrm{ref}$ is the dust abundance of the gas $\sigma_\mathrm{d, eff}$ was calibrated against. The corresponding opacity is $\sigma_\mathrm{d, eff} / (\mathcal{D}_\mathrm{ref} \, m_p) = 2.93 \times 10^5 \, \mathrm{cm^2 \, g^{-1}}$, and
+
+$\begin{equation}
+    C_{sd} = 4.908 \times 10^{-19} \, \mathrm{mp^{-1} \, cm^2} \, .
+\end{equation}$
+
+For comparison, our dust initial condition at the present-day solar photosphere of [Asplund2009](https://doi.org/10.1146/annurev.astro.46.060407.145222) gives $\mathcal{D} = f_d(0) / X = 6.80 \times 10^{-3} \approx 0.83 \, \mathcal{D}_\mathrm{ref}$. The difference comes from the lower C and Si abundances of [Asplund2009](https://doi.org/10.1146/annurev.astro.46.060407.145222) relative to those in Table 1 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) (from Cox 2000).
 """
   ╠═╡ =#
-
-# ╔═╡ 805ef471-1bd2-4ce2-bf50-eeb9c6b10e4d
-begin
-	# Effective cross section
-	const σdeff = 4.0e-21u"cm^2"
-
-	# Dust shielding constant
-	const C_sd = σdeff / (Zsun * u"mp")
-
-	# Unit of C_sd
-	const csd_unit = m_u^-1 * l_u^2
-
-	# Nominal value of C_sd in our choice of units
-	const c_sd = ustrip(Unitful.NoUnits, C_sd / csd_unit)
-end;
 
 # ╔═╡ 6eef3827-1af6-431d-a163-67bb595c337d
 # ╠═╡ skip_as_script = true
@@ -2135,7 +2164,7 @@ where $b_5 = b / 10^5 \, \mathrm{cm \, s^{-1}}$ and $b$ is the Doppler broadenin
 We can rewrite $x$ as
 
 $\begin{equation}
-    x = \frac{f_m \, \rho_\mathrm{cell} \, h}{2 \, m_p \, x_\mathrm{nf}} = C_{sh2} \, f_m \, \rho_\mathrm{cell} \, h \, ,
+    x = \frac{f_m \, \rho_\mathrm{cell} \, L_\mathrm{sh}}{2 \, m_p \, x_\mathrm{nf}} = C_{sh2} \, f_m \, \rho_\mathrm{cell} \, L_\mathrm{sh} \, ,
 \end{equation}$
 
 where $x_\mathrm{nf} = 5 \times 10^{14} \, \mathrm{cm^{-2}}$ and
@@ -2164,6 +2193,81 @@ begin
 
 	# Nominal value of C_sh2 in our choice of units
 	const c_sh2 = ustrip(Unitful.NoUnits, C_sh2 / ch2_unit)
+end;
+
+# ╔═╡ 79fa6ccd-e137-4178-9376-c1222dd0a8f7
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+### Shielding length
+
+The shielding factors $S_d$ and $S_{\mathrm{H}_2}$ describe the attenuation, by the surrounding material, of radiation coming from outside the cell. So, the column densities must be computed with a length that represents the physical structure of the gas.
+
+Following [SafranekShrader2017](https://doi.org/10.1093/mnras/stw2647) (Section 2.5), we approximate the column densities as the product of the local number density and a shielding length, $N = n \, L_\mathrm{sh}$, and use the Jeans length (their eq. 27)
+
+$\begin{equation}
+    L_\mathrm{sh} = \left( \frac{\pi \, c_s^2}{G \, \rho_\mathrm{cell}} \right)^{1/2} \, ,
+\end{equation}$
+
+where $c_s$ is the sound speed. The physical motivation is that the gas able to become molecular sits in dense clumps undergoing gravitational instability, which are shielded by a column of gas of size $\sim L_\mathrm{sh}$. [SafranekShrader2017](https://doi.org/10.1093/mnras/stw2647) compare several local approximations for $L_\mathrm{sh}$ with full ray tracing, and find that the Jeans length computed with a temperature ceiling of $T_\mathrm{ceil} = 40 \, \mathrm{K}$ (their model L1a) is among the best performing. Without the ceiling (model L1), warm diffuse gas has an unphysically large shielding length, as $L_\mathrm{sh} \propto T^{1/2}$.
+
+In star-forming cells $\texttt{AREPO}$ uses the two-phase model of [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x). The internal energy of these cells represents the effective pressure of the two-phase medium, and not the temperature of the shielded gas, so we cannot use it. The cold clouds have a temperature $T_c \simeq 1000 \, \mathrm{K}$, but [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x) note that their results do not depend on this choice as long as $T_c \ll 10^4 \, \mathrm{K}$, i.e. it is not a physical estimate of the temperature of the molecular gas. Applying the ceiling of model L1a to the cold phase, $T = \min(T_c, T_\mathrm{ceil}) = T_\mathrm{ceil}$, so we use the isothermal sound speed
+
+$\begin{equation}
+    c_s = \left( \frac{k_B \, T_\mathrm{ceil}}{\mu \, m_p} \right)^{1/2} = 0.52 \, \mathrm{km \, s^{-1}} \, ,
+\end{equation}$
+
+with $\mu = 4 / (1 + 3 \, X_\mathrm{H}) = 1.22$ ($X_\mathrm{H} = 0.76$), the mean molecular weight of neutral gas that $\texttt{AREPO}$ uses for the cold phase. [SafranekShrader2017](https://doi.org/10.1093/mnras/stw2647) do not specify their convention for the sound speed (isothermal or adiabatic, and the mean molecular weight), so the normalization of $L_\mathrm{sh}$ is uncertain at the $\sim 30\%$ level.
+
+Then
+
+$\begin{equation}
+    L_\mathrm{sh} = \frac{C_{L_\mathrm{sh}}}{\rho_\mathrm{cell}^{1/2}} \, ,
+\end{equation}$
+
+where
+
+$\begin{align}
+    C_{L_\mathrm{sh}} &= \left( \frac{\pi \, c_s^2}{G} \right)^{1/2} \\
+	&= 2.760 \times 10^{20} \, \mathrm{mp^{1/2} \, cm^{-1/2}} \, ,
+\end{align}$
+
+i.e. $L_\mathrm{sh} = 89.5 \, \mathrm{pc}$ for $\rho_\mathrm{cell} = 1 \, \mathrm{mp \, cm^{-3}}$.
+
+With a constant sound speed the column densities scale as $N \propto \rho_\mathrm{cell}^{1/2}$, close to the scaling $N \propto n_\mathrm{H}^{0.42}$ that [SafranekShrader2017](https://doi.org/10.1093/mnras/stw2647) find with ray tracing (their eq. 29). $L_\mathrm{sh}$ only depends on local physical quantities, so it is independent of the resolution. We evaluate it with the cell density, as all the other quantities in our model, while [SafranekShrader2017](https://doi.org/10.1093/mnras/stw2647) use the density resolved at $2 \, \mathrm{pc}$ (the cold clouds inside a cell of [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x) are denser than the cell average). We do not cap $L_\mathrm{sh}$ at the cell size, as it would reintroduce the resolution dependence.
+
+#### Photon absorption within the cell
+
+The optical depths $\tau_\mathrm{ion}$ and $\tau_\mathrm{diss}$ used for $\eta_\mathrm{ion}^*$ and $\eta_\mathrm{diss}^*$ (see the section Photodissociation and photoionization) answer a different question. The fraction of the photons emitted by the stars formed in the cell that are absorbed within the cell. As the cell is the control volume of our equations, the relevant path length is set by the cell geometry, so there we keep the cell size $h = 2 \, (3 \, V_\mathrm{cell} / 4 \pi)^{1/3}$.
+"""
+  ╠═╡ =#
+
+# ╔═╡ e7f0842c-954a-40e1-a112-ec03631e5270
+begin
+	# Ceiling temperature for the Jeans length (model L1a)
+	# Safranek-Shrader2017 - https://doi.org/10.1093/mnras/stw2647
+	const T_ceil = 40.0u"K"
+
+	# Hydrogen mass fraction (AREPO HYDROGEN_MASSFRAC)
+	const X_H = 0.76
+
+	# Mean molecular weight of the neutral gas (AREPO convention for the cold phase)
+	const μ_sh = 4.0 / (1.0 + 3.0 * X_H)
+
+	# Isothermal sound speed at T_ceil
+	const cs_sh = sqrt(u"k" * T_ceil / (μ_sh * u"mp"))
+
+	# Shielding length constant
+	const C_Lsh = sqrt(π * cs_sh^2 / u"G")
+
+	# Our choice of units for C_Lsh
+	const clsh_unit = m_u^(1/2) * l_u^(-1/2)
+
+	# Nominal value of C_Lsh in our choice of units
+	const c_lsh = ustrip(Unitful.NoUnits, C_Lsh / clsh_unit)
+
+	# Shielding length [cm]
+	L_sh(ρc) = c_lsh / sqrt(ρc)
 end;
 
 # ╔═╡ aaba63dd-8fc3-405d-ad19-8e8368e70019
@@ -2611,7 +2715,7 @@ begin
 	const N_EQU = 6  
 	
 	# Number of parameters
-	const N_PAR = 8 
+	const N_PAR = 10 
 
 	# Index of each phase in the ODE solution matrix
 	const phase_name_to_index = Dict(
@@ -2674,267 +2778,17 @@ function Base.fma(x::Symbolics.Num, y::Symbolics.Num, z::Symbolics.Num)
 	return x * y + z
 end;
 
-# ╔═╡ bd8743d6-8f21-413d-835a-e543926baa09
-#####################################################################################
-# System of ODEs, where each equation has units of Myr^(-1), and
-#
-# Ionized gas fraction:    fi(t) = Mi(t) / M_cell --> y[1]
-# Atomic gas fraction:     fa(t) = Ma(t) / M_cell --> y[2]
-# Molecular gas fraction:  fm(t) = Mm(t) / M_cell --> y[3]
-# Stellar fraction:        fs(t) = Ms(t) / M_cell --> y[4]
-# Metals fraction:         fZ(t) = MZ(t) / M_cell --> y[5]
-# Dust fraction:           fd(t) = Md(t) / M_cell --> y[6]
-# 
-# This function follows the API requirements of DifferentialEquations.jl
-#####################################################################################
-function system!(dydt, ic, parameters, t)
-
-	##################################################################
-    # Initial conditions
-	##################################################################
-
-    fi, fa, fm, fs, fZ, fd = ic
-
-	##################################################################
-    # Parameters
-	##################################################################
-	#
-	# ρ_cell: Total cell density           [mp * cm^(-3)]
-	# ΓUVB:   UVB photoionization rate     [Myr^(-1)]
-	# ΓLWB:   LWB photodissociation rate   [Myr^(-1)]
-	# η_diss: Photodissociation efficiency [dimensionless]
-	# η_ion:  Photoionization efficiency   [dimensionless]
-	# R:      Mass recycling fraction      [dimensionless]
-	# Zsn:    Metals recycling fraction    [dimensionless]
-	# h:      Column height                [cm]
-	##################################################################
-
-    ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h = parameters
-
-	##################################################################
-    # Auxiliary equations
-	##################################################################
-
-	# Star formation rate [Myr^(-1)]
-	ψs = ψ(fm, ρ_cell)
-
-	###################
-	# Partial fraction
-    ###################
-
-	# Neutral fraction
-	fn = fa + fm
-
-	# Gas fraction
-	fg = fn + fi
-
-	# Metal fraction
-	Zt = fZ + fd
-
-	############
-	# Shielding
-    ############
-
-	# Dust optical depth 
-	τ_d = c_sd * h * ρ_cell * fn * Zt
-	
-	# Dust shielding 
-	sd = exp(-τ_d)
-
-	# Molecular self-shielding optical depth
-	xp1     = c_sh2 * h * fm * ρ_cell + 1.0
-	xp1_2   = xp1 * xp1
-	sq_xp1  = NaNMath.sqrt(xp1)
-	τ_sh    = exp_fac * sq_xp1
-
-	# Molecular self-shielding
-	exp_xp1 = exp(-τ_sh)
-	sh2     = ((1 - ωH2) / xp1_2) + (ωH2 * exp_xp1 / sq_xp1)
-
-	# Combined shielding 
-	e_diss = sd * sh2
-
-	#################
-	# Net ionization
-    #################
-
-	# Recombination [Myr^(-1)]
-	recomb = c_rec * fi * fi * ρ_cell
-
-	# Ionization optical depth
-	τ_ion = c_τion * fa * ρ_cell * h
-
-	# Stellar ionization [Myr^(-1)]
-	ion_prob = -expm1(-τ_ion)
-	s_ion    = sd * η_ion * ion_prob * ψs
-
-	# UVB photoionization [Myr^(-1)]
-	uvb = sd * ΓUVB * fa
-
-	net_ionization = uvb + s_ion - recomb
-
-	#########################
-	# Stellar gas production
-    #########################
-
-	# Gas and metals produced at stellar death [Myr^(-1)]
-	R_ψs = R * ψs
-
-	s_gas_production = fma(R_ψs, -Zsn, R_ψs)
-
-	###################
-	# Net dissociation
-    ###################
-
-	# Condensation [Myr^(-1)]
-	Zt_eff = Zt + Zeff
-	cond   = c_cond * fa * ρ_cell * fg * Zt_eff
-
-	# Dissociation optical depth
-	τ_diss = c_τdiss * fm * ρ_cell * h
-
-	# Stellar dissociation [Myr^(-1)]
-	diss_prob = -expm1(-τ_diss)
-	s_diss    = e_diss * η_diss * diss_prob * ψs
-
-	# LW background dissociation [Myr^(-1)]
-	lwb = e_diss * ΓLWB * fm
-
-	net_dissociation = lwb + s_diss - cond
-
-	##################
-	# Net dust growth
-	##################
-
-	# Dust yield by SNe [Myr^(-1)]
-	dg_SNe = δ_d * Zsn * R_ψs
-
-	# Dust accretion [Myr^(-1)]
-	dg_acc = c_dg * fZ * fd * fn * fn * ρ_cell
-
-	# Dust destruction [Myr^(-1)]
-	dd = fd * inv_T_dd * ψs
-
-	net_dust_growth = dg_SNe + dg_acc - dd
-
-	##################################################################
-    # ODE system
-	##################################################################
-
-	dydt[1] = net_ionization + s_gas_production
-    dydt[2] = net_dissociation - net_ionization
-    dydt[3] = -net_dissociation - ψs
-    dydt[4] = fma(R, -ψs, ψs)
-	dydt[5] = fma(Zsn, R_ψs, -net_dust_growth)
-	dydt[6] = net_dust_growth
-
-end;
-
-# ╔═╡ 80005099-7154-4306-9172-c9a168336e14
-const JACOBIAN_FUNCTION = construct_jacobian(system!);
-
-# ╔═╡ c291700e-3a84-49a7-85d6-592cfb3b1a11
-#####################################################################################
-# Evaluate the Jacobian
-#
-# Arguments
-# 
-#     J:          Matrix to save the results, it must have size N_EQU × N_EQU
-#     ic:         Initial condition, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-#     parameters: Parameters for the ODEs, [ρ, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h]
-#     t:          Unused variable to comply with the DifferentialEquations.jl API
-# 
-# Returns
-#
-#     The Jacobian matrix
-#####################################################################################
-function jacobian!(
-	J::Matrix{Float64},
-	ic::Vector{Float64},
-	parameters::Vector{Float64},
-	t::Float64=0.0,
-)
-
-	for i in 1:N_EQU
-	    for j in 1:N_EQU
-	        J[i, j] = JACOBIAN_FUNCTION[i, j](ic, parameters, t)
-	    end
-	end
-
-end;
-
 # ╔═╡ 1ec99792-905d-4e1b-a413-ef58143d3c68
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"## ODE function"
   ╠═╡ =#
 
-# ╔═╡ 4e1140be-3e61-47bd-9f9f-6b5dfbff6ae2
-#####################################################################################
-# System to be solved by DifferentialEquations.jl
-#####################################################################################
-ode_function = ODEFunction{true}(
-	system!;
-	jac=jacobian!,
-	tgrad=(dt, ic, p, t) -> nothing,
-);
-
 # ╔═╡ 2afd459c-90e9-4105-9121-27e21bb89eeb
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"## Integration"
   ╠═╡ =#
-
-# ╔═╡ 4173e91c-c01a-4fa2-ae77-0408bf7d9a1b
-#####################################################################################
-# Solve the system of ODEs
-#
-# Arguments
-# 
-#     ic:          Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h]
-#     tspan:       Integration span, (ti, tf) [Myr]
-#     times:       Times at which the solution will be returned [Myr]
-#     args:        Positional arguments for the solver of DifferentialEquations.jl
-#     kwargs:      Keyword arguments for the solver of DifferentialEquations.jl
-# 
-# Returns
-#
-#     A vector of vectors [fi(t), fa(t), fm(t), fs(t), fZ(t), fd(t)] 
-#     for each t in `times`
-#####################################################################################
-function integrate_model(
-    ic::Vector{Float64},
-	base_params::Vector{Float64},
-	tspan::NTuple{2,Float64};
-    times::Vector{Float64}=[tspan[2],],
-	args::Tuple=(),
-    kwargs::NamedTuple=(
-		dense=false,
-		reltol=1.0e-10,
-		verbose=SciMLLogging.None(),
-	),
-)::Vector{Vector{Float64}}
-
-	ρ_cell, Z, a, h = base_params
-
-	ΓUVB          = compute_UVB(a)
-	ΓLWB          = compute_LWB(a)
-	η_diss, η_ion = compute_η(tspan[2], Z)
-	R, Zsn        = compute_recycled_fractions(Z)
-
-	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h]
-
-    sol = solve(ODEProblem(
-		ode_function,
-		ic,
-		tspan,
-		parameters,
-	), args...; kwargs...)
-
-    return sol(times).u
-
-end;
 
 # ╔═╡ 24920a1b-355c-43e1-aff2-028e6f25584c
 # ╠═╡ skip_as_script = true
@@ -2954,67 +2808,6 @@ md"## ODE coefficients"
 md"### Stiffness coefficient"
   ╠═╡ =#
 
-# ╔═╡ a2a12511-97d6-4e83-a21d-1c7528f486bc
-# ╠═╡ skip_as_script = true
-#=╠═╡
-#####################################################################################
-# Compute the stiffness ratio
-#
-# Arguments
-# 
-#     ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-#     base_parms: Parameters for the ODEs, [ρ_cell, Z, a, h, it]
-#
-# Returns
-#
-#     The stiffness ratio
-#####################################################################################
-function stiffness_ratio(
-	ic::Vector{Float64},
-	base_params::Vector{Float64},
-)::Float64
-
-	# Parameters for the ODEs
-	# ρ_cell: Density [cm^(-3)]
-	# Z:      Metallicity [dimensionless]
-	# a:      Scale factor [dimensionless]
-	# h:      Column height [cm]
-	# it:     Integration time [Myr]
-	ρ_cell, Z, a, h, it = base_params
-
-	ΓUVB          = compute_UVB(a)
-	ΓLWB          = compute_LWB(a)
-	η_diss, η_ion = compute_η(it, Z)
-	R, Zsn        = compute_recycled_fractions(Z)
-
-	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h]
-
-	# Allocate memory for the Jacobian
-	J = Matrix{Float64}(undef, N_EQU, N_EQU)
-
-	# Compute the Jacobian and store it in J
-	jacobian!(J, ic, parameters)
-
-	# Get the norm of the real part of the non-zero eigenvalues
-	eigen_values = filter(x -> x > eps(typeof(x)), eigvals(J) .|> real .|> abs)
-
-	# Compute the stiffness ratio
-	return maximum(eigen_values) / minimum(eigen_values)
-
-end;
-  ╠═╡ =#
-
-# ╔═╡ 8ade720c-37b7-4436-8bcd-8e902f52057b
-# ╠═╡ skip_as_script = true
-#=╠═╡
-stiffness_ratio(
-	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-	[0.3, 0.57, 0.0, 0.0, 0.02, 0.01],
-	# [ρ_cell [cm^(-3)], Z [dimensionless], a [dimensionless], h [cm], it [Myr]]
-	[1.0, Zsun, 1.0, 3.0e20, 5.0],
-)
-  ╠═╡ =#
-
 # ╔═╡ b39e416e-a204-4f6b-a6e4-00f6a71d3b27
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -3025,71 +2818,6 @@ md"The model, for a typical set of initial conditions, is very stiff (stiffness 
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"### Lyapunov spectrum"
-  ╠═╡ =#
-
-# ╔═╡ ac57dfbe-f19b-4c5f-a753-5f4162e245d4
-# ╠═╡ skip_as_script = true
-#=╠═╡
-#####################################################################################
-# Compute the Lyapunov spectrum
-#
-# Arguments
-# 
-#     ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-#     base_parms: Parameters for the ODEs, [ρ_cell, Z, a, h, it]
-#
-# Returns
-#
-#     The Lyapunov spectrum
-#####################################################################################
-function lyapunov_spectrum(
-	ic::Vector{Float64},
-	base_params::Vector{Float64},
-)::Vector{Float64}
-
-	# Parameters for the ODEs
-	# ρ_cell: Density [cm^(-3)]
-	# Z:      Metallicity [dimensionless]
-	# a:      Scale factor [dimensionless]
-	# h:      Column height [cm]
-	# it:     Integration time [Myr]
-	ρ_cell, Z, a, h, it = base_params
-
-	ΓUVB          = compute_UVB(a)
-	ΓLWB          = compute_LWB(a)
-	η_diss, η_ion = compute_η(it, Z)
-	R, Zsn        = compute_recycled_fractions(Z)
-
-	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h]
-	
-	ds = CoupledODEs(system!, ic, parameters)
-
-	# Compute the Lyapunov spectrum
-	return lyapunovspectrum(ds, 100; Δt=1e-6)
-
-end;
-  ╠═╡ =#
-
-# ╔═╡ b1e67fcd-f70b-4dd2-87e5-74bef1fa201e
-# ╠═╡ skip_as_script = true
-#=╠═╡
-lyapunov_spectrum(
-	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-	[0.3, 0.57, 0.0, 0.0, 0.02, 0.01],
-	# [ρ_cell [cm^(-3)], Z [dimensionless], a [dimensionless], h [cm], it [Myr]]
-	[10.0, Zsun, 1.0, 3.0e20, 10.0],
-)
-  ╠═╡ =#
-
-# ╔═╡ d1f3d076-b9d6-4b92-b25c-4155b5fc464b
-# ╠═╡ skip_as_script = true
-#=╠═╡
-lyapunov_spectrum(
-	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-	[0.3, 0.57, 0.0, 0.0, 0.02, 0.01],
-	# [ρ_cell [cm^(-3)], Z [dimensionless], a [dimensionless], h [cm], it [Myr]]
-	[1000.0, Zsun, 1.0, 3.0e20, 10.0],
-)
   ╠═╡ =#
 
 # ╔═╡ f336b083-99c7-4345-8ada-78b166a98abe
@@ -3160,77 +2888,674 @@ TikzPictures.TikzPicture(
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-Following eq. 18 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x), the initial dust mass density is given by
+Following eqs. 17 and 18 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x), the initial mass density of a grain species with key element $\mathrm{X}$ (Si for silicate, C for graphite) is
 
 $\begin{equation}
-	\rho_d(0) = \frac{m_\mathrm{X_d}}{f_\mathrm{X_d}}  \, (1 - \xi_0) \, \frac{Z}{Z_\odot} \, \left( \mathrm{\frac{X_d}{H}} \right)_{\!\odot} \, n_H \, ,
+	\rho_{d,\mathrm{X}}(0) = \frac{m_\mathrm{X}}{f_\mathrm{X}} \, (1 - \xi_\mathrm{X}) \, n_\mathrm{X}^\mathrm{tot} \, ,
 \end{equation}$
 
-where $f_\mathrm{X_d}$ is the mass fraction in the dust of element $\mathrm{X_d}$, $m_\mathrm{X_d}$ is the atomic mass of $\mathrm{X_d}$, $\left( \mathrm{X_d / H} \right)_\odot$ is the solar abundance of $\mathrm{X_d}$, $n_H$ is the number density of hydrogen, and $\xi_0$ is the initial gas-phase fraction of $\mathrm{X_d}$, defined by
+where $f_\mathrm{X}$ is the mass fraction of element $\mathrm{X}$ in the grain material, $m_\mathrm{X}$ is the atomic mass of $\mathrm{X}$, $n_\mathrm{X}^\mathrm{tot}$ is the number density of $\mathrm{X}$ in both gas and dust, and $\xi_\mathrm{X}$ is the fraction of $\mathrm{X}$ in the gas phase
 
 $\begin{equation}
-	\xi(t) = \frac{n_\mathrm{X_d}^\mathrm{gas}}{n_\mathrm{X_d}^\mathrm{tot}} \, ,
+	\xi_\mathrm{X} = \frac{n_\mathrm{X}^\mathrm{gas}}{n_\mathrm{X}^\mathrm{tot}} \, .
 \end{equation}$
 
-with $n_\mathrm{X_d}^\mathrm{gas}$ the number density of $\mathrm{X_d}$ in the gas phase, and $n_\mathrm{X_d}^\mathrm{tot}$ the total number density (in gas and dust).
-
-Using the following values
-
-|  Species | $\mathrm{X_d}$ | $f_\mathrm{X_d}$ | $m_\mathrm{X_d}$ | $(\mathrm{X_d / H})_\odot$ |
-|:--------:|:--------------:|:----------------:|:----------------:|:--------------------------:|
-| Silicate |       Si       |      $0.166$     |      $28.1$      |    $3.55 \times 10^{-5}$   |
-| Graphite |        C       |        $1$       |       $12$       |    $3.63 \times 10^{-4}$   |
-
-and adopting the fiducial value $\xi_0 = 0.3$ from [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x), we can express the initial dust fraction as
+[Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) closes this expression with $n_\mathrm{X}^\mathrm{tot} = (Z / Z_\odot) \, (\mathrm{X/H})_\odot \, n_\mathrm{H}$ (eq. 17), which assumes a solar abundance pattern, and requires a value for $Z_\odot$ consistent with the adopted $(\mathrm{X/H})_\odot$, and the total hydrogen nuclei density $n_\mathrm{H}$. Instead, $\texttt{AREPO}$ tracks the mass of nine elements in each cell (H, He, C, N, O, Ne, Mg, Si, and Fe; [McKinnon2017](https://doi.org/10.1093/mnras/stx467)), so we can use the cell abundances directly
 
 $\begin{equation}
-    f_d(0) =  \frac{\rho_d(0)}{\rho_\mathrm{cell}} = C_\mathrm{X_d} \, Z \, f_n \, ,
+	m_\mathrm{X} \, n_\mathrm{X}^\mathrm{tot} = X_\mathrm{X} \, \rho_\mathrm{cell} \, ,
 \end{equation}$
 
-where we used
+where $X_\mathrm{X} = M_\mathrm{X} / M_\mathrm{cell}$ is the mass fraction of element $\mathrm{X}$ (gas + dust). Silicate and graphite are separate mass reservoirs, so their contributions are summed, and the initial dust fraction is
 
 $\begin{equation}
-    n_H = n_a + 2 \, n_m = f_n \, \frac{\rho_\mathrm{cell}}{m_p} \, .
+	f_d(0) = \sum_\mathrm{X} \frac{\rho_{d,\mathrm{X}}(0)}{\rho_\mathrm{cell}} = c_\mathrm{Si} \, X_\mathrm{Si} + c_\mathrm{C} \, X_\mathrm{C} \, ,
 \end{equation}$
 
-The coefficient $C_\mathrm{X_d}$ is defined as
+with
 
 $\begin{equation}
-    C_\mathrm{X_d} = \frac{m_\mathrm{X_d}}{f_\mathrm{X_d}}  \, (1 - \xi_0) \, \frac{1}{Z_\odot \, m_p} \, \left( \mathrm{\frac{X_d}{H}} \right)_{\!\odot} \, ,
+	c_\mathrm{X} = \frac{1 - \xi_\mathrm{X}}{f_\mathrm{X}} \, .
 \end{equation}$
 
-using the tabulated values and $Z_\odot = 0.0127$, we find
+We adopt the following values
 
-|  Species | $\mathrm{X_d}$ | $C_\mathrm{X_d}$ |
-|:--------:|:--------------:|:----------------:|
-| Silicate |       Si       |      $0.329$     |
-| Graphite |        C       |      $0.238$     |
+|  Species | $\mathrm{X}$ | $f_\mathrm{X}$ | $\xi_\mathrm{X}$ | $c_\mathrm{X}$ |
+|:--------:|:------------:|:--------------:|:----------------:|:--------------:|
+| Silicate |      Si      |     $0.166$    |      $0.25$      |     $4.52$     |
+| Graphite |       C      |       $1$      |      $0.15$      |     $0.85$     |
 
-Thus, our fiducial value for $C_\mathrm{X_d}$ is taken as the average 
+where $f_\mathrm{Si} = 0.166$ corresponds to the composition $\mathrm{Mg_{1.1} Fe_{0.9} Si O_4}$ (Table 1 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x)), and $\xi_\mathrm{Si}$ and $\xi_\mathrm{C}$ are the values that [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) (Section 4.1) uses so the initial grain abundance reproduces the mean extinction curve of the Milky Way. They are close to that paper's fiducial $\xi(0) = 0.3$, which roughly matches the depletion in the diffuse medium (see Section 2.3 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x), where $\xi(0) = 0.1 - 0.7$ is considered a reasonable range). Thus, $f_d(0)$ represents the dust content of the diffuse ISM before any growth in the dense gas, which is then followed by the ODEs.
+
+This initial condition only depends on the abundances of Si and C, so it does not need a value for $Z_\odot$ or $n_\mathrm{H}$, and it does not depend on the ionization state of the gas (hydrogen ionization does not destroy grains). Carbon returned by AGB stars, which $\texttt{AREPO}$ adds to $X_\mathrm{C}$, is therefore included in the initial dust content.
+
+As a reference, for the present-day solar photosphere of [Asplund2009](https://doi.org/10.1146/annurev.astro.46.060407.145222) ($\log \epsilon_\mathrm{C} = 8.43$ and $\log \epsilon_\mathrm{Si} = 7.51$ from their Table 1, and $X = 0.7381$, $Z = 0.0134$ from their Table 4), the mass fractions are $X_\mathrm{C} \approx 2.37 \times 10^{-3}$ and $X_\mathrm{Si} \approx 6.65 \times 10^{-4}$, and we get $f_d(0) \approx 5.0 \times 10^{-3}$, i.e. a dust-to-metal ratio $f_d / Z \approx 0.37$, comparable to the values of $\sim 0.4 - 0.5$ usually adopted for local galaxies (see the discussion in [McKinnon2016](https://doi.org/10.1093/mnras/stw253)).
+
+#### Maximum dust fraction
+
+Dust can grow until all the key elements are in grains ($\xi_\mathrm{X} = 0$), so the maximum dust fraction is
 
 $\begin{equation}
-	C_\mathrm{X_d} = 0.283 \, .
+	f_d^\mathrm{max} = \min\left( \frac{X_\mathrm{Si}}{f_\mathrm{Si}} + \frac{X_\mathrm{C}}{f_\mathrm{C}}, Z \right) \, ,
 \end{equation}$
+
+where the cap at $Z$ only matters for unrealistic abundance patterns, and guarantees $f_Z \geq 0$. For the present-day solar photosphere of [Asplund2009](https://doi.org/10.1146/annurev.astro.46.060407.145222), $f_d^\mathrm{max} / Z = 0.476$: dust can lock at most about half of the metals, because most of the oxygen and elements such as N and Ne do not condense into silicate or graphite grains. For cells without Si and C, $f_d^\mathrm{max} = 0$, so there is no dust and no accretion.
+
+#### Cells that enter the model more than once
+
+After an integration, the stochastic star formation of $\texttt{AREPO}$ may keep a cell as gas, and the cell can enter the model again. The gas phases, the stars, and the metallicity are always reset from the current state of the cell in $\texttt{AREPO}$, so the model remains a closed box that, given the state of a cell, returns its SFR and the fraction of each component. The exception is the dust: its time scales (accretion and destruction, see the section Dust creation) are much longer than the integration time, so resetting it at every entry would erase its evolution. As $\texttt{AREPO}$ does not follow the dust, we store the dust-to-metal ratio at the end of the previous integration,
+
+$\begin{equation}
+	\mathrm{DZ} = \frac{f_d}{f_Z + f_d} \, ,
+\end{equation}$
+
+and combine it with the current metallicity of the cell
+
+$\begin{equation}
+	f_d(0) = \min(\mathrm{DZ} \, Z, f_d^\mathrm{max}) \, .
+\end{equation}$
+
+The dust-to-metal ratio is an intensive quantity, so it can be combined with the metallicity of the cell after $\texttt{AREPO}$ has changed its metal content (stellar enrichment, or mass exchange with the neighboring cells). The recipe above is used only the first time a cell enters the model (the stored fractions are NaN at the start of a run). We do not reset the dust-to-metal ratio of cells that leave the star-forming regime and enter it again later, as the dust processes outside star-forming cells (e.g. thermal sputtering in hot gas) are not included in the model.
 """
   ╠═╡ =#
 
 # ╔═╡ d7cc8a66-220a-4e9b-b42e-a0e085ed3a0f
 begin
-	# Initial fraction of Si and C in the gas pahse
-	const ξ0 = 0.3
+	# Fraction of the key element in the gas phase (Hirashita 2012, Sect. 4.1)
+	const ξ_Si = 0.25   # Silicate (key element Si)
+	const ξ_C  = 0.15   # Graphite (key element C)
 
-	# Initial dust fraction constant
-	C_xd(mx, fx, XH) = (mx / fx) * (1.0 - ξ0) * XH / (Zsun * 1.0u"mp")
+	# Mass fraction of the key element in the grain material (Hirashita 2012, Table 1)
+	const f_Si = 0.166  # Silicate (Mg1.1 Fe0.9 Si O4)
+	const f_C  = 1.0    # Graphite
 
-	# C_xd for silicate
-	const silicate = C_xd(28.1u"u", 0.166, 3.55e-5)
+	# Initial dust fraction coefficients
+	const c_Si = (1.0 - ξ_Si) / f_Si
+	const c_C  = (1.0 - ξ_C) / f_C
 
-	# C_xd for graphite
-	const graphite = C_xd(12.0u"u", 1.0, 3.63e-4)
+	#################################################################################
+	# Initial dust fraction
+	#
+	# Arguments
+	#
+	#     X_Si: Mass fraction of Si in the cell (gas + dust)
+	#     X_C:  Mass fraction of C in the cell (gas + dust)
+	#     Z:    Total metallicity of the cell (gas + dust)
+	#
+	# Returns
+	#
+	#     fd(0), capped at Z so that fZ(0) = Z - fd(0) >= 0
+	#################################################################################
+	initial_dust_fraction(X_Si, X_C, Z) = min(c_Si * X_Si + c_C * X_C, Z)
 
-	# Nominal value of C_xd
-	const c_xd = ustrip(Unitful.NoUnits, silicate + graphite) / 2.0
+	# Maximum dust mass per unit mass of the key element (all of it in grains)
+	const cmax_Si = 1.0 / f_Si  # Silicate
+	const cmax_C  = 1.0 / f_C   # Graphite
+
+	#################################################################################
+	# Maximum dust fraction (all Si and C in grains)
+	#
+	# Arguments
+	#
+	#     X_Si: Mass fraction of Si in the cell (gas + dust)
+	#     X_C:  Mass fraction of C in the cell (gas + dust)
+	#     Z:    Total metallicity of the cell (gas + dust)
+	#
+	# Returns
+	#
+	#     fd_max, capped at Z
+	#################################################################################
+	max_dust_fraction(X_Si, X_C, Z) = min(cmax_Si * X_Si + cmax_C * X_C, Z)
+
+	# Present-day solar photosphere (Asplund 2009, Tables 1 and 4)
+	const X_H_A09  = 0.7381                                       # Hydrogen mass fraction
+	const Z_A09    = 0.0134                                       # Metallicity
+	const X_C_A09  = X_H_A09 * 10^(8.43 - 12) * 12.011 / 1.008   # Carbon mass fraction
+	const X_Si_A09 = X_H_A09 * 10^(7.51 - 12) * 28.086 / 1.008   # Silicon mass fraction
+
+	#################################################################################
+	# Initial dust fraction of a cell that already went through the model
+	#
+	# Arguments
+	#
+	#     fd_prev: Dust fraction at the end of the previous integration
+	#     fZ_prev: Metal fraction at the end of the previous integration
+	#     Z:       Current total metallicity of the cell (gas + dust)
+	#     fd_max:  Maximum dust fraction of the cell
+	#
+	# Returns
+	#
+	#     fd(0) = min(DZ * Z, fd_max), with DZ = fd_prev / (fZ_prev + fd_prev)
+	#################################################################################
+	carried_dust_fraction(fd_prev, fZ_prev, Z, fd_max) = min(fd_prev / (fZ_prev + fd_prev) * Z, fd_max)
+
+	# Atomic mass of the key element (Hirashita 2012, Table 1)
+	const m_Si = 28.1u"u"  # Silicon
+	const m_C  = 12.0u"u"  # Carbon
+
+	# Solar abundance of the key element, by number relative to H (Hirashita 2012, Table 1)
+	const SiH_sun = 3.55e-5  # Silicon
+	const CH_sun  = 3.63e-4  # Carbon
+
+	# Reference (Milky Way) dust-to-hydrogen mass ratio (Hirashita 2012, eq. 18 and Sect. 4.1)
+	const D_ref = ustrip(
+		Unitful.NoUnits,
+		(c_Si * m_Si * SiH_sun + c_C * m_C * CH_sun) / 1.0u"mp",
+	)
 end;
+
+# ╔═╡ 568d9fe3-6716-4a9a-ba1d-b9e6fd039150
+begin
+	# Solar metallicity
+    const Zsun = 0.0127
+	
+	# Dust grains internal density
+	# Ragone-Figueroa2024 - https://doi.org/10.1051/0004-6361/202451344
+    const s_d = 3.0u"g * cm^-3"
+
+	# Effective grain radius ⟨a³⟩/⟨a²⟩ (models C and F, Table 2)
+	# Hirashita2011 - https://doi.org/10.1111/j.1365-2966.2011.19131.x
+    const a_eff = 0.0159u"μm"
+	
+    # Recombination coefficient (γ) times 
+	# the average thermal velocity of hydrogen atoms (⟨va⟩)
+	# Hollenbach1971b - https://doi.org/10.1086/150755
+	const γva = 5.0e4u"cm * s^-1"
+
+	# Dust fraction floor (1e-3 of the Milky Way dust-to-hydrogen mass ratio)
+	const fd_eff = 1e-3 * D_ref
+
+	# Clumping factor
+	const Cρ = 100.0
+
+	# Condensation constant
+	const C_cond = (3 * Cρ * γva) / (4 * s_d * a_eff)
+
+	# Our choice of units for C_cond
+	const cc_unit = m_u^-1 * t_u^-1 * l_u^3
+
+	# Nominal value of C_cond in our choice of units
+	const c_cond = ustrip(Unitful.NoUnits, C_cond / cc_unit)
+
+	# Condensation time-scale
+	τ_cond(ρc, fd) = 1.0 / (c_cond * ρc * (fd + fd_eff))
+end;
+
+# ╔═╡ 2a39d6f8-da49-4976-9aa7-889391e55a5d
+begin
+	# Material density of the grains (Hirashita 2012, Table 1)
+	const s_Si = 3.3u"g * cm^-3"   # Silicate
+	const s_C  = 2.26u"g * cm^-3"  # Graphite
+
+	# Accretion constant of each species, 
+	# c_X = 3 * S / (ā * f_X * s_X) * sqrt(k * T / (2π * m_X))
+	# ā = ⟨a³⟩/⟨a²⟩ = a_eff (models C and F of Hirashita 2011, Table 2)
+	const C_acc_Si = (3 * S) / (a_eff * f_Si * s_Si) * sqrt(u"k" * T / (2 * π * m_Si))
+	const C_acc_C  = (3 * S) / (a_eff * f_C * s_C) * sqrt(u"k" * T / (2 * π * m_C))
+
+	# Our choice of units for C_acc
+	const cacc_unit = m_u^-1 * t_u^-1 * l_u^3
+
+	# Nominal value of C_acc in our choice of units
+	const c_acc_Si = ustrip(Unitful.NoUnits, C_acc_Si / cacc_unit)
+	const c_acc_C  = ustrip(Unitful.NoUnits, C_acc_C / cacc_unit)
+
+	#################################################################################
+	# Accretion parameters of a cell
+	#
+	# Arguments
+	#
+	#     X_Si: Mass fraction of Si in the cell (gas + dust)
+	#     X_C:  Mass fraction of C in the cell (gas + dust)
+	#     Z:    Total metallicity of the cell (gas + dust)
+	#
+	# Returns
+	#
+	#     fd_max: Maximum dust fraction (all Si and C in grains), capped at Z.
+	#             For cells without Si nor C (no accretion) it is set to 1
+	#             to avoid dividing by 0 in the ODEs
+	#     c_dg:   Dust growth constant [Myr^(-1) * mp^(-1) * cm^3],
+	#             It is 0 for cells without Si nor C
+	#################################################################################
+	function accretion_parameters(X_Si, X_C, Z)
+
+		# Maximum silicate and graphite fractions
+		y_Si = cmax_Si * X_Si
+		y_C  = cmax_C * X_C
+
+		# Maximum dust fraction
+		fd_max = min(y_Si + y_C, Z)
+
+		if fd_max <= 0.0
+			return 1.0, 0.0
+		end
+
+		# Dust growth constant
+		c_dg = (c_acc_Si * X_Si * y_Si + c_acc_C * X_C * y_C) / (y_Si + y_C)
+
+		return fd_max, c_dg
+
+	end
+end;
+
+# ╔═╡ 805ef471-1bd2-4ce2-bf50-eeb9c6b10e4d
+begin
+	# Effective cross section
+	const σdeff = 4.0e-21u"cm^2"
+
+	# Dust shielding constant
+	const C_sd = σdeff / (D_ref * u"mp")
+
+	# Unit of C_sd
+	const csd_unit = m_u^-1 * l_u^2
+
+	# Nominal value of C_sd in our choice of units
+	const c_sd = ustrip(Unitful.NoUnits, C_sd / csd_unit)
+end;
+
+# ╔═╡ bd8743d6-8f21-413d-835a-e543926baa09
+#####################################################################################
+# System of ODEs, where each equation has units of Myr^(-1), and
+#
+# Ionized gas fraction:    fi(t) = Mi(t) / M_cell --> y[1]
+# Atomic gas fraction:     fa(t) = Ma(t) / M_cell --> y[2]
+# Molecular gas fraction:  fm(t) = Mm(t) / M_cell --> y[3]
+# Stellar fraction:        fs(t) = Ms(t) / M_cell --> y[4]
+# Metals fraction:         fZ(t) = MZ(t) / M_cell --> y[5]
+# Dust fraction:           fd(t) = Md(t) / M_cell --> y[6]
+# 
+# This function follows the API requirements of DifferentialEquations.jl
+#####################################################################################
+function system!(dydt, ic, parameters, t)
+
+	##################################################################
+    # Initial conditions
+	##################################################################
+
+    fi, fa, fm, fs, fZ, fd = ic
+
+	##################################################################
+    # Parameters
+	##################################################################
+	#
+	# ρ_cell: Total cell density           [mp * cm^(-3)]
+	# ΓUVB:   UVB photoionization rate     [Myr^(-1)]
+	# ΓLWB:   LWB photodissociation rate   [Myr^(-1)]
+	# η_diss: Photodissociation efficiency [dimensionless]
+	# η_ion:  Photoionization efficiency   [dimensionless]
+	# R:      Mass recycling fraction      [dimensionless]
+	# Zsn:    Metals recycling fraction    [dimensionless]
+	# h:      Cell size                    [cm]
+	# fd_max: Maximum dust fraction        [dimensionless]
+	# c_dg:   Dust growth constant         [Myr^(-1) * mp^(-1) * cm^3]
+	##################################################################
+
+    ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg = parameters
+
+	##################################################################
+    # Auxiliary equations
+	##################################################################
+
+	# Star formation rate [Myr^(-1)]
+	ψs = ψ(fm, ρ_cell)
+
+	###################
+	# Partial fraction
+    ###################
+
+	# Neutral fraction
+	fn = fa + fm
+
+	############
+	# Shielding
+    ############
+
+	# Shielding length [cm]
+	Lsh = c_lsh / sqrt(ρ_cell)
+
+	# Dust optical depth 
+	τ_d = c_sd * Lsh * ρ_cell * fd
+	
+	# Dust shielding 
+	sd = exp(-τ_d)
+
+	# Molecular self-shielding optical depth
+	# (fm clamped at 0, so trial steps of the solver with fm < 0 do not give xp1 <= 0)
+	xp1     = c_sh2 * Lsh * max(fm, 0.0) * ρ_cell + 1.0
+	xp1_2   = xp1 * xp1
+	sq_xp1  = NaNMath.sqrt(xp1)
+	τ_sh    = exp_fac * sq_xp1
+
+	# Molecular self-shielding
+	exp_xp1 = exp(-τ_sh)
+	sh2     = ((1 - ωH2) / xp1_2) + (ωH2 * exp_xp1 / sq_xp1)
+
+	# Combined shielding 
+	e_diss = sd * sh2
+
+	#################
+	# Net ionization
+    #################
+
+	# Recombination [Myr^(-1)]
+	# (fi * fi written as fi * max(fi, 0), so recombination stops for fi < 0 instead of running away)
+	recomb = c_rec * fi * max(fi, 0.0) * ρ_cell
+
+	# Ionization optical depth
+	τ_ion = c_τion * fa * ρ_cell * h
+
+	# Stellar ionization [Myr^(-1)]
+	ion_prob = -expm1(-τ_ion)
+	s_ion    = sd * η_ion * ion_prob * ψs
+
+	# UVB photoionization [Myr^(-1)]
+	uvb = sd * ΓUVB * fa
+
+	net_ionization = uvb + s_ion - recomb
+
+	#########################
+	# Stellar gas production
+    #########################
+
+	# Gas and metals produced at stellar death [Myr^(-1)]
+	R_ψs = R * ψs
+
+	s_gas_production = fma(R_ψs, -Zsn, R_ψs)
+
+	###################
+	# Net dissociation
+    ###################
+
+	# Condensation [Myr^(-1)]
+	cond = c_cond * fa * ρ_cell * (fd + fd_eff)
+
+	# Dissociation optical depth
+	τ_diss = c_τdiss * fm * ρ_cell * h
+
+	# Stellar dissociation [Myr^(-1)]
+	diss_prob = -expm1(-τ_diss)
+	s_diss    = e_diss * η_diss * diss_prob * ψs
+
+	# LW background dissociation [Myr^(-1)]
+	lwb = e_diss * ΓLWB * fm
+
+	net_dissociation = lwb + s_diss - cond
+
+	##################
+	# Net dust growth
+	##################
+
+	# Dust yield by SNe [Myr^(-1)]
+	dg_SNe = δ_d * Zsn * R_ψs
+
+	# Gas-phase fraction of the key elements
+	# (0 above the maximum dust fraction: accretion can only add metals to the grains)
+	ξ = max(0.0, 1.0 - fd / fd_max)
+
+	# Dust accretion [Myr^(-1)]
+	dg_acc = c_dg * ξ * fd * fn * ρ_cell
+
+	# Dust destruction [Myr^(-1)]
+	dd = fd * inv_T_dd * ψs
+
+	net_dust_growth = dg_SNe + dg_acc - dd
+
+	##################################################################
+    # ODE system
+	##################################################################
+
+	dydt[1] = net_ionization + s_gas_production
+    dydt[2] = net_dissociation - net_ionization
+    dydt[3] = -net_dissociation - ψs
+    dydt[4] = fma(R, -ψs, ψs)
+	dydt[5] = fma(Zsn, R_ψs, -net_dust_growth)
+	dydt[6] = net_dust_growth
+
+end;
+
+# ╔═╡ 80005099-7154-4306-9172-c9a168336e14
+const JACOBIAN_FUNCTION = construct_jacobian(system!);
+
+# ╔═╡ c291700e-3a84-49a7-85d6-592cfb3b1a11
+#####################################################################################
+# Evaluate the Jacobian
+#
+# Arguments
+# 
+#     J:          Matrix to save the results, it must have size N_EQU × N_EQU
+#     ic:         Initial condition, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+#     parameters: Parameters for the ODEs, [ρ, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
+#     t:          Unused variable to comply with the DifferentialEquations.jl API
+# 
+# Returns
+#
+#     The Jacobian matrix
+#####################################################################################
+function jacobian!(
+	J::Matrix{Float64},
+	ic::Vector{Float64},
+	parameters::Vector{Float64},
+	t::Float64=0.0,
+)
+
+	for i in 1:N_EQU
+	    for j in 1:N_EQU
+	        J[i, j] = JACOBIAN_FUNCTION[i, j](ic, parameters, t)
+	    end
+	end
+
+end;
+
+# ╔═╡ a2a12511-97d6-4e83-a21d-1c7528f486bc
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Compute the stiffness ratio
+#
+# Arguments
+# 
+#     ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, X_Si, X_C]
+#     it:          Integration time [Myr]
+#
+# Returns
+#
+#     The stiffness ratio
+#####################################################################################
+function stiffness_ratio(
+	ic::Vector{Float64},
+	base_params::Vector{Float64},
+	it::Float64,
+)::Float64
+
+	# Parameters for the ODEs
+	# ρ_cell: Density [cm^(-3)]
+	# Z:      Metallicity [dimensionless]
+	# a:      Scale factor [dimensionless]
+	# h:      Cell size [cm]
+	# X_Si:   Mass fraction of Si [dimensionless]
+	# X_C:    Mass fraction of C [dimensionless]
+	ρ_cell, Z, a, h, X_Si, X_C = base_params
+
+	ΓUVB          = compute_UVB(a)
+	ΓLWB          = compute_LWB(a)
+	η_diss, η_ion = compute_η(it, Z)
+	R, Zsn        = compute_recycled_fractions(Z)
+	fd_max, c_dg  = accretion_parameters(X_Si, X_C, Z)
+
+	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
+
+	# Allocate memory for the Jacobian
+	J = Matrix{Float64}(undef, N_EQU, N_EQU)
+
+	# Compute the Jacobian and store it in J
+	jacobian!(J, ic, parameters)
+
+	# Get the norm of the real part of the non-zero eigenvalues
+	eigen_values = filter(x -> x > eps(typeof(x)), eigvals(J) .|> real .|> abs)
+
+	# Compute the stiffness ratio
+	return maximum(eigen_values) / minimum(eigen_values)
+
+end;
+  ╠═╡ =#
+
+# ╔═╡ 4e1140be-3e61-47bd-9f9f-6b5dfbff6ae2
+#####################################################################################
+# System to be solved by DifferentialEquations.jl
+#####################################################################################
+ode_function = ODEFunction{true}(
+	system!;
+	jac=jacobian!,
+	tgrad=(dt, ic, p, t) -> nothing,
+);
+
+# ╔═╡ 4173e91c-c01a-4fa2-ae77-0408bf7d9a1b
+#####################################################################################
+# Solve the system of ODEs
+#
+# Arguments
+# 
+#     ic:          Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, X_Si, X_C]
+#     tspan:       Integration span, (ti, tf) [Myr]
+#     times:       Times at which the solution will be returned [Myr]
+#     args:        Positional arguments for the solver of DifferentialEquations.jl
+#     kwargs:      Keyword arguments for the solver of DifferentialEquations.jl
+# 
+# Returns
+#
+#     A vector of vectors [fi(t), fa(t), fm(t), fs(t), fZ(t), fd(t)] 
+#     for each t in `times`. It throws an error if the solver did not succeed
+#####################################################################################
+function integrate_model(
+    ic::Vector{Float64},
+	base_params::Vector{Float64},
+	tspan::NTuple{2,Float64};
+    times::Vector{Float64}=[tspan[2],],
+	args::Tuple=(),
+    kwargs::NamedTuple=(
+		dense=false,
+		reltol=1.0e-10,
+		abstol=1.0e-12,
+		verbose=SciMLLogging.None(),
+	),
+)::Vector{Vector{Float64}}
+
+	ρ_cell, Z, a, h, X_Si, X_C = base_params
+
+	ΓUVB          = compute_UVB(a)
+	ΓLWB          = compute_LWB(a)
+	η_diss, η_ion = compute_η(tspan[2], Z)
+	R, Zsn        = compute_recycled_fractions(Z)
+	fd_max, c_dg  = accretion_parameters(X_Si, X_C, Z)
+
+	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
+
+    sol = solve(ODEProblem(
+		ode_function,
+		ic,
+		tspan,
+		parameters,
+	), args...; kwargs...)
+
+	# Check the return code of the solver (e.g. ReturnCode.Success)
+	if !occursin("Success", string(sol.retcode))
+		error("integrate_model: the solver failed with return code $(sol.retcode)")
+	end
+
+    return sol(times).u
+
+end;
+
+# ╔═╡ ac57dfbe-f19b-4c5f-a753-5f4162e245d4
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Compute the Lyapunov spectrum
+#
+# Arguments
+# 
+#     ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, X_Si, X_C]
+#     it:          Integration time [Myr]
+#
+# Returns
+#
+#     The Lyapunov spectrum
+#####################################################################################
+function lyapunov_spectrum(
+	ic::Vector{Float64},
+	base_params::Vector{Float64},
+	it::Float64,
+)::Vector{Float64}
+
+	# Parameters for the ODEs
+	# ρ_cell: Density [cm^(-3)]
+	# Z:      Metallicity [dimensionless]
+	# a:      Scale factor [dimensionless]
+	# h:      Cell size [cm]
+	# X_Si:   Mass fraction of Si [dimensionless]
+	# X_C:    Mass fraction of C [dimensionless]
+	ρ_cell, Z, a, h, X_Si, X_C = base_params
+
+	ΓUVB          = compute_UVB(a)
+	ΓLWB          = compute_LWB(a)
+	η_diss, η_ion = compute_η(it, Z)
+	R, Zsn        = compute_recycled_fractions(Z)
+	fd_max, c_dg  = accretion_parameters(X_Si, X_C, Z)
+
+	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
+	
+	ds = CoupledODEs(system!, ic, parameters)
+
+	# Compute the Lyapunov spectrum
+	return lyapunovspectrum(ds, 100; Δt=1e-6)
+
+end;
+  ╠═╡ =#
+
+# ╔═╡ 8ade720c-37b7-4436-8bcd-8e902f52057b
+# ╠═╡ skip_as_script = true
+#=╠═╡
+stiffness_ratio(
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	[0.3, 0.57, 0.0, 0.0, 0.02, 0.01],
+	# [ρ_cell [cm^(-3)], Z [dimensionless], a [dimensionless], h [cm], X_Si [dimensionless], X_C [dimensionless]]
+	# (solar abundance pattern of Asplund 2009, scaled to Zsun)
+	[1.0, Zsun, 1.0, 3.0e20, X_Si_A09 * Zsun / Z_A09, X_C_A09 * Zsun / Z_A09],
+	# it [Myr]
+	5.0,
+)
+  ╠═╡ =#
+
+# ╔═╡ b1e67fcd-f70b-4dd2-87e5-74bef1fa201e
+# ╠═╡ skip_as_script = true
+#=╠═╡
+lyapunov_spectrum(
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	[0.3, 0.57, 0.0, 0.0, 0.02, 0.01],
+	# [ρ_cell [cm^(-3)], Z [dimensionless], a [dimensionless], h [cm], X_Si [dimensionless], X_C [dimensionless]]
+	# (solar abundance pattern of Asplund 2009, scaled to Zsun)
+	[10.0, Zsun, 1.0, 3.0e20, X_Si_A09 * Zsun / Z_A09, X_C_A09 * Zsun / Z_A09],
+	# it [Myr]
+	10.0,
+)
+  ╠═╡ =#
+
+# ╔═╡ d1f3d076-b9d6-4b92-b25c-4155b5fc464b
+# ╠═╡ skip_as_script = true
+#=╠═╡
+lyapunov_spectrum(
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	[0.3, 0.57, 0.0, 0.0, 0.02, 0.01],
+	# [ρ_cell [cm^(-3)], Z [dimensionless], a [dimensionless], h [cm], X_Si [dimensionless], X_C [dimensionless]]
+	# (solar abundance pattern of Asplund 2009, scaled to Zsun)
+	[1000.0, Zsun, 1.0, 3.0e20, X_Si_A09 * Zsun / Z_A09, X_C_A09 * Zsun / Z_A09],
+	# it [Myr]
+	10.0,
+)
+  ╠═╡ =#
 
 # ╔═╡ 477c8f59-97d1-405d-a1c8-64b7e0b9119f
 # ╠═╡ skip_as_script = true
@@ -3322,7 +3647,18 @@ md"## Equilibrium fractions"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-To find the per-equation and global equilibrium we take que ODEs and set the derivatives to $0$.
+To find the per-equation and global equilibrium we take que ODEs
+
+$\begin{aligned}
+	\frac{\mathrm{d}}{\mathrm{d}t} f_i &= S_d \, \eta_\mathrm{ion}^* \, \psi + S_d \, \Gamma_\mathrm{UVB} \, f_a + R \, (1 - Z_\mathrm{SN}) \, \psi - \frac{f_i}{\tau_\mathrm{rec}} \, , \\
+	\frac{\mathrm{d}}{\mathrm{d}t} f_a &= \frac{f_i}{\tau_\mathrm{rec}} + e_\mathrm{diss \, \Gamma_\mathrm{LWB} \, f_m} + e_\mathrm{diss} \, \eta_\mathrm{diss}^* \, \psi - S_d \, \eta_\mathrm{ion}^* \, \psi - S_d \, \Gamma_\mathrm{UVB} \, f_a - \frac{f_a}{\tau_\mathrm{cond}} \, , \\
+	\frac{\mathrm{d}}{\mathrm{d}t} f_m &= \frac{f_a}{\tau_\mathrm{cond}} - e_\mathrm{diss}  \, \eta_\mathrm{diss}^* \, \psi - e_\mathrm{diss}  \, \Gamma_\mathrm{LWB} \, f_m - \psi \, , \\
+	\frac{\mathrm{d}}{\mathrm{d}t} f_s &= \psi - R \, \psi \, , \\
+	\frac{\mathrm{d}}{\mathrm{d}t} f_Z &= R \, Z_\mathrm{SN} \, (1 - \delta_\text{d}) \, \psi + \frac{f_d}{T_\mathrm{dd}} \, \psi - \xi \, \frac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m) \, , \\
+	\frac{\mathrm{d}}{\mathrm{d}t} f_d &= R \, Z_\mathrm{SN} \, \delta_\text{d} \, \psi + \xi \, \frac{f_d}{\tau_\mathrm{dg}} \, (f_a + f_m) - \frac{f_d}{T_\mathrm{dd}} \, \psi \, .
+\end{aligned}$
+
+and set the derivatives to $0$.
 """
   ╠═╡ =#
 
@@ -3333,7 +3669,8 @@ To find the per-equation and global equilibrium we take que ODEs and set the der
 # Arguments
 # 
 #     fractions:  Mass fractions, [fi, fa, fm, fs, fZ, fd]
-#     base_parms: Parameters for the ODEs, (ρ_cell, Z, a, h, it)
+#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, X_Si, X_C]
+#     it:          Integration time [Myr]
 # 
 # Returns
 #
@@ -3341,17 +3678,19 @@ To find the per-equation and global equilibrium we take que ODEs and set the der
 #####################################################################################
 function equilibrium(
     fractions::Vector{Float64},
-	base_params::Vector{Float64};
+	base_params::Vector{Float64},
+	it::Float64,
 )::Vector{Float64}
 
-	ρ_cell, Z, a, h, it = base_params
+	ρ_cell, Z, a, h, X_Si, X_C = base_params
 
 	ΓUVB          = compute_UVB(a)
 	ΓLWB          = compute_LWB(a)
 	η_diss, η_ion = compute_η(it, Z)
 	R, Zsn        = compute_recycled_fractions(Z)
+	fd_max, c_dg  = accretion_parameters(X_Si, X_C, Z)
 
-	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h]
+	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
 
 	dydt = Vector{Float64}(undef, N_EQU)
 
@@ -3368,7 +3707,8 @@ end;
 # Arguments
 # 
 #     fractions:  Mass fractions, [fi, fa, fm, fs, fZ, fd]
-#     base_parms: Parameters for the ODEs, (ρ_cell, Z, a, h, it)
+#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, X_Si, X_C]
+#     it:          Integration time [Myr]
 #     limit:      Equilibrium criteria.
 # 
 # Returns
@@ -3377,13 +3717,13 @@ end;
 #####################################################################################
 function test_equilibrium(
     fractions::Vector{Float64},
-	base_params::Vector{Float64};
+	base_params::Vector{Float64},
+	it::Float64;
 	limit::Float64=1e-10,
 )::Vector{Bool}
 
-	time_scale = base_params[5]
-
-    return (equilibrium(fractions, base_params) ./ (1 / time_scale)) .< limit
+	# Change of each fraction during the integration time, relative to `limit`
+    return abs.(equilibrium(fractions, base_params, it) .* it) .< limit
 
 end;
 
@@ -3521,7 +3861,7 @@ begin
 		Ms = 10.0,                 # Mach number
 		deviation = (-6, 6),       # (min, max) values for s = log(ρ/ρ₀)
 		divisions = 20,            # Number of divisions for the discretization
-								   # of the density PDF
+		                                       # of the density PDF
 	)
 
     # Pre computation of the default mass fractions
@@ -3543,7 +3883,6 @@ Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
 NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-SciMLLogging = "a6db7da4-7206-11f0-1eab-35f2a5dbe1d1"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 TikzPictures = "37f6aa50-8035-52d0-81c2-5a1d08754b2d"
@@ -3551,18 +3890,17 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 UnitfulAstro = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
 
 [compat]
-CSV = "~1.1.0"
+CSV = "~1.3.0"
 ChaosTools = "~3.5.4"
 DataFrames = "~1.8.2"
 DifferentialEquations = "~8.1.1"
 Interpolations = "~0.16.3"
 Measurements = "~2.14.1"
-NaNMath = "~1.1.4"
-PlutoUI = "~0.7.83"
+NaNMath = "~1.1.5"
+PlutoUI = "~0.7.84"
 QuadGK = "~2.11.3"
-SciMLLogging = "~2.1.0"
-SpecialFunctions = "~2.9.0"
-Symbolics = "~7.43.0"
+SpecialFunctions = "~2.9.1"
+Symbolics = "~7.48.0"
 TikzPictures = "~3.5.2"
 Unitful = "~1.29.0"
 UnitfulAstro = "~1.2.2"
@@ -3572,9 +3910,9 @@ UnitfulAstro = "~1.2.2"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.13.1"
+julia_version = "1.13.3"
 manifest_format = "2.1"
-project_hash = "76e713b09e39d1452514e90f67ba6f2970f84b3b"
+project_hash = "8268437d75cd10746a02ba9a3d40ed6c7bc99d2c"
 
 [[deps.ADTypes]]
 deps = ["PrecompileTools"]
@@ -3622,10 +3960,10 @@ version = "0.4.5"
 
 [[deps.Accessors]]
 deps = ["CompositionsBase", "ConstructionBase", "Dates", "InverseFunctions", "MacroTools"]
-git-tree-sha1 = "7063ad1083578215c7c4bf410368150abe8d5524"
+git-tree-sha1 = "8c0bc12397dabf5d2dfc4b5763ec463854cc44d3"
 registries = "General"
 uuid = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
-version = "0.1.45"
+version = "0.1.46"
 
     [deps.Accessors.extensions]
     AxisKeysExt = "AxisKeys"
@@ -3647,10 +3985,10 @@ version = "0.1.45"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra"]
-git-tree-sha1 = "7c2c19b5a26e601634bf718490b89d59685f122e"
+git-tree-sha1 = "dee8388a9bec89c8713ad176f96960ae2f98598a"
 registries = "General"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "4.7.1"
+version = "4.7.4"
 weakdeps = ["SparseArrays", "StaticArrays"]
 
     [deps.Adapt.extensions]
@@ -3777,10 +4115,10 @@ version = "1.0.9+0"
 
 [[deps.CRlibm]]
 deps = ["CRlibm_jll"]
-git-tree-sha1 = "66188d9d103b92b6cd705214242e27f5737a1e5e"
+git-tree-sha1 = "32e8293800e4cf5b850fb2a8a73621daa4564d68"
 registries = "General"
 uuid = "96374032-68de-5a5b-8d9e-752f78720389"
-version = "1.0.2"
+version = "1.1.0"
 
 [[deps.CRlibm_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -3791,10 +4129,10 @@ version = "1.0.1+0"
 
 [[deps.CSV]]
 deps = ["CodecZlib", "DataStrings", "Dates", "Downloads", "Durations", "Mmap", "Parsers", "PooledArrays", "PrecompileTools", "Printf", "Tables", "Unicode"]
-git-tree-sha1 = "ed05d41d96b1a815d52e9de1ef472971bc509832"
+git-tree-sha1 = "feb15aa037b0004ed9a988a05bb6f5833a670ac7"
 registries = "General"
 uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-version = "1.1.0"
+version = "1.3.0"
 
     [deps.CSV.extensions]
     CSVDataDecimalsExt = "DataDecimals"
@@ -3821,11 +4159,11 @@ uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
 version = "0.5.2"
 
 [[deps.ChainRulesCore]]
-deps = ["Compat", "LinearAlgebra"]
-git-tree-sha1 = "12177ad6b3cad7fd50c8b3825ce24a99ad61c18f"
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "295fa9b898db109bc56df62c0fc20bd105cec00e"
 registries = "General"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.26.1"
+version = "1.26.8"
 weakdeps = ["SparseArrays"]
 
     [deps.ChainRulesCore.extensions]
@@ -3847,10 +4185,10 @@ version = "0.7.9"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
-git-tree-sha1 = "61761f58648aa7217445f24f841839b78c712232"
+git-tree-sha1 = "af523e59de94de05b9b367a2ca4d63233aacd222"
 registries = "General"
 uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
-version = "0.12.3"
+version = "0.12.5"
 weakdeps = ["StyledStrings"]
 
     [deps.ColorTypes.extensions]
@@ -3956,10 +4294,10 @@ version = "4.2.0"
 
 [[deps.DSP]]
 deps = ["Bessels", "FFTW", "IterTools", "LinearAlgebra", "Polynomials", "Random", "Reexport", "SpecialFunctions", "Statistics"]
-git-tree-sha1 = "a65cfc2999988f5ba09fc4bd8049e3ed914e5a04"
+git-tree-sha1 = "dd73b345b24e52d7b57550b69113261ef2d79c92"
 registries = "General"
 uuid = "717857b8-e6f2-59f4-9121-6e50c889abd2"
-version = "0.8.6"
+version = "0.8.7"
 weakdeps = ["OffsetArrays"]
 
     [deps.DSP.extensions]
@@ -4011,10 +4349,10 @@ version = "1.9.1"
 
 [[deps.DiffEqBase]]
 deps = ["ArrayInterface", "BracketingNonlinearSolve", "ConcreteStructs", "DocStringExtensions", "FastBroadcast", "FastClosures", "FastPower", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "Logging", "Markdown", "MuladdMacro", "PrecompileTools", "Printf", "RecursiveArrayTools", "Reexport", "RespecializeParams", "SciMLBase", "SciMLLogging", "SciMLOperators", "SciMLStructures", "Setfield", "StaticArraysCore", "SymbolicIndexingInterface", "TruncatedStacktraces"]
-git-tree-sha1 = "4e3938f036cf93f3c6acf7a7008848675d3d130f"
+git-tree-sha1 = "3af08981a379247735de45c24220867f66384c8c"
 registries = "General"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "7.21.3"
+version = "7.21.5"
 
     [deps.DiffEqBase.extensions]
     DiffEqBaseCUDAExt = "CUDA"
@@ -4055,10 +4393,10 @@ version = "7.21.3"
 
 [[deps.DiffEqCallbacks]]
 deps = ["ConcreteStructs", "DataStructures", "DiffEqBase", "DifferentiationInterface", "LinearAlgebra", "Markdown", "PrecompileTools", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArraysCore"]
-git-tree-sha1 = "74d18419405b8c196f8443aa9be9c6527bd3e6e2"
+git-tree-sha1 = "bbad42942524f183faa0898725fd2c9782e31180"
 registries = "General"
 uuid = "459566f4-90b8-5000-8ac3-15dfb0a30def"
-version = "4.19.4"
+version = "4.19.5"
 
     [deps.DiffEqCallbacks.extensions]
     DiffEqCallbacksFunctorsExt = "Functors"
@@ -4068,10 +4406,10 @@ version = "4.19.4"
 
 [[deps.DiffEqNoiseProcess]]
 deps = ["CommonSolve", "DiffEqBase", "Distributions", "GPUArraysCore", "LinearAlgebra", "Markdown", "PoissonRandom", "PrecompileTools", "QuadGK", "Random", "RecipesBase", "RecursiveArrayTools", "ResettableStacks", "SciMLBase", "StaticArraysCore", "Statistics"]
-git-tree-sha1 = "f35dd7ff63e050a6230c7e1919703843da59bbcd"
+git-tree-sha1 = "891caab6046d57486f779b529bfbfebcdeada50a"
 registries = "General"
 uuid = "77a26b50-5914-5dd7-bc55-306e6241c503"
-version = "5.36.4"
+version = "5.36.5"
 
     [deps.DiffEqNoiseProcess.extensions]
     DiffEqNoiseProcessOptimExt = "Optim"
@@ -4256,10 +4594,10 @@ uuid = "4e289a0a-7415-4d19-859d-a7e5c4648b56"
 version = "1.0.7"
 
 [[deps.EnzymeCore]]
-git-tree-sha1 = "90ab232666984c3eafa9d14cc85f8ff51cf6c353"
+git-tree-sha1 = "04c4269956f90d8f5c9acc73b774c5293481f4d7"
 registries = "General"
 uuid = "f151be2c-9106-41f4-ab19-57ee4f262869"
-version = "0.8.22"
+version = "0.8.26"
 weakdeps = ["Adapt", "ChainRulesCore"]
 
     [deps.EnzymeCore.extensions]
@@ -4268,10 +4606,10 @@ weakdeps = ["Adapt", "ChainRulesCore"]
 
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "2bfb1e047e2ad0a5ca94365340bde8005d637568"
+git-tree-sha1 = "d0f666deaf8099a7d7ac229a74402ada88898be1"
 registries = "General"
 uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
-version = "2.8.4+0"
+version = "2.9.0+0"
 
 [[deps.ExprTools]]
 git-tree-sha1 = "d2e49e7efd29719d6f28b891b0e0e159daa9d2b4"
@@ -4301,16 +4639,18 @@ version = "3.3.12+0"
 
 [[deps.FastBroadcast]]
 deps = ["ArrayInterface", "LinearAlgebra", "PrecompileTools"]
-git-tree-sha1 = "c8f8eefadaa330d982bbf5e395c34e53a13ab668"
+git-tree-sha1 = "b90aee4f191474eeda3dfa0cb588635f80820cf1"
 registries = "General"
 uuid = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
-version = "1.4.0"
+version = "1.5.0"
 
     [deps.FastBroadcast.extensions]
     FastBroadcastPolyesterExt = "Polyester"
     FastBroadcastStaticExt = "Static"
+    FixedSizeArraysExt = "FixedSizeArrays"
 
     [deps.FastBroadcast.weakdeps]
+    FixedSizeArrays = "3821ddf9-e5b5-40d5-8e25-6813ab96b5e2"
     Polyester = "f517fe37-dbe3-4b94-8317-1923a5111588"
     Static = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
 
@@ -4322,10 +4662,10 @@ version = "0.3.2"
 
 [[deps.FastPower]]
 deps = ["PrecompileTools"]
-git-tree-sha1 = "3c7269c236978d434a16ebe99f9743b9d706270a"
+git-tree-sha1 = "a6bcbd090fc6b6f022fc0ad96f77ba31b9577282"
 registries = "General"
 uuid = "a4df4552-cc26-4903-aec0-212e50a0e84b"
-version = "1.5.0"
+version = "1.5.1"
 
     [deps.FastPower.extensions]
     FastPowerEnzymeExt = "Enzyme"
@@ -4351,10 +4691,10 @@ version = "1.11.0"
 
 [[deps.FillArrays]]
 deps = ["LinearAlgebra"]
-git-tree-sha1 = "086b5fbd032baf544678cc15b52b015e4c4aceb8"
+git-tree-sha1 = "831f86fde78ab7f6470d6ba4d1161a11fb6b4ec0"
 registries = "General"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "1.17.1"
+version = "1.18.2"
 weakdeps = ["PDMats", "SparseArrays", "StaticArrays", "Statistics"]
 
     [deps.FillArrays.extensions]
@@ -4365,10 +4705,10 @@ weakdeps = ["PDMats", "SparseArrays", "StaticArrays", "Statistics"]
 
 [[deps.FindFirstFunctions]]
 deps = ["PrecompileTools"]
-git-tree-sha1 = "dcce413ffacb0be72f38b491ae4887730343d451"
+git-tree-sha1 = "93eb9afa3a53b29d8a49714b83878225402b3281"
 registries = "General"
 uuid = "64ca27bc-2ba2-4a57-88aa-44e436879224"
-version = "3.4.0"
+version = "3.4.1"
 
     [deps.FindFirstFunctions.extensions]
     FindFirstFunctionsEnzymeCoreExt = "EnzymeCore"
@@ -4406,10 +4746,10 @@ version = "0.8.6"
 
 [[deps.Fontconfig_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Expat_jll", "FreeType2_jll", "JLLWrappers", "Libdl", "Libuuid_jll", "Zlib_jll"]
-git-tree-sha1 = "f85dac9a96a01087df6e3a749840015a0ca3817d"
+git-tree-sha1 = "e1e9ba3a8f5d71e6ae698f138a1362aeabb42e9f"
 registries = "General"
 uuid = "a3f928ae-7b40-5064-980b-68af3947d34b"
-version = "2.17.1+0"
+version = "2.18.3+0"
 
 [[deps.ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions"]
@@ -4424,10 +4764,10 @@ weakdeps = ["StaticArrays"]
 
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "70329abc09b886fd2c5d94ad2d9527639c421e3e"
+git-tree-sha1 = "d95a7a3a7e0f2fffc6291bd33035830aab01310b"
 registries = "General"
 uuid = "d7e528f0-a631-5988-bf34-fe36492bcfd7"
-version = "2.14.3+1"
+version = "2.15.0+0"
 
 [[deps.FunctionMaps]]
 deps = ["CompositeTypes", "LinearAlgebra", "StaticArrays"]
@@ -4465,10 +4805,10 @@ version = "1.11.0"
 
 [[deps.GPUArraysCore]]
 deps = ["Adapt"]
-git-tree-sha1 = "0b2b3e8b8fb7c1f5ddbf498be2eb2b3b37c9c0ed"
+git-tree-sha1 = "f60436514e6d73f8ee069ae4ee0ff038fe96b69d"
 registries = "General"
 uuid = "46192b85-c4d5-4398-a991-12ede77f4527"
-version = "0.2.1"
+version = "0.2.2"
 
 [[deps.Gamma]]
 deps = ["LogExpFunctions"]
@@ -4525,10 +4865,10 @@ version = "2.8.1+1"
 
 [[deps.HypergeometricFunctions]]
 deps = ["Gamma", "LinearAlgebra"]
-git-tree-sha1 = "31bb6c92405c084617facc1d7ed9eb6c402d061e"
+git-tree-sha1 = "c28dceeadc1c9c699656a3ac9d63f79cfaa17472"
 registries = "General"
 uuid = "34004b35-14d8-5ef3-9330-4cdb6864b03a"
-version = "0.3.30"
+version = "0.3.31"
 
 [[deps.Hyperscript]]
 deps = ["Test"]
@@ -4663,10 +5003,10 @@ version = "0.7.15"
     Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [[deps.InverseFunctions]]
-git-tree-sha1 = "a779299d77cd080bf77b97535acecd73e1c5e5cb"
+git-tree-sha1 = "5cc6ad3e2bfc75a11eed92632ee341d37f4a4536"
 registries = "General"
 uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
-version = "0.1.17"
+version = "0.1.18"
 weakdeps = ["Dates", "Test"]
 
     [deps.InverseFunctions.extensions]
@@ -4680,16 +5020,16 @@ uuid = "41ab1584-1d38-5bbf-9106-f11c6c58b48f"
 version = "1.3.1"
 
 [[deps.IrrationalConstants]]
-git-tree-sha1 = "b2d91fe939cae05960e760110b328288867b5758"
+git-tree-sha1 = "d22e8bdb3f03c300a103ff23c0dd5a654c6701de"
 registries = "General"
 uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
-version = "0.2.6"
+version = "0.2.7"
 
 [[deps.IterTools]]
-git-tree-sha1 = "42d5f897009e7ff2cf88db414a389e5ed1bdd023"
+git-tree-sha1 = "123311cf9834c6ee6a8347bba9af68f255615391"
 registries = "General"
 uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
-version = "1.10.0"
+version = "1.11.0"
 
 [[deps.IteratorInterfaceExtensions]]
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
@@ -4713,10 +5053,10 @@ version = "0.2.1"
 
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "037babc10853eeb8e585418922246cb97b8e5b74"
+git-tree-sha1 = "e06b451acfb1c6fa5ea753b5042207226271f455"
 registries = "General"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
-version = "3.2.0+1"
+version = "3.2.1+0"
 
 [[deps.JuliaSyntaxHighlighting]]
 deps = ["StyledStrings"]
@@ -4725,10 +5065,10 @@ version = "1.12.0"
 
 [[deps.JumpProcesses]]
 deps = ["ADTypes", "ArrayInterface", "DataStructures", "DiffEqBase", "DiffEqCallbacks", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "PoissonRandom", "PrecompileTools", "Random", "RecursiveArrayTools", "SciMLBase", "SimpleNonlinearSolve", "StaticArrays", "SymbolicIndexingInterface"]
-git-tree-sha1 = "0332650de24eab1202f3d509dc2645a21384dd3c"
+git-tree-sha1 = "94bb904c2b04ce952a3d0bf97ed3ddcd5899f2e3"
 registries = "General"
 uuid = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
-version = "9.33.1"
+version = "10.0.1"
 
     [deps.JumpProcesses.extensions]
     JumpProcessesForwardDiffExt = "ForwardDiff"
@@ -4743,17 +5083,17 @@ version = "9.33.1"
 
 [[deps.Krylov]]
 deps = ["LinearAlgebra", "Printf", "SparseArrays"]
-git-tree-sha1 = "909890a0d1486c392128cf4bd6e038ee0c6a7af4"
+git-tree-sha1 = "b13076e4fff6ea0d0a5ddd9b939a11ca2027755a"
 registries = "General"
 uuid = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
-version = "0.10.10"
+version = "0.10.12"
 
 [[deps.LERC_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "39bca05343661c347aae0bca57a5994a0bf4f08d"
+git-tree-sha1 = "6d7c65411dda4bfa0beb7490476122b4f805cf31"
 registries = "General"
 uuid = "88015f11-f218-50d7-93a8-a6af411a945d"
-version = "4.2.0+0"
+version = "4.3.0+0"
 
 [[deps.LHLFactorization]]
 deps = ["LinearAlgebra", "PrecompileTools"]
@@ -4804,7 +5144,7 @@ version = "1.0.0"
 [[deps.LibCURL_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "LibSSH2_jll", "Libdl", "OpenSSL_jll", "Zlib_jll", "Zstd_jll", "nghttp2_jll"]
 uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
-version = "8.18.0+1"
+version = "8.22.0+0"
 
 [[deps.LibGit2]]
 deps = ["LibGit2_jll", "NetworkOptions", "Printf", "SHA"]
@@ -4814,7 +5154,7 @@ version = "1.11.0"
 [[deps.LibGit2_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "LibSSH2_jll", "Libdl", "OpenSSL_jll", "PCRE2_jll", "Zlib_jll"]
 uuid = "e37daf67-58a4-590a-8e99-b0245dd2ffc5"
-version = "1.9.1+0"
+version = "1.9.7+0"
 
 [[deps.LibSSH2_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl", "OpenSSL_jll", "Zlib_jll"]
@@ -4841,10 +5181,10 @@ version = "1.18.0+0"
 
 [[deps.Libmount_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "cc3ad4faf30015a3e8094c9b5b7f19e85bdf2386"
+git-tree-sha1 = "b8a91037379e1fd661e9b5ff3d7a770424b1f9f2"
 registries = "General"
 uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
-version = "2.42.0+0"
+version = "2.42.4+0"
 
 [[deps.Libtiff_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "XZ_jll", "Zlib_jll", "Zstd_jll"]
@@ -4855,10 +5195,10 @@ version = "4.7.3+0"
 
 [[deps.Libuuid_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "d620582b1f0cbe2c72dd1d5bd195a9ce73370ab1"
+git-tree-sha1 = "9e887184f306b28dbfcff88cefbb0ec80f1aa9e0"
 registries = "General"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
-version = "2.42.0+0"
+version = "2.42.4+0"
 
 [[deps.LineSearch]]
 deps = ["ADTypes", "CommonSolve", "ConcreteStructs", "FastClosures", "LinearAlgebra", "MaybeInplace", "PrecompileTools", "SciMLBase", "SciMLJacobianOperators", "StaticArraysCore"]
@@ -4885,10 +5225,10 @@ version = "1.13.0"
 
 [[deps.LinearSolve]]
 deps = ["AMD", "ArrayInterface", "ConcreteStructs", "DocStringExtensions", "EnumX", "GPUArraysCore", "InteractiveUtils", "Krylov", "LHLFactorization", "Libdl", "LinearAlgebra", "MKL_jll", "Markdown", "OpenBLAS_jll", "PrecompileTools", "Preferences", "PureKLU", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLLogging", "SciMLOperators", "SciMLStructures", "Setfield", "SparseArrays", "SparseColumnPivotedQR", "StaticArraysCore"]
-git-tree-sha1 = "308c25a9f0606d5f17770e21dc485fcac7df62cf"
+git-tree-sha1 = "e3e84c5c330ea65568a85aef00031e2b870b0e99"
 registries = "General"
 uuid = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
-version = "5.18.2"
+version = "5.18.3"
 
     [deps.LinearSolve.extensions]
     LinearSolveAMDGPUExt = "AMDGPU"
@@ -4994,10 +5334,10 @@ version = "2.19.1+0"
 
 [[deps.LogExpFunctions]]
 deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "b85e2797b2409570e84c4de46238c0ed5f6476ae"
+git-tree-sha1 = "28d620bcdb37a3fb02de9f521928ee453690f414"
 registries = "General"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "1.0.2"
+version = "1.0.3"
 
     [deps.LogExpFunctions.extensions]
     LogExpFunctionsChainRulesCoreExt = "ChainRulesCore"
@@ -5087,10 +5427,10 @@ version = "2.14.1"
 
 [[deps.Missings]]
 deps = ["DataAPI"]
-git-tree-sha1 = "ec4f7fbeab05d7747bdf98eb74d130a2a2ed298d"
+git-tree-sha1 = "d9d20d6eb2a3290ba5c70a1c013b45305cc39c9e"
 registries = "General"
 uuid = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
-version = "1.2.0"
+version = "1.2.1"
 
 [[deps.Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
@@ -5105,7 +5445,7 @@ version = "0.3.13"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2026.8.13"
+version = "2026.10.20"
 
 [[deps.MuladdMacro]]
 deps = ["PrecompileTools"]
@@ -5131,10 +5471,10 @@ version = "0.5.20"
 
 [[deps.MutableArithmetics]]
 deps = ["LinearAlgebra", "SparseArrays", "Test"]
-git-tree-sha1 = "7fc67976fca2c577ca96257061e4785463bb9fb8"
+git-tree-sha1 = "ffd1161361638e5f0bb796a095b0fdc230d6f019"
 registries = "General"
 uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
-version = "1.8.1"
+version = "1.9.3"
 
 [[deps.NLSolversBase]]
 deps = ["ADTypes", "DifferentiationInterface", "FiniteDiff", "LinearAlgebra"]
@@ -5145,10 +5485,10 @@ version = "8.0.1"
 
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
-git-tree-sha1 = "dbd2e8cd2c1c27f0b584f6661b4309609c5a685e"
+git-tree-sha1 = "676c0f1c1c34224d6869675047a54b42fdc7b8c5"
 registries = "General"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
-version = "1.1.4"
+version = "1.1.5"
 
 [[deps.NearestNeighbors]]
 deps = ["AbstractTrees", "Distances", "StaticArrays"]
@@ -5204,10 +5544,10 @@ version = "4.32.0"
 
 [[deps.NonlinearSolveBase]]
 deps = ["ADTypes", "Adapt", "ArrayInterface", "CommonSolve", "Compat", "ConcreteStructs", "DifferentiationInterface", "EnumX", "EnzymeCore", "FastClosures", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "LogExpFunctions", "Markdown", "MaybeInplace", "PreallocationTools", "PrecompileTools", "Preferences", "Printf", "RecursiveArrayTools", "RespecializeParams", "SciMLBase", "SciMLJacobianOperators", "SciMLLogging", "SciMLOperators", "SciMLStructures", "Setfield", "StaticArraysCore", "SymbolicIndexingInterface", "TimerOutputs"]
-git-tree-sha1 = "f4f5ebf8bfd9bfafdc4116fb3715dfd50fe4a7bd"
+git-tree-sha1 = "f83b1fb97c02b99390346e13a71a027a59dc2459"
 registries = "General"
 uuid = "be0214bd-f91f-a760-ac4e-3421ce2b2da0"
-version = "2.54.1"
+version = "2.55.1"
 
     [deps.NonlinearSolveBase.extensions]
     NonlinearSolveBaseBandedMatricesExt = "BandedMatrices"
@@ -5301,7 +5641,7 @@ version = "0.8.7+0"
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-version = "3.5.6+0"
+version = "3.5.8+0"
 
 [[deps.OpenSpecFun_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl"]
@@ -5324,10 +5664,10 @@ version = "2.3.2"
     MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 
 [[deps.OrderedCollections]]
-git-tree-sha1 = "f9b03759e9ef463718934fbed30820b39997511e"
+git-tree-sha1 = "b079a6affebde167dad8ffe0d670b53917fbcb68"
 registries = "General"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
-version = "2.0.2"
+version = "2.0.3"
 
 [[deps.OrdinaryDiffEq]]
 deps = ["ADTypes", "CommonSolve", "DiffEqBase", "DocStringExtensions", "OrdinaryDiffEqBDF", "OrdinaryDiffEqCore", "OrdinaryDiffEqDefault", "OrdinaryDiffEqRosenbrock", "OrdinaryDiffEqTsit5", "OrdinaryDiffEqVerner", "SciMLBase", "SciMLLogging"]
@@ -5338,17 +5678,17 @@ version = "7.8.1"
 
 [[deps.OrdinaryDiffEqBDF]]
 deps = ["ADTypes", "ArrayInterface", "DiffEqBase", "FastBroadcast", "LinearAlgebra", "MacroTools", "MuladdMacro", "OrdinaryDiffEqCore", "OrdinaryDiffEqDifferentiation", "OrdinaryDiffEqNonlinearSolve", "OrdinaryDiffEqSDIRK", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "TruncatedStacktraces"]
-git-tree-sha1 = "42650454ef40bfd71443daa2751c6a6f9aa1120a"
+git-tree-sha1 = "06dddbb32c023b4fc42f620bc7ff98f72d3d1f5b"
 registries = "General"
 uuid = "6ad6398a-0878-4a85-9266-38940aa047c8"
-version = "2.4.12"
+version = "2.4.14"
 
 [[deps.OrdinaryDiffEqCore]]
 deps = ["ADTypes", "Accessors", "Adapt", "ArrayInterface", "BinaryHeaps", "CommonSolve", "ConstructionBase", "DiffEqBase", "DocStringExtensions", "EnumX", "EnzymeCore", "FastBroadcast", "FastClosures", "FastPower", "FindFirstFunctions", "FunctionWrappers", "FunctionWrappersWrappers", "InteractiveUtils", "LinearAlgebra", "Logging", "MacroTools", "MuladdMacro", "PrecompileTools", "Preferences", "Printf", "Random", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLLogging", "SciMLOperators", "SciMLStructures", "SymbolicIndexingInterface", "TruncatedStacktraces"]
-git-tree-sha1 = "2815c99c179c5c9d1a82d63394a975b67ef6b69c"
+git-tree-sha1 = "5765dd5605c88f1db2b3630df6f291751a96cd16"
 registries = "General"
 uuid = "bbf590c4-e513-4bbe-9b18-05decba2e5d8"
-version = "4.18.1"
+version = "4.19.1"
 
     [deps.OrdinaryDiffEqCore.extensions]
     OrdinaryDiffEqCoreMooncakeExt = "Mooncake"
@@ -5369,10 +5709,10 @@ version = "2.6.2"
 
 [[deps.OrdinaryDiffEqDifferentiation]]
 deps = ["ADTypes", "ArrayInterface", "ConcreteStructs", "ConstructionBase", "DiffEqBase", "DifferentiationInterface", "FastBroadcast", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "LinearAlgebra", "LinearSolve", "OrdinaryDiffEqCore", "SciMLBase", "SciMLOperators", "SparseMatrixColorings", "StaticArraysCore"]
-git-tree-sha1 = "57ebe5c7130f1def087d4ebc01a4959bba8c7689"
+git-tree-sha1 = "7bab95310a175e7b24b419cdc49d234c35a13a22"
 registries = "General"
 uuid = "4302a76b-040a-498a-8c04-15b101fed76b"
-version = "3.12.4"
+version = "3.12.5"
 weakdeps = ["SparseArrays"]
 
     [deps.OrdinaryDiffEqDifferentiation.extensions]
@@ -5380,10 +5720,10 @@ weakdeps = ["SparseArrays"]
 
 [[deps.OrdinaryDiffEqNonlinearSolve]]
 deps = ["ADTypes", "ArrayInterface", "CommonSolve", "ConstructionBase", "DiffEqBase", "FastBroadcast", "FastClosures", "ForwardDiff", "LinearAlgebra", "LinearSolve", "MuladdMacro", "NonlinearSolve", "NonlinearSolveBase", "OrdinaryDiffEqCore", "OrdinaryDiffEqDifferentiation", "PreallocationTools", "RecursiveArrayTools", "SciMLBase", "SciMLOperators", "SciMLPublic", "SimpleNonlinearSolve", "SparseArrays", "StaticArraysCore"]
-git-tree-sha1 = "3bc20fcc25eae4d01b2884a1e596af2a14ce7829"
+git-tree-sha1 = "19dcb7f30de00a97d4c4e39094f398eeca31080a"
 registries = "General"
 uuid = "127b3ac7-2247-4354-8eb6-78cf4e7c58e8"
-version = "2.9.9"
+version = "2.9.10"
 
 [[deps.OrdinaryDiffEqRosenbrock]]
 deps = ["ADTypes", "ArrayInterface", "DiffEqBase", "DifferentiationInterface", "FastBroadcast", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "LinearSolve", "MacroTools", "MuladdMacro", "OrdinaryDiffEqCore", "OrdinaryDiffEqDifferentiation", "OrdinaryDiffEqRosenbrockTableaus", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase"]
@@ -5400,10 +5740,10 @@ version = "2.4.2"
 
 [[deps.OrdinaryDiffEqSDIRK]]
 deps = ["ADTypes", "CommonSolve", "ConstructionBase", "DiffEqBase", "FastBroadcast", "LinearAlgebra", "MacroTools", "MuladdMacro", "OrdinaryDiffEqCore", "OrdinaryDiffEqDifferentiation", "OrdinaryDiffEqNonlinearSolve", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "TruncatedStacktraces"]
-git-tree-sha1 = "693be93138c2e1f13d56a8e4d0114936492dd3db"
+git-tree-sha1 = "9e2bd5473cf2fb7c813f7c3f93a1f5a61b5a699a"
 registries = "General"
 uuid = "2d112036-d095-4a1e-ab9a-08536f3ecdbf"
-version = "2.9.7"
+version = "2.9.8"
 
 [[deps.OrdinaryDiffEqTsit5]]
 deps = ["CommonSolve", "DiffEqBase", "FastBroadcast", "LinearAlgebra", "MuladdMacro", "OrdinaryDiffEqCore", "PrecompileTools", "Preferences", "RecursiveArrayTools", "Reexport", "SciMLBase", "TruncatedStacktraces"]
@@ -5422,7 +5762,7 @@ version = "2.4.2"
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
-version = "10.46.0+0"
+version = "10.47.0+0"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
@@ -5437,10 +5777,10 @@ weakdeps = ["StatsBase"]
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools"]
-git-tree-sha1 = "663e8b48b789916221e0765393b289ca6c88f24e"
+git-tree-sha1 = "91503bbab255aec9374145accd1b09c7e108cd54"
 registries = "General"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "3.0.0"
+version = "3.0.5"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "Libdl"]
@@ -5460,24 +5800,24 @@ weakdeps = ["REPL"]
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Downloads", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "e189d0623e7ce9c37389bac17e80aac3b0302e75"
+git-tree-sha1 = "9869376035f47756b8b8e711fd0d06a06d51da6f"
 registries = "General"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.83"
+version = "0.7.84"
 
 [[deps.PoissonRandom]]
 deps = ["LogExpFunctions", "PrecompileTools", "Random"]
-git-tree-sha1 = "faa278c0dc901606775554f6171350ad962d0e18"
+git-tree-sha1 = "7b7becc6ada13786479af8c5d08e7f7fe7d68301"
 registries = "General"
 uuid = "e409e4f3-bfea-5376-8464-e040bb5c01ab"
-version = "0.4.13"
+version = "0.4.14"
 
 [[deps.Polynomials]]
 deps = ["LinearAlgebra", "OrderedCollections", "Setfield", "SparseArrays"]
-git-tree-sha1 = "9aa2cf5b3a0f55ef0ac4f26c8b92cc6d08b06fbf"
+git-tree-sha1 = "d86ea3a5364b306b8547e02741830e69c2d04448"
 registries = "General"
 uuid = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
-version = "4.1.3"
+version = "4.1.6"
 
     [deps.Polynomials.extensions]
     PolynomialsChainRulesCoreExt = "ChainRulesCore"
@@ -5540,10 +5880,10 @@ version = "1.3.4"
 
 [[deps.Preferences]]
 deps = ["TOML"]
-git-tree-sha1 = "5005266de4bfe50e53ff44a5cb5c540b6e47a254"
+git-tree-sha1 = "aef1987d90dcc2e2cbd919ad10b2d25bcce4f418"
 registries = "General"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
-version = "1.6.0"
+version = "1.6.1"
 
 [[deps.PrettyTables]]
 deps = ["Crayons", "LaTeXStrings", "Markdown", "PrecompileTools", "Printf", "REPL", "Reexport", "StringManipulation", "StyledStrings", "Tables"]
@@ -5575,11 +5915,19 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 version = "1.11.0"
 
 [[deps.ProgressMeter]]
-deps = ["Distributed", "Printf"]
-git-tree-sha1 = "fbb92c6c56b34e1a2c4c36058f68f332bec840e7"
+deps = ["Printf"]
+git-tree-sha1 = "ce5ba3edfdeba107a721748d53b5f5887f415853"
 registries = "General"
 uuid = "92933f4c-e287-5a05-a399-4b506db050ca"
-version = "1.11.0"
+version = "1.13.0"
+
+    [deps.ProgressMeter.extensions]
+    ProgressMeterDistributedExt = "Distributed"
+    ProgressMeterIJuliaExt = "IJulia"
+
+    [deps.ProgressMeter.weakdeps]
+    Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
+    IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
 
 [[deps.PtrArrays]]
 git-tree-sha1 = "4fbbafbc6251b883f4d2705356f3641f3652a7fe"
@@ -5647,10 +5995,10 @@ version = "1.4.0"
 
 [[deps.RecursiveArrayTools]]
 deps = ["Adapt", "ArrayInterface", "GPUArraysCore", "LinearAlgebra", "PrecompileTools", "RecipesBase", "SciMLPublic", "SciMLStructures", "StaticArraysCore", "SymbolicIndexingInterface"]
-git-tree-sha1 = "258850fd9188f5b1ac44bb03ab9225b4084500eb"
+git-tree-sha1 = "47fe0f2a25b5e98412c65227f8a649d26bb7f1b9"
 registries = "General"
 uuid = "731186ca-8d62-57ce-b412-fbd966d074cd"
-version = "4.5.3"
+version = "4.5.6"
 
     [deps.RecursiveArrayTools.extensions]
     RecursiveArrayToolsCUDAExt = "CUDA"
@@ -5769,10 +6117,10 @@ version = "1.0.0"
 
 [[deps.SciMLBase]]
 deps = ["ADTypes", "Accessors", "Adapt", "ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "FindFirstFunctions", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "LoggingExtras", "Markdown", "PreallocationTools", "PrecompileTools", "Preferences", "Printf", "Random", "RecipesBase", "RecursiveArrayTools", "RuntimeGeneratedFunctions", "SciMLOperators", "SciMLPublic", "SciMLStructures", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface"]
-git-tree-sha1 = "46345faa1fa3f43c24c241653c3b2719672b8d99"
+git-tree-sha1 = "85f85c3c5b949e7d691047e758e3fdb77c21310c"
 registries = "General"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "3.57.0"
+version = "3.58.0"
 
     [deps.SciMLBase.extensions]
     SciMLBaseChainRulesCoreExt = "ChainRulesCore"
@@ -5790,6 +6138,7 @@ version = "3.57.0"
     SciMLBasePythonCallExt = "PythonCall"
     SciMLBaseRCallExt = "RCall"
     SciMLBaseReactantCoreExt = "ReactantCore"
+    SciMLBaseReactantExt = "Reactant"
     SciMLBaseReverseDiffExt = ["ReverseDiff", "ForwardDiff"]
     SciMLBaseStaticArraysExt = "StaticArrays"
     SciMLBaseTrackerExt = "Tracker"
@@ -5813,6 +6162,7 @@ version = "3.57.0"
     PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
     PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
     RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
+    Reactant = "3c362404-f566-11ee-1572-e11a4b42c853"
     ReactantCore = "a3311ec8-5e00-46d5-b541-4f83e724a433"
     ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
     StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
@@ -5822,10 +6172,10 @@ version = "3.57.0"
 
 [[deps.SciMLJacobianOperators]]
 deps = ["ADTypes", "ArrayInterface", "ConcreteStructs", "ConstructionBase", "DifferentiationInterface", "FastClosures", "LinearAlgebra", "SciMLBase", "SciMLOperators"]
-git-tree-sha1 = "e58036956d27635a57276b05bdbbe8b22376a805"
+git-tree-sha1 = "781d5413c2991e581da86979b0d9f86f9a034a1c"
 registries = "General"
 uuid = "19f34311-ddf3-4b8b-af20-060888a46c0e"
-version = "0.1.19"
+version = "0.1.20"
 
 [[deps.SciMLLogging]]
 deps = ["Logging", "LoggingExtras", "PrecompileTools", "Preferences"]
@@ -5842,10 +6192,10 @@ version = "2.1.0"
 
 [[deps.SciMLOperators]]
 deps = ["Accessors", "Adapt", "ArrayInterface", "DocStringExtensions", "LinearAlgebra", "PrecompileTools", "SciMLPublic"]
-git-tree-sha1 = "6c97cd41488ccd362363ff9c883dafcff18da45c"
+git-tree-sha1 = "3feb8a7bce88bb3ef051a4eda8106004ad040b6f"
 registries = "General"
 uuid = "c0aeaf25-5076-4817-a8d5-81caf7dfa961"
-version = "1.30.2"
+version = "1.30.4"
 
     [deps.SciMLOperators.extensions]
     SciMLOperatorsLoopVectorizationExt = "LoopVectorization"
@@ -5864,17 +6214,17 @@ version = "1.3.0"
 
 [[deps.SciMLStructures]]
 deps = ["ArrayInterface", "PrecompileTools"]
-git-tree-sha1 = "5c2f9dbf6f07eea6bc9e93f117b00b7939a79f9e"
+git-tree-sha1 = "4b8fc0ffe22b4ecba7a02f1fec0b3757db014d0c"
 registries = "General"
 uuid = "53ae85a6-f571-4167-b2af-e1d143709226"
-version = "1.10.5"
+version = "1.10.6"
 
 [[deps.SentinelArrays]]
 deps = ["Dates", "Random"]
-git-tree-sha1 = "084c47c7c5ce5cfecefa0a98dff69eb3646b5a80"
+git-tree-sha1 = "4910c2c2f334d74735b7a8fd02f837ead352576a"
 registries = "General"
 uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
-version = "1.4.10"
+version = "1.4.11"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -5882,10 +6232,10 @@ version = "1.11.0"
 
 [[deps.Setfield]]
 deps = ["ConstructionBase", "Future", "MacroTools", "StaticArraysCore"]
-git-tree-sha1 = "c5391c6ace3bc430ca630251d02ea9687169ca68"
+git-tree-sha1 = "89880a2cca5cabc68c9023f58e544beda1d2fc1f"
 registries = "General"
 uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
-version = "1.1.2"
+version = "1.2.0"
 
 [[deps.SharedArrays]]
 deps = ["Distributed", "Mmap", "Random", "Serialization"]
@@ -5952,12 +6302,13 @@ weakdeps = ["AMD"]
 
 [[deps.SparseMatrixColorings]]
 deps = ["ADTypes", "DocStringExtensions", "LinearAlgebra", "PrecompileTools", "Random", "SparseArrays"]
-git-tree-sha1 = "63e1776f40bbd5e7394edce08e62f852b1384baf"
+git-tree-sha1 = "0730f14b07c68fd3b3a6fae89a829a5124a7ae7e"
 registries = "General"
 uuid = "0a514795-09f3-496d-8182-132a7b665d35"
-version = "0.4.28"
+version = "0.4.29"
 
     [deps.SparseMatrixColorings.extensions]
+    SparseMatrixColoringsAMDGPUExt = "AMDGPU"
     SparseMatrixColoringsCUDAExt = ["CUDA", "cuSPARSE"]
     SparseMatrixColoringsCliqueTreesExt = "CliqueTrees"
     SparseMatrixColoringsColorsExt = "Colors"
@@ -5965,6 +6316,7 @@ version = "0.4.28"
     SparseMatrixColoringsJuMPExt = ["JuMP", "MathOptInterface"]
 
     [deps.SparseMatrixColorings.weakdeps]
+    AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
     CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
     CliqueTrees = "60701a23-6482-424a-84db-faee86b9b1f8"
     Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
@@ -5975,10 +6327,10 @@ version = "0.4.28"
 
 [[deps.SpecialFunctions]]
 deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "429071b23f4c9a13fb6582f807cc2ef454082408"
+git-tree-sha1 = "88ef0d98204515bc53dd4aaea5f7788882d1b66c"
 registries = "General"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.9.0"
+version = "2.9.1"
 weakdeps = ["ChainRulesCore"]
 
     [deps.SpecialFunctions.extensions]
@@ -5986,10 +6338,18 @@ weakdeps = ["ChainRulesCore"]
 
 [[deps.StarAlgebras]]
 deps = ["LinearAlgebra", "MutableArithmetics", "SparseArrays"]
-git-tree-sha1 = "235b1f9d287bbf34083b3d0829343a7942c0ad1c"
+git-tree-sha1 = "95c5ea2eef117ba1310ee14aa1737d3ea2d262ae"
 registries = "General"
 uuid = "0c0c59c1-dc5f-42e9-9a8b-b5dc384a6cd1"
-version = "0.3.0"
+version = "0.3.1"
+
+    [deps.StarAlgebras.extensions]
+    StarAlgebrasJuMPExt = "JuMP"
+    StarAlgebrasMathOptInterfaceExt = "MathOptInterface"
+
+    [deps.StarAlgebras.weakdeps]
+    JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+    MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 
 [[deps.StateSpaceSets]]
 deps = ["Distances", "LinearAlgebra", "Neighborhood", "Random", "StaticArraysCore", "Statistics"]
@@ -6000,10 +6360,10 @@ version = "2.5.5"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "PrecompileTools", "Random", "StaticArraysCore"]
-git-tree-sha1 = "39e70e0ab5d7f89833a62ab7c79df15d4fc417c1"
+git-tree-sha1 = "8a8a52f887f38d44014e24ee46b8a7311c625f6d"
 registries = "General"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.9.22"
+version = "1.9.24"
 weakdeps = ["ChainRulesCore", "Statistics"]
 
     [deps.StaticArrays.extensions]
@@ -6055,17 +6415,17 @@ weakdeps = ["ChainRulesCore", "InverseFunctions"]
 
 [[deps.StochasticDiffEqCore]]
 deps = ["ADTypes", "Adapt", "ArrayInterface", "CommonSolve", "DiffEqBase", "DiffEqNoiseProcess", "FastPower", "FiniteDiff", "ForwardDiff", "JumpProcesses", "LinearAlgebra", "Logging", "MuladdMacro", "OrdinaryDiffEqCore", "Random", "RecursiveArrayTools", "Reexport", "SciMLBase", "SciMLLogging", "SciMLOperators", "SimpleNonlinearSolve", "SparseArrays", "StaticArrays", "StochasticDiffEqLevyArea"]
-git-tree-sha1 = "d4e1a49afe72070becb3a10b2080e4289fd2fcfa"
+git-tree-sha1 = "0c59edcc1d619c58a5fdba92b14d47d44590d713"
 registries = "General"
 uuid = "19c5a474-6cd1-4a5f-be79-46dc34e54d7f"
-version = "2.2.3"
+version = "2.2.5"
 
 [[deps.StochasticDiffEqHighOrder]]
 deps = ["DiffEqBase", "DiffEqNoiseProcess", "LinearAlgebra", "MuladdMacro", "OrdinaryDiffEqCore", "RecursiveArrayTools", "Reexport", "SciMLBase", "StaticArrays", "StochasticDiffEqCore"]
-git-tree-sha1 = "b358d8aed9c1448e9d0ebe168104d985784b8f88"
+git-tree-sha1 = "6e416fdb64d6c26538f39cd3259173a31318d6ad"
 registries = "General"
 uuid = "0520c28c-50fd-4d16-9c96-902fc80b3bab"
-version = "2.2.0"
+version = "2.2.1"
 
 [[deps.StochasticDiffEqLevyArea]]
 deps = ["LinearAlgebra", "Random", "SpecialFunctions"]
@@ -6107,17 +6467,17 @@ weakdeps = ["PrettyTables"]
 
 [[deps.SymbolicLimits]]
 deps = ["PrecompileTools", "SymbolicUtils", "TermInterface"]
-git-tree-sha1 = "3780b4d8aaa1db8996a67146ac7d4ac20606f56e"
+git-tree-sha1 = "cdf3f5760ff2ece5abe16f26a92a3f7da0eb8276"
 registries = "General"
 uuid = "19f23fe9-fdab-4a78-91af-e7b7767979c3"
-version = "1.2.1"
+version = "1.2.2"
 
 [[deps.SymbolicUtils]]
 deps = ["AbstractTrees", "ArrayInterface", "Combinatorics", "ConstructionBase", "DataStructures", "DocStringExtensions", "DynamicPolynomials", "EnumX", "ExproniconLite", "Graphs", "LinearAlgebra", "MacroTools", "Moshi", "MultivariatePolynomials", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "ReadOnlyArrays", "SciMLPublic", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArraysCore", "SymbolicIndexingInterface", "TaskLocalValues", "TermInterface", "WeakCacheSets"]
-git-tree-sha1 = "5b6c4665d3c22dda9c991a9426e72e9fe02305e6"
+git-tree-sha1 = "05972ad476e67448b8364697b9c2c090eb69db1d"
 registries = "General"
 uuid = "d1185830-fcd6-423d-90d6-eec64667417b"
-version = "4.49.0"
+version = "4.54.0"
 
     [deps.SymbolicUtils.extensions]
     SymbolicUtilsChainRulesCoreExt = "ChainRulesCore"
@@ -6133,10 +6493,10 @@ version = "4.49.0"
 
 [[deps.Symbolics]]
 deps = ["ADTypes", "AbstractPlutoDingetjes", "ArrayInterface", "Bijections", "CommonWorldInvalidations", "ConstructionBase", "DataStructures", "DiffRules", "DocStringExtensions", "DomainSets", "DynamicPolynomials", "IntervalSets", "Libdl", "LinearAlgebra", "LogExpFunctions", "MacroTools", "Markdown", "Moshi", "MultivariatePolynomials", "MutableArithmetics", "NaNMath", "PrecompileTools", "Preferences", "Primes", "RecipesBase", "RuntimeGeneratedFunctions", "SciMLPublic", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArraysCore", "SymbolicIndexingInterface", "SymbolicLimits", "SymbolicUtils", "TermInterface"]
-git-tree-sha1 = "d23970b06c3690e56a696f240b72c3abdda6decf"
+git-tree-sha1 = "49a65a35d6fb99d152ad7266f8acd278da7e8d83"
 registries = "General"
 uuid = "0c5d862f-8b57-4792-8d23-62f2024744c7"
-version = "7.43.0"
+version = "7.48.0"
 
     [deps.Symbolics.extensions]
     SymbolicsD3TreesExt = "D3Trees"
@@ -6194,10 +6554,11 @@ uuid = "ed4db957-447d-4319-bfb6-7fa9ae7ecf34"
 version = "0.1.3"
 
 [[deps.TermInterface]]
-git-tree-sha1 = "d673e0aca9e46a2f63720201f55cc7b3e7169b16"
+deps = ["PrecompileTools"]
+git-tree-sha1 = "d6984451701c6462ce685d0e2d4f2c47cd966773"
 registries = "General"
 uuid = "8ea1fca8-c5ef-4a55-8b96-4e9afe9c9a3c"
-version = "2.0.0"
+version = "2.0.1"
 
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
@@ -6244,10 +6605,11 @@ uuid = "781d530d-4396-4725-bb49-402e4bee1e77"
 version = "1.4.0"
 
 [[deps.URIs]]
-git-tree-sha1 = "908fec9df6c5de98548ead82a468c95ccf6cd263"
+deps = ["Serialization"]
+git-tree-sha1 = "eb3b85ca904a1d1647b15acc091b113b8874b648"
 registries = "General"
 uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
-version = "1.7.0"
+version = "1.7.3"
 
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
@@ -6325,10 +6687,10 @@ version = "5.8.4+0"
 
 [[deps.Xorg_libX11_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxcb_jll", "Xorg_xtrans_jll"]
-git-tree-sha1 = "808090ede1d41644447dd5cbafced4731c56bd2f"
+git-tree-sha1 = "ce91b54a5f90c4f27df6950706234b34e49cf79e"
 registries = "General"
 uuid = "4f6342f7-b3d2-589e-9d20-edeb45f2b2bc"
-version = "1.8.13+0"
+version = "1.8.14+0"
 
 [[deps.Xorg_libXau_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -6353,10 +6715,10 @@ version = "1.3.8+0"
 
 [[deps.Xorg_libXrender_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
-git-tree-sha1 = "7ed9347888fac59a618302ee38216dd0379c480d"
+git-tree-sha1 = "a54cf54677c9f6eac0d97e9d757c233b56bc21b9"
 registries = "General"
 uuid = "ea2f1a96-1ddc-540d-b46f-429655e07cfa"
-version = "0.9.12+0"
+version = "0.9.13+0"
 
 [[deps.Xorg_libxcb_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libXau_jll", "Xorg_libXdmcp_jll"]
@@ -6375,7 +6737,7 @@ version = "1.6.0+0"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.3.1+2"
+version = "1.3.2+0"
 
 [[deps.Zstd_jll]]
 deps = ["CompilerSupportLibraries_jll", "Libdl"]
@@ -6389,27 +6751,27 @@ version = "5.15.0+0"
 
 [[deps.libpng_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "32781be40fe86735af02eae0dd22754e4b5f779d"
+git-tree-sha1 = "1fcd6cf05d23adab0b5ffc496d020537215751dc"
 registries = "General"
 uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
-version = "1.6.59+0"
+version = "1.6.59+1"
 
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
-version = "1.67.1+0"
+version = "1.70.0+0"
 
 [[deps.oneTBB_jll]]
 deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
-git-tree-sha1 = "da8c1f6eee04831f14edcfa5dae611d309807e57"
+git-tree-sha1 = "ed2d8d4ad96c03d3abe3382cdbbdea9489b63636"
 registries = "General"
 uuid = "1317d2d5-d96f-522e-a858-c73665f53c3e"
-version = "2022.3.0+0"
+version = "2023.1.0+0"
 
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
-version = "17.8.2+0"
+version = "17.8.3+0"
 
 [[deps.tectonic_jll]]
 deps = ["Artifacts", "Fontconfig_jll", "FreeType2_jll", "Graphite2_jll", "HarfBuzz_ICU_jll", "HarfBuzz_jll", "ICU_jll", "JLLWrappers", "Libdl", "OpenSSL_jll", "Zlib_jll", "libpng_jll"]
@@ -6455,24 +6817,16 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╟─6cab6cb7-a432-40b6-9390-ad0083fe486d
 # ╠═38e91d0d-1020-44a8-becc-8542fd600104
 # ╟─4b81f302-9637-4161-b745-8ac39b9e31d3
-# ╟─f525b379-b5e2-48bc-af1a-e57436f6176e
-# ╠═c01cf078-c0cb-4000-bf76-a90cbeb10b89
 # ╟─46c5bd5a-21b1-4f92-8eb1-a11ec2a0c94a
-# ╠═9c5b30d5-08aa-48a8-9ae2-c3b6c432ab89
-# ╠═002cfcdd-41a5-43e5-8cbe-8a1d8b6d5793
-# ╟─ce2383dc-c34f-4b56-8501-42ce0539c95c
-# ╠═a3d1e1bf-c513-4d6b-a43b-3dab0106f1a5
-# ╟─5680e62b-973b-4a60-bb3f-8785ce07e581
-# ╠═47bf94da-1368-41bd-ba46-c9c1f75cf44e
+# ╟─866df30a-7a45-4821-a4ef-fa886040d9c0
 # ╟─9af6ce74-5678-4b48-8758-37b0d5a6f0e4
 # ╠═a9c6a292-086e-4aa0-9856-78d3ab3fbe35
 # ╟─5890b699-b7de-47a3-bee7-1e7dd7663fbe
 # ╠═ef79392b-395c-497a-9c0e-dc2cd468f6e1
 # ╟─8c9ab125-2acb-4732-a9bf-7838e819e4f7
-# ╠═e74e6af3-7c28-4836-a7a7-db65cca302dc
 # ╠═2a39d6f8-da49-4976-9aa7-889391e55a5d
-# ╟─c3d163c4-dfb2-48e3-bb91-4edcb823de56
-# ╠═2522ab4b-0397-4897-a1ce-9e752efac7c1
+# ╟─b5ede1bb-8361-4380-b943-c9780d4a6253
+# ╠═027dbe5e-4993-41c2-983d-289101c118fb
 # ╟─f4399d4f-9e85-4974-9f39-d47acaf1399c
 # ╠═6a59ed2e-f040-4e10-bc55-91d2c1dcc97e
 # ╟─14ae7f11-1065-46aa-a6ed-eea400c0d2ec
@@ -6480,12 +6834,14 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╟─4d09ed45-423c-4bd6-802d-59389a966d2e
 # ╠═b9d7da8b-5f01-4f4f-8929-fd44f9689f3e
 # ╠═e527f834-9965-4cdf-bda8-b4ea07e86f27
-# ╟─c869e896-cc87-4b12-bba2-84b0cf0964c6
+# ╠═c869e896-cc87-4b12-bba2-84b0cf0964c6
 # ╠═2c2f97cc-127a-446e-a6cd-e9651df833f0
 # ╟─9a756404-f35b-40b9-bc88-4b7e3a7df0b6
 # ╠═805ef471-1bd2-4ce2-bf50-eeb9c6b10e4d
 # ╟─6eef3827-1af6-431d-a163-67bb595c337d
 # ╠═e14648ff-69f6-47c2-924c-c5ac69e200ed
+# ╟─79fa6ccd-e137-4178-9376-c1222dd0a8f7
+# ╠═e7f0842c-954a-40e1-a112-ec03631e5270
 # ╟─aaba63dd-8fc3-405d-ad19-8e8368e70019
 # ╠═03754250-3831-41db-ac11-fe6f5a08f0c1
 # ╟─2d27f581-2c53-409e-afde-812e70bba8bf
@@ -6494,7 +6850,7 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╟─7df63fdf-ef41-44f2-8a55-e5c2c849029c
 # ╟─64c2a3ee-e7a0-4e03-b9a8-86239e1ca81e
 # ╟─0895d464-a029-410d-9e7d-89cfac2d1615
-# ╠═07cd9aad-029f-42c6-abe8-ab4a9a2a910c
+# ╟─07cd9aad-029f-42c6-abe8-ab4a9a2a910c
 # ╟─0bdf9dbf-479c-46f6-bd86-50576095cba0
 # ╟─6fe43e3a-2e8f-4708-a3ec-6f5a8088060e
 # ╠═f863d68f-590e-4b96-8433-dc6b5177539f
