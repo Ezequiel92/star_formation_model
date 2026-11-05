@@ -6,15 +6,15 @@ using InteractiveUtils
 
 # ╔═╡ bed6fa20-aa41-11ee-294a-371a11a36ae2
 let
-	using Measurements, Libdl, Printf, PlutoLinks, Random, Statistics, StatsBase, OrdinaryDiffEqRosenbrock, OrdinaryDiffEqSDIRK, OrdinaryDiffEqBDF, OrdinaryDiffEqNordsieck
+	using Measurements, Libdl, Printf, PlutoLinks, Random, Statistics, StatsBase, OrdinaryDiffEqRosenbrock, OrdinaryDiffEqSDIRK, OrdinaryDiffEqNordsieck
 
-	using DataFrames, ChaosTools, CSV, DifferentialEquations, Interpolations, LinearAlgebra, Measurements, NaNMath, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Unitful, UnitfulAstro
+	using DataFrames, ChaosTools, CSV, DifferentialEquations, Interpolations, LinearAlgebra, OrdinaryDiffEqBDF, PlutoUI, QuadGK, Symbolics, TikzPictures, Unitful, UnitfulAstro
 end
 
 # ╔═╡ 99f0e608-6f6b-44e1-8c66-f2cc063a3a96
 # ╠═╡ skip_as_script = true
 #=╠═╡
-TableOfContents(title="Testing", depth=4)
+TableOfContents(title="Testing", depth=3)
   ╠═╡ =#
 
 # ╔═╡ 1bddd137-6609-4ed6-b086-bf3426b569ce
@@ -46,8 +46,7 @@ begin
     # Z:  Metallicity [dimensionless] / Zsun
 	# h:  Cell size [cm]
     # it: Integration time [Myr]
-	# X:  Abundance of Si or C relative to the solar pattern of Asplund (2009),
-	#     at the same metallicity, i.e. X_X / (X_X,A09 * Z / Z_A09) [dimensionless]
+	# X:  Abundance of Si or C [dimensionless]
     const fi_range = (-3.0, -0.3)
     const ρc_range = (-0.8, 3.0)
 	const Z_range  = (-4.0, 0.5)
@@ -72,7 +71,8 @@ begin
 	# Cell size [cm]
 	const H_CTE = 3.0e20
 	
-	# Si and C mass fractions for the solar abundance pattern of Asplund (2009), at Zsun [dimensionless]
+	# Si and C mass fractions for the solar abundance pattern 
+	# of Asplund (2009), at Zsun [dimensionless]
 	const X_SI_CTE = MODEL.X_Si_A09 * MODEL.Zsun / MODEL.Z_A09
 	const X_C_CTE  = MODEL.X_C_A09 * MODEL.Zsun / MODEL.Z_A09
 
@@ -134,7 +134,7 @@ md"## C functions"
 #             fZ: Metal fraction         [dimensionless]
 #             fd: Dust fraction          [dimensionless]
 #
-#         base_param::Vector{Float64}
+#         base_params::Vector{Float64}
 #
 #     		  ρ_cell: Total cell density  [mp * cm^(-3)]
 #     		  Z:      Metallicity         [dimensionless]
@@ -185,7 +185,7 @@ end;
 #             fZ: Metal fraction         [dimensionless]
 #             fd: Dust fraction          [dimensionless]
 #
-#         base_param::Vector{Float64}
+#         base_params::Vector{Float64}
 #
 #     		  ρ_cell: Total cell density  [mp * cm^(-3)]
 #     		  Z:      Metallicity         [dimensionless]
@@ -226,65 +226,6 @@ end;
 #=╠═╡
 md"## Julia function"
   ╠═╡ =#
-
-# ╔═╡ 6f0a8708-284e-4ddc-9ecf-5fc87b252117
-#####################################################################################
-# Create an integration function that uses DifferentialEquations.jl
-# to solve for `phase`
-# 
-# Arguments
-# 
-#     phase: Target phase of the ODEs. The options are given by 
-#            the dictionary `MODEL.phase_name_to_index`
-# 
-# Returns
-# 
-#     An integration function that solves for `phase`
-# 
-#     The returned function accepts three arguments:
-#
-#         ic::Vector{Float64} (initial condition)
-#
-#             fi: Ionized gas fraction   [dimensionless]
-#             fa: Atomic gas fraction    [dimensionless]
-#             fm: Molecular gas fraction [dimensionless]
-#             fs: Stellar fraction       [dimensionless]
-#             fZ: Metal fraction         [dimensionless]
-#             fd: Dust fraction          [dimensionless]
-#
-#         base_param::Vector{Float64}
-#
-#     		  ρ_cell: Total cell density  [mp * cm^(-3)]
-#     		  Z:      Metallicity         [dimensionless]
-#     		  a:      Scale factor        [dimensionless]
-#     		  h:      Cell size           [cm]
-#     		  X_Si:   Mass fraction of Si [dimensionless]
-#     		  X_C:    Mass fraction of C  [dimensionless]
-#
-#         it::Float64
-#
-#             it: Integration time [Myr]
-#####################################################################################
-function integrate_with_julia(; phase::String="stellar")::Function
-
-    # Index in the solution of the target phase
-    idx = MODEL.phase_name_to_index[phase]
-
-    function integrator(
-		ic::Vector{Float64},
-		base_params::Vector{Float64},
-		it::Float64,
-	)::Float64
-
-        solution = MODEL.integrate_model(ic, base_params, (0.0, it))
-
-        return solution[end][idx]
-
-    end
-
-    return integrator
-
-end;
 
 # ╔═╡ 0d6bf055-337a-4a02-a832-7d08a3853e9c
 # ╠═╡ skip_as_script = true
@@ -373,7 +314,7 @@ function benchmark_jsolve(
 	if isnothing(benchmark)
 		println("Failed.\n")
 	else
-		time = @sprintf("%.3g", benchmark.time * exp10(6.0))
+		time  = @sprintf("%.3g", benchmark.time * exp10(6.0))
 		value = @sprintf("%.3g", benchmark.value)
 		println("Time: $(time) μs  -  Result = $(value).")
 	end
@@ -387,7 +328,7 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 #####################################################################################
-# Convinience wrapper around `TESTING.integrate_with_c()` to catch errors,
+# Convenience wrapper around `TESTING.integrate_with_c()` to catch errors,
 # and print its runtime
 #####################################################################################
 function benchmark_csolve(
@@ -409,7 +350,7 @@ function benchmark_csolve(
 	# it:     Integration time            [Myr]
 	fi, ρ_cell, Z, a, h, X_Si, X_C, it = parameters
 
-	# Initial dust fraction of the model (first entry of a cell) [dimensionless]
+	# Initial dust fraction of the model [dimensionless]
 	fd0 = MODEL.initial_dust_fraction(X_Si, X_C, Z)
 
 	# Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
@@ -424,7 +365,7 @@ function benchmark_csolve(
 
 	print("Method: C library     -  ")
 
-	time = @sprintf("%.3g", benchmark.time * exp10(6.0))
+	time  = @sprintf("%.3g", benchmark.time * exp10(6.0))
 	value = @sprintf("%.3g", benchmark.value)
 	println("Time: $(time) μs  -  Result = $(value).")
 
@@ -438,14 +379,14 @@ end;
 #=╠═╡
 begin
 	parameters = [
-		0.2,              # Ionized fraction of the gas [dimensionless]
-		10.0,             # Total cell density          [mp * cm^(-3)]
-		MODEL.Zsun,       # Metallicity                 [dimensionless]
-		A_CTE,            # Scale factor                [dimensionless]
-		H_CTE,            # Cell size                   [cm]
-		X_SI_CTE,         # Mass fraction of Si         [dimensionless]
-		X_C_CTE,          # Mass fraction of C          [dimensionless]
-		10.0,             # Integration time            [Myr]
+		0.2,        # Ionized fraction of the gas [dimensionless]
+		10.0,       # Total cell density          [mp * cm^(-3)]
+		MODEL.Zsun, # Metallicity                 [dimensionless]
+		A_CTE,      # Scale factor                [dimensionless]
+		H_CTE,      # Cell size                   [cm]
+		X_SI_CTE,   # Mass fraction of Si         [dimensionless]
+		X_C_CTE,    # Mass fraction of C          [dimensionless]
+		10.0,       # Integration time            [Myr]
 	]
 	
 	benchmark_csolve(parameters; phase="stellar")
@@ -464,6 +405,8 @@ md"# Testing"
   ╠═╡ =#
 
 # ╔═╡ 12889c08-16c8-4574-acbd-83e05fb1e4dc
+# ╠═╡ skip_as_script = true
+#=╠═╡
 #####################################################################################
 # Initial conditions and parameters of the test case `i`
 # 
@@ -477,12 +420,12 @@ md"# Testing"
 #####################################################################################
 function test_case(i::Int)::Tuple{Vector{Float64},Vector{Float64},Float64}
 
-	fi     = exp10(fi_list[i])
-	ρc     = exp10(ρc_list[i])
-	Z      = exp10(Z_list[i]) * MODEL.Zsun
-	a      = a_list[i]
-	h      = exp10(h_list[i])
-	it     = exp10(it_list[i])
+	fi = exp10(fi_list[i])
+	ρc = exp10(ρc_list[i])
+	Z  = exp10(Z_list[i]) * MODEL.Zsun
+	a  = a_list[i]
+	h  = exp10(h_list[i])
+	it = exp10(it_list[i])
 
 	# Si and C mass fractions, scattered around the solar pattern of Asplund (2009)
 	X_Si = exp10(X_Si_list[i]) * MODEL.X_Si_A09 * Z / MODEL.Z_A09
@@ -494,12 +437,12 @@ function test_case(i::Int)::Tuple{Vector{Float64},Vector{Float64},Float64}
 	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
 	ic = [(1.0 - Z) * fi, (1.0 - Z) * (1.0 - fi), 0.0, 0.0, Z - fd0, fd0]
 
-	# [ρ_cell, Z, a, h, X_Si, X_C]
 	base_params = [ρc, Z, a, h, X_Si, X_C]
 
 	return ic, base_params, it
 
 end;
+  ╠═╡ =#
 
 # ╔═╡ e6aec66b-dd6a-4483-84a9-8a18975d1735
 # ╠═╡ skip_as_script = true
@@ -549,7 +492,7 @@ function test_integration()::Nothing
 	end
 
 	# Report the failed integrations 
-	# the inputs can be recovered with `test_case(i)`
+	# The inputs can be recovered with `test_case(i)`
 	println("Failed integrations (of $(N_ERR)):")
 	println("\tC:     $(length(failed_c))")
 	println("\tJulia: $(length(failed_j))")
@@ -612,7 +555,6 @@ Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
-NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 OrdinaryDiffEqBDF = "6ad6398a-0878-4a85-9266-38940aa047c8"
 OrdinaryDiffEqNordsieck = "c9986a66-5c92-4813-8696-a7ec84c806c8"
 OrdinaryDiffEqRosenbrock = "43230ef6-c299-4910-a778-202eb28ce4ce"
@@ -622,7 +564,6 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
@@ -637,7 +578,6 @@ DataFrames = "~1.8.2"
 DifferentialEquations = "~8.1.1"
 Interpolations = "~0.16.3"
 Measurements = "~2.14.1"
-NaNMath = "~1.1.5"
 OrdinaryDiffEqBDF = "~2.4.14"
 OrdinaryDiffEqNordsieck = "~2.3.2"
 OrdinaryDiffEqRosenbrock = "~2.7.5"
@@ -645,7 +585,6 @@ OrdinaryDiffEqSDIRK = "~2.9.8"
 PlutoLinks = "~0.1.8"
 PlutoUI = "~0.7.84"
 QuadGK = "~2.11.3"
-SpecialFunctions = "~2.9.1"
 StatsBase = "~0.34.13"
 Symbolics = "~7.48.0"
 TikzPictures = "~3.5.2"
@@ -659,7 +598,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.13.3"
 manifest_format = "2.1"
-project_hash = "024e495035cf16cae6b959ee8098dd95eac8fcfc"
+project_hash = "a57722ac3ebb805e0e899488be97be7f962678a2"
 
 [[deps.ADTypes]]
 deps = ["PrecompileTools"]
@@ -866,10 +805,10 @@ version = "1.11.0"
 
 [[deps.CRlibm]]
 deps = ["CRlibm_jll"]
-git-tree-sha1 = "32e8293800e4cf5b850fb2a8a73621daa4564d68"
+git-tree-sha1 = "0db159493e83ecb2d122f9c40138d89b70d43963"
 registries = "General"
 uuid = "96374032-68de-5a5b-8d9e-752f78720389"
-version = "1.1.0"
+version = "1.1.1"
 
 [[deps.CRlibm_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1156,11 +1095,11 @@ version = "7.21.5"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.DiffEqCallbacks]]
-deps = ["ConcreteStructs", "DataStructures", "DiffEqBase", "DifferentiationInterface", "LinearAlgebra", "Markdown", "PrecompileTools", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArraysCore"]
-git-tree-sha1 = "bbad42942524f183faa0898725fd2c9782e31180"
+deps = ["ConcreteStructs", "DataStructures", "DiffEqBase", "DifferentiationInterface", "LinearAlgebra", "Markdown", "PrecompileTools", "Random", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArraysCore"]
+git-tree-sha1 = "dc3c0668779fd5783c075dab6ed53371eea12e8c"
 registries = "General"
 uuid = "459566f4-90b8-5000-8ac3-15dfb0a30def"
-version = "4.19.5"
+version = "4.19.6"
 
     [deps.DiffEqCallbacks.extensions]
     DiffEqCallbacksFunctorsExt = "Functors"
@@ -1370,16 +1309,22 @@ weakdeps = ["Adapt", "ChainRulesCore"]
 
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "d0f666deaf8099a7d7ac229a74402ada88898be1"
+git-tree-sha1 = "f2659a735f9360fedfa29925812380f322679e93"
 registries = "General"
 uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
-version = "2.9.0+0"
+version = "2.10.0+0"
 
 [[deps.ExprTools]]
 git-tree-sha1 = "d2e49e7efd29719d6f28b891b0e0e159daa9d2b4"
 registries = "General"
 uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
 version = "0.1.11"
+
+[[deps.ExpressionExplorer]]
+git-tree-sha1 = "fdcc9d4a253e0041d37c95487f9ae027c3ec002d"
+registries = "General"
+uuid = "21656369-7473-754a-2065-74616d696c43"
+version = "1.1.6"
 
 [[deps.ExproniconLite]]
 git-tree-sha1 = "c13f0b150373771b0fdc1713c97860f8df12e6c2"
@@ -1517,10 +1462,10 @@ version = "2.18.3+0"
 
 [[deps.ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions"]
-git-tree-sha1 = "3b0f72e2ffef1a139ac450725c9ecd01c0a3c050"
+git-tree-sha1 = "a55669aa77ae8bbdc7310c4027112500ff5ec874"
 registries = "General"
 uuid = "f6369f11-7733-5829-9624-2563aa707210"
-version = "1.4.6"
+version = "1.4.7"
 weakdeps = ["StaticArrays"]
 
     [deps.ForwardDiff.extensions]
@@ -1972,11 +1917,11 @@ uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
 version = "2.42.4+0"
 
 [[deps.LineSearch]]
-deps = ["ADTypes", "CommonSolve", "ConcreteStructs", "FastClosures", "LinearAlgebra", "MaybeInplace", "PrecompileTools", "SciMLBase", "SciMLJacobianOperators", "StaticArraysCore"]
-git-tree-sha1 = "678bdf03a97059e018401d4482385548d61a3c73"
+deps = ["ADTypes", "CommonSolve", "ConcreteStructs", "FastClosures", "LinearAlgebra", "MaybeInplace", "PrecompileTools", "ReactantCore", "SciMLBase", "SciMLJacobianOperators", "StaticArraysCore"]
+git-tree-sha1 = "53cf132c453dcfcf10f1cb9a701a07c99b7e842e"
 registries = "General"
 uuid = "87fe0de2-c867-4266-b59a-2f0a94fc965b"
-version = "0.1.19"
+version = "0.1.20"
 weakdeps = ["LineSearches"]
 
     [deps.LineSearch.extensions]
@@ -2779,6 +2724,13 @@ weakdeps = ["FixedPointNumbers"]
     [deps.Ratios.extensions]
     RatiosFixedPointNumbersExt = "FixedPointNumbers"
 
+[[deps.ReactantCore]]
+deps = ["ExpressionExplorer", "MacroTools"]
+git-tree-sha1 = "1fe4e616752a0c4818ae88a504fc59b0fb016659"
+registries = "General"
+uuid = "a3311ec8-5e00-46d5-b541-4f83e724a433"
+version = "0.1.26"
+
 [[deps.ReadOnlyArrays]]
 git-tree-sha1 = "e6f7ddf48cf141cb312b078ca21cb2d29d0dc11d"
 registries = "General"
@@ -3266,10 +3218,10 @@ version = "7.10.1+0"
 
 [[deps.SymbolicIndexingInterface]]
 deps = ["Accessors", "ArrayInterface", "PrecompileTools", "RuntimeGeneratedFunctions", "StaticArraysCore"]
-git-tree-sha1 = "7eb6da9656581ac9fbffaef3ef7950a090a5002a"
+git-tree-sha1 = "42dd4c193a1bacea5b6adf78b6224de907b06351"
 registries = "General"
 uuid = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
-version = "0.3.55"
+version = "0.3.56"
 weakdeps = ["PrettyTables"]
 
     [deps.SymbolicIndexingInterface.extensions]
@@ -3284,10 +3236,10 @@ version = "1.2.2"
 
 [[deps.SymbolicUtils]]
 deps = ["AbstractTrees", "ArrayInterface", "Combinatorics", "ConstructionBase", "DataStructures", "DocStringExtensions", "DynamicPolynomials", "EnumX", "ExproniconLite", "Graphs", "LinearAlgebra", "MacroTools", "Moshi", "MultivariatePolynomials", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "ReadOnlyArrays", "SciMLPublic", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArraysCore", "SymbolicIndexingInterface", "TaskLocalValues", "TermInterface", "WeakCacheSets"]
-git-tree-sha1 = "05972ad476e67448b8364697b9c2c090eb69db1d"
+git-tree-sha1 = "61a82af727479af3d96988079fe3e05cdd57d695"
 registries = "General"
 uuid = "d1185830-fcd6-423d-90d6-eec64667417b"
-version = "4.54.0"
+version = "4.55.0"
 
     [deps.SymbolicUtils.extensions]
     SymbolicUtilsChainRulesCoreExt = "ChainRulesCore"
@@ -3607,7 +3559,6 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╠═409aa356-dbf0-4b35-ab11-d82366fef73f
 # ╠═56e869cd-c371-4141-9e4d-ed8420990ede
 # ╟─16184946-3492-4e74-9ed6-8fe7fadea504
-# ╠═6f0a8708-284e-4ddc-9ecf-5fc87b252117
 # ╟─0d6bf055-337a-4a02-a832-7d08a3853e9c
 # ╠═5a31770d-8a52-4aa7-8874-ab3a5c98623d
 # ╠═59a06a84-6070-41d3-b615-c8348adf91ab

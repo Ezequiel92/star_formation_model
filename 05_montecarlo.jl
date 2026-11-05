@@ -6,9 +6,9 @@ using InteractiveUtils
 
 # ╔═╡ f79c680a-7c97-4100-97e8-19190707c55b
 let
-	using CairoMakie, ColorSchemes, Measurements, Libdl, Printf, PlutoLinks, Random, Statistics, StatsBase, OrdinaryDiffEqRosenbrock, OrdinaryDiffEqSDIRK, OrdinaryDiffEqBDF, OrdinaryDiffEqNordsieck
+	using CairoMakie, ColorSchemes, Measurements, Libdl, Printf, PlutoLinks, Random, Statistics, StatsBase, OrdinaryDiffEqRosenbrock, OrdinaryDiffEqSDIRK, OrdinaryDiffEqNordsieck
 
-	using DataFrames, ChaosTools, CSV, DifferentialEquations, Interpolations, LinearAlgebra, Measurements, NaNMath, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Unitful, UnitfulAstro
+	using DataFrames, ChaosTools, CSV, DifferentialEquations, Interpolations, LinearAlgebra, OrdinaryDiffEqBDF, PlutoUI, QuadGK, Symbolics, TikzPictures, Unitful, UnitfulAstro
 end
 
 # ╔═╡ 53faa843-2056-4c76-bc8b-31bb602d475c
@@ -98,396 +98,473 @@ begin
 end;
 
 # ╔═╡ 94ea6306-5a09-4458-9231-1669621aea30
-md"# Montecarlo"
+md"""
+# Star formation probability
+
+In the simulations, each time a star-forming cell is active, the model integrates the ODEs for the time step of the cell, $\Delta t$, starting from the initial conditions of the section Initial conditions of `01_model.jl`. In particular, every step starts with $f_m(0) = f_s(0) = 0$, and only the dust-to-metal ratio is carried over from the previous step. The model then gives $\texttt{AREPO}$ the gross SFR
+
+$\begin{equation}
+    \mathrm{SFR} = \frac{f_s(\Delta t) \, M_\mathrm{cell}}{(1 - R) \, \Delta t} \, ,
+\end{equation}$
+
+and $\texttt{AREPO}$ turns the cell into a star particle of mass $m_* = M_\mathrm{cell}$ with probability
+
+$\begin{equation}
+    p = 1 - \exp\left( -\frac{\mathrm{SFR} \, \Delta t}{M_\mathrm{cell}} \right) = 1 - \exp\left( -\frac{f_s(\Delta t)}{1 - R} \right) \, .
+\end{equation}$
+
+This notebook studies two consequences of this procedure:
+
+1.  **Time-step dependence.** The molecular gas forms from zero in every step, so $f_s(\Delta t)$ is not proportional to $\Delta t$, and the specific SFR, $\lambda = \mathrm{SFR} / M_\mathrm{cell}$, depends on the time step.
+2.  **Sampling.** The expected fraction of cells that turn into stars, for the probability of $\texttt{AREPO}$ and for the old recipes, compared with the gas consumed at the rate of the model.
+
+All the gas cells of a sample are identical, so they have the same state at every step, and the expected results can be computed exactly with one integration per step. The Monte Carlo samples only show the noise for a finite number of cells.
+"""
 
 # ╔═╡ 35f987e3-321c-4772-8bee-ef3ae29c7e61
 # ╠═╡ skip_as_script = true
 #=╠═╡
 begin
-	mutable struct Cell
-        ρc::Float64
-        Z::Float64
-		fi::Float64
-		fa::Float64
-		fm::Float64
-		fs::Float64
-		fZ::Float64
-		fd::Float64
-		stellar::Bool
-    end
-
-	# Number of gas cells
-	const N_CELLS = 5000
-
-	# Number of time steps
-	const N_STEPS = 150
-
 	# Directory for the plots
 	const MONT_PATH = mkpath("./generated_files/plots/montecarlo")
 
-	# Integration steps [Myr]
-	time_steps = collect(range(0.0, 1500.0, N_STEPS))
-	time_ticks = time_steps[2:end]
+	# Seed for the random numbers of the Monte Carlo samples
+	const SEED = 1234
 
-	# Allocate memory
-	cells = Vector{Cell}(undef, N_CELLS)
-	n_gas = Vector{Int}(undef, N_STEPS - 1)
+	# Indices of the fractions in the solution of the ODEs
+	const I_FI = MODEL.phase_name_to_index["ionized"]
+	const I_FA = MODEL.phase_name_to_index["atomic"]
+	const I_FM = MODEL.phase_name_to_index["molecular"]
+	const I_FS = MODEL.phase_name_to_index["stellar"]
+	const I_FZ = MODEL.phase_name_to_index["metals"]
+	const I_FD = MODEL.phase_name_to_index["dust"]
 
-	# Reference cell density [mp * cm^(-3)]
-	const ref_ρc = 1.0
+	#################################################################################
+	# Apply `f` to every element of `xs`, using threads with the Julia solver
+	# (the C library in TESTING mode caches its tables, so it is used serially)
+	#
+	# Arguments
+	#
+	#     f:  Function to apply
+	#     xs: Array of arguments
+	#
+	# Returns
+	#
+	#     An array with the same shape as `xs`, with f(x) for each element x
+	#################################################################################
+	function threaded_map(f::Function, xs::AbstractArray)::AbstractArray
 
-	# Reference metallicity [dimensionless]
-	const ref_Z = MODEL.Zsun
+		results = Array{Any}(undef, size(xs))
 
-	# Reference ionized fraction [dimensionless]
-	const ref_fi = 0.2
+		if PLOTS.SOLVE_WITH_JULIA
+			Threads.@threads for i in eachindex(xs)
+				results[i] = f(xs[i])
+			end
+		else
+			for i in eachindex(xs)
+				results[i] = f(xs[i])
+			end
+		end
 
-	# Create gas cells
-	for i in eachindex(cells)
-
-		# Cell density [mp * cm^(-3)]
-		ρc = ref_ρc
-
-		# Metallicity [dimensionless]
-		Z = ref_Z
-
-		# Ionized fraction [dimensionless]
-		fi = ref_fi
-
-		# Initial conditions as in the model, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-		cells[i] = Cell(ρc, Z, PLOTS.make_ic(Z, fi)..., false)
+		return identity.(results)
 
 	end
 
-	# Reference initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-	IC = PLOTS.make_ic(ref_Z, ref_fi)
+	#################################################################################
+	# Specific SFR that the model gives to AREPO, for one step of length Δt, starting
+	# from the initial conditions of a first entry
+	#
+	#     λ = SFR / M_cell = fs(Δt) / ((1 - R) * Δt)
+	#
+	# Arguments
+	#
+	#     ρ:  Total cell density [mp * cm^(-3)]
+	#     Z:  Metallicity [dimensionless]
+	#     fi: Ionized fraction of the gas [dimensionless]
+	#     Δt: Time step [Myr]
+	#
+	# Returns
+	#
+	#     The specific SFR [Myr^(-1)]
+	#################################################################################
+	function step_sfr(ρ::Float64, Z::Float64, fi::Float64, Δt::Float64)::Float64
 
-	# Reference parameters for the ODEs, [ρc, Z, a, h, X_Si, X_C]
-	PARAMETERS = PLOTS.make_base_params(ref_ρc, ref_Z)
+		R  = MODEL.compute_recycled_fractions(Z)[1]
+		fs = PLOTS.solve_ode(PLOTS.make_ic(Z, fi), PLOTS.make_base_params(ρ, Z), Δt)[I_FS]
 
-	reference_sim = PLOTS.solve_ode(IC, PARAMETERS, time_ticks)
+		return fs / ((1.0 - R) * Δt)
 
-	ref_fs = getindex.(reference_sim, MODEL.phase_name_to_index["stellar"])
+	end
+
+	#################################################################################
+	# Specific SFR along an uninterrupted trajectory (a single integration, without the
+	# resets of the simulations), per unit of gas mass
+	#
+	#     λ(t) = ψ(t) / (fi(t) + fa(t) + fm(t))
+	#
+	# Arguments
+	#
+	#     ρ:         Total cell density [mp * cm^(-3)]
+	#     Z:         Metallicity [dimensionless]
+	#     fi:        Ionized fraction of the gas at t = 0 [dimensionless]
+	#     time_list: Times [Myr]
+	#
+	# Returns
+	#
+	#     The specific SFR [Myr^(-1)] at each time
+	#################################################################################
+	function trajectory_sfr(
+		ρ::Float64,
+		Z::Float64,
+		fi::Float64,
+		time_list::Vector{Float64},
+	)::Vector{Float64}
+
+		fractions = PLOTS.solve_trajectory(
+			PLOTS.make_ic(Z, fi),
+			PLOTS.make_base_params(ρ, Z),
+			time_list,
+		)
+
+		return [MODEL.ψ(f[I_FM], ρ) / (f[I_FI] + f[I_FA] + f[I_FM]) for f in fractions]
+
+	end
+
+	#################################################################################
+	# Monte Carlo sample of the number of gas cells left after each step
+	#
+	# Arguments
+	#
+	#     probabilities: Probability of a gas cell turning into a star particle, for each step
+	#     n_cells:       Initial number of gas cells
+	#     rng:           Random number generator
+	#
+	# Returns
+	#
+	#     The number of gas cells left after each step
+	#################################################################################
+	function sample_gas_cells(
+		probabilities::Vector{Float64},
+		n_cells::Int,
+		rng::AbstractRNG,
+	)::Vector{Int}
+
+		n_gas = Vector{Int}(undef, length(probabilities))
+		n = n_cells
+
+		for (k, p) in enumerate(probabilities)
+			n -= count(_ -> rand(rng) < p, 1:n)
+			n_gas[k] = n
+		end
+
+		return n_gas
+
+	end
 end;
   ╠═╡ =#
 
-# ╔═╡ 569231d3-a254-4e30-8e38-26cce1bfd3d5
+# ╔═╡ 9d53a456-1168-4197-8863-55172cdedb90
 # ╠═╡ skip_as_script = true
 #=╠═╡
-#####################################################################################
-# Recipe 01 (Yago probability)
-#
-# p(t) = (fs(t) - fs(t - Δt)) / (1.0 - fs(t - Δt))
-#####################################################################################
+md"""
+## Time-step dependence of the SFR
+
+For a cell that is active for a time step $\Delta t$, the specific SFR given to $\texttt{AREPO}$ is
+
+$\begin{equation}
+    \lambda(\Delta t) = \frac{\mathrm{SFR}}{M_\mathrm{cell}} = \frac{f_s(\Delta t)}{(1 - R) \, \Delta t} = \frac{1}{\Delta t} \int_0^{\Delta t} \psi \, \mathrm{d}t \, ,
+\end{equation}$
+
+i.e. the mean of $\psi$ during the step. As every step starts without molecular gas, for $\Delta t \ll \tau_\mathrm{cond}$ the cell forms almost no $\mathrm{H_2}$ before the step ends, and $\lambda \propto \Delta t$. For comparison, the dashed lines show the instantaneous specific SFR along a single uninterrupted integration, $\psi(t) / (f_i + f_a + f_m)$, i.e. the rate of a cell whose molecular gas is not reset (with the parameters fixed at their values for the final time).
+
+The output gives $\lambda(\Delta t)$ relative to the maximum of the uninterrupted rate, for a few time steps.
+"""
+  ╠═╡ =#
+
+# ╔═╡ f915c851-8bee-4c4b-8a36-4858c671b519
+# ╠═╡ skip_as_script = true
+#=╠═╡
 let
-	cells_copy = deepcopy(cells)
+	# Total cell densities [mp * cm^(-3)], one panel each
+	ρ_list = [0.1, 1.0, 10.0, 100.0]
 
-	for i in 2:N_STEPS
+	# Metallicities [dimensionless], one color each, and their labels
+	Z_list   = [1.0, 0.1] .* MODEL.Zsun
+	Z_labels = [L"Z = Z_\odot", L"Z = 0.1 \, Z_\odot"]
 
-		it = time_steps[i] - time_steps[i - 1]
+	# Ionized fraction of the gas at the start of each step [dimensionless]
+	fi = 0.2
 
-		# Select only the cells that are still gas
-		gas_idxs = findall(x -> !x.stellar, cells_copy)
+	# Time steps, and times of the uninterrupted integrations [Myr]
+	Δt_list = exp10.(range(-3, 2, 51))
 
-		Threads.@threads for cell in cells_copy[gas_idxs]
+	# Specific SFR for one step of length Δt, for each time step, metallicity, and density
+	λ_step = threaded_map(
+		((ρ, Z, Δt),) -> step_sfr(ρ, Z, fi, Δt),
+		[(ρ, Z, Δt) for Δt in Δt_list, Z in Z_list, ρ in ρ_list],
+	)
 
-			# Set the initial conditions and the parameters
-			ic     = [cell.fi, cell.fa, cell.fm, cell.fs, cell.fZ, cell.fd]
-			params = PLOTS.make_base_params(cell.ρc, cell.Z)
+	# Specific SFR along an uninterrupted integration, for each metallicity and density
+	λ_traj = threaded_map(
+		((ρ, Z),) -> trajectory_sfr(ρ, Z, fi, Δt_list),
+		[(ρ, Z) for Z in Z_list, ρ in ρ_list],
+	)
 
-			# Solve the ODEs
-			fracs = PLOTS.solve_ode(ic, params, it)
+	# Values that cannot be shown in a log scale
+	positive(x) = x > 0.0 ? x : NaN
 
-			# Store the previus value of fs
-			old_fs = cell.fs
+	#################################################################################
+	# λ(Δt) relative to the maximum of the uninterrupted rate
+	#################################################################################
+	Δt_print = [0.01, 0.1, 1.0, 10.0]
 
-			# Read the fractions and renormalize negative values
-			fi = max(fracs[MODEL.phase_name_to_index["ionized"]], 0.0)
-			fa = max(fracs[MODEL.phase_name_to_index["atomic"]], 0.0)
-			fm = max(fracs[MODEL.phase_name_to_index["molecular"]], 0.0)
-			fs = max(fracs[MODEL.phase_name_to_index["stellar"]], 0.0)
-			fZ = max(fracs[MODEL.phase_name_to_index["metals"]], 0.0)
-			fd = max(fracs[MODEL.phase_name_to_index["dust"]], 0.0)
+	println("λ(Δt) / max(λ_uninterrupted), for Δt = $(Δt_print) Myr:\n")
 
-     		ft = fi + fa + fm + fs + fZ + fd
+	for (k, ρ) in enumerate(ρ_list), (j, Z) in enumerate(Z_list)
 
-			# Update the fractions in the gas cell
-			cell.fi = fi / ft
-			cell.fa = fa / ft
-			cell.fm = fm / ft
-			cell.fs = fs / ft
-			cell.fZ = fZ / ft
-			cell.fd = fd / ft
+		λ_max  = maximum(filter(isfinite, λ_traj[j, k]))
+		idxs   = [argmin(abs.(log10.(Δt_list) .- log10(Δt))) for Δt in Δt_print]
+		ratios = round.(λ_step[idxs, j, k] ./ λ_max; sigdigits=2)
 
-			# Compute the probability of forming a star
-			prob = (cell.fs - old_fs) / (1.0 - old_fs)
+		@printf("    ρ = %6.1f cm^-3, Z / Z⊙ = %.1f:  %s\n", ρ, Z / MODEL.Zsun, join(ratios, ", "))
 
-			# Test if the gas cell turn into a star
-			if rand() < prob
-				cell.stellar = true
+	end
+
+	#################################################################################
+	# Plot
+	#################################################################################
+
+	colors = Makie.wong_colors()
+
+	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
+
+		f = Figure(size=(1700, 1900))
+
+		for (k, ρ) in enumerate(ρ_list)
+
+			row, col = fldmod1(k, 2)
+
+			ax = CairoMakie.Axis(
+				f[row, col];
+				xlabel=L"\Delta t, \, t \,\, [\mathrm{Myr}]",
+				ylabel=L"\lambda \,\, [\mathrm{Myr^{-1}}]",
+				xlabelvisible=(row == 2),
+				ylabelvisible=(col == 1),
+				title=L"\rho_\mathrm{cell} = %$(ρ) \, \mathrm{cm^{-3}}",
+				xscale=log10,
+				yscale=log10,
+			)
+
+			for (j, color) in enumerate(colors[1:length(Z_list)])
+
+				# One step of length Δt (as in the simulations)
+				lines!(ax, Δt_list, positive.(λ_step[:, j, k]); color, linestyle=:solid)
+
+				# Uninterrupted integration
+				lines!(ax, Δt_list, positive.(λ_traj[j, k]); color, linestyle=:dash)
+
 			end
 
 		end
 
-		n_gas[i - 1] = count(x -> !x.stellar, cells_copy)
-
-	end
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure()
-
-		ax = CairoMakie.Axis(
-			f[1, 1];
-			xlabel=L"t \, [\mathrm{Myr}]",
-			ylabel=L"\mathrm{Fraction}",
-			limits=(nothing, nothing, -0.05, 1.05),
-			title="Recipe 01 (Yago probability)",
+		Legend(
+			f[3, :],
+			[
+				[LineElement(; color, linestyle=:solid) for color in colors[1:length(Z_list)]]...,
+				LineElement(; color=:black, linestyle=:solid),
+				LineElement(; color=:black, linestyle=:dash),
+			],
+			[
+				Z_labels...,
+				L"\mathrm{one \,\, step \,\, of \,\, length} \,\, \Delta t",
+				L"\mathrm{uninterrupted \,\, integration, \,\, at} \,\, t",
+			];
+			orientation=:horizontal,
+			nbanks=2,
+			tellheight=true,
+			tellwidth=false,
+			halign=:center,
+			valign=:center,
 		)
 
-		f_gas = n_gas ./ N_CELLS
-
-		lines!(
-			ax,
-			time_ticks,
-			ref_fs,
-			label=L"\mathrm{Reference}",
-			color=:gray55,
-		)
-
-		lines!(
-			ax,
-			time_ticks,
-			f_gas;
-			label=L"\mathrm{Gas \,\, fraction}",
-			color=Makie.wong_colors()[1],
-		)
-
-		lines!(
-			ax,
-			time_ticks,
-			1.0 .- f_gas;
-			label=L"\mathrm{Stellar \,\, fraction}",
-			color=Makie.wong_colors()[2],
-		)
-
-		axislegend(; position=:rt, nbanks=1)
-
-		Makie.save(joinpath(MONT_PATH, "recipe_01.png"), f)
+		Makie.save(joinpath(MONT_PATH, "sfr_vs_time_step.png"), f)
 
 		f
+
 	end
 end
   ╠═╡ =#
 
-# ╔═╡ 7253e168-bd24-48c9-b013-2a21d4fa0879
+# ╔═╡ 3af424b4-a354-4af6-810e-a4ae9f28383a
 # ╠═╡ skip_as_script = true
 #=╠═╡
-#####################################################################################
-# Recipe 02 (trivial probability)
-#
-# p(t) = fs(t)
-#####################################################################################
-let
-	cells_copy = deepcopy(cells)
+md"""
+## Sampling of the star particles
 
-	@inbounds for i in 2:N_STEPS
+A sample of identical gas cells ($\rho_\mathrm{cell} = 1 \, \mathrm{cm^{-3}}$, $Z = Z_\odot$, and an ionized fraction of the gas of $0.2$ at the start of each step) is evolved as in the simulations: every step starts from the initial conditions of the model, and only the dust-to-metal ratio is carried over. After each step, every gas cell turns into a star particle with probability $p$, and the expected fraction of gas cells left after $n$ steps is $\prod_{k=1}^{n} (1 - p_k)$.
 
-		it = time_steps[i] - time_steps[i - 1]
+The reference is the gas consumed at the gross rate of the model, $\exp\left( -\int_0^t \lambda \, \mathrm{d}t \right)$, with $\lambda$ constant within each step. The probability of $\texttt{AREPO}$ is the probability that a cell is consumed by a Poisson process with rate $\lambda$, so its expected curve matches the reference exactly, for any time step. The Monte Carlo sample shows the noise for a finite number of cells.
 
-		# Select only the cells that are still gas
-		gas_idxs = findall(x -> !x.stellar, cells_copy)
+With $f_s(0) = 0$ in every step, the old recipes reduce to
 
-		Threads.@threads for cell in cells_copy[gas_idxs]
+*  Recipes 01 and 02: $p = f_s(\Delta t)$, as $p = (f_s(t) - f_s(t - \Delta t)) / (1 - f_s(t - \Delta t))$ and $p = f_s(t)$ are the same when $f_s(t - \Delta t) = 0$,
+*  Recipe 03: $p = 1 - \exp(-f_s(\Delta t))$, as $f_s(t) \, \Delta t / t$ becomes $f_s(\Delta t)$ when the integration covers only the step,
 
-			# Set the initial conditions and the parameters
-			ic     = [cell.fi, cell.fa, cell.fm, cell.fs, cell.fZ, cell.fd]
-			params = PLOTS.make_base_params(cell.ρc, cell.Z)
-
-			# Solve the ODEs
-			fracs = PLOTS.solve_ode(ic, params, it)
-
-			# Read the fractions and renormalize negative values
-			fi = max(fracs[MODEL.phase_name_to_index["ionized"]], 0.0)
-			fa = max(fracs[MODEL.phase_name_to_index["atomic"]], 0.0)
-			fm = max(fracs[MODEL.phase_name_to_index["molecular"]], 0.0)
-			fs = max(fracs[MODEL.phase_name_to_index["stellar"]], 0.0)
-			fZ = max(fracs[MODEL.phase_name_to_index["metals"]], 0.0)
-			fd = max(fracs[MODEL.phase_name_to_index["dust"]], 0.0)
-
-     		ft = fi + fa + fm + fs + fZ + fd
-
-			# Update the fractions in the gas cell
-			cell.fi = fi / ft
-			cell.fa = fa / ft
-			cell.fm = fm / ft
-			cell.fs = fs / ft
-			cell.fZ = fZ / ft
-			cell.fd = fd / ft
-
-			# Compute the probability of forming a star
-			prob = cell.fs
-
-			# Test if the gas cell turn into a star
-			if rand() < prob
-				cell.stellar = true
-			end
-
-		end
-
-		n_gas[i - 1] = count(x -> !x.stellar, cells_copy)
-
-	end
-
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
-
-		f = Figure()
-
-		ax = CairoMakie.Axis(
-			f[1, 1];
-			xlabel=L"t \, [\mathrm{Myr}]",
-			ylabel=L"\mathrm{Fraction}",
-			limits=(nothing, nothing, -0.05, 1.05),
-			title="Recipe 02 (trivial probability)",
-		)
-
-		f_gas = n_gas ./ N_CELLS
-
-		lines!(
-			ax,
-			time_ticks,
-			ref_fs,
-			label=L"\mathrm{Reference}",
-			color=:gray55,
-		)
-
-		lines!(
-			ax,
-			time_ticks,
-			f_gas;
-			label=L"\mathrm{Gas \,\, fraction}",
-			color=Makie.wong_colors()[1],
-		)
-
-		lines!(
-			ax,
-			time_ticks,
-			1.0 .- f_gas;
-			label=L"\mathrm{Stellar \,\, fraction}",
-			color=Makie.wong_colors()[2],
-		)
-
-		axislegend(; position=(0.95, 0.9), nbanks=1)
-
-		Makie.save(joinpath(MONT_PATH, "recipe_02.png"), f)
-
-		f
-	end
-end
+which use the net stellar mass, without the factor $1 / (1 - R)$, so they underestimate the consumption of gas. The two panels use two time steps, to show the effect of the time step on the consumption of gas.
+"""
   ╠═╡ =#
 
-# ╔═╡ da6f13ce-34fc-4344-b3c7-667bab0afb82
+# ╔═╡ 05e0c465-998f-4111-8571-e6e7dbbe095e
 # ╠═╡ skip_as_script = true
 #=╠═╡
 #####################################################################################
-# Recipe 03 (Arepo probability)
-#
-# p(t) = 1.0 - exp(-fs(t) * (Δt / t))
+# Expected and sampled gas consumption, for each time step
 #####################################################################################
-let
-	cells_copy = deepcopy(cells)
+sampling = let
+	# Total cell density [mp * cm^(-3)]
+	ρ = 1.0
 
-	@inbounds for i in 2:N_STEPS
+	# Metallicity [dimensionless]
+	Z = MODEL.Zsun
 
-		it = time_steps[i] - time_steps[i - 1]
+	# Ionized fraction of the gas at the start of each step [dimensionless]
+	fi = 0.2
 
-		# Select only the cells that are still gas
-		gas_idxs = findall(x -> !x.stellar, cells_copy)
+	# Number of gas cells of the Monte Carlo samples
+	n_cells = 5000
 
-		Threads.@threads for cell in cells_copy[gas_idxs]
+	# Total time [Myr]
+	t_end = 1500.0
 
-			# Set the initial conditions and the parameters
-			ic     = [cell.fi, cell.fa, cell.fm, cell.fs, cell.fZ, cell.fd]
-			params = PLOTS.make_base_params(cell.ρc, cell.Z)
+	# Time steps [Myr], one panel each
+	Δt_list = [10.0, 1.0]
 
-			# Solve the ODEs
-			fracs = PLOTS.solve_ode(ic, params, it)
+	params = PLOTS.make_base_params(ρ, Z)
 
-			# Read the fractions and renormalize negative values
-			fi = max(fracs[MODEL.phase_name_to_index["ionized"]], 0.0)
-			fa = max(fracs[MODEL.phase_name_to_index["atomic"]], 0.0)
-			fm = max(fracs[MODEL.phase_name_to_index["molecular"]], 0.0)
-			fs = max(fracs[MODEL.phase_name_to_index["stellar"]], 0.0)
-			fZ = max(fracs[MODEL.phase_name_to_index["metals"]], 0.0)
-			fd = max(fracs[MODEL.phase_name_to_index["dust"]], 0.0)
+	# Mass recycling fraction
+	R = MODEL.compute_recycled_fractions(Z)[1]
 
-     		ft = fi + fa + fm + fs + fZ + fd
+	# Maximum dust fraction (for the dust carried between steps)
+	fd_max = MODEL.max_dust_fraction(params[5], params[6], Z)
 
-			# Update the fractions in the gas cell
-			cell.fi = fi / ft
-			cell.fa = fa / ft
-			cell.fm = fm / ft
-			cell.fs = fs / ft
-			cell.fZ = fZ / ft
-			cell.fd = fd / ft
+	rng = MersenneTwister(SEED)
 
-			# Compute the probability of forming a star
-			prob = 1.0 - exp(-cell.fs * (it / time_steps[i]))
+	map(Δt_list) do Δt
 
-			# Test if the gas cell turn into a star
-			if rand() < prob
-				cell.stellar = true
-			end
+		# Time at the end of each step [Myr]
+		times = collect(Δt:Δt:t_end)
+
+		#############################################################################
+		# Stellar fraction formed in each step. Every step starts from the initial
+		# conditions of the model (fm = fs = 0), and only the dust-to-metal ratio is
+		# carried over (the same for all the gas cells)
+		#############################################################################
+		fs = Vector{Float64}(undef, length(times))
+		ic = PLOTS.make_ic(Z, fi)
+
+		for k in eachindex(times)
+
+			fractions = PLOTS.solve_ode(ic, params, Δt)
+			fs[k]     = fractions[I_FS]
+
+			# Dust of the next step, from the dust-to-metal ratio of this one
+			fZ_prev = fractions[I_FZ]
+			fd_prev = fractions[I_FD]
+			fd = fZ_prev + fd_prev > 0.0 ? min(fd_prev / (fZ_prev + fd_prev) * Z, fd_max) : ic[I_FD]
+
+			ic = copy(ic)
+			ic[I_FM] = 0.0
+			ic[I_FS] = 0.0
+			ic[I_FZ] = Z - fd
+			ic[I_FD] = fd
 
 		end
 
-		n_gas[i - 1] = count(x -> !x.stellar, cells_copy)
+		# Probability of a gas cell turning into a star particle, for each step
+		probabilities = (
+			arepo     = 1.0 .- exp.(-fs ./ (1.0 - R)),
+			recipe_12 = fs,
+			recipe_03 = 1.0 .- exp.(-fs),
+		)
+
+		# Expected fraction of gas cells left after each step
+		expected = map(p -> cumprod(1.0 .- p), probabilities)
+
+		# Gas left when consumed at the gross rate of the model
+		reference = exp.(-cumsum(fs ./ (1.0 - R)))
+
+		# Monte Carlo sample, with the probability of AREPO
+		sample = sample_gas_cells(probabilities.arepo, n_cells, rng) ./ n_cells
+
+		(; Δt, times, fs, expected, reference, sample)
 
 	end
 
+end;
+  ╠═╡ =#
+
+# ╔═╡ 3f2c01bc-9d9a-4d69-becb-b8fa75c7618f
+# ╠═╡ skip_as_script = true
+#=╠═╡
+let
+	colors = Makie.wong_colors()
+
 	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
 
-		f = Figure()
+		f = Figure(size=(1700, 1050))
 
-		ax = CairoMakie.Axis(
-			f[1, 1];
-			xlabel=L"t \, [\mathrm{Myr}]",
-			ylabel=L"\mathrm{Fraction}",
-			limits=(nothing, nothing, -0.05, 1.05),
-			title="Recipe 03 (Arepo probability)",
+		for (col, run) in enumerate(sampling)
+
+			ax = CairoMakie.Axis(
+				f[1, col];
+				xlabel=L"t \,\, [\mathrm{Myr}]",
+				ylabel=L"\mathrm{Stellar \,\, fraction}",
+				ylabelvisible=(col == 1),
+				limits=(nothing, nothing, -0.05, 1.05),
+				title=L"\Delta t = %$(run.Δt) \, \mathrm{Myr}",
+			)
+
+			# Reference: gas consumed at the gross rate of the model
+			lines!(ax, run.times, 1.0 .- run.reference; color=:gray65, linewidth=10)
+
+			# Monte Carlo sample
+			lines!(ax, run.times, 1.0 .- run.sample; color=colors[1], linewidth=2)
+
+			# Expected curves
+			lines!(ax, run.times, 1.0 .- run.expected.arepo; color=colors[1], linestyle=:dash)
+			lines!(ax, run.times, 1.0 .- run.expected.recipe_12; color=colors[2])
+			lines!(ax, run.times, 1.0 .- run.expected.recipe_03; color=colors[3], linestyle=:dot)
+
+		end
+
+		Legend(
+			f[2, :],
+			[
+				LineElement(; color=:gray65, linewidth=10),
+				LineElement(; color=colors[1], linestyle=:dash),
+				LineElement(; color=colors[1], linewidth=2),
+				LineElement(; color=colors[2]),
+				LineElement(; color=colors[3], linestyle=:dot),
+			],
+			[
+				L"\mathrm{Reference}",
+				L"\mathrm{AREPO}: \, p = 1 - e^{-f_s / (1 - R)}",
+				L"\mathrm{AREPO \,\, (sample)}",
+				L"\mathrm{Recipes \,\, 01, \, 02}: \, p = f_s",
+				L"\mathrm{Recipe \,\, 03}: \, p = 1 - e^{-f_s}",
+			];
+			orientation=:horizontal,
+			nbanks=2,
+			tellheight=true,
+			tellwidth=false,
+			halign=:center,
+			valign=:center,
 		)
 
-		f_gas = n_gas ./ N_CELLS
-
-		lines!(
-			ax,
-			time_ticks,
-			ref_fs,
-			label=L"\mathrm{Reference}",
-			color=:gray55,
-		)
-
-		lines!(
-			ax,
-			time_ticks,
-			f_gas;
-			label=L"\mathrm{Gas \,\, fraction}",
-			color=Makie.wong_colors()[1],
-		)
-
-		lines!(
-			ax,
-			time_ticks,
-			1.0 .- f_gas;
-			label=L"\mathrm{Stellar \,\, fraction}",
-			color=Makie.wong_colors()[2],
-		)
-
-		axislegend(; position=:rt, nbanks=1)
-
-		Makie.save(joinpath(MONT_PATH, "recipe_03.png"), f)
+		Makie.save(joinpath(MONT_PATH, "sampling.png"), f)
 
 		f
+
 	end
 end
   ╠═╡ =#
@@ -505,7 +582,6 @@ Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
-NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 OrdinaryDiffEqBDF = "6ad6398a-0878-4a85-9266-38940aa047c8"
 OrdinaryDiffEqNordsieck = "c9986a66-5c92-4813-8696-a7ec84c806c8"
 OrdinaryDiffEqRosenbrock = "43230ef6-c299-4910-a778-202eb28ce4ce"
@@ -515,7 +591,6 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
@@ -527,12 +602,11 @@ UnitfulAstro = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
 CSV = "~1.3.0"
 CairoMakie = "~0.15.17"
 ChaosTools = "~3.5.4"
-ColorSchemes = "~3.31.0"
+ColorSchemes = "~3.32.0"
 DataFrames = "~1.8.2"
 DifferentialEquations = "~8.1.1"
 Interpolations = "~0.16.3"
 Measurements = "~2.14.1"
-NaNMath = "~1.1.5"
 OrdinaryDiffEqBDF = "~2.4.14"
 OrdinaryDiffEqNordsieck = "~2.3.2"
 OrdinaryDiffEqRosenbrock = "~2.7.5"
@@ -540,7 +614,6 @@ OrdinaryDiffEqSDIRK = "~2.9.8"
 PlutoLinks = "~0.1.8"
 PlutoUI = "~0.7.84"
 QuadGK = "~2.11.3"
-SpecialFunctions = "~2.9.1"
 StatsBase = "~0.34.13"
 Symbolics = "~7.48.0"
 TikzPictures = "~3.5.2"
@@ -554,7 +627,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.13.3"
 manifest_format = "2.1"
-project_hash = "1300149b88387c5a001878c7b1b6d1b5bd854471"
+project_hash = "1903fb8d4c7aa9cb23dbe5f7bdebdf42e74f5092"
 
 [[deps.ADTypes]]
 deps = ["PrecompileTools"]
@@ -815,10 +888,10 @@ version = "1.11.0"
 
 [[deps.CRlibm]]
 deps = ["CRlibm_jll"]
-git-tree-sha1 = "32e8293800e4cf5b850fb2a8a73621daa4564d68"
+git-tree-sha1 = "0db159493e83ecb2d122f9c40138d89b70d43963"
 registries = "General"
 uuid = "96374032-68de-5a5b-8d9e-752f78720389"
-version = "1.1.0"
+version = "1.1.1"
 
 [[deps.CRlibm_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -920,10 +993,10 @@ version = "0.4.2"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "ColorVectorSpace", "Colors", "FixedPointNumbers", "PrecompileTools", "Random"]
-git-tree-sha1 = "b0fd3f56fa442f81e0a47815c92245acfaaa4e34"
+git-tree-sha1 = "060adaf7a5c2e14bca025edf0eea0206ffdebd87"
 registries = "General"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-version = "3.31.0"
+version = "3.32.0"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -1178,11 +1251,11 @@ version = "7.21.5"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.DiffEqCallbacks]]
-deps = ["ConcreteStructs", "DataStructures", "DiffEqBase", "DifferentiationInterface", "LinearAlgebra", "Markdown", "PrecompileTools", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArraysCore"]
-git-tree-sha1 = "bbad42942524f183faa0898725fd2c9782e31180"
+deps = ["ConcreteStructs", "DataStructures", "DiffEqBase", "DifferentiationInterface", "LinearAlgebra", "Markdown", "PrecompileTools", "Random", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArraysCore"]
+git-tree-sha1 = "dc3c0668779fd5783c075dab6ed53371eea12e8c"
 registries = "General"
 uuid = "459566f4-90b8-5000-8ac3-15dfb0a30def"
-version = "4.19.5"
+version = "4.19.6"
 
     [deps.DiffEqCallbacks.extensions]
     DiffEqCallbacksFunctorsExt = "Functors"
@@ -1402,16 +1475,22 @@ version = "2.2.9"
 
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "d0f666deaf8099a7d7ac229a74402ada88898be1"
+git-tree-sha1 = "f2659a735f9360fedfa29925812380f322679e93"
 registries = "General"
 uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
-version = "2.9.0+0"
+version = "2.10.0+0"
 
 [[deps.ExprTools]]
 git-tree-sha1 = "d2e49e7efd29719d6f28b891b0e0e159daa9d2b4"
 registries = "General"
 uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
 version = "0.1.11"
+
+[[deps.ExpressionExplorer]]
+git-tree-sha1 = "fdcc9d4a253e0041d37c95487f9ae027c3ec002d"
+registries = "General"
+uuid = "21656369-7473-754a-2065-74616d696c43"
+version = "1.1.6"
 
 [[deps.ExproniconLite]]
 git-tree-sha1 = "c13f0b150373771b0fdc1713c97860f8df12e6c2"
@@ -1428,10 +1507,10 @@ version = "6.1.2+0"
 
 [[deps.FFTA]]
 deps = ["AbstractFFTs", "DocStringExtensions", "LinearAlgebra", "MuladdMacro", "Primes", "Random", "Reexport"]
-git-tree-sha1 = "65e55303b72f4a567a51b174dd2c47496efeb95a"
+git-tree-sha1 = "16aa62b6b2c5c65a642155bd1bce90633b8d3130"
 registries = "General"
 uuid = "b86e33f2-c0db-4aa1-a6e0-ab43e668529e"
-version = "0.3.1"
+version = "0.3.2"
 
 [[deps.FFTW]]
 deps = ["AbstractFFTs", "FFTW_jll", "Libdl", "LinearAlgebra", "MKL_jll", "Preferences", "Reexport"]
@@ -1636,10 +1715,10 @@ version = "1.3.7"
 
 [[deps.ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions"]
-git-tree-sha1 = "3b0f72e2ffef1a139ac450725c9ecd01c0a3c050"
+git-tree-sha1 = "a55669aa77ae8bbdc7310c4027112500ff5ec874"
 registries = "General"
 uuid = "f6369f11-7733-5829-9624-2563aa707210"
-version = "1.4.6"
+version = "1.4.7"
 weakdeps = ["StaticArrays"]
 
     [deps.ForwardDiff.extensions]
@@ -2261,11 +2340,11 @@ uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
 version = "2.42.4+0"
 
 [[deps.LineSearch]]
-deps = ["ADTypes", "CommonSolve", "ConcreteStructs", "FastClosures", "LinearAlgebra", "MaybeInplace", "PrecompileTools", "SciMLBase", "SciMLJacobianOperators", "StaticArraysCore"]
-git-tree-sha1 = "678bdf03a97059e018401d4482385548d61a3c73"
+deps = ["ADTypes", "CommonSolve", "ConcreteStructs", "FastClosures", "LinearAlgebra", "MaybeInplace", "PrecompileTools", "ReactantCore", "SciMLBase", "SciMLJacobianOperators", "StaticArraysCore"]
+git-tree-sha1 = "53cf132c453dcfcf10f1cb9a701a07c99b7e842e"
 registries = "General"
 uuid = "87fe0de2-c867-4266-b59a-2f0a94fc965b"
-version = "0.1.19"
+version = "0.1.20"
 weakdeps = ["LineSearches"]
 
     [deps.LineSearch.extensions]
@@ -3204,6 +3283,13 @@ weakdeps = ["FixedPointNumbers"]
     [deps.Ratios.extensions]
     RatiosFixedPointNumbersExt = "FixedPointNumbers"
 
+[[deps.ReactantCore]]
+deps = ["ExpressionExplorer", "MacroTools"]
+git-tree-sha1 = "1fe4e616752a0c4818ae88a504fc59b0fb016659"
+registries = "General"
+uuid = "a3311ec8-5e00-46d5-b541-4f83e724a433"
+version = "0.1.26"
+
 [[deps.ReadOnlyArrays]]
 git-tree-sha1 = "e6f7ddf48cf141cb312b078ca21cb2d29d0dc11d"
 registries = "General"
@@ -3786,10 +3872,10 @@ version = "7.10.1+0"
 
 [[deps.SymbolicIndexingInterface]]
 deps = ["Accessors", "ArrayInterface", "PrecompileTools", "RuntimeGeneratedFunctions", "StaticArraysCore"]
-git-tree-sha1 = "7eb6da9656581ac9fbffaef3ef7950a090a5002a"
+git-tree-sha1 = "42dd4c193a1bacea5b6adf78b6224de907b06351"
 registries = "General"
 uuid = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
-version = "0.3.55"
+version = "0.3.56"
 weakdeps = ["PrettyTables"]
 
     [deps.SymbolicIndexingInterface.extensions]
@@ -3804,10 +3890,10 @@ version = "1.2.2"
 
 [[deps.SymbolicUtils]]
 deps = ["AbstractTrees", "ArrayInterface", "Combinatorics", "ConstructionBase", "DataStructures", "DocStringExtensions", "DynamicPolynomials", "EnumX", "ExproniconLite", "Graphs", "LinearAlgebra", "MacroTools", "Moshi", "MultivariatePolynomials", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "ReadOnlyArrays", "SciMLPublic", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArraysCore", "SymbolicIndexingInterface", "TaskLocalValues", "TermInterface", "WeakCacheSets"]
-git-tree-sha1 = "05972ad476e67448b8364697b9c2c090eb69db1d"
+git-tree-sha1 = "61a82af727479af3d96988079fe3e05cdd57d695"
 registries = "General"
 uuid = "d1185830-fcd6-423d-90d6-eec64667417b"
-version = "4.54.0"
+version = "4.55.0"
 
     [deps.SymbolicUtils.extensions]
     SymbolicUtilsChainRulesCoreExt = "ChainRulesCore"
@@ -4226,8 +4312,10 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╠═a0ca487a-8a51-48cb-acc0-7b318c793d09
 # ╟─94ea6306-5a09-4458-9231-1669621aea30
 # ╠═35f987e3-321c-4772-8bee-ef3ae29c7e61
-# ╟─569231d3-a254-4e30-8e38-26cce1bfd3d5
-# ╟─7253e168-bd24-48c9-b013-2a21d4fa0879
-# ╟─da6f13ce-34fc-4344-b3c7-667bab0afb82
+# ╟─9d53a456-1168-4197-8863-55172cdedb90
+# ╟─f915c851-8bee-4c4b-8a36-4858c671b519
+# ╟─3af424b4-a354-4af6-810e-a4ae9f28383a
+# ╠═05e0c465-998f-4111-8571-e6e7dbbe095e
+# ╟─3f2c01bc-9d9a-4d69-becb-b8fa75c7618f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

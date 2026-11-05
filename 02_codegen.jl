@@ -8,13 +8,13 @@ using InteractiveUtils
 let
 	using Printf, PlutoLinks, Libdl
 
-	using DataFrames, ChaosTools, CSV, DifferentialEquations, Interpolations, LinearAlgebra, Measurements, NaNMath, PlutoUI, QuadGK, SpecialFunctions, Symbolics, TikzPictures, Unitful, UnitfulAstro
+	using DataFrames, ChaosTools, CSV, DifferentialEquations, Interpolations, LinearAlgebra, OrdinaryDiffEqBDF, PlutoUI, QuadGK, Symbolics, TikzPictures, Unitful, UnitfulAstro
 end
 
 # ╔═╡ 37653018-aaf5-42d1-a938-e05a44f18918
 # ╠═╡ skip_as_script = true
 #=╠═╡
-TableOfContents(title="Code generation", depth=4)
+TableOfContents(title="Code generation", depth=3)
   ╠═╡ =#
 
 # ╔═╡ f028697a-0534-4ccd-8282-1b9a3d8e284b
@@ -32,10 +32,6 @@ md"## Load the model"
 # ╔═╡ a0ca487a-8a51-48cb-acc0-7b318c793d09
 const MODEL = @ingredients("./01_model.jl");
 
-# ╔═╡ 176d2173-b440-4d03-822b-60034921cade
-# If we will use an ODE solver from GSL that needs the jacobian
-const JACOBIAN = false;
-
 # ╔═╡ 33e83e53-1df4-48a9-85fd-17b50c1b1be6
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -46,29 +42,105 @@ md"## Paths"
 begin
 	const GEN_FILES = mkpath("./generated_files")
 
-	# Path to the .c and .h tables
+	# Path to the .c and .h files
 	const C_FILES = mkpath(joinpath(GEN_FILES, "c_files"))
 
-	# Paths to the interpolation tables
+	# Path to the interpolation tables
 	const INTERP_FILES = mkpath(joinpath(GEN_FILES, "interpolation_tables"))
-	const ETA_D_TABLE  = joinpath(INTERP_FILES, "eta_d.txt")
-	const ETA_I_TABLE  = joinpath(INTERP_FILES, "eta_i.txt")
-	const R_TABLE      = joinpath(INTERP_FILES, "R.txt")
-	const ZSN_TABLE    = joinpath(INTERP_FILES, "Zsn.txt")
-	const UVB_TABLE    = joinpath(INTERP_FILES, "UVB.txt")
-	const SDSS_TABLE   = joinpath(INTERP_FILES, "magnitudes.txt")
 
-	# Paths to the C libraries (DLLs or SOs) and GCC
-	@static if Sys.iswindows()
-	    const LIB_PATH = joinpath(C_FILES, "lib.dll")
-		const GCC_PATH = "C:/msys64/mingw64/bin/gcc.exe"
-		const GSL_INC = "C:/msys64/mingw64/include"
-		const GSL_LIB = "C:/msys64/mingw64/lib"
-	elseif Sys.islinux()
-	    const LIB_PATH = joinpath(C_FILES, "lib.so")
-		const GCC_PATH = "gcc"
-		const GSL_INC = "/home/linuxbrew/.linuxbrew/include"
-		const GSL_LIB = "/home/linuxbrew/.linuxbrew/lib"
+	# Path to the C library (DLL in Windows, SO in Linux and macOS)
+	const LIB_PATH = joinpath(C_FILES, Sys.iswindows() ? "lib.dll" : "lib.so")
+
+	#################################################################################
+	# Find an executable, first in the PATH and then in a list of usual locations
+	#
+	# Arguments
+	#
+	#     name:      Name of the executable
+	#     fallbacks: Full paths to try if `name` is not in the PATH
+	#
+	# Returns
+	#
+	#     The full path to the executable, or nothing if it was not found
+	#################################################################################
+	function find_executable(
+		name::String,
+		fallbacks::Vector{String}=String[],
+	)::Union{String,Nothing}
+
+		path = Sys.which(name)
+
+		if !isnothing(path)
+			return path
+		end
+
+		for fallback in fallbacks
+			if isfile(fallback)
+				return fallback
+			end
+		end
+
+		return nothing
+
+	end
+
+	# Path to GCC (MinGW-w64 from MSYS2 in Windows)
+	const GCC_PATH = let
+		path = find_executable(
+			"gcc",
+			["C:/msys64/mingw64/bin/gcc.exe", "C:/msys64/ucrt64/bin/gcc.exe"],
+		)
+
+		if isnothing(path)
+			error("I could not find GCC. Add it to the PATH, or install it \
+			(in Windows, the MinGW-w64 GCC of MSYS2)")
+		end
+
+		path
+	end
+
+	#################################################################################
+	# Installation prefix of GSL, i.e. the folder with `include/gsl` and `lib`
+	#
+	# In order of priority, it is taken from:
+	#
+	#     1. The environment variable GSL_PREFIX
+	#     2. The output of `gsl-config --prefix` (Linux and macOS)
+	#     3. The installation prefix of GCC (MSYS2 in Windows, or a system GSL)
+	#################################################################################
+	const GSL_PREFIX = let
+		if haskey(ENV, "GSL_PREFIX")
+
+			ENV["GSL_PREFIX"]
+
+		else
+
+			gsl_config = Sys.iswindows() ? nothing : find_executable(
+				"gsl-config",
+				[
+					"/home/linuxbrew/.linuxbrew/bin/gsl-config",
+					"/opt/homebrew/bin/gsl-config",
+					"/usr/local/bin/gsl-config",
+				],
+			)
+
+			if isnothing(gsl_config)
+				# GCC is in <prefix>/bin
+				dirname(dirname(GCC_PATH))
+			else
+				String(strip(read(`$(gsl_config) --prefix`, String)))
+			end
+
+		end
+	end
+
+	# Paths to the GSL headers and libraries
+	const GSL_INC = joinpath(GSL_PREFIX, "include")
+	const GSL_LIB = joinpath(GSL_PREFIX, "lib")
+
+	if !isfile(joinpath(GSL_INC, "gsl", "gsl_odeiv2.h"))
+		error("I could not find GSL in $(GSL_PREFIX). Install it, or set the \
+		environment variable GSL_PREFIX to the folder with `include/gsl` and `lib`")
 	end
 end;
 
@@ -78,49 +150,25 @@ end;
 md"## Interpolation tables"
   ╠═╡ =#
 
-# ╔═╡ 0f03beab-d57c-4e7c-8dd1-e5eb3425c0c2
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"### Tables sizes"
-  ╠═╡ =#
-
-# ╔═╡ 5769c1c3-d184-41b2-9f23-d490fb1a9df1
-begin
-	# Stellar ages for the η_diss and η_ion interpolation tables
-	η_ages = MODEL.Q_ages
-
-	# Metallicities for the η_diss and η_ion interpolation tables
-	η_Zs = collect(range(MODEL.Q_metals[1], MODEL.Q_metals[end], 100))
-
-	# Metallicities for the R and Zsn interpolation tables
-	recycling_Zs = collect(range(MODEL.sy_metals[1], MODEL.sy_metals[end], 100))
-
-	# Number of rows in the η tables
-	const ETA_NROWS = length(η_ages) + 1
-
-	# Number of columns in the η tables
-	const ETA_NCOLS = length(η_Zs) + 1
-
-	# Number of rows in the R and Zsn tables
-	const R_ZSN_NROWS = length(recycling_Zs)
-
-	# Number of columns in the R and Zsn tables
-	const R_ZSN_NCOLS = 2
-
-	# Number of rows in the UVB table
-	const UVB_NROWS = size(MODEL.UVB_TABLE, 1)
-
-	# Number of columns in the UVB table
-	const UVB_NCOLS = 2
-end;
-
 # ╔═╡ 798cafe1-58e6-4c30-8668-59615b1d26ba
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"### UVB"
   ╠═╡ =#
 
-# ╔═╡ b94ba6f9-f136-4ca9-bb21-207df7a5534b
+# ╔═╡ 9bf00038-fc96-4fb8-ae17-ca1e4ea75a42
+begin
+	# Number of rows in the UVB table
+	const UVB_NROWS = size(MODEL.UVB_TABLE, 1)
+
+	# Number of columns in the UVB table
+	const UVB_NCOLS = 2
+
+	# Path to the UVB table
+	const UVB_TABLE = joinpath(INTERP_FILES, "UVB.txt")
+end;
+
+# ╔═╡ 728ef06e-69f8-47a5-a096-d10d26551968
 # ╠═╡ skip_as_script = true
 #=╠═╡
 # We use the table from Haardt et al. (2012)
@@ -137,6 +185,43 @@ cp(
 md"### Photodissociation and photoionization"
   ╠═╡ =#
 
+# ╔═╡ cf94872f-eff3-4524-87ee-6412c2de95a9
+begin
+	# Maximum step in log10(age [yr]) of the η tables
+	const ETA_MAX_DLOG_AGE = 0.02
+
+	# Stellar ages for the η_diss and η_ion interpolation tables, as log10(age [yr])
+	# The native ages of the SED tables are kept, and each interval between them is
+	# split into equal steps of at most ETA_MAX_DLOG_AGE.
+	η_ages = let
+		ages = [MODEL.Q_ages[1]]
+		
+		for (a1, a2) in zip(MODEL.Q_ages[1:end-1], MODEL.Q_ages[2:end])
+			
+			n    = ceil(Int, (a2 - a1) / ETA_MAX_DLOG_AGE - 1.0e-9)
+			step = (a2 - a1) / n
+			
+			append!(ages, [a1 .+ (1:n-1) .* step; a2])
+			
+		end
+		
+		ages
+	end
+
+	# Metallicities for the η_diss and η_ion interpolation tables
+	η_Zs = copy(MODEL.Q_metals)
+
+	# Number of rows in the η tables
+	const ETA_NROWS = length(η_ages) + 1
+
+	# Number of columns in the η tables
+	const ETA_NCOLS = length(η_Zs) + 1
+
+	# Paths to the η tables
+	const ETA_D_TABLE = joinpath(INTERP_FILES, "eta_d.txt")
+	const ETA_I_TABLE = joinpath(INTERP_FILES, "eta_i.txt")
+end;
+
 # ╔═╡ 0db83126-5520-4438-9f6b-2a6839559787
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -148,13 +233,14 @@ md"### Photodissociation and photoionization"
 #     η_diss(age, Z) -> eta_d.txt
 #     η_ion(age, Z)  -> eta_i.txt
 #
-# The columns are the tellar metallicity, the rows are the stellar ages
+# The first row has the stellar metallicities, the first column has the stellar ages,
+# and η is in the rest of the table
 #
 # Arguments
 #
-#     path: Where to store the resulting text files
-#     ages: List of stellar ages, as log₁₀(age [y])
-#     Zs:   List of stellar metallicities
+#     path:     Where to store the resulting text files
+#     log_ages: List of stellar ages, as log₁₀(age [yr])
+#     Zs:       List of stellar metallicities
 #####################################################################################
 function write_η_tables(
 	path::String,
@@ -164,7 +250,7 @@ function write_η_tables(
 
 	# Allocate memory for η_diss and η_ion matrices
 	η_diss = Matrix{Float64}(undef, length(log_ages) + 1, length(Zs) + 1)
-	η_ion = Matrix{Float64}(undef, length(log_ages) + 1, length(Zs) + 1)
+	η_ion  = Matrix{Float64}(undef, length(log_ages) + 1, length(Zs) + 1)
 
 	# First column
 	η_diss[:, 1] .= [0.0, log_ages...]
@@ -188,7 +274,7 @@ function write_η_tables(
 
 	# Write `eta_d.txt`
 	CSV.write(
-		joinpath(path, "eta_d.txt"),
+		ETA_D_TABLE,
 		Tables.table(η_diss);
 		delim=' ',
 		writeheader=false,
@@ -196,7 +282,7 @@ function write_η_tables(
 
 	# Write `eta_i.txt`
 	CSV.write(
-		joinpath(path, "eta_i.txt"),
+		ETA_I_TABLE,
 		Tables.table(η_ion);
 		delim=' ',
 		writeheader=false,
@@ -218,6 +304,26 @@ write_η_tables(INTERP_FILES, η_ages, η_Zs)
 #=╠═╡
 md"### Mass recycling"
   ╠═╡ =#
+
+# ╔═╡ 9f06677b-367c-4ea2-8320-474fa07ef0ae
+begin
+	# Metallicities for the R and Zsn interpolation tables
+	# The native metallicities of the yield model are included
+	recycling_Zs = sort!(unique!([
+		MODEL.sy_metals;
+		collect(range(MODEL.sy_metals[1], MODEL.sy_metals[end], 100))
+	]))
+
+	# Number of rows in the R and Zsn tables
+	const R_ZSN_NROWS = length(recycling_Zs)
+
+	# Number of columns in the R and Zsn tables
+	const R_ZSN_NCOLS = 2
+
+	# Paths to the R and Zsn tables
+	const R_TABLE   = joinpath(INTERP_FILES, "R.txt")
+	const ZSN_TABLE = joinpath(INTERP_FILES, "Zsn.txt")
+end;
 
 # ╔═╡ 871a53c5-82aa-4a4e-9627-c759901e7a89
 # ╠═╡ skip_as_script = true
@@ -252,7 +358,7 @@ function write_recycling_tables(path::String, Zs::Vector{Float64})::Nothing
 
 	# Write `R.txt`
 	CSV.write(
-		joinpath(path, "R.txt"),
+		R_TABLE,
 		Tables.table([Zs;; R]);
 		delim=' ',
 		writeheader=false,
@@ -260,7 +366,7 @@ function write_recycling_tables(path::String, Zs::Vector{Float64})::Nothing
 
 	# Write `Zsn.txt`
 	CSV.write(
-		joinpath(path, "Zsn.txt"),
+		ZSN_TABLE,
 		Tables.table([Zs;; Zsn]);
 		delim=' ',
 		writeheader=false,
@@ -293,15 +399,15 @@ md"### SDSS magnitudes"
 #
 #     Z | log_age | g | r | i
 #
-#       Z:       Metallicty
-#       log_age: log₁₀(age [yr])
-#       g:       Blue filter
-#       r:       Green filter
-#       i:       Red filter
+#     Z:       Metallicity
+#     log_age: log₁₀(age [yr])
+#     g:       Green filter
+#     r:       Red filter
+#     i:       Near-infrared filter
 #
 # Arguments
 #
-#     path: Where to store the resulting text files
+#     path: Where to store the resulting text file
 #     file: Path to the source file with the magnitudes (HR-pyPopStar 2025)
 #     imf:  Target IMF
 #####################################################################################
@@ -336,11 +442,7 @@ end;
 # ╔═╡ 22361146-afa5-40a5-ad79-9b7b91cba8db
 # ╠═╡ skip_as_script = true
 #=╠═╡
-write_magnitude_table(
-	INTERP_FILES,
-	MODEL.MAGNITUDE_TABLE,
-	MODEL.IMF_FUNCTIONS[MODEL.IMF][1],
-)
+write_magnitude_table(INTERP_FILES, MODEL.MAGNITUDE_TABLE, MODEL.IMF_KEY)
   ╠═╡ =#
 
 # ╔═╡ 73503ce5-c8b4-4f1d-a95c-cc7a307fdb8f
@@ -361,7 +463,7 @@ md"## Header file"
 #
 # Returns
 #
-#     If path === nothing, return the header file as a string
+#     The header file as a string if path === nothing, and nothing otherwise
 #####################################################################################
 function write_c_header(path::Union{String,Nothing})::Union{String,Nothing}
 
@@ -371,18 +473,16 @@ function write_c_header(path::Union{String,Nothing})::Union{String,Nothing}
 
 /* T [internal_units] * T_MYR = T [Myr] */
 #define T_MYR (All.UnitTime_in_s / All.HubbleParam / SEC_PER_MEGAYEAR)
-/* RHO [internal_units] * RHO_COSMO = RHO [cm^(-3)] */
+/* RHO [internal_units] * RHO_COSMO = RHO [mp * cm^(-3)] */
 #define RHO_COSMO (All.UnitDensity_in_cgs * All.HubbleParam * All.HubbleParam * All.cf_a3inv / PROTONMASS)
-/* M [internal_units] * M_COSMO = M [Mₒ] */
+/* M [internal_units] * M_COSMO = M [Msun] */
 #define M_COSMO (All.UnitMass_in_g / All.HubbleParam / SOLAR_MASS)
 /* M [internal_units] * M_CGS = M [mp] */
 #define M_CGS (All.UnitMass_in_g / All.HubbleParam / PROTONMASS)
-/* L [internal_units] * L_CGS = L [cm] */
-#define L_CGS (All.UnitLength_in_cm * All.cf_atime / All.HubbleParam)
 
 /* Interpolation tables */
 #define ETA_NROWS $(ETA_NROWS)   // Number of rows in the η tables
-#define ETA_NCOLS $(ETA_NCOLS)   // Number of columns in the η tables
+#define ETA_NCOLS $(ETA_NCOLS)     // Number of columns in the η tables
 #define ETA_LOG_AGE_MIN $(@sprintf("%.15e", η_ages[1])) // First age of the η tables, log10(age [yr])
 #define R_ZSN_NROWS $(R_ZSN_NROWS) // Number of rows in the R and Zsn tables
 #define R_ZSN_NCOLS $(R_ZSN_NCOLS)   // Number of columns in the R and Zsn tables
@@ -398,35 +498,45 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 
 /* ODE constants */
 
-/* Cρ = $(@sprintf("%.1f", MODEL.Cρ)) (clumping factor) */
-/* T_ceil = $(@sprintf("%.1f", ustrip(u"K", MODEL.T_ceil))) K, μ = 4 / (1 + 3 * $(@sprintf("%.2f", MODEL.X_H))) (Jeans shielding length with temperature ceiling, Safranek-Shrader2017 model L1a) */
-/* IMF: $(MODEL.IMF) */
+/* Model choices */
+/* IMF: $(MODEL.IMF), $(MODEL.IMF_M_LOW) - $(MODEL.IMF_M_HIGH) (SNII progenitors above $(MODEL.M_IR)) */
 /* Yield model: $(MODEL.YIELD_MODEL) */
 /* Stellar luminosity model: $(MODEL.HR_LUMINOSITY ? "Millán-Irigoyen2021" : "Mollá2009") */
-/* LW background model: $(MODEL.LW_SOURCE) */
+/* UVB model: Haardt2012 */
+/* LW background model: $(MODEL.LW_SOURCE), J21 constant below z = $(MODEL.LWB_Z_MIN) */
+/* Clumping factor: Cρ = $(@sprintf("%.1f", MODEL.Cρ)) */
+/* Dust grains (condensation): a_eff = $(MODEL.a_eff), s = $(MODEL.s_d) */
+/* Dust initial condition: ξ_Si = $(MODEL.ξ_Si), ξ_C = $(MODEL.ξ_C) (Hirashita2012) */
+/* Dust accretion: T_gas = $(MODEL.T), T_dust = $(MODEL.Td) */
+/* Dust destruction: ϵ = $(MODEL.ϵ_SNII), E_SNII = $(MODEL.E_SNII) */
+/* Shielding length: T = $(MODEL.T_ceil) */
 
-#define N_EQU $(MODEL.N_EQU)                         /* Number of equations */
-#define ODE_CREC $(@sprintf("%.15e", MODEL.c_rec))  /* Recombination constant [Myr^(-1) * cm^3 * mp^(-1)] */
-#define ODE_CCOND $(@sprintf("%.15e", MODEL.c_cond)) /* Condensation constant [Myr^(-1) * cm^3 * mp^(-1)] */
-#define ODE_CS $(@sprintf("%.15e", MODEL.c_star))    /* Star formation constant [Myr^(-1) * cm^(3/2) * mp^(-1/2)] */
-#define ODE_CACCSI $(@sprintf("%.15e", MODEL.c_acc_Si)) /* Silicate accretion constant [Myr^(-1) * mp^(-1) * cm^3] */
-#define ODE_CACCC $(@sprintf("%.15e", MODEL.c_acc_C))  /* Graphite accretion constant [Myr^(-1) * mp^(-1) * cm^3] */
-#define ODE_CSD $(@sprintf("%.15e", MODEL.c_sd))   /* Dust shielding constant [cm^2 * mp^(-1)] */
-#define ODE_CSH2 $(@sprintf("%.15e", MODEL.c_sh2))             /* Molecular self-shielding constant [cm^2 * mp^(-1)] */
-#define ODE_CLSH $(@sprintf("%.15e", MODEL.c_lsh))     /* Shielding length constant [mp^(1/2) * cm^(-1/2)] */
-#define ODE_CXSI $(@sprintf("%.15e", MODEL.c_Si))     /* Silicate initial condition constant [dimensionless] */
-#define ODE_CXC $(@sprintf("%.15e", MODEL.c_C))      /* Graphite initial condition constant [dimensionless] */
-#define ODE_CMAXSI $(@sprintf("%.15e", MODEL.cmax_Si))   /* Maximum dust mass per unit mass of Si, 1 / f_Si [dimensionless] */
-#define ODE_CMAXC $(@sprintf("%.15e", MODEL.cmax_C))    /* Maximum dust mass per unit mass of C, 1 / f_C [dimensionless] */
-#define Z_FLOOR 1.0e-10                    /* Metallicity below which a cell is considered pristine (numerical noise) [dimensionless] */
-#define ODE_CTION $(@sprintf("%.4e", MODEL.c_τion))            /* Photoionization optical depth constant [cm^2 * mp^(-1)] */
-#define ODE_CTDISS $(@sprintf("%.4e", MODEL.c_τdiss))           /* Photodissociation optical depth constant [cm^2 * mp^(-1)] */
-#define FD_EFF $(@sprintf("%.15e", MODEL.fd_eff))       /* Dust fraction floor for condensation, 1e-3 D_ref [dimensionless] */
-#define WH2 $(@sprintf("%.4e", MODEL.ωH2))                  /* Molecular shielding parameter [dimensionless] */
-#define ABEL97 $(@sprintf("%.15e", MODEL.abel97))              /* LWB dissociation constant [Myr^(-1)] */
-#define DELTA_DUST $(@sprintf("%.2e", MODEL.δ_d))                /* Dust condensation efficiency [dimensionless] */
-#define ODE_CSWMASS $(@sprintf("%.15e", MODEL.c_sw_mass))  /* Nominal value of the mass swept-up by a SNe shock times the efficiency of dust destruction [Msun] */
-#define SNII_FRAC_TEST $(@sprintf("%.2e", MODEL.SNII_FRAC))            /* Characteristic value of the fraction of SNII for testing purposes [Msun^(-1)] */
+#define N_EQU $(MODEL.N_EQU)                          /* Number of equations */
+#define ODE_CREC $(@sprintf("%.15e", MODEL.c_rec))   /* Recombination constant [Myr^(-1) * cm^3 * mp^(-1)] */
+#define ODE_CCOND $(@sprintf("%.15e", MODEL.c_cond))  /* Condensation constant [Myr^(-1) * cm^3 * mp^(-1)] */
+#define ODE_CS $(@sprintf("%.15e", MODEL.c_star))     /* Star formation constant [Myr^(-1) * cm^(3/2) * mp^(-1/2)] */
+#define ODE_CACCSI $(@sprintf("%.15e", MODEL.c_acc_Si)) /* Silicate accretion constant [Myr^(-1) * cm^3 * mp^(-1)] */
+#define ODE_CACCC $(@sprintf("%.15e", MODEL.c_acc_C))  /* Graphite accretion constant [Myr^(-1) * cm^3 * mp^(-1)] */
+#define ODE_CSD $(@sprintf("%.15e", MODEL.c_sd))    /* Dust shielding constant [cm^2 * mp^(-1)] */
+#define ODE_CSH2 $(@sprintf("%.15e", MODEL.c_sh2))   /* Molecular self-shielding constant [cm^2 * mp^(-1)] */
+#define ODE_CLSH $(@sprintf("%.15e", MODEL.c_lsh))   /* Shielding length constant [mp^(1/2) * cm^(-1/2)] */
+#define ODE_CXSI $(@sprintf("%.15e", MODEL.c_Si))   /* Dust mass per unit mass of Si in the initial condition [dimensionless] */
+#define ODE_CXC $(@sprintf("%.15e", MODEL.c_C))    /* Dust mass per unit mass of C in the initial condition [dimensionless] */
+#define ODE_CMAXSI $(@sprintf("%.15e", MODEL.cmax_Si)) /* Maximum dust mass per unit mass of Si [dimensionless] */
+#define ODE_CMAXC $(@sprintf("%.15e", MODEL.cmax_C))  /* Maximum dust mass per unit mass of C [dimensionless] */
+#define Z_FLOOR 1.0e-10                  /* Metallicity below which a cell is considered pristine [dimensionless] */
+#define ODE_CTION $(@sprintf("%.4e", MODEL.c_τion))             /* Photoionization optical depth constant [cm^2 * mp^(-1)] */
+#define ODE_CTDISS $(@sprintf("%.4e", MODEL.c_τdiss))            /* Photodissociation optical depth constant [cm^2 * mp^(-1)] */
+#define FD_EFF $(@sprintf("%.15e", MODEL.fd_eff))     /* Dust fraction floor for condensation [dimensionless] */
+#define WH2 $(@sprintf("%.4e", MODEL.ωH2))                   /* Molecular self-shielding parameter [dimensionless] */
+#define ODE_EXPFAC $(@sprintf("%.15e", MODEL.exp_fac)) /* Exponential factor of the molecular self-shielding [dimensionless] */
+#define ABEL97 $(@sprintf("%.15e", MODEL.abel97))     /* H2 photodissociation rate per unit J21 [Myr^(-1)] */
+#define LWB_A $(@sprintf("%.15e", MODEL.lwb_A))      /* J21 fit, constant coefficient [dimensionless] */
+#define LWB_B $(@sprintf("%.15e", MODEL.lwb_B))     /* J21 fit, linear coefficient [dimensionless] */
+#define LWB_C $(@sprintf("%.15e", MODEL.lwb_C))     /* J21 fit, quadratic coefficient [dimensionless] */
+#define LWB_Z_MIN $(@sprintf("%.15e", MODEL.LWB_Z_MIN))  /* Lowest redshift of the validity range of the J21 fit [dimensionless] */
+#define DELTA_DUST $(@sprintf("%.2e", MODEL.δ_d))              /* Dust condensation efficiency of the SN ejecta [dimensionless] */
+#define ODE_CDD $(@sprintf("%.15e", MODEL.c_dd))    /* Dust destruction constant [dimensionless] */
 
 typedef struct DataTable
 {
@@ -438,7 +548,7 @@ typedef struct DataTable
 void *read_ftable(const char *file_path, const int n_rows, const int n_cols);
 double rate_of_star_formation(const int index);
 
-#endif /* #ifdef EL_SFR_H */
+#endif /* #ifndef EL_SFR_H */
 	"""
 
 	if isnothing(path)
@@ -460,310 +570,9 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 begin
-	# Write the header file (defined as a variable so the compilation depends on it)
 	header_written = joinpath(C_FILES, "el_sfr.h")
 	write_c_header(header_written)
-end
-  ╠═╡ =#
-
-# ╔═╡ 7e5980f4-2bcc-4c42-a244-5a8e45df9ae1
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"## Jacobian"
-  ╠═╡ =#
-
-# ╔═╡ 85d9b763-ded9-4e95-be86-e519abe904d9
-# ╠═╡ skip_as_script = true
-#=╠═╡
-#####################################################################################
-# Write the jacobian as a C function in the `el_sfr.c` file
-#
-# Arguments
-#
-#     path: Path to the `el_sfr.c` file
-#####################################################################################
-function write_jacobian(path::String)::Nothing
-
-	# Boilerplate
-	head = """
-	\n/*! \\brief Evaluate the Jacobian of the systems of equations.
-	*
-	*  Evaluate the Jacobian matrix of the model, using the following variables:
-	*
-	*  Ionized gas fraction:    fi(t) = Mi(t) / MC --> y[0]
-	*  Atomic gas fraction:     fa(t) = Ma(t) / MC --> y[1]
-	*  Molecular gas fraction:  fm(t) = Mm(t) / MC --> y[2]
-	*  Stellar fraction:        fs(t) = Ms(t) / MC --> y[3]
-	*  Metal fraction:          fZ(t) = MZ(t) / MC --> y[4]
-	*  Dust fraction:           fd(t) = Md(t) / MC --> y[5]
-	*
-	*  where MC = Mi(t) + Ma(t) + Mm(t) + Ms(t) + MZ(t) + Md(t) is the total density of the gas cell,
-	*  and each equation has units of Myr^(-1).
-	*
-	*  \\param[in] t Unused variable to comply with the `gsl_odeiv2_driver_alloc_y_new()` API.
-	*  \\param[in] y Values of the variables at which the Jacobian will be evaluated.
-	*  \\param[out] dfdy Where the results of evaluating the Jacobian will be stored.
-	*  \\param[out] dfdt Where the results of evaluating the time derivatives will be stored.
-	*  \\param[in] parameters Parameters for the Jacobian.
-	*
-	*  \\return Constant `GSL_SUCCESS`, to confirm that the computation was successful.
-	*/
-	static int jacobian(double t, const double y[], double *dfdy, double dfdt[], void *parameters)
-	{
-		(void)(t);
-
-		/*
-		 * Destructure the parameters
-		 *
-		 * rho_C: Total cell density           [mp * cm^(-3)]
-		 * UVB:   UVB photoionization rate     [Myr^(-1)]
-		 * LWB:   LWB Photodissociation  rate  [Myr^(-1)]
-		 * eta_d: Photodissociation efficiency [dimensionless]
-		 * eta_i: Photoionization efficiency   [dimensionless]
-		 * R:     Mass recycling fraction      [dimensionless]
-		 * Zsn:   Metals recycling fraction    [dimensionless]
-		 * h:     Column height                [cm]
-		 */
-		double *p    = (double *)parameters;
-		double rho_C = p[0];
-		double UVB   = p[1];
-		double LWB   = p[2];
-		double eta_d = p[3];
-		double eta_i = p[4];
-		double R     = p[5];
-		double Zsn   = p[6];
-		double h     = p[7];
-
-		gsl_matrix_view dfdy_mat = gsl_matrix_view_array(dfdy, $(MODEL.N_EQU), $(MODEL.N_EQU));
-		gsl_matrix *m = &dfdy_mat.matrix;
-
-		double aux_var_01 = AUX_VAR_01;
-		double aux_var_02 = AUX_VAR_02;
-		double aux_var_03 = AUX_VAR_03;
-		double aux_var_04 = AUX_VAR_04;
-		double aux_var_05 = AUX_VAR_05;
-		double aux_var_06 = AUX_VAR_06;
-		double aux_var_07 = AUX_VAR_07;
-		double aux_var_08 = AUX_VAR_08;
-		double aux_var_09 = AUX_VAR_09;
-		double aux_var_10 = AUX_VAR_10;
-		double aux_var_11 = AUX_VAR_11;
-		double aux_var_12 = AUX_VAR_12;
-		double aux_var_13 = AUX_VAR_13;
-
-	"""
-
-	tail = """
-		dfdt[0] = 0;
-		dfdt[1] = 0;
-		dfdt[2] = 0;
-		dfdt[3] = 0;
-		dfdt[4] = 0;
-		dfdt[5] = 0;
-
-		return GSL_SUCCESS;
-	}
-	"""
-
-	c_file_str = read(path, String)
-
-	# Main regex patterns
-	jac_block    = r"(?<=// JACOBIAN_START)((?s:.)*?)(?=// JACOBIAN_END)"
-	solver_block = r"(?<=gsl_odeiv2_driver_alloc_y_new\(\&sys)((?s:.)*?)(?=;)"
-	sys_block    = r"(?<=gsl_odeiv2_system sys = )((?s:.)*?)(?=;)"
-
-	if JACOBIAN
-
-		# Create the C version of the jacobian
-		@variables S_t S_ic[1:MODEL.N_EQU] S_parameters[1:MODEL.N_PAR]
-	    S_dydt = Vector{Num}(undef, MODEL.N_EQU)
-	    MODEL.system!(S_dydt, S_ic, S_parameters, S_t)
-
-		# Compute the Jacobian symbolically
-	    jac = Symbolics.jacobian(S_dydt, S_ic)
-
-		# Function block regex pattern
-		func_block = r"(?<=\{\n  )(.*?)(?=\n\}\n)"
-
-		matrix = ""
-
-		for i in 1:MODEL.N_EQU
-
-			for j in 1:MODEL.N_EQU
-
-				# Transform the symbolic expresions into C functions
-				c_function = build_function(
-					jac[i, j],
-					S_ic,
-					S_parameters,
-					S_t;
-					target=Symbolics.CTarget(),
-				)
-
-				# Replacements for correct formatting
-				matrix *= replace(
-					 match(func_block, c_function).match,
-					"du[0] =" => "\tgsl_matrix_set(m, $(i-1), $(j-1),",
-					 ";"      => ");\n",
-				)
-
-			end
-
-		end
-
-		aux_var_01 = "sqrt(rho_C)"
-		aux_var_02 = "sqrt(1.0 + 9.999999999999999e-16 * y[2] * rho_C * h)"
-		aux_var_03 = "exp(-3.149606299212598e-19 * (y[1] + y[2]) * (y[4] + y[5]) * rho_C * h)"
-		aux_var_04 = "expm1(-6.2999999999999996e-18 * y[1] * rho_C * h)"
-		aux_var_05 = "pow(1.0 + 9.999999999999999e-16 * y[2] * rho_C * h, 2)"
-		aux_var_06 = "expm1(-1.05e-19 * y[2] * rho_C * h)"
-		aux_var_07 = "exp(-0.00085 * aux_var_02)"
-		aux_var_08 = "pow(aux_var_02, 2)"
-		aux_var_09 = "pow(1.0 + 9.999999999999999e-16 * y[2] * rho_C * h, 4)"
-		aux_var_10 = "rho_C * eta_i * h * aux_var_04 * aux_var_01 * aux_var_03"
-		aux_var_11 = "exp(-6.2999999999999996e-18 * y[1] * rho_C * h)"
-		aux_var_12 = "pow(y[1] + y[2], 2)"
-		aux_var_13 = "exp(-1.05e-19 * y[2] * rho_C * h) * aux_var_03"
-
-		jacobian_string = head * matrix * "\n" * tail
-
-		# Replacements for correct formatting
-		jacobian_string = replace(
-			jacobian_string,
-			"RHS1"    => "y",
-			"RHS2[0]" => "rho_C",
-			"RHS2[1]" => "UVB",
-			"RHS2[2]" => "LWB",
-			"RHS2[3]" => "eta_d",
-			"RHS2[4]" => "eta_i",
-			"RHS2[5]" => "R",
-			"RHS2[6]" => "Zsn",
-			"RHS2[7]" => "h",
-			"+ -"     => "-",
-		)
-
-		# Replacements for correct formatting
-		jacobian_string = replace(
-			jacobian_string,
-			"-1 *"       => "-",
-			aux_var_01   => "aux_var_01",
-			aux_var_02   => "aux_var_02",
-			aux_var_03   => "aux_var_03",
-			aux_var_04   => "aux_var_04",
-			aux_var_05   => "aux_var_05",
-			aux_var_06   => "aux_var_06",
-			"AUX_VAR_01" => aux_var_01,
-			"AUX_VAR_02" => aux_var_02,
-			"AUX_VAR_03" => aux_var_03,
-			"AUX_VAR_04" => aux_var_04,
-			"AUX_VAR_05" => aux_var_05,
-			"AUX_VAR_06" => aux_var_06,
-		)
-
-		# Replacements for correct formatting
-		jacobian_string = replace(
-			jacobian_string,
-			aux_var_07   => "aux_var_07",
-			aux_var_08   => "aux_var_08",
-			aux_var_09   => "aux_var_09",
-			aux_var_10   => "aux_var_10",
-			aux_var_11   => "aux_var_11",
-			aux_var_12   => "aux_var_12",
-			aux_var_13   => "aux_var_13",
-			"AUX_VAR_07" => aux_var_07,
-			"AUX_VAR_08" => "aux_var_02 * aux_var_02",
-			"AUX_VAR_09" => aux_var_09,
-			"AUX_VAR_10" => aux_var_10,
-			"AUX_VAR_11" => aux_var_11,
-			"AUX_VAR_12" => aux_var_12,
-			"AUX_VAR_13" => aux_var_13,
-		)
-
-		# Write the jacobian into the main string
-		file_with_jacobian = replace(
-			c_file_str,
-			jac_block    => jacobian_string,
-			solver_block => ", gsl_odeiv2_step_msbdf, it * 1e-4, 1e-10, 0.0)",
-			sys_block    => "{sf_ode, jacobian, N_EQU, parameters}",
-		)
-
-	else
-
-		file_with_jacobian = replace(
-			c_file_str,
-			jac_block    => "\n",
-			solver_block => ", gsl_odeiv2_step_msadams, it * 1e-4, 1e-10, 0.0)",
-			sys_block    => "{sf_ode, NULL, N_EQU, parameters}",
-		)
-
-	end
-
-	# Write the jacobian into the C file
-	write(path, file_with_jacobian)
-
-	return nothing
-
 end;
-  ╠═╡ =#
-
-# ╔═╡ 8d718f6f-1ace-4d5a-8c9d-6b1994cb014d
-# ╠═╡ skip_as_script = true
-#=╠═╡
-begin
-	# Write the Jacobian into the C file (defined as a variable so the compilation depends on it)
-	jacobian_written = joinpath(C_FILES, "el_sfr.c")
-	write_jacobian(jacobian_written)
-end
-  ╠═╡ =#
-
-# ╔═╡ 2e4eda53-ef7b-411e-893d-c47de1f4b4df
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"## LWB photodissociation"
-  ╠═╡ =#
-
-# ╔═╡ 8aea8d2e-90ef-4302-875d-d99f952a6ca0
-# ╠═╡ skip_as_script = true
-#=╠═╡
-#####################################################################################
-# Write the choseen LWB photodissociation into the `el_sfr.c` file
-#
-# Arguments
-#
-#     path: Path to the `el_sfr.c` file
-#####################################################################################
-function write_LWB(path::String)::Nothing
-
-	c_file_str = read(path, String)
-
-	# Main regex patterns
-	A_block = r"(?<=double LWB_A = )((?s:.)*?)(?=;)"
-	B_block = r"(?<=double LWB_B = )((?s:.)*?)(?=;)"
-	C_block = r"(?<=double LWB_C = )((?s:.)*?)(?=;)"
-
-	file_with_LWB = replace(
-		c_file_str,
-		A_block => MODEL.lwb_A,
-		B_block => MODEL.lwb_B,
-		C_block => MODEL.lwb_C,
-	)
-
-	# Write the LWB photodissociation into the C file
-	write(path, file_with_LWB)
-
-	return nothing
-
-end;
-  ╠═╡ =#
-
-# ╔═╡ 8c7ed540-9e7d-428f-bb68-ae7fe91fef42
-# ╠═╡ skip_as_script = true
-#=╠═╡
-begin
-	# Write the LWB constants into the C file (defined as a variable so the compilation depends on it)
-	lwb_written = joinpath(C_FILES, "el_sfr.c")
-	write_LWB(lwb_written)
-end
   ╠═╡ =#
 
 # ╔═╡ e36e8f05-138f-4a8f-be3a-23edbac61304
@@ -799,12 +608,12 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 begin
-	# Reference the writer cells, so the library is recompiled each time
-	# the header, the Jacobian, or the LWB constants are rewritten
-	header_written, jacobian_written, lwb_written
+	# Reference the writer cell, so the library is recompiled each time the header
+	# is rewritten
+	header_written
 
 	compile_libraries(C_FILES)
-end
+end;
   ╠═╡ =#
 
 # ╔═╡ d4af2366-fa8d-4280-9057-15699d585daa
@@ -856,7 +665,7 @@ function integrate_with_c(
 	library::Ptr{Nothing},
 )::Function
 
-	# Load the C functions rom `library`
+	# Load the C functions from `library`
 	integrate_ode = Libdl.dlsym(library, :integrate_ode)
 	interpolate1D = Libdl.dlsym(library, :interpolate1D)
 	interpolate2D = Libdl.dlsym(library, :interpolate2D)
@@ -930,7 +739,7 @@ function integrate_with_c(
 		)::Cdouble
 
 		# Below the first age of the η tables, the photon rates Q are constant,
-		# so η is proportional to the integration time (as in the C caller)
+		# so η is proportional to the integration time
 		if log_it < η_ages[1]
 			η_scale = exp10(log_it - η_ages[1])
 			η_diss *= η_scale
@@ -945,7 +754,7 @@ function integrate_with_c(
 			R_ZSN_NCOLS::Cint,
 		)::Cdouble
 
-		# Metals recycling fraction [dimensionless]
+		# Metallicity of the supernova ejecta [dimensionless]
 		Zsn = @ccall $interpolate1D(
 			Z::Cdouble,
 			Zsn_table::Cstring,
@@ -953,7 +762,7 @@ function integrate_with_c(
 			R_ZSN_NCOLS::Cint,
 		)::Cdouble
 
-		# Maximum dust fraction and accretion coefficient, as in the C caller
+		# Maximum dust fraction and accretion coefficient
 		fd_max, c_dg = MODEL.accretion_parameters(X_Si, X_C, Z)
 
 		parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
@@ -987,13 +796,11 @@ DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
-NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
+OrdinaryDiffEqBDF = "6ad6398a-0878-4a85-9266-38940aa047c8"
 PlutoLinks = "0ff47ea0-7a50-410d-8455-4348d5de0420"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 TikzPictures = "37f6aa50-8035-52d0-81c2-5a1d08754b2d"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
@@ -1005,12 +812,10 @@ ChaosTools = "~3.5.4"
 DataFrames = "~1.8.2"
 DifferentialEquations = "~8.1.1"
 Interpolations = "~0.16.3"
-Measurements = "~2.14.1"
-NaNMath = "~1.1.5"
+OrdinaryDiffEqBDF = "~2.4.14"
 PlutoLinks = "~0.1.8"
 PlutoUI = "~0.7.84"
 QuadGK = "~2.11.3"
-SpecialFunctions = "~2.9.1"
 Symbolics = "~7.48.0"
 TikzPictures = "~3.5.2"
 Unitful = "~1.29.0"
@@ -1023,7 +828,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.13.3"
 manifest_format = "2.1"
-project_hash = "64188949ee98dd1b82d93e8bb3c9ad43f48ecf9f"
+project_hash = "e5a65c5467285c0e17a3a4c384b4a21421a83cad"
 
 [[deps.ADTypes]]
 deps = ["PrecompileTools"]
@@ -1230,10 +1035,10 @@ version = "1.11.0"
 
 [[deps.CRlibm]]
 deps = ["CRlibm_jll"]
-git-tree-sha1 = "32e8293800e4cf5b850fb2a8a73621daa4564d68"
+git-tree-sha1 = "0db159493e83ecb2d122f9c40138d89b70d43963"
 registries = "General"
 uuid = "96374032-68de-5a5b-8d9e-752f78720389"
-version = "1.1.0"
+version = "1.1.1"
 
 [[deps.CRlibm_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1520,11 +1325,11 @@ version = "7.21.5"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.DiffEqCallbacks]]
-deps = ["ConcreteStructs", "DataStructures", "DiffEqBase", "DifferentiationInterface", "LinearAlgebra", "Markdown", "PrecompileTools", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArraysCore"]
-git-tree-sha1 = "bbad42942524f183faa0898725fd2c9782e31180"
+deps = ["ConcreteStructs", "DataStructures", "DiffEqBase", "DifferentiationInterface", "LinearAlgebra", "Markdown", "PrecompileTools", "Random", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArraysCore"]
+git-tree-sha1 = "dc3c0668779fd5783c075dab6ed53371eea12e8c"
 registries = "General"
 uuid = "459566f4-90b8-5000-8ac3-15dfb0a30def"
-version = "4.19.5"
+version = "4.19.6"
 
     [deps.DiffEqCallbacks.extensions]
     DiffEqCallbacksFunctorsExt = "Functors"
@@ -1734,16 +1539,22 @@ weakdeps = ["Adapt", "ChainRulesCore"]
 
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "d0f666deaf8099a7d7ac229a74402ada88898be1"
+git-tree-sha1 = "f2659a735f9360fedfa29925812380f322679e93"
 registries = "General"
 uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
-version = "2.9.0+0"
+version = "2.10.0+0"
 
 [[deps.ExprTools]]
 git-tree-sha1 = "d2e49e7efd29719d6f28b891b0e0e159daa9d2b4"
 registries = "General"
 uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
 version = "0.1.11"
+
+[[deps.ExpressionExplorer]]
+git-tree-sha1 = "fdcc9d4a253e0041d37c95487f9ae027c3ec002d"
+registries = "General"
+uuid = "21656369-7473-754a-2065-74616d696c43"
+version = "1.1.6"
 
 [[deps.ExproniconLite]]
 git-tree-sha1 = "c13f0b150373771b0fdc1713c97860f8df12e6c2"
@@ -1881,10 +1692,10 @@ version = "2.18.3+0"
 
 [[deps.ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions"]
-git-tree-sha1 = "3b0f72e2ffef1a139ac450725c9ecd01c0a3c050"
+git-tree-sha1 = "a55669aa77ae8bbdc7310c4027112500ff5ec874"
 registries = "General"
 uuid = "f6369f11-7733-5829-9624-2563aa707210"
-version = "1.4.6"
+version = "1.4.7"
 weakdeps = ["StaticArrays"]
 
     [deps.ForwardDiff.extensions]
@@ -2336,11 +2147,11 @@ uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
 version = "2.42.4+0"
 
 [[deps.LineSearch]]
-deps = ["ADTypes", "CommonSolve", "ConcreteStructs", "FastClosures", "LinearAlgebra", "MaybeInplace", "PrecompileTools", "SciMLBase", "SciMLJacobianOperators", "StaticArraysCore"]
-git-tree-sha1 = "678bdf03a97059e018401d4482385548d61a3c73"
+deps = ["ADTypes", "CommonSolve", "ConcreteStructs", "FastClosures", "LinearAlgebra", "MaybeInplace", "PrecompileTools", "ReactantCore", "SciMLBase", "SciMLJacobianOperators", "StaticArraysCore"]
+git-tree-sha1 = "53cf132c453dcfcf10f1cb9a701a07c99b7e842e"
 registries = "General"
 uuid = "87fe0de2-c867-4266-b59a-2f0a94fc965b"
-version = "0.1.19"
+version = "0.1.20"
 weakdeps = ["LineSearches"]
 
     [deps.LineSearch.extensions]
@@ -3136,6 +2947,13 @@ weakdeps = ["FixedPointNumbers"]
     [deps.Ratios.extensions]
     RatiosFixedPointNumbersExt = "FixedPointNumbers"
 
+[[deps.ReactantCore]]
+deps = ["ExpressionExplorer", "MacroTools"]
+git-tree-sha1 = "1fe4e616752a0c4818ae88a504fc59b0fb016659"
+registries = "General"
+uuid = "a3311ec8-5e00-46d5-b541-4f83e724a433"
+version = "0.1.26"
+
 [[deps.ReadOnlyArrays]]
 git-tree-sha1 = "e6f7ddf48cf141cb312b078ca21cb2d29d0dc11d"
 registries = "General"
@@ -3623,10 +3441,10 @@ version = "7.10.1+0"
 
 [[deps.SymbolicIndexingInterface]]
 deps = ["Accessors", "ArrayInterface", "PrecompileTools", "RuntimeGeneratedFunctions", "StaticArraysCore"]
-git-tree-sha1 = "7eb6da9656581ac9fbffaef3ef7950a090a5002a"
+git-tree-sha1 = "42dd4c193a1bacea5b6adf78b6224de907b06351"
 registries = "General"
 uuid = "2efcf032-c050-4f8e-a9bb-153293bab1f5"
-version = "0.3.55"
+version = "0.3.56"
 weakdeps = ["PrettyTables"]
 
     [deps.SymbolicIndexingInterface.extensions]
@@ -3641,10 +3459,10 @@ version = "1.2.2"
 
 [[deps.SymbolicUtils]]
 deps = ["AbstractTrees", "ArrayInterface", "Combinatorics", "ConstructionBase", "DataStructures", "DocStringExtensions", "DynamicPolynomials", "EnumX", "ExproniconLite", "Graphs", "LinearAlgebra", "MacroTools", "Moshi", "MultivariatePolynomials", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "ReadOnlyArrays", "SciMLPublic", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArraysCore", "SymbolicIndexingInterface", "TaskLocalValues", "TermInterface", "WeakCacheSets"]
-git-tree-sha1 = "05972ad476e67448b8364697b9c2c090eb69db1d"
+git-tree-sha1 = "61a82af727479af3d96988079fe3e05cdd57d695"
 registries = "General"
 uuid = "d1185830-fcd6-423d-90d6-eec64667417b"
-version = "4.54.0"
+version = "4.55.0"
 
     [deps.SymbolicUtils.extensions]
     SymbolicUtilsChainRulesCoreExt = "ChainRulesCore"
@@ -3958,18 +3776,18 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╟─f028697a-0534-4ccd-8282-1b9a3d8e284b
 # ╟─4b65fd9c-bd69-4e97-a28c-357c6a9c7bda
 # ╠═a0ca487a-8a51-48cb-acc0-7b318c793d09
-# ╠═176d2173-b440-4d03-822b-60034921cade
 # ╟─33e83e53-1df4-48a9-85fd-17b50c1b1be6
 # ╠═0c6f9d84-30d5-4b4d-8efd-f7414205aa5e
 # ╟─5eadbd03-da0b-48e1-9027-bc3243389a8d
-# ╟─0f03beab-d57c-4e7c-8dd1-e5eb3425c0c2
-# ╠═5769c1c3-d184-41b2-9f23-d490fb1a9df1
 # ╟─798cafe1-58e6-4c30-8668-59615b1d26ba
-# ╠═b94ba6f9-f136-4ca9-bb21-207df7a5534b
+# ╠═9bf00038-fc96-4fb8-ae17-ca1e4ea75a42
+# ╠═728ef06e-69f8-47a5-a096-d10d26551968
 # ╟─65b56c83-f48a-4df5-8e52-326e40c56e78
+# ╠═cf94872f-eff3-4524-87ee-6412c2de95a9
 # ╠═0db83126-5520-4438-9f6b-2a6839559787
 # ╠═93d71685-815f-4faf-bff8-3bb35945d2bf
 # ╟─5db32b26-0485-4929-89ec-34c09450555e
+# ╠═9f06677b-367c-4ea2-8320-474fa07ef0ae
 # ╠═871a53c5-82aa-4a4e-9627-c759901e7a89
 # ╠═76d42a07-ae3f-42f9-8a97-9b2892e55088
 # ╟─95fc4af6-247b-43fd-b271-5f3a588f3dff
@@ -3978,12 +3796,6 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╟─73503ce5-c8b4-4f1d-a95c-cc7a307fdb8f
 # ╠═2017166e-2932-48f3-a9e2-f5423f018742
 # ╠═be89676f-0e5a-48c5-b8e3-61b2d7b892a5
-# ╟─7e5980f4-2bcc-4c42-a244-5a8e45df9ae1
-# ╠═85d9b763-ded9-4e95-be86-e519abe904d9
-# ╠═8d718f6f-1ace-4d5a-8c9d-6b1994cb014d
-# ╟─2e4eda53-ef7b-411e-893d-c47de1f4b4df
-# ╠═8aea8d2e-90ef-4302-875d-d99f952a6ca0
-# ╠═8c7ed540-9e7d-428f-bb68-ae7fe91fef42
 # ╟─e36e8f05-138f-4a8f-be3a-23edbac61304
 # ╠═a1e9bf3b-8bf9-4425-a57c-61876cfdaa7a
 # ╠═c90f69cf-399e-4831-818d-f6d34036b641

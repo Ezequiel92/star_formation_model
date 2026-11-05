@@ -89,10 +89,10 @@ uuid = "21656369-7473-754a-2065-74616d696c43"
 version = "1.1.6"
 
 [[deps.ExproniconLite]]
-git-tree-sha1 = "c13f0b150373771b0fdc1713c97860f8df12e6c2"
+git-tree-sha1 = "250aa1562e840b38c72b44a9ebef0f39f6b6e950"
 registries = "General"
 uuid = "55351af7-c7e9-48d6-89ff-24e801d99491"
-version = "0.10.14"
+version = "0.10.16"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -107,10 +107,10 @@ version = "2.4.3"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "Dates", "EnumX", "Logging", "PrecompileTools", "Random", "Reseau", "SHA", "TranscodingStreams", "URIs", "UUIDs", "Zlib_jll"]
-git-tree-sha1 = "f756cc1b518604435938ebca5dddf08c4921ea50"
+git-tree-sha1 = "779aaa01f905311a6a2c21b04517da84efb0be3c"
 registries = "General"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "2.14.1"
+version = "2.14.2"
 
 [[deps.HypertextLiteral]]
 deps = ["Tricks"]
