@@ -570,6 +570,27 @@ $\begin{equation}
 """
   ╠═╡ =#
 
+# ╔═╡ dc45a37a-b939-499f-b9d2-4140aee92282
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Effective grain radius, ā = ⟨a^3⟩ / ⟨a^2⟩, of the size distribution of models
+# C and F of Hirashita & Kuo (2011): n(a) ∝ a^(-3.5) between 0.001 and 0.25 μm, 
+# with the moments weighted by the number of grains (their eq. 27)
+#####################################################################################
+let
+	# Power-law index, and minimum and maximum grain radii [μm]
+	r    = 3.5
+	amin = 0.001
+	amax = 0.25
+
+	# ℓ-th moment of a power-law size distribution (eq. 27 of Hirashita & Kuo 2011)
+	moment(ℓ) = (1 - r) / (ℓ + 1 - r) * (amax^(ℓ + 1 - r) - amin^(ℓ + 1 - r)) / (amax^(1 - r) - amin^(1 - r))
+
+	round(moment(3) / moment(2); sigdigits=3) * u"μm"
+end
+  ╠═╡ =#
+
 # ╔═╡ 0a6364c3-851e-4f0b-b140-f4f0e633fb36
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1788,6 +1809,31 @@ function compute_recycled_fractions(Z::Float64)
 
 end;
 
+# ╔═╡ cf02b69e-f6e5-4312-9a85-d43b61fac435
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Metallicity of the SN ejecta, Z_SN, at the lowest and highest metallicities of
+# the yield tables of Portinari et al. (1998)
+#####################################################################################
+let
+	R_Zsn_lowest  = compute_recycled_fractions(first(sy_metals))
+	R_Zsn_highest = compute_recycled_fractions(last(sy_metals))
+	
+	R_lowest  = R_Zsn_lowest[1]
+	R_highest = R_Zsn_highest[1]
+	
+	Zsn_lowest  = R_Zsn_lowest[2]
+	Zsn_highest = R_Zsn_highest[2]
+
+	println("R_lowest    = $(round(R_lowest; sigdigits=3))")
+	println("R_highest   = $(round(R_highest; sigdigits=3))")
+	println()
+	println("Zsn_lowest  = $(round(Zsn_lowest; sigdigits=3))")
+	println("Zsn_highest = $(round(Zsn_highest; sigdigits=3))")
+end;
+  ╠═╡ =#
+
 # ╔═╡ 6cab6cb7-a432-40b6-9390-ad0083fe486d
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1914,6 +1960,16 @@ begin
 	const c_dd = ustrip(u"Msun", ϵ_SNII * Ms) * f_SNII
 end;
 
+# ╔═╡ 9bf08113-14a4-468a-8766-a6a9b1ed0577
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# M_100 per 10^51 erg of explosion energy, to compare with the 6800 M⊙ per 10^51 erg
+# of McKee (1989)
+#####################################################################################
+round(u"Msun", Ms * (1.0e51u"erg" / E_SNII); sigdigits=4)
+  ╠═╡ =#
+
 # ╔═╡ b5ede1bb-8361-4380-b943-c9780d4a6253
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1941,7 +1997,7 @@ const δ_d = 0.1;
 md"""
 ### Dust accretion
 
-Following [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), dust grows by the accretion of gas-phase metals onto pre-existing grains. Here we derive the accretion term step by step, based on [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) (Section 2.1), [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Section 2), and [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259). We use $\mathrm{X}$ for the key element of each grain species, $X_\mathrm{X}$ for its mass fraction in the cell, $n_\mathrm{X}$ for its gas-phase number density, and $\mathcal{N}_\mathrm{X}(a)$ for the grain size distribution.
+Following [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), dust grows by the accretion of gas-phase metals onto pre-existing grains. Here we derive the accretion term step by step, based on [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) (Section 2.1), [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Section 2), and [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259). We use $\mathrm{X}$ for the key element of each grain species, $Z_\mathrm{X}$ for its mass fraction in the cell, $n_\mathrm{X}$ for its gas-phase number density, and $\mathcal{N}_\mathrm{X}(a)$ for the grain size distribution.
 
 #### Microscopic relations
 
@@ -2010,16 +2066,16 @@ $\begin{equation}
 
 which is eq. 19 of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) with $a = a_0$.
 
-Let $\rho_\mathrm{cell}$ be the density of the cell and $X_\mathrm{X}$ the mass fraction of element $\mathrm{X}$ in the cell, counting gas and dust ($\texttt{AREPO}$ tracks it for Si and C). By definition
+Let $\rho_\mathrm{cell}$ be the density of the cell and $Z_\mathrm{X}$ the mass fraction of element $\mathrm{X}$ in the cell, counting gas and dust ($\texttt{AREPO}$ tracks it for Si and C). By definition
 
 $\begin{equation}
-	n_\mathrm{X,tot} = \frac{X_\mathrm{X} \, \rho_\mathrm{cell}}{m_\mathrm{X}} \quad \Longrightarrow \quad n_\mathrm{X,tot} \, m_\mathrm{X} = X_\mathrm{X} \, \rho_\mathrm{cell} \, ,
+	n_\mathrm{X,tot} = \frac{Z_\mathrm{X} \, \rho_\mathrm{cell}}{m_\mathrm{X}} \quad \Longrightarrow \quad n_\mathrm{X,tot} \, m_\mathrm{X} = Z_\mathrm{X} \, \rho_\mathrm{cell} \, ,
 \end{equation}$
 
 and replacing in the expression for $\tau_\mathrm{X}(a)$
 
 $\begin{equation}
-	\tau_\mathrm{X}(a) = \frac{a \, f_\mathrm{X} \, s_\mathrm{X}}{X_\mathrm{X} \, \rho_\mathrm{cell} \, S} \left( \frac{2 \, \pi \, m_\mathrm{X}}{k \, T} \right)^{\!1/2} \, .
+	\tau_\mathrm{X}(a) = \frac{a \, f_\mathrm{X} \, s_\mathrm{X}}{Z_\mathrm{X} \, \rho_\mathrm{cell} \, S} \left( \frac{2 \, \pi \, m_\mathrm{X}}{k \, T} \right)^{\!1/2} \, .
 \end{equation}$
 
 #### Macroscopic relations
@@ -2077,7 +2133,7 @@ $\begin{equation}
 where $\tau_{\mathrm{dg},\mathrm{X}} = \tau_\mathrm{X}(\bar{a}) / 3$ is the dust growth time scale of species $\mathrm{X}$. Using the expression for $\tau_\mathrm{X}(a)$ evaluated at $a = \bar{a}$
 
 $\begin{equation}
-	\tau_{\mathrm{dg},\mathrm{X}} = \frac{\tau_\mathrm{X}(\bar{a})}{3} = \frac{\bar{a} \, f_\mathrm{X} \, s_\mathrm{X}}{3 \, X_\mathrm{X} \, \rho_\mathrm{cell} \, S} \left( \frac{2 \, \pi \, m_\mathrm{X}}{k \, T} \right)^{\!1/2} \, .
+	\tau_{\mathrm{dg},\mathrm{X}} = \frac{\tau_\mathrm{X}(\bar{a})}{3} = \frac{\bar{a} \, f_\mathrm{X} \, s_\mathrm{X}}{3 \, Z_\mathrm{X} \, \rho_\mathrm{cell} \, S} \left( \frac{2 \, \pi \, m_\mathrm{X}}{k \, T} \right)^{\!1/2} \, .
 \end{equation}$
 
 We adopt models C and F of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Table 2), which are equivalent for our purposes. Both give
@@ -2090,22 +2146,22 @@ the same value $a_\mathrm{eff}$ we use for the condensation of molecular hydroge
 
 #### From the grain species to a single dust component
 
-In our model we follow a single dust fraction $f_d$, which adds silicate and graphite. The mass of $\mathrm{X}$ in dust is $(1 - \xi_\mathrm{X}) \, X_\mathrm{X} \, M_\mathrm{cell}$, and the mass of the grains built on $\mathrm{X}$ is that mass divided by $f_\mathrm{X}$. Dividing by the mass of the cell, the dust fraction of species $\mathrm{X}$ is
+In our model we follow a single dust fraction $f_d$, which adds silicate and graphite. The mass of $\mathrm{X}$ in dust is $(1 - \xi_\mathrm{X}) \, Z_\mathrm{X} \, M_\mathrm{cell}$, and the mass of the grains built on $\mathrm{X}$ is that mass divided by $f_\mathrm{X}$. Dividing by the mass of the cell, the dust fraction of species $\mathrm{X}$ is
 
 $\begin{equation}
-	f_{d,\mathrm{X}} = (1 - \xi_\mathrm{X}) \, \frac{X_\mathrm{X}}{f_\mathrm{X}} \, ,
+	f_{d,\mathrm{X}} = (1 - \xi_\mathrm{X}) \, \frac{Z_\mathrm{X}}{f_\mathrm{X}} \, ,
 \end{equation}$
 
 and the total dust fraction is
 
 $\begin{equation}
-	f_d = (1 - \xi_\mathrm{Si}) \, \frac{X_\mathrm{Si}}{f_\mathrm{Si}} + (1 - \xi_\mathrm{C}) \, \frac{X_\mathrm{C}}{f_\mathrm{C}} \, .
+	f_d = (1 - \xi_\mathrm{Si}) \, \frac{Z_\mathrm{Si}}{f_\mathrm{Si}} + (1 - \xi_\mathrm{C}) \, \frac{Z_\mathrm{C}}{f_\mathrm{C}} \, .
 \end{equation}$
 
 This only restates the definitions, so it holds at any time. As we follow a single dust fraction, we can only follow one depletion, so we assume $\xi_\mathrm{Si} = \xi_\mathrm{C} = \xi$. Then
 
 $\begin{equation}
-	f_d = (1 - \xi) \, f_d^\mathrm{max} \, , \qquad f_d^\mathrm{max} = \frac{X_\mathrm{Si}}{f_\mathrm{Si}} + \frac{X_\mathrm{C}}{f_\mathrm{C}} \, ,
+	f_d = (1 - \xi) \, f_d^\mathrm{max} \, , \qquad f_d^\mathrm{max} = \frac{Z_\mathrm{Si}}{f_\mathrm{Si}} + \frac{Z_\mathrm{C}}{f_\mathrm{C}} \, ,
 \end{equation}$
 
 where $f_d^\mathrm{max}$ is the dust fraction for $\xi = 0$, i.e. with all the Si and C in grains (see the section Dust initial condition). So
@@ -2133,22 +2189,22 @@ $\begin{equation}
 Using the expression for $\tau_{\mathrm{dg},\mathrm{X}}$ we finally get
 
 $\begin{equation}
-	\frac{1}{\tau_\mathrm{dg}} = \frac{3 \, S \, \rho_\mathrm{cell}}{\bar{a}} \left( \frac{k \, T}{2 \, \pi} \right)^{\!1/2} \sum_\mathrm{X} \frac{w_\mathrm{X} \, X_\mathrm{X}}{f_\mathrm{X} \, s_\mathrm{X} \, m_\mathrm{X}^{1/2}} \, .
+	\frac{1}{\tau_\mathrm{dg}} = \frac{3 \, S \, \rho_\mathrm{cell}}{\bar{a}} \left( \frac{k \, T}{2 \, \pi} \right)^{\!1/2} \sum_\mathrm{X} \frac{w_\mathrm{X} \, Z_\mathrm{X}}{f_\mathrm{X} \, s_\mathrm{X} \, m_\mathrm{X}^{1/2}} \, .
 \end{equation}$
 
-The weights $w_\mathrm{X}$ can be written in terms of the known quantities $X_\mathrm{X}$ and $f_\mathrm{X}$ as
+The weights $w_\mathrm{X}$ can be written in terms of the known quantities $Z_\mathrm{X}$ and $f_\mathrm{X}$ as
 
 $\begin{align}
 	w_\mathrm{X} &:= \frac{\rho_{d,\mathrm{X}}}{\rho_d} = \frac{f_{d,\mathrm{X}}}{f_d} \\
-	&= \frac{(1 - \xi_\mathrm{X}) \, \dfrac{X_\mathrm{X}}{f_\mathrm{X}}}{\sum_\mathrm{Y} (1 - \xi_\mathrm{Y}) \, \dfrac{X_\mathrm{Y}}{f_\mathrm{Y}}} \\
-	&= \frac{\dfrac{X_\mathrm{X}}{f_\mathrm{X}}}{\dfrac{X_\mathrm{Si}}{f_\mathrm{Si}} + \dfrac{X_\mathrm{C}}{f_\mathrm{C}}} \, ,
+	&= \frac{(1 - \xi_\mathrm{X}) \, \dfrac{Z_\mathrm{X}}{f_\mathrm{X}}}{\sum_\mathrm{Y} (1 - \xi_\mathrm{Y}) \, \dfrac{Z_\mathrm{Y}}{f_\mathrm{Y}}} \\
+	&= \frac{\dfrac{Z_\mathrm{X}}{f_\mathrm{X}}}{\dfrac{Z_\mathrm{Si}}{f_\mathrm{Si}} + \dfrac{Z_\mathrm{C}}{f_\mathrm{C}}} \, ,
 \end{align}$
 
 where we used $\xi_\mathrm{Si} = \xi_\mathrm{C} = \xi$. So
 
 $\begin{align}
-	w_\mathrm{Si} &= \frac{X_\mathrm{Si} \, f_\mathrm{C}}{X_\mathrm{Si} \, f_\mathrm{C} + X_\mathrm{C} \, f_\mathrm{Si}} \, , \\
-	w_\mathrm{C} &= \frac{X_\mathrm{C} \, f_\mathrm{Si}}{X_\mathrm{Si} \, f_\mathrm{C} + X_\mathrm{C} \, f_\mathrm{Si}} \, .
+	w_\mathrm{Si} &= \frac{Z_\mathrm{Si} \, f_\mathrm{C}}{Z_\mathrm{Si} \, f_\mathrm{C} + Z_\mathrm{C} \, f_\mathrm{Si}} \, , \\
+	w_\mathrm{C} &= \frac{Z_\mathrm{C} \, f_\mathrm{Si}}{Z_\mathrm{Si} \, f_\mathrm{C} + Z_\mathrm{C} \, f_\mathrm{Si}} \, .
 \end{align}$
 
 #### From the grain population to the cell
@@ -2162,10 +2218,10 @@ $\begin{equation}
 With $X_\mathrm{cold} \simeq f_a + f_m$, and the expression for $\xi$, we get
 
 $\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\mathrm{accretion}} = \left( 1 - \frac{f_d}{f_d^\mathrm{max}} \right) (f_a + f_m) \, \frac{f_d}{\tau_\mathrm{dg}} = \frac{f_d}{\tau_\mathrm{dc}} \, ,
+	\left. \frac{\mathrm{d}}{\mathrm{d}t}f_d(t)\right|_{\mathrm{accretion}} = \left( 1 - \frac{f_d}{f_d^\mathrm{max}} \right) (f_a + f_m) \, \frac{f_d}{\tau_\mathrm{dg}} = \frac{f_d}{\tau_\mathrm{da}} \, ,
 \end{equation}$
 
-where $\tau_\mathrm{dc}$ is the dust creation time scale, defined by this expression.
+where $\tau_\mathrm{da}$ is the dust accretion time scale, defined by this expression.
 
 #### Grain properties
 
@@ -2284,7 +2340,7 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 md"""
-#### Final form of $\tau_\mathrm{dg}$ and $\tau_\mathrm{dc}$
+#### Final form of $\tau_\mathrm{dg}$ and $\tau_\mathrm{da}$
 
 From the expression for $1 / \tau_\mathrm{dg}$ derived above, the dust growth time scale can be written as
 
@@ -2295,7 +2351,7 @@ $\begin{equation}
 where
 
 $\begin{equation}
-	C_\mathrm{dg} = \sum_\mathrm{X} w_\mathrm{X} \, C_\mathrm{acc,X} \, X_\mathrm{X} \, , \qquad C_\mathrm{acc,X} = \frac{3 \, S}{\bar{a} \, f_\mathrm{X} \, s_\mathrm{X}} \left( \frac{k \, T}{2 \, \pi \, m_\mathrm{X}} \right)^{\!1/2} \, ,
+	C_\mathrm{dg} = \sum_\mathrm{X} w_\mathrm{X} \, C_\mathrm{acc,X} \, Z_\mathrm{X} \, , \qquad C_\mathrm{acc,X} = \frac{3 \, S}{\bar{a} \, f_\mathrm{X} \, s_\mathrm{X}} \left( \frac{k \, T}{2 \, \pi \, m_\mathrm{X}} \right)^{\!1/2} \, ,
 \end{equation}$
 
 with 
@@ -2305,12 +2361,12 @@ $\begin{align}
 	C_\mathrm{acc,C} &= 0.1821 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, .
 \end{align}$
 
-Unlike the other constants of the model, $C_\mathrm{dg}$ depends on the cell, through the abundances $X_\mathrm{Si}$ and $X_\mathrm{C}$ (which also set the weights $w_\mathrm{X}$), so it is computed at the start of each integration.
+Unlike the other constants of the model, $C_\mathrm{dg}$ depends on the cell, through the abundances $Z_\mathrm{Si}$ and $Z_\mathrm{C}$ (which also set the weights $w_\mathrm{X}$), so it is computed at the start of each integration.
 
-The accretion term can be written as $f_d / \tau_\mathrm{dc}$, which defines the dust creation time scale
+The accretion term can be written as $f_d / \tau_\mathrm{da}$, which defines the dust accretion time scale
 
 $\begin{equation}
-	\tau_\mathrm{dc} = \frac{\tau_\mathrm{dg}}{\xi \, f_n} = \frac{1}{C_\mathrm{dg} \, (1 - f_d / f_d^\mathrm{max}) \, f_n \, \rho_\mathrm{cell}} \, ,
+	\tau_\mathrm{da} = \frac{\tau_\mathrm{dg}}{\xi \, f_n} = \frac{1}{C_\mathrm{dg} \, (1 - f_d / f_d^\mathrm{max}) \, f_n \, \rho_\mathrm{cell}} \, ,
 \end{equation}$
 
 where $f_n = f_a + f_m$.
@@ -2327,7 +2383,7 @@ Cells without Si and C have no dust and no accretion, so we set $C_\mathrm{dg} =
 
 As $f_d^\mathrm{max}$ is kept constant during the integration, dust produced by SNe can exceed it in cells with very low metallicity. Accretion can only add metals to the grains, so in the ODEs we use $\xi = \max(0, 1 - f_d / f_d^\mathrm{max})$. Which means that above $f_d^\mathrm{max}$ there is nothing left to accrete, and the term is $0$ instead of turning dust back into metals. For $0 \leq f_d \leq f_d^\mathrm{max}$ this is the expression above.
 
-The metallicity and the Si and C abundances computed by $\texttt{AREPO}$ can have unphysical values (e.g. slightly negative, or inconsistent with each other) when they are close to $0$. So, before computing the initial conditions and the accretion parameters, they are clamped at $0$, cells with $Z < 10^{-10}$ (about $10^{-8} \, Z_\odot$) are considered pristine ($Z = X_\mathrm{Si} = X_\mathrm{C} = 0$), and $X_\mathrm{Si}$ and $X_\mathrm{C}$ are scaled down if their sum exceeds $Z$.
+The metallicity and the Si and C abundances computed by $\texttt{AREPO}$ can have unphysical values (e.g. slightly negative, or inconsistent with each other) when they are close to $0$. So, before computing the initial conditions and the accretion parameters, they are clamped at $0$, cells with $Z < 10^{-10}$ (about $10^{-8} \, Z_\odot$) are considered pristine ($Z = Z_\mathrm{Si} = Z_\mathrm{C} = 0$), and $Z_\mathrm{Si}$ and $Z_\mathrm{C}$ are scaled down if their sum exceeds $Z$.
 """
   ╠═╡ =#
 
@@ -2520,13 +2576,13 @@ $\begin{equation}
 [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) closes this expression with $n_\mathrm{X}^\mathrm{tot} = (Z / Z_\odot) \, (\mathrm{X/H})_\odot \, n_\mathrm{H}$ (eq. 17), which assumes a solar abundance pattern. Instead, $\texttt{AREPO}$ tracks the mass of nine elements in each cell (H, He, C, N, O, Ne, Mg, Si, and Fe; [McKinnon2017](https://doi.org/10.1093/mnras/stx467)), so we can use the cell abundances directly
 
 $\begin{equation}
-	m_\mathrm{X} \, n_\mathrm{X}^\mathrm{tot} = X_\mathrm{X} \, \rho_\mathrm{cell} \, ,
+	m_\mathrm{X} \, n_\mathrm{X}^\mathrm{tot} = Z_\mathrm{X} \, \rho_\mathrm{cell} \, ,
 \end{equation}$
 
-where $X_\mathrm{X} = M_\mathrm{X} / M_\mathrm{cell}$ is the mass fraction of element $\mathrm{X}$ (gas + dust). Silicate and graphite are separate mass reservoirs, so their contributions are summed, and the initial dust fraction is
+where $Z_\mathrm{X} = M_\mathrm{X} / M_\mathrm{cell}$ is the mass fraction of element $\mathrm{X}$ (gas + dust). Silicate and graphite are separate mass reservoirs, so their contributions are summed, and the initial dust fraction is
 
 $\begin{equation}
-	f_d(0) = \sum_\mathrm{X} \frac{\rho_{d,\mathrm{X}}(0)}{\rho_\mathrm{cell}} = c_\mathrm{Si} \, X_\mathrm{Si} + c_\mathrm{C} \, X_\mathrm{C} \, ,
+	f_d(0) = \sum_\mathrm{X} \frac{\rho_{d,\mathrm{X}}(0)}{\rho_\mathrm{cell}} = c_\mathrm{Si} \, Z_\mathrm{Si} + c_\mathrm{C} \, Z_\mathrm{C} \, ,
 \end{equation}$
 
 with
@@ -2549,7 +2605,7 @@ where $f_\mathrm{Si} = 0.166$ corresponds to the composition $\mathrm{Mg_{1.1} F
 Dust can grow until all the key elements are in grains ($\xi_\mathrm{X} = 0$), so the maximum dust fraction is
 
 $\begin{equation}
-	f_d^\mathrm{max} = \min\left( \frac{X_\mathrm{Si}}{f_\mathrm{Si}} + \frac{X_\mathrm{C}}{f_\mathrm{C}}, Z \right) \, ,
+	f_d^\mathrm{max} = \min\left( \frac{Z_\mathrm{Si}}{f_\mathrm{Si}} + \frac{Z_\mathrm{C}}{f_\mathrm{C}}, Z \right) \, ,
 \end{equation}$
 
 where the cap at $Z$ only matters for unrealistic abundance patterns, and guarantees $f_Z \geq 0$. For the present-day solar photosphere of [Asplund2009](https://doi.org/10.1146/annurev.astro.46.060407.145222), $f_d^\mathrm{max} / Z = 0.476$, which means that dust can lock at most about half of the metals, because most of the oxygen and elements such as N and Ne do not condense into silicate or graphite grains. For cells without Si and C, $f_d^\mathrm{max} = 0$, so there is no dust and no accretion.
@@ -2595,15 +2651,15 @@ begin
 	#
 	# Arguments
 	#
-	#     X_Si: Mass fraction of Si in the cell (gas + dust)
-	#     X_C:  Mass fraction of C in the cell (gas + dust)
+	#     Z_Si: Mass fraction of Si in the cell (gas + dust)
+	#     Z_C:  Mass fraction of C in the cell (gas + dust)
 	#     Z:    Total metallicity of the cell (gas + dust)
 	#
 	# Returns
 	#
 	#     fd(0), capped at Z so that fZ(0) = Z - fd(0) >= 0
 	#################################################################################
-	initial_dust_fraction(X_Si, X_C, Z) = min(c_Si * X_Si + c_C * X_C, Z)
+	initial_dust_fraction(Z_Si, Z_C, Z) = min(c_Si * Z_Si + c_C * Z_C, Z)
 
 	# Maximum dust mass per unit mass of the key element (all of it in grains)
 	const cmax_Si = 1.0 / f_Si  # Silicate
@@ -2614,22 +2670,22 @@ begin
 	#
 	# Arguments
 	#
-	#     X_Si: Mass fraction of Si in the cell (gas + dust)
-	#     X_C:  Mass fraction of C in the cell (gas + dust)
+	#     Z_Si: Mass fraction of Si in the cell (gas + dust)
+	#     Z_C:  Mass fraction of C in the cell (gas + dust)
 	#     Z:    Total metallicity of the cell (gas + dust)
 	#
 	# Returns
 	#
 	#     fd_max, capped at Z
 	#################################################################################
-	max_dust_fraction(X_Si, X_C, Z) = min(cmax_Si * X_Si + cmax_C * X_C, Z)
+	max_dust_fraction(Z_Si, Z_C, Z) = min(cmax_Si * Z_Si + cmax_C * Z_C, Z)
 
 	# Present-day solar photosphere 
 	# Asplund 2009, Tables 1 and 4
 	const X_H_A09  = 0.7381 # Hydrogen mass fraction
 	const Z_A09    = 0.0134 # Metallicity
-	const X_C_A09  = X_H_A09 * 10^(8.43 - 12) * 12.011 / 1.008 # Carbon mass fraction
-	const X_Si_A09 = X_H_A09 * 10^(7.51 - 12) * 28.086 / 1.008 # Silicon mass fraction
+	const Z_C_A09  = X_H_A09 * 10^(8.43 - 12) * 12.011 / 1.008 # Carbon mass fraction
+	const Z_Si_A09 = X_H_A09 * 10^(7.51 - 12) * 28.086 / 1.008 # Silicon mass fraction
 
 	# Atomic mass of the key element 
 	# Hirashita 2012, Table 1
@@ -2920,8 +2976,8 @@ begin
 	#
 	# Arguments
 	#
-	#     X_Si: Mass fraction of Si in the cell (gas + dust)
-	#     X_C:  Mass fraction of C in the cell (gas + dust)
+	#     Z_Si: Mass fraction of Si in the cell (gas + dust)
+	#     Z_C:  Mass fraction of C in the cell (gas + dust)
 	#     Z:    Total metallicity of the cell (gas + dust)
 	#
 	# Returns
@@ -2932,11 +2988,11 @@ begin
 	#     c_dg:   Dust growth constant [Myr^(-1) * mp^(-1) * cm^3],
 	#             It is 0 for cells without Si nor C
 	#################################################################################
-	function accretion_parameters(X_Si, X_C, Z)
+	function accretion_parameters(Z_Si, Z_C, Z)
 
 		# Maximum silicate and graphite fractions
-		y_Si = cmax_Si * X_Si
-		y_C  = cmax_C * X_C
+		y_Si = cmax_Si * Z_Si
+		y_C  = cmax_C * Z_C
 
 		# Maximum dust fraction
 		fd_max = min(y_Si + y_C, Z)
@@ -2946,7 +3002,7 @@ begin
 		end
 
 		# Dust growth constant
-		c_dg = (c_acc_Si * X_Si * y_Si + c_acc_C * X_C * y_C) / (y_Si + y_C)
+		c_dg = (c_acc_Si * Z_Si * y_Si + c_acc_C * Z_C * y_C) / (y_Si + y_C)
 
 		return fd_max, c_dg
 
@@ -2960,7 +3016,7 @@ end;
 # Arguments
 # 
 #     ic:          Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, X_Si, X_C]
+#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
 #     tspan:       Integration span, (ti, tf) [Myr]
 #     times:       Times at which the solution will be returned [Myr]
 #     args:        Positional arguments for the solver of DifferentialEquations.jl
@@ -2985,13 +3041,13 @@ function integrate_model(
 	),
 )::Vector{Vector{Float64}}
 
-	ρ_cell, Z, a, h, X_Si, X_C = base_params
+	ρ_cell, Z, a, h, Z_Si, Z_C = base_params
 
 	ΓUVB          = compute_UVB(a)
 	ΓLWB          = compute_LWB(a)
 	η_diss, η_ion = compute_η(tspan[2], Z)
 	R, Zsn        = compute_recycled_fractions(Z)
-	fd_max, c_dg  = accretion_parameters(X_Si, X_C, Z)
+	fd_max, c_dg  = accretion_parameters(Z_Si, Z_C, Z)
 
 	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
 
@@ -3083,8 +3139,8 @@ begin
 
 	# Metallicity and abundances of Si and C
 	const EXAMPLE_Z    = Zsun
-	const EXAMPLE_X_Si = X_Si_A09 * Zsun / Z_A09
-	const EXAMPLE_X_C  = X_C_A09 * Zsun / Z_A09
+	const EXAMPLE_X_Si = Z_Si_A09 * Zsun / Z_A09
+	const EXAMPLE_X_C  = Z_C_A09 * Zsun / Z_A09
 
 	# Ionized and neutral fractions of the gas
 	const EXAMPLE_FI_GAS = 0.1
@@ -3114,6 +3170,45 @@ begin
 	]
 end;
 
+# ╔═╡ 3a2fce00-7fee-4c04-9ed0-8e7cdc5bcc0a
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Dust growth time scale, τ_dg = 1 / (C_dg ρ_cell), for Z = Zsun 
+# with the solar abundance pattern (Asplund et al. 2009, scaled to Zsun), 
+# at ρ_cell = 10^3 mp cm^(-3)
+#####################################################################################
+let
+	# Si and C mass fractions for the solar abundance pattern, scaled to Zsun
+	Z_Si = Z_Si_A09 * Zsun / Z_A09
+	Z_C  = Z_C_A09 * Zsun / Z_A09
+
+	# Dust growth constant [Myr^(-1) * mp^(-1) * cm^3]
+	_, c_dg = accretion_parameters(Z_Si, Z_C, Zsun)
+
+	# Cell density [mp * cm^(-3)]
+	ρ_cell = 1.0e3
+
+	round(1.0 / (c_dg * ρ_cell); sigdigits=3) * u"Myr"
+end
+  ╠═╡ =#
+
+# ╔═╡ 3871738a-a126-4996-ad95-9674564a4931
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Dust-to-metal ratio of the initial condition, f_d(0) / Z, for Z = Zsun with the
+# solar abundance pattern (Asplund et al. 2009, scaled to Zsun)
+#####################################################################################
+let
+	# Si and C mass fractions for the solar abundance pattern, scaled to Zsun
+	Z_Si = Z_Si_A09 * Zsun / Z_A09
+	Z_C  = Z_C_A09 * Zsun / Z_A09
+
+	round(initial_dust_fraction(Z_Si, Z_C, Zsun) / Zsun; sigdigits=2)
+end
+  ╠═╡ =#
+
 # ╔═╡ 8fd489b2-620a-40cd-8283-dc88b7f3584f
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -3135,7 +3230,7 @@ md"### Stiffness coefficient"
 # Arguments
 # 
 #     ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, X_Si, X_C]
+#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
 #     it:          Integration time [Myr]
 #
 # Returns
@@ -3153,15 +3248,15 @@ function stiffness_ratio(
 	# Z:      Metallicity [dimensionless]
 	# a:      Scale factor [dimensionless]
 	# h:      Cell size [cm]
-	# X_Si:   Mass fraction of Si [dimensionless]
-	# X_C:    Mass fraction of C [dimensionless]
-	ρ_cell, Z, a, h, X_Si, X_C = base_params
+	# Z_Si:   Mass fraction of Si [dimensionless]
+	# Z_C:    Mass fraction of C [dimensionless]
+	ρ_cell, Z, a, h, Z_Si, Z_C = base_params
 
 	ΓUVB          = compute_UVB(a)
 	ΓLWB          = compute_LWB(a)
 	η_diss, η_ion = compute_η(it, Z)
 	R, Zsn        = compute_recycled_fractions(Z)
-	fd_max, c_dg  = accretion_parameters(X_Si, X_C, Z)
+	fd_max, c_dg  = accretion_parameters(Z_Si, Z_C, Z)
 
 	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
 
@@ -3207,7 +3302,7 @@ md"### Lyapunov spectrum"
 # Arguments
 # 
 #     ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, X_Si, X_C]
+#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
 #     it:          Integration time [Myr]
 #
 # Returns
@@ -3225,15 +3320,15 @@ function lyapunov_spectrum(
 	# Z:      Metallicity [dimensionless]
 	# a:      Scale factor [dimensionless]
 	# h:      Cell size [cm]
-	# X_Si:   Mass fraction of Si [dimensionless]
-	# X_C:    Mass fraction of C [dimensionless]
-	ρ_cell, Z, a, h, X_Si, X_C = base_params
+	# Z_Si:   Mass fraction of Si [dimensionless]
+	# Z_C:    Mass fraction of C [dimensionless]
+	ρ_cell, Z, a, h, Z_Si, Z_C = base_params
 
 	ΓUVB          = compute_UVB(a)
 	ΓLWB          = compute_LWB(a)
 	η_diss, η_ion = compute_η(it, Z)
 	R, Zsn        = compute_recycled_fractions(Z)
-	fd_max, c_dg  = accretion_parameters(X_Si, X_C, Z)
+	fd_max, c_dg  = accretion_parameters(Z_Si, Z_C, Z)
 
 	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
 	
@@ -3364,7 +3459,7 @@ To find the per-equation and global equilibrium we take the ODEs and set the der
 # Arguments
 # 
 #     fractions:  Mass fractions, [fi, fa, fm, fs, fZ, fd]
-#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, X_Si, X_C]
+#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
 #     it:          Integration time [Myr]
 # 
 # Returns
@@ -3377,13 +3472,13 @@ function equilibrium(
 	it::Float64,
 )::Vector{Float64}
 
-	ρ_cell, Z, a, h, X_Si, X_C = base_params
+	ρ_cell, Z, a, h, Z_Si, Z_C = base_params
 
 	ΓUVB          = compute_UVB(a)
 	ΓLWB          = compute_LWB(a)
 	η_diss, η_ion = compute_η(it, Z)
 	R, Zsn        = compute_recycled_fractions(Z)
-	fd_max, c_dg  = accretion_parameters(X_Si, X_C, Z)
+	fd_max, c_dg  = accretion_parameters(Z_Si, Z_C, Z)
 
 	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
 
@@ -3402,7 +3497,7 @@ end;
 # Arguments
 # 
 #     fractions:   Mass fractions, [fi, fa, fm, fs, fZ, fd]
-#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, X_Si, X_C]
+#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
 #     it:          Integration time [Myr]
 #     limit:       Equilibrium criteria.
 # 
@@ -6385,6 +6480,7 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╠═49d1a7f7-2bf2-4472-94df-6247b9237ddd
 # ╟─80bae1ac-9f61-4512-84c9-c562ad7a61ba
 # ╠═568d9fe3-6716-4a9a-ba1d-b9e6fd039150
+# ╠═dc45a37a-b939-499f-b9d2-4140aee92282
 # ╟─0a6364c3-851e-4f0b-b140-f4f0e633fb36
 # ╠═f9bcdb15-ce25-49a4-9837-53d042065151
 # ╟─14ae7f11-1065-46aa-a6ed-eea400c0d2ec
@@ -6409,8 +6505,10 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╠═64c2a3ee-e7a0-4e03-b9a8-86239e1ca81e
 # ╠═0895d464-a029-410d-9e7d-89cfac2d1615
 # ╠═07cd9aad-029f-42c6-abe8-ab4a9a2a910c
+# ╠═cf02b69e-f6e5-4312-9a85-d43b61fac435
 # ╟─6cab6cb7-a432-40b6-9390-ad0083fe486d
 # ╠═38e91d0d-1020-44a8-becc-8542fd600104
+# ╠═9bf08113-14a4-468a-8766-a6a9b1ed0577
 # ╟─b5ede1bb-8361-4380-b943-c9780d4a6253
 # ╠═027dbe5e-4993-41c2-983d-289101c118fb
 # ╟─4b81f302-9637-4161-b745-8ac39b9e31d3
@@ -6421,6 +6519,7 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╠═ef79392b-395c-497a-9c0e-dc2cd468f6e1
 # ╟─8c9ab125-2acb-4732-a9bf-7838e819e4f7
 # ╠═2a39d6f8-da49-4976-9aa7-889391e55a5d
+# ╠═3a2fce00-7fee-4c04-9ed0-8e7cdc5bcc0a
 # ╟─0bdf9dbf-479c-46f6-bd86-50576095cba0
 # ╟─6fe43e3a-2e8f-4708-a3ec-6f5a8088060e
 # ╠═f863d68f-590e-4b96-8433-dc6b5177539f
@@ -6439,6 +6538,7 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╟─6475b25b-8711-44cd-bc3b-e3d42681bb93
 # ╟─14a6478e-939f-4e9c-b905-4cec39917d47
 # ╠═d7cc8a66-220a-4e9b-b42e-a0e085ed3a0f
+# ╠═3871738a-a126-4996-ad95-9674564a4931
 # ╟─0fc36dec-9f45-4f49-a44f-7884ec33d7be
 # ╟─24920a1b-355c-43e1-aff2-028e6f25584c
 # ╠═ad67d733-4365-4b37-ab45-1b936c80d617

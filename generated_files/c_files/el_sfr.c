@@ -911,30 +911,30 @@ double rate_of_star_formation(const int index)
     }
 
     /* Silicon mass fraction [dimensionless] */
-    double X_Si = fmax(0.0, SphP[index].MetalsFraction[idx_Si]);
+    double Z_Si = fmax(0.0, SphP[index].MetalsFraction[idx_Si]);
 
     /* Carbon mass fraction [dimensionless] */
-    double X_C = fmax(0.0, SphP[index].MetalsFraction[idx_C]);
+    double Z_C = fmax(0.0, SphP[index].MetalsFraction[idx_C]);
 
     /* Clean the metal fractions from numerical noise */
     if (Z < Z_FLOOR)
     {
         /* Pristine gas: below the floor, the values are numerical noise */
         Z = 0.0;
-        X_Si = 0.0;
-        X_C = 0.0;
+        Z_Si = 0.0;
+        Z_C = 0.0;
     }
-    else if (X_Si + X_C > Z)
+    else if (Z_Si + Z_C > Z)
     {
         /* Si and C cannot be more than all the metals */
-        double X_scale = Z / (X_Si + X_C);
-        X_Si *= X_scale;
-        X_C *= X_scale;
+        double Z_scale = Z / (Z_Si + Z_C);
+        Z_Si *= Z_scale;
+        Z_C *= Z_scale;
     }
 
     /* Maximum silicate and graphite mass fractions [dimensionless] */
-    double y_Si = ODE_CMAXSI * X_Si;
-    double y_C  = ODE_CMAXC * X_C;
+    double y_Si = ODE_CMAXSI * Z_Si;
+    double y_C  = ODE_CMAXC * Z_C;
 
     /* Maximum dust mass fraction [dimensionless] (capped at Z) */
     double fd_max = fmin(y_Si + y_C, Z);
@@ -943,7 +943,7 @@ double rate_of_star_formation(const int index)
     double c_dg = 0.0;
     if (fd_max > 0.0)
     {
-        c_dg = (ODE_CACCSI * X_Si * y_Si + ODE_CACCC * X_C * y_C) / (y_Si + y_C);
+        c_dg = (ODE_CACCSI * Z_Si * y_Si + ODE_CACCC * Z_C * y_C) / (y_Si + y_C);
     }
 
     /* Maximum dust mass fraction for the ODEs [dimensionless] */
@@ -998,7 +998,7 @@ double rate_of_star_formation(const int index)
     if (isnan(fZ_prev) || isnan(fd_prev) || fZ_prev + fd_prev <= 0.0)
     {
         /* First entry: Hirashita 2012, eq. 18, silicate + graphite, capped at Z */
-    	fd = fmin(Z, ODE_CXSI * X_Si + ODE_CXC * X_C);
+    	fd = fmin(Z, ODE_CXSI * Z_Si + ODE_CXC * Z_C);
     }
     else
     {

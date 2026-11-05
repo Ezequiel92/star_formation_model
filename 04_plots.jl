@@ -17,31 +17,70 @@ end
 TableOfContents(title="Plots", depth=3)
   ╠═╡ =#
 
+# ╔═╡ 4b65fd9c-bd69-4e97-a28c-357c6a9c7bda
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"## Load the model"
+  ╠═╡ =#
+
+# ╔═╡ a0ca487a-8a51-48cb-acc0-7b318c793d09
+begin
+	const TESTING = @ingredients("./03_testing.jl")
+	const CODEGEN = TESTING.CODEGEN
+	const MODEL   = CODEGEN.MODEL
+end;
+
+# ╔═╡ 2049dd94-3bef-4078-90d5-41372959b5a2
+begin
+	#################################################################################
+	# Si and C mass fractions [dimensionless] for the solar abundance pattern of
+	# Asplund (2009), scaled to the metallicity Z
+	#################################################################################
+	Z_Si(Z) = MODEL.Z_Si_A09 * Z / MODEL.Z_A09
+	Z_C(Z)  = MODEL.Z_C_A09 * Z / MODEL.Z_A09
+
+	#################################################################################
+	# Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C], 
+	# for a solar abundance pattern
+	#
+	# Arguments
+	#
+	#     ρ: Total cell density [mp * cm^(-3)]
+	#     Z: Metallicity [dimensionless]
+	#     a: Scale factor [dimensionless]
+	#     h: Cell size [cm]
+	#################################################################################
+	make_base_params(ρ, Z; a=1.0, h=3.0e20) = [ρ, Z, a, h, Z_Si(Z), Z_C(Z)]
+
+	#################################################################################
+	# Initial conditions as in the first entry of a cell,
+	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+	#
+	# Arguments
+	#
+	#     Z:  Metallicity [dimensionless]
+	#     fi: Ionized fraction of the gas [dimensionless]
+	#################################################################################
+	function make_ic(Z, fi)
+		fd = MODEL.initial_dust_fraction(Z_Si(Z), Z_C(Z), Z)
+		return [(1.0 - Z) * fi, (1.0 - Z) * (1.0 - fi), 0.0, 0.0, Z - fd, fd]
+	end
+end;
+
+# ╔═╡ cfacae0b-ee2e-4ba5-b31e-0fc122a3676b
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"# Plots"
+  ╠═╡ =#
+
 # ╔═╡ 6e5823eb-3614-476b-80e7-66fc27ed0392
 # ╠═╡ skip_as_script = true
 #=╠═╡
 begin
-	MARKERS = [
-		:circle,
-		:rect,
-		:dtriangle,
-		:utriangle,
-		:cross,
-		:diamond,
-		:ltriangle,
-		:rtriangle,
-		:pentagon,
-		:xcross,
-		:hexagon,
-	]
-
-	CYCLE = Cycle([:color, :linestyle, :marker])
-
 	DEFAULT_THEME = Theme(
 	    size=(880, 880),
 	    fontsize=35,
 	    figure_padding=(1, 15, 5, 15),
-	    palette=(color=Makie.wong_colors(), marker=MARKERS),
 	    CairoMakie=(px_per_unit=2.3622, pt_per_unit=0.283466),
 	    Axis=(
 	        xlabelpadding=15,
@@ -80,11 +119,8 @@ begin
 	            Point2f(0.15, 0.85),
 	        ],
 	    ),
-	    Lines=(linewidth=5, cycle=CYCLE),
-	    VLines=(linewidth=3, cycle=CYCLE),
-	    HLines=(linewidth=3, cycle=CYCLE),
+	    Lines=(linewidth=5,),
 	    Heatmap=(colormap=:CMRmap, nan_color=ColorSchemes.CMRmap[1]),
-	    Scatter=(markersize=22, cycle=CYCLE),
 	    Colorbar=(
 	        colormap=:CMRmap,
 	        size=25,
@@ -99,61 +135,6 @@ begin
 end;
   ╠═╡ =#
 
-# ╔═╡ 4b65fd9c-bd69-4e97-a28c-357c6a9c7bda
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"## Load the model"
-  ╠═╡ =#
-
-# ╔═╡ a0ca487a-8a51-48cb-acc0-7b318c793d09
-begin
-	const TESTING = @ingredients("./03_testing.jl")
-	const CODEGEN = TESTING.CODEGEN
-	const MODEL   = CODEGEN.MODEL
-end;
-
-# ╔═╡ 2049dd94-3bef-4078-90d5-41372959b5a2
-begin
-	#################################################################################
-	# Si and C mass fractions [dimensionless] for the solar abundance pattern of
-	# Asplund (2009), scaled to the metallicity Z
-	#################################################################################
-	X_Si(Z) = MODEL.X_Si_A09 * Z / MODEL.Z_A09
-	X_C(Z)  = MODEL.X_C_A09 * Z / MODEL.Z_A09
-
-	#################################################################################
-	# Parameters for the ODEs, [ρ_cell, Z, a, h, X_Si, X_C], for a solar abundance pattern
-	#
-	# Arguments
-	#
-	#     ρ: Total cell density [mp * cm^(-3)]
-	#     Z: Metallicity [dimensionless]
-	#     a: Scale factor [dimensionless]
-	#     h: Cell size [cm]
-	#################################################################################
-	make_base_params(ρ, Z; a=1.0, h=3.0e20) = [ρ, Z, a, h, X_Si(Z), X_C(Z)]
-
-	#################################################################################
-	# Initial conditions as in the model (first entry of a cell),
-	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-	#
-	# Arguments
-	#
-	#     Z:  Metallicity [dimensionless]
-	#     fi: Ionized fraction of the gas [dimensionless]
-	#################################################################################
-	function make_ic(Z, fi)
-		fd = MODEL.initial_dust_fraction(X_Si(Z), X_C(Z), Z)
-		return [(1.0 - Z) * fi, (1.0 - Z) * (1.0 - fi), 0.0, 0.0, Z - fd, fd]
-	end
-end;
-
-# ╔═╡ cfacae0b-ee2e-4ba5-b31e-0fc122a3676b
-# ╠═╡ skip_as_script = true
-#=╠═╡
-md"# Plots"
-  ╠═╡ =#
-
 # ╔═╡ d5d5c8f9-4eb2-4332-8de5-6e20da7e528a
 begin
 	# If the plots will be made with the Julia implementation
@@ -161,10 +142,10 @@ begin
 
 	if SOLVE_WITH_JULIA
 
-		#################################################################################
-		# Fractions at the end of an integration of length `it` [Myr], using the Julia
-		# implementation
-		#################################################################################
+		#############################################################################
+		# Fractions at the end of an integration of length `it` [Myr], 
+		# using the Julia implementation
+		#############################################################################
 		function solve_ode(
 			ic::Vector{Float64},
 			base_params::Vector{Float64},
@@ -177,10 +158,10 @@ begin
 
 	else
 
-		#################################################################################
-		# Fractions at the end of an integration of length `it` [Myr], using the C
-		# implementation
-		#################################################################################
+		#############################################################################
+		# Fractions at the end of an integration of length `it` [Myr], 
+		# using the C implementation
+		#############################################################################
 		c_solver = TESTING.c_solver_generator();
 
 		function solve_ode(
@@ -196,10 +177,10 @@ begin
 	end
 
 	#################################################################################
-	# Fractions at the end of an integration of length t, for each t in `time_list` [Myr]
+	# Fractions at the end of an integration of length t, 
+	# for each t in `time_list` [Myr]
 	#
 	# Each t is a separate integration, with the parameters for an integration time t
-	# (η depends on it), as in the simulations
 	#################################################################################
 	function solve_ode(
 		ic::Vector{Float64},
@@ -212,13 +193,15 @@ begin
 	end
 
 	#################################################################################
-	# Trajectory of a single integration, from t = 0 to time_list[end] [Myr], saved at
-	# each t in `time_list`
+	# Trajectory of a single integration, from t = 0 to time_list[end] [Myr], 
+	# saved at each t in `time_list`
 	#
-	# The parameters are fixed at their values for an integration time time_list[end],
-	# so this is the evolution of the ODEs within one integration, and not the result of
-	# integrations of different lengths. It always uses the Julia implementation, as the
-	# C library only returns the final state of an integration
+	# The parameters are fixed at their values for an integration time
+	# time_list[end], so this is the evolution of the ODEs within one integration,
+	# and not the result of integrations of different lengths. 
+	# 
+	# It always uses the Julia implementation, as the C library only returns 
+	# the final state of an integration
 	#################################################################################
 	function solve_trajectory(
 		ic::Vector{Float64},
@@ -244,7 +227,6 @@ begin
 
 	#################################################################################
 	# Apply `f` to every element of `xs`, using threads with the Julia solver
-	# (the C library in TESTING mode caches its tables, so it is used serially)
 	#
 	# Arguments
 	#
@@ -329,7 +311,7 @@ md"## Physical processes"
 # ╔═╡ 78385b04-ccee-48ad-8bb3-c6b1af1bfd1e
 # ╠═╡ skip_as_script = true
 #=╠═╡
-diagram = TikzPictures.TikzPicture(
+diagram_color = TikzPictures.TikzPicture(
 	L"""
 		% Phases
 		\node[box] (atom) {H\,\textsc{i}};
@@ -367,6 +349,57 @@ diagram = TikzPictures.TikzPicture(
 		\definecolor{c_star}{HTML}{A88B00}  % Return of mass, metals, and dust by stars
 		\definecolor{c_dg}{HTML}{5B8C1A}    % Dust growth
 		\definecolor{c_dd}{HTML}{7B68AE}    % Dust destruction
+
+		\tikzset{
+		    >={Stealth[length=2.4mm]},
+		    box/.style={
+		        rectangle,
+		        rounded corners=3pt,
+		        draw=black,
+		        thick,
+		        text=black,
+		        minimum width=3.4em,
+		        minimum height=2.2em,
+		        align=center,
+		    },
+		    flow/.style={
+		        ->,
+		        thick,
+		    },
+		}
+	""",
+)
+  ╠═╡ =#
+
+# ╔═╡ 53fdd9ca-3fc8-4820-ba5d-b33e6c5a29f4
+# ╠═╡ skip_as_script = true
+#=╠═╡
+diagram = TikzPictures.TikzPicture(
+	L"""
+		% Phases
+		\node[box] (atom) {H\,\textsc{i}};
+		\node[box, left=2.6cm of atom] (ion) {H\,\textsc{ii}};
+		\node[box, right=2.6cm of atom] (molecule) {H$_2$};
+		\node[box, below=2.6cm of atom] (stars) {Stars};
+		\node[box, below left=1.1cm and 0.6cm of stars] (metals) {Metals};
+		\node[box, below right=1.1cm and 0.6cm of stars] (dust) {Dust};
+
+		% Processes, one arrow per direction
+		\draw[flow] (ion) to[bend left=30] node[above] {recombination} (atom);
+		\draw[flow] (atom) to[bend left=30] node[below] {photoionization} (ion);
+		\draw[flow] (atom) to[bend left=30] node[above] {condensation} (molecule);
+		\draw[flow] (molecule) to[bend left=30] node[below] {photodissociation} (atom);
+		\draw[flow] (molecule) to[bend left=25] node[below right] {star formation} (stars);
+		\draw[flow] (stars) to[bend left=25] node[below left] {recycling} (ion);
+		\draw[flow] (stars) to[bend right=20] node[above left] {enrichment} (metals);
+		\draw[flow] (stars) to[bend left=20] node[above right] {dust production} (dust);
+		\draw[flow] (metals) to[bend left=20] node[above] {dust growth} (dust);
+		\draw[flow] (dust) to[bend left=20] node[below] {dust destruction} (metals);
+	""",
+	width="75em",
+	preamble=raw"""
+		\usepackage{amsmath}
+		\usetikzlibrary{arrows.meta, positioning}
 
 		\tikzset{
 		    >={Stealth[length=2.4mm]},
@@ -427,7 +460,7 @@ let
 	Zt_range = range(0.0, 1.0, resolution)[2:end] .* MODEL.Zsun
 
 	# Dust growth constant, for a solar abundance pattern [Myr^(-1) * mp^(-1) * cm^3]
-	c_dg(Zt) = MODEL.accretion_parameters(X_Si(Zt), X_C(Zt), Zt)[2]
+	c_dg(Zt) = MODEL.accretion_parameters(Z_Si(Zt), Z_C(Zt), Zt)[2]
 
 	#################################################################################
 	# Panels, one per time scale
@@ -435,7 +468,8 @@ let
 	#     y:      Values of the second variable of the time scale
 	#     y_plot: Values of the y axis
 	#     τ:      Time scale [Myr], as a function of (ρ_cell, y)
-	#     ρ:      Cell density [mp * cm^(-3)] for a given time scale, as a function of (τ, y)
+	#     ρ:      Cell density [mp * cm^(-3)] for a given time scale, 
+	#             as a function of (τ, y)
 	#################################################################################
 	panels = [
 		(
@@ -496,7 +530,7 @@ let
 				yticks=[0.0, 0.5, 1.0],
 			)
 
-			# Density for each time scale, only within the density range (NaN elsewhere)
+			# Density for each time scale, only within the density range
 			log_ρc = [log10(panel.ρ(exp10(x), y)) for x in log_τ, y in panel.y]
 			log_ρc = replace(x -> log_ρc_lims[1] < x < log_ρc_lims[2] ? x : NaN, log_ρc)
 
@@ -547,10 +581,9 @@ md"### Photodissociation and mass recycling"
 # ╠═╡ skip_as_script = true
 #=╠═╡
 #####################################################################################
-# Photodissociation and photoionization efficiencies, computed once for both figures
+# Photodissociation and photoionization efficiencies
 #
-# The metallicities are the native ones of the SED tables of HR-pyPopStar (Q is
-# interpolated linearly between them, and kept constant outside of their range)
+# The metallicities are the native ones of the SED tables of HR-pyPopStar
 #####################################################################################
 η_curves = let
 
@@ -645,7 +678,8 @@ end
 # ╠═╡ skip_as_script = true
 #=╠═╡
 let
-	# Lowest metallicity of the SED tables, and solar metallicity (Z = 0.02 in HR-pyPopStar)
+	# Lowest metallicity of the SED tables, 
+	# and solar metallicity (Z = 0.02 in HR-pyPopStar)
 	Z_columns = [1, 3]
 
 	with_theme(THEME) do
@@ -691,7 +725,7 @@ md"## Integration"
 md"""
 ### Fractions vs. time
 
-Each point is the result of a separate integration of length $t$, with the parameters for that integration time, as in the simulations.
+Each point is the result of a separate integration of length $t$, with the parameters for that integration time.
 """
   ╠═╡ =#
 
@@ -714,7 +748,8 @@ let
 	# Integration times [Myr] (each one is a separate integration)
 	time_list = exp10.(range(-3.0, 1.0, 100))
 
-	# Fractions vs. integration time, for each density, metallicity, and initial ionized fraction
+	# Fractions vs. integration time, for each density, metallicity, 
+	# and initial ionized fraction
 	runs = [(ρ, Z * MODEL.Zsun, fi) for ρ in ρ_list, Z in Z_list, fi in fi_list]
 
 	fractions = threaded_map(runs) do (ρ, Z, fi)
@@ -729,7 +764,10 @@ let
 	with_theme(THEME) do
 
 		# The extra height is for the legend of the line styles
-		f = Figure(size=(1700, panel_size * n_rows + 80), figure_padding=(1, 15, 5, 15))
+		f = Figure(
+			size=(1700, panel_size * n_rows + 80), 
+			figure_padding=(1, 15, 5, 15),
+		)
 
 		for (row, Z_str) in enumerate(Z_strs), (col, ρ_str) in enumerate(ρ_strs)
 
@@ -751,7 +789,6 @@ let
 						getindex.(fractions[col, row, k], idx);
 						linestyle,
 						color,
-						# Only the solid lines go into the legend
 						label=(k == 1 ? label : nothing),
 					)
 				end
@@ -767,14 +804,14 @@ let
 		Legend(
 			f[n_rows + 1, :],
 			[LineElement(; color=:black, linestyle) for linestyle in linestyles],
-			[L"f_i^\mathrm{gas}(0) = %$(fi)" for fi in fi_list];
+			[L"f_i(0) = %$(fi)" for fi in fi_list];
 			orientation=:horizontal,
 			nbanks=1,
 			tellheight=true,
 			tellwidth=false,
 			halign=:center,
 			valign=:center,
-			labelsize=32,
+			labelsize=35,
 		)
 
 		save_figure(f, "fractions-vs-time.png")
@@ -796,12 +833,14 @@ md"### Fractions vs. density"
 #=╠═╡
 begin
 	#################################################################################
-	# Total cell densities for the fractions vs. density plots, as log10(ρ [mp * cm^(-3)])
+	# Total cell densities for the fractions vs. density plots, 
+	# as log10(ρ [mp * cm^(-3)])
 	#################################################################################
 	const DENSITY_LOG_RANGE = range(-1, 3, 121)
 
 	#################################################################################
-	# Metallicities for the fractions vs. density plots [Z⊙], one line each, and their labels
+	# Metallicities for the fractions vs. density plots [Z⊙], 
+	# one line each, and their labels
 	#################################################################################
 	const DENSITY_PLOT_Z = [0.0, 0.001, 0.01, 0.1, 0.5, 1.0]
 	const DENSITY_PLOT_Z_LABELS = [
@@ -814,18 +853,19 @@ begin
 	]
 
 	#################################################################################
-	# Plot the fractions at the end of the integration vs. the cell density, with one
-	# row per fraction, one line per metallicity, and one column per case
+	# Plot the fractions at the end of the integration vs. the cell density, 
+	# with one row per fraction, one line per metallicity, and one column per case
 	#
 	# Arguments
 	#
-	#     cases:           Vector of named tuples (fi, it, title), one per column, with the
-	#                      initial ionized fraction of the gas, the integration time [Myr],
-	#                      and the title of the column
-	#     ylimits:         Limits of the y axis, one per fraction
-	#     legend_panel:    (row, column) of the panel with the legend
+	#     cases:            Vector of named tuples (fi, it, title), 
+	#                       one per column, with the initial ionized fraction 
+	#                       of the gas, the integration time [Myr],
+	#                       and the title of the column
+	#     ylimits:          Limits of the y axis, one per fraction
+	#     legend_panel:     (row, column) of the panel with the legend
 	#     legend_labelsize: Label size of the legend
-	#     width:           Width of the figure
+	#     width:            Width of the figure
 	#
 	# Returns
 	#
@@ -854,12 +894,15 @@ begin
 			solve_ode(make_ic(Z, fi), make_base_params(ρ, Z), it)
 		end
 
+		iterator = enumerate(zip(FRACTION_LABELS, ylimits))
+
 		with_theme(THEME) do
 
 			f = Figure(size=(width, panel_size * n_rows))
 
 			for (col, case) in enumerate(cases)
-				for (row, (ylabel, ylimit)) in enumerate(zip(FRACTION_LABELS, ylimits))
+				
+				for (row, (ylabel, ylimit)) in iterator
 
 					ax = CairoMakie.Axis(
 						f[row, col];
@@ -873,14 +916,25 @@ begin
 					)
 
 					for (j, label) in enumerate(DENSITY_PLOT_Z_LABELS)
-						lines!(ax, DENSITY_LOG_RANGE, getindex.(fractions[:, j, col], row); label)
+						lines!(
+							ax, 
+							DENSITY_LOG_RANGE, 
+							getindex.(fractions[:, j, col], row); 
+							label,
+						)
 					end
 
 					if (row, col) == legend_panel
-						axislegend(ax; position=:lt, nbanks=2, labelsize=legend_labelsize)
+						axislegend(
+							ax; 
+							position=:lt, 
+							nbanks=2, 
+							labelsize=legend_labelsize,
+						)
 					end
 
 				end
+				
 			end
 
 			colgap!(f.layout, 35)
@@ -904,9 +958,9 @@ let
 		(-0.02, 0.62),
 		(-0.04, 1.02),
 		(-0.04, 1.02),
-		(-0.004, 0.154),
-		(-0.0004, 0.024),
-		(-0.0002, 0.006),
+		(-0.02, 0.44),
+		(-0.002, 0.042),
+		(-0.0002, 0.0055),
 	]
 
 	plot_fractions_vs_density(
@@ -924,15 +978,21 @@ end
 #=╠═╡
 let
 	# Columns: integration time [Myr], for an initial ionized fraction of 0.1
-	cases = [(fi=0.1, it=it, title=L"t_f = %$it \, \mathrm{Myr}") for it in [0.5, 1.0, 10.0]]
+	cases = [
+		(
+			fi=0.1, 
+			it=it, 
+			title=L"t_f = %$it \, \mathrm{Myr}",
+		) for it in [0.5, 1.0, 10.0]
+	]
 
 	ylimits = [
 		(-0.04, 1.05),
 		(-0.04, 1.05),
 		(-0.04, 1.05),
-		(-0.04, 0.6),
-		(-0.001, 0.04),
-		(-0.0005, 0.006),
+		(-0.04, 1.05),
+		(-0.002, 0.061),
+		(-0.0005, 0.0055),
 	]
 
 	f = plot_fractions_vs_density(cases, ylimits; legend_panel=(1, 1))
@@ -949,7 +1009,7 @@ end
 md"""
 ### Long integration time
 
-Trajectories of a single integration, with the parameters fixed at their values for the final time, to study the behavior of the ODEs. They always use the Julia implementation.
+Trajectories of a single integration, with the parameters fixed at their values for the final time.
 """
   ╠═╡ =#
 
@@ -1025,12 +1085,18 @@ let
 			ylabel=L"\log_{10} f",
 			aspect=AxisAspect(1),
 			xticks=(-4:1:5),
-			yticks=(-8:1:0),
-			limits=(nothing, nothing, -8.1, nothing),
+			yticks=(-6:1:0),
+			limits=(nothing, nothing, -6.1, 0.1),
 		)
 
 		for (idx, (label, color)) in enumerate(zip(FRACTION_LABELS, FRACTION_COLORS))
-			lines!(ax, log_t, log10.(getindex.(long_run.fractions, idx)); color, label)
+			lines!(
+				ax, 
+				log_t, 
+				log10.(getindex.(long_run.fractions, idx)); 
+				color, 
+				label,
+			)
 		end
 
 		axislegend(ax; position=(0.7, 0.03), nbanks=2, labelsize=32)
@@ -1059,14 +1125,17 @@ let
 	base_params = make_base_params(ρ, Z)
 
 	# Integration time [Myr]
-	it = 100.0
+	it = 1000.0
 	time_list = exp10.(range(-4, log10(it), 1000))
 
 	# Integrate the system (single trajectory)
 	fractions = solve_trajectory(ic, base_params, time_list)
 
 	# Time derivatives of the fractions, along the solution
-	equilibrium = threaded_map(fraction -> MODEL.equilibrium(fraction, base_params, it), fractions)
+	equilibrium = threaded_map(
+		fraction -> MODEL.equilibrium(fraction, base_params, it), 
+		fractions,
+	)
 
 	with_theme(THEME) do
 
@@ -1078,16 +1147,26 @@ let
 			ylabel=L"|\mathrm{df/dt}| \,\, [\mathrm{%$(MODEL.t_u)^{-1}}]",
 			yscale=log10,
 			aspect=AxisAspect(1),
-			xticks=(-4:1:2),
+			xticks=(-4:1:3),
 		)
 
 		# Gas phases: ionized, atomic, and molecular
-		labels = [L"\mathrm{HII}", L"\mathrm{HI}", L"\mathrm{H}_2"]
+		labels = [
+			L"\mathrm{HII}", 
+			L"\mathrm{HI}", 
+			L"\mathrm{H}_2",
+			L"\mathrm{Stars}",
+			L"Z",
+			L"\mathrm{Dust}",
+		]
 
 		for (idx, label) in enumerate(labels)
 
 			# Exact zeros cannot be shown in a log scale
-			abs_dfdt = replace(x -> x > 0.0 ? x : NaN, abs.(getindex.(equilibrium, idx)))
+			abs_dfdt = replace(
+				x -> x > 0.0 ? x : NaN, 
+				abs.(getindex.(equilibrium, idx)),
+			)
 
 			lines!(
 				ax,
@@ -1099,7 +1178,7 @@ let
 
 		end
 
-		axislegend(ax; position=(0.98, 1.0), nbanks=1, labelsize=30)
+		axislegend(ax; position=(0.98, 0.02), nbanks=2, labelsize=30)
 
 		f
 
@@ -4846,20 +4925,21 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╔═╡ Cell order:
 # ╠═f79c680a-7c97-4100-97e8-19190707c55b
 # ╟─37653018-aaf5-42d1-a938-e05a44f18918
-# ╟─6e5823eb-3614-476b-80e7-66fc27ed0392
 # ╟─4b65fd9c-bd69-4e97-a28c-357c6a9c7bda
 # ╠═a0ca487a-8a51-48cb-acc0-7b318c793d09
-# ╠═2049dd94-3bef-4078-90d5-41372959b5a2
+# ╟─2049dd94-3bef-4078-90d5-41372959b5a2
 # ╟─cfacae0b-ee2e-4ba5-b31e-0fc122a3676b
+# ╟─6e5823eb-3614-476b-80e7-66fc27ed0392
 # ╟─d5d5c8f9-4eb2-4332-8de5-6e20da7e528a
 # ╟─9a7f2c28-35a8-4b6d-9749-87da03445415
 # ╟─b0c851e1-2cf7-48b7-b045-f5960147fb04
 # ╟─78385b04-ccee-48ad-8bb3-c6b1af1bfd1e
+# ╟─53fdd9ca-3fc8-4820-ba5d-b33e6c5a29f4
 # ╠═6162a115-fdb7-43eb-becb-0f25192001e0
 # ╟─6775e416-0878-4d82-9b3a-067eeebbe3ad
 # ╟─25ae9eb0-86ce-4e73-8b4b-128c33f15e4e
 # ╟─dfb8b71a-b3a3-4ea0-9ea3-213c206117ca
-# ╠═664cfcca-9848-4e26-b5d5-24ec5746f31f
+# ╟─664cfcca-9848-4e26-b5d5-24ec5746f31f
 # ╟─4ad4589f-9834-44a5-9c4b-994b7d91e442
 # ╟─b2197f1a-ff9a-429c-8486-dfa27abc880d
 # ╟─ad34b750-5e81-4cb8-a444-52220c116790
@@ -4870,7 +4950,7 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╟─c76cf08f-aaef-46df-ae18-9cd018141b70
 # ╟─3bd92a5f-4efd-441e-a7d1-c3597e1f4a39
 # ╟─e99ef380-2646-4948-8673-436baad64d3b
-# ╠═a98d7153-e6c7-42ab-9e2d-cfd7de4a278b
+# ╟─a98d7153-e6c7-42ab-9e2d-cfd7de4a278b
 # ╟─660aa82c-78db-469d-87cf-9325fa6a30ff
 # ╟─05c3a97a-4096-4642-a1ae-c47283666a43
 # ╟─a6b4d852-43dd-4fe9-a0d8-f07e1c53c1f1

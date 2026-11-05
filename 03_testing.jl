@@ -46,13 +46,13 @@ begin
     # Z:  Metallicity [dimensionless] / Zsun
 	# h:  Cell size [cm]
     # it: Integration time [Myr]
-	# X:  Abundance of Si or C [dimensionless]
+	# ZX: Abundance of Si or C [dimensionless]
     const fi_range = (-3.0, -0.3)
     const ρc_range = (-0.8, 3.0)
 	const Z_range  = (-4.0, 0.5)
 	const h_range  = (19.5, 21.5)
 	const it_range = (-2.0, 1.0)
-	const X_range  = (-0.5, 0.5)
+	const ZX_range = (-0.5, 0.5)
 
 	#################################################################################
 	# Linear ranges
@@ -73,8 +73,8 @@ begin
 	
 	# Si and C mass fractions for the solar abundance pattern 
 	# of Asplund (2009), at Zsun [dimensionless]
-	const X_SI_CTE = MODEL.X_Si_A09 * MODEL.Zsun / MODEL.Z_A09
-	const X_C_CTE  = MODEL.X_C_A09 * MODEL.Zsun / MODEL.Z_A09
+	const Z_SI_CTE = MODEL.Z_Si_A09 * MODEL.Zsun / MODEL.Z_A09
+	const Z_C_CTE  = MODEL.Z_C_A09 * MODEL.Zsun / MODEL.Z_A09
 
     # Number of random parameters to be used in the error estimation
     const N_ERR = 200
@@ -103,8 +103,8 @@ begin
 	h_list    = rand_list(h_range)
     it_list   = rand_list(it_range)
 	a_list    = rand_list(a_range)
-	X_Si_list = rand_list(X_range)
-	X_C_list  = rand_list(X_range)
+	Z_Si_list = rand_list(ZX_range)
+	Z_C_list  = rand_list(ZX_range)
 
 	# Initial dust fraction, as a fraction of the maximum dust fraction
 	fd0_list = rand_list((0.0, 1.0))
@@ -140,8 +140,8 @@ md"## C functions"
 #     		  Z:      Metallicity         [dimensionless]
 #     		  a:      Scale factor        [dimensionless]
 #     		  h:      Cell size           [cm]
-#     		  X_Si:   Mass fraction of Si [dimensionless]
-#     		  X_C:    Mass fraction of C  [dimensionless]
+#     		  Z_Si:   Mass fraction of Si [dimensionless]
+#     		  Z_C:    Mass fraction of C  [dimensionless]
 #
 #         it::Float64
 #
@@ -191,8 +191,8 @@ end;
 #     		  Z:      Metallicity         [dimensionless]
 #     		  a:      Scale factor        [dimensionless]
 #     		  h:      Cell size           [cm]
-#     		  X_Si:   Mass fraction of Si [dimensionless]
-#     		  X_C:    Mass fraction of C  [dimensionless]
+#     		  Z_Si:   Mass fraction of Si [dimensionless]
+#     		  Z_C:    Mass fraction of C  [dimensionless]
 #
 #         it::Float64
 #
@@ -278,22 +278,22 @@ function benchmark_jsolve(
 	# Z:      Metallicity                 [dimensionless]
 	# a:      Scale factor                [dimensionless]
 	# h:      Cell size                   [cm]
-	# X_Si:   Mass fraction of Si         [dimensionless]
-	# X_C:    Mass fraction of C          [dimensionless]
+	# Z_Si:   Mass fraction of Si         [dimensionless]
+	# Z_C:    Mass fraction of C          [dimensionless]
 	# it:     Integration time            [Myr]
-	fi, ρ_cell, Z, a, h, X_Si, X_C, it = parameters
+	fi, ρ_cell, Z, a, h, Z_Si, Z_C, it = parameters
 
 	# Index in the solution of the target phase
     idx = MODEL.phase_name_to_index[phase]
 
 	# Initial dust fraction of the model (first entry of a cell) [dimensionless]
-	fd0 = MODEL.initial_dust_fraction(X_Si, X_C, Z)
+	fd0 = MODEL.initial_dust_fraction(Z_Si, Z_C, Z)
 
 	# Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
 	ic = [(1.0 - Z) * fi, (1.0 - Z) * (1.0 - fi), 0.0, 0.0, Z - fd0, fd0]
 
-	# Parameters for the ODEs, [ρ_cell, Z, a, h, X_Si, X_C]
-	base_params = [ρ_cell, Z, a, h, X_Si, X_C]
+	# Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
+	base_params = [ρ_cell, Z, a, h, Z_Si, Z_C]
 
 	# Integration span, (ti, tf) [Myr]
 	tspan = (0.0, it)
@@ -345,19 +345,19 @@ function benchmark_csolve(
 	# Z:      Metallicity                 [dimensionless]
 	# a:      Scale factor                [dimensionless]
 	# h:      Cell size                   [cm]
-	# X_Si:   Mass fraction of Si         [dimensionless]
-	# X_C:    Mass fraction of C          [dimensionless]
+	# Z_Si:   Mass fraction of Si         [dimensionless]
+	# Z_C:    Mass fraction of C          [dimensionless]
 	# it:     Integration time            [Myr]
-	fi, ρ_cell, Z, a, h, X_Si, X_C, it = parameters
+	fi, ρ_cell, Z, a, h, Z_Si, Z_C, it = parameters
 
 	# Initial dust fraction of the model [dimensionless]
-	fd0 = MODEL.initial_dust_fraction(X_Si, X_C, Z)
+	fd0 = MODEL.initial_dust_fraction(Z_Si, Z_C, Z)
 
 	# Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
 	ic = [(1.0 - Z) * fi, (1.0 - Z) * (1.0 - fi), 0.0, 0.0, Z - fd0, fd0]
 
-	# Parameters for the ODEs, [ρ_cell, Z, a, h, X_Si, X_C]
-	base_params = [ρ_cell, Z, a, h, X_Si, X_C]
+	# Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
+	base_params = [ρ_cell, Z, a, h, Z_Si, Z_C]
 
 	# First call, to exclude the compilation time
 	integrator(ic, base_params, it)
@@ -384,8 +384,8 @@ begin
 		MODEL.Zsun, # Metallicity                 [dimensionless]
 		A_CTE,      # Scale factor                [dimensionless]
 		H_CTE,      # Cell size                   [cm]
-		X_SI_CTE,   # Mass fraction of Si         [dimensionless]
-		X_C_CTE,    # Mass fraction of C          [dimensionless]
+		Z_SI_CTE,   # Mass fraction of Si         [dimensionless]
+		Z_C_CTE,    # Mass fraction of C          [dimensionless]
 		10.0,       # Integration time            [Myr]
 	]
 	
@@ -428,16 +428,16 @@ function test_case(i::Int)::Tuple{Vector{Float64},Vector{Float64},Float64}
 	it = exp10(it_list[i])
 
 	# Si and C mass fractions, scattered around the solar pattern of Asplund (2009)
-	X_Si = exp10(X_Si_list[i]) * MODEL.X_Si_A09 * Z / MODEL.Z_A09
-	X_C  = exp10(X_C_list[i]) * MODEL.X_C_A09 * Z / MODEL.Z_A09
+	Z_Si = exp10(Z_Si_list[i]) * MODEL.Z_Si_A09 * Z / MODEL.Z_A09
+	Z_C  = exp10(Z_C_list[i]) * MODEL.Z_C_A09 * Z / MODEL.Z_A09
 
 	# Initial dust fraction, between 0 and the maximum dust fraction
-	fd0 = fd0_list[i] * MODEL.max_dust_fraction(X_Si, X_C, Z)
+	fd0 = fd0_list[i] * MODEL.max_dust_fraction(Z_Si, Z_C, Z)
 
 	# [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
 	ic = [(1.0 - Z) * fi, (1.0 - Z) * (1.0 - fi), 0.0, 0.0, Z - fd0, fd0]
 
-	base_params = [ρc, Z, a, h, X_Si, X_C]
+	base_params = [ρc, Z, a, h, Z_Si, Z_C]
 
 	return ic, base_params, it
 
