@@ -11,84 +11,6 @@ let
 	using DataFrames, ChaosTools, CSV, DifferentialEquations, Interpolations, LinearAlgebra, OrdinaryDiffEqBDF, PlutoUI, QuadGK, Symbolics, TikzPictures, Unitful, UnitfulAstro
 end
 
-# ╔═╡ 53faa843-2056-4c76-bc8b-31bb602d475c
-begin
-	MARKERS = [
-		:circle,
-		:rect,
-		:dtriangle,
-		:utriangle,
-		:cross,
-		:diamond,
-		:ltriangle,
-		:rtriangle,
-		:pentagon,
-		:xcross,
-		:hexagon,
-	]
-	LINE_STYLES=[:solid, :dash, :dot, :dashdot, :dashdotdot]
-	CYCLE = Cycle([:color, :linestyle, :marker])
-end;
-
-# ╔═╡ b07d40bf-e115-4cd6-82b7-55951aa1c04e
-DEFAULT_THEME = Theme(
-    size=(880, 880),
-    fontsize=35,
-    figure_padding=(1, 15, 5, 15),
-    palette=(color=Makie.wong_colors(), marker=MARKERS, linestyle=LINE_STYLES),
-    CairoMakie=(px_per_unit=2.3622, pt_per_unit=0.283466),
-    Axis=(
-        xlabelpadding=15,
-        xticklabelpad=10,
-        xticksize=7,
-        xgridvisible=false,
-        spinewidth=3,
-        xminorticksvisible=true,
-        xminorticks=IntervalsBetween(5),
-        ylabelpadding=15,
-        yticklabelpad=10,
-        yticksize=7,
-        ygridvisible=false,
-        yminorticksvisible=true,
-        yminorticks=IntervalsBetween(5),
-        aspect=AxisAspect(1),
-    ),
-    Legend=(
-        tellheight=false,
-        tellwidth=false,
-        framevisible=false,
-        colgap=20,
-        halign=:right,
-        valign=:bottom,
-        nbanks=3,
-        titlegap=-5,
-        labelsize=30,
-        linewidth=5,
-        markersize=28,
-        patchsize=(50, 50),
-        linepoints=[Point2f(0.0, 0.5), Point2f(0.9, 0.5)],
-        polypoints=[
-            Point2f(0.15, 0.15),
-            Point2f(0.85, 0.15),
-            Point2f(0.85, 0.85),
-            Point2f(0.15, 0.85),
-        ],
-    ),
-    Lines=(linewidth=5, cycle=CYCLE),
-    VLines=(linewidth=3, cycle=CYCLE),
-    HLines=(linewidth=3, cycle=CYCLE),
-    Heatmap=(colormap=:CMRmap, nan_color=ColorSchemes.CMRmap[1]),
-    Scatter=(markersize=22, cycle=CYCLE),
-    Colorbar=(
-        colormap=:CMRmap,
-        size=25,
-        ticklabelpad=10,
-        minorticksvisible=true,
-        ticksize=7,
-        labelpadding=2,
-    ),
-);
-
 # ╔═╡ a0ca487a-8a51-48cb-acc0-7b318c793d09
 begin
 	const PLOTS   = @ingredients("./04_plots.jl")
@@ -101,17 +23,20 @@ end;
 md"""
 # Star formation probability
 
-In the simulations, each time a star-forming cell is active, the model integrates the ODEs for the time step of the cell, $\Delta t$, starting from the initial conditions of the section Initial conditions of `01_model.jl`. In particular, every step starts with $f_m(0) = f_s(0) = 0$, and only the dust-to-metal ratio is carried over from the previous step. The model then gives $\texttt{AREPO}$ the gross SFR
+In the simulations, each time a star-forming cell is active, the model integrates the ODEs for the time step of the cell, $\Delta t$, starting from the initial conditions. In particular, every step starts with $f_m(0) = f_s(0) = 0$, and only the dust-to-metal ratio is carried over from the previous step. The model then gives $\texttt{AREPO}$ the gross SFR
 
 $\begin{equation}
     \mathrm{SFR} = \frac{f_s(\Delta t) \, M_\mathrm{cell}}{(1 - R) \, \Delta t} \, ,
 \end{equation}$
 
-and $\texttt{AREPO}$ turns the cell into a star particle of mass $m_* = M_\mathrm{cell}$ with probability
+and $\texttt{AREPO}$ turns the cell into a star particle of mass $m_*$ with probability
 
-$\begin{equation}
-    p = 1 - \exp\left( -\frac{\mathrm{SFR} \, \Delta t}{M_\mathrm{cell}} \right) = 1 - \exp\left( -\frac{f_s(\Delta t)}{1 - R} \right) \, .
-\end{equation}$
+$\begin{align}
+    p &= \frac{M_\mathrm{cell}}{m_\star}
+    \left[ 1 - \exp\left( -\frac{\mathrm{SFR} \, \Delta t}{M_\mathrm{cell}} \right) \right] \\
+    &= \frac{M_\mathrm{cell}}{m_\star}
+    \left[ 1 - \exp\left( -\frac{f_s(\Delta t)}{1 - R} \right) \right] .
+\end{align}$
 
 This notebook studies two consequences of this procedure:
 
@@ -141,7 +66,7 @@ begin
 
 	#################################################################################
 	# Apply `f` to every element of `xs`, using threads with the Julia solver
-	# (the C library in TESTING mode caches its tables, so it is used serially)
+	# the C library in TESTING mode caches its tables, so it is used serially
 	#
 	# Arguments
 	#
@@ -190,15 +115,20 @@ begin
 	function step_sfr(ρ::Float64, Z::Float64, fi::Float64, Δt::Float64)::Float64
 
 		R  = MODEL.compute_recycled_fractions(Z)[1]
-		fs = PLOTS.solve_ode(PLOTS.make_ic(Z, fi), PLOTS.make_base_params(ρ, Z), Δt)[I_FS]
+		fs = PLOTS.solve_ode(
+			PLOTS.make_ic(Z, fi), 
+			PLOTS.make_base_params(ρ, Z), 
+			Δt,
+		)[I_FS]
 
 		return fs / ((1.0 - R) * Δt)
 
 	end
 
 	#################################################################################
-	# Specific SFR along an uninterrupted trajectory (a single integration, without the
-	# resets of the simulations), per unit of gas mass
+	# Specific SFR along an uninterrupted trajectory 
+	# (a single integration, without the resets of the simulations), 
+	# per unit of gas mass
 	#
 	#     λ(t) = ψ(t) / (fi(t) + fa(t) + fm(t))
 	#
@@ -226,7 +156,10 @@ begin
 			time_list,
 		)
 
-		return [MODEL.ψ(f[I_FM], ρ) / (f[I_FI] + f[I_FA] + f[I_FM]) for f in fractions]
+		return [
+			MODEL.ψ(f[I_FM], ρ) / (f[I_FI] + f[I_FA] + f[I_FM]) 
+			for f in fractions
+		]
 
 	end
 
@@ -235,7 +168,8 @@ begin
 	#
 	# Arguments
 	#
-	#     probabilities: Probability of a gas cell turning into a star particle, for each step
+	#     probabilities: Probability of a gas cell turning into a star particle, 
+	  #                    for each step
 	#     n_cells:       Initial number of gas cells
 	#     rng:           Random number generator
 	#
@@ -298,13 +232,15 @@ let
 	# Time steps, and times of the uninterrupted integrations [Myr]
 	Δt_list = exp10.(range(-3, 2, 51))
 
-	# Specific SFR for one step of length Δt, for each time step, metallicity, and density
+	# Specific SFR for one step of length Δt, 
+	# for each time step, metallicity, and density
 	λ_step = threaded_map(
 		((ρ, Z, Δt),) -> step_sfr(ρ, Z, fi, Δt),
 		[(ρ, Z, Δt) for Δt in Δt_list, Z in Z_list, ρ in ρ_list],
 	)
 
-	# Specific SFR along an uninterrupted integration, for each metallicity and density
+	# Specific SFR along an uninterrupted integration, 
+	# for each metallicity and density
 	λ_traj = threaded_map(
 		((ρ, Z),) -> trajectory_sfr(ρ, Z, fi, Δt_list),
 		[(ρ, Z) for Z in Z_list, ρ in ρ_list],
@@ -336,7 +272,7 @@ let
 
 	colors = Makie.wong_colors()
 
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
+	with_theme(merge(theme_latexfonts(), PLOTS.DEFAULT_THEME)) do
 
 		f = Figure(size=(1700, 1900))
 
@@ -509,7 +445,7 @@ end;
 let
 	colors = Makie.wong_colors()
 
-	with_theme(merge(theme_latexfonts(), DEFAULT_THEME)) do
+	with_theme(merge(theme_latexfonts(), PLOTS.DEFAULT_THEME)) do
 
 		f = Figure(size=(1700, 1050))
 
@@ -520,7 +456,7 @@ let
 				xlabel=L"t \,\, [\mathrm{Myr}]",
 				ylabel=L"\mathrm{Stellar \,\, fraction}",
 				ylabelvisible=(col == 1),
-				limits=(nothing, nothing, -0.05, 1.05),
+				limits=(nothing, nothing, -0.02, 0.27),
 				title=L"\Delta t = %$(run.Δt) \, \mathrm{Myr}",
 			)
 
@@ -548,10 +484,10 @@ let
 			],
 			[
 				L"\mathrm{Reference}",
-				L"\mathrm{AREPO}: \, p = 1 - e^{-f_s / (1 - R)}",
+				L"\mathrm{AREPO}: \, p = 1 - \exp(-f_s / (1 - R))",
 				L"\mathrm{AREPO \,\, (sample)}",
 				L"\mathrm{Recipes \,\, 01, \, 02}: \, p = f_s",
-				L"\mathrm{Recipe \,\, 03}: \, p = 1 - e^{-f_s}",
+				L"\mathrm{Recipe \,\, 03}: \, p = 1 - \exp(-f_s)",
 			];
 			orientation=:horizontal,
 			nbanks=2,
@@ -4307,15 +4243,13 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 
 # ╔═╡ Cell order:
 # ╠═f79c680a-7c97-4100-97e8-19190707c55b
-# ╟─53faa843-2056-4c76-bc8b-31bb602d475c
-# ╟─b07d40bf-e115-4cd6-82b7-55951aa1c04e
 # ╠═a0ca487a-8a51-48cb-acc0-7b318c793d09
 # ╟─94ea6306-5a09-4458-9231-1669621aea30
-# ╠═35f987e3-321c-4772-8bee-ef3ae29c7e61
+# ╟─35f987e3-321c-4772-8bee-ef3ae29c7e61
 # ╟─9d53a456-1168-4197-8863-55172cdedb90
 # ╟─f915c851-8bee-4c4b-8a36-4858c671b519
 # ╟─3af424b4-a354-4af6-810e-a4ae9f28383a
-# ╠═05e0c465-998f-4111-8571-e6e7dbbe095e
+# ╟─05e0c465-998f-4111-8571-e6e7dbbe095e
 # ╟─3f2c01bc-9d9a-4d69-becb-b8fa75c7618f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

@@ -74,8 +74,6 @@ md"# Plots"
   ╠═╡ =#
 
 # ╔═╡ 6e5823eb-3614-476b-80e7-66fc27ed0392
-# ╠═╡ skip_as_script = true
-#=╠═╡
 begin
 	DEFAULT_THEME = Theme(
 	    size=(880, 880),
@@ -133,7 +131,6 @@ begin
 
 	THEME = merge(DEFAULT_THEME, theme_latexfonts())
 end;
-  ╠═╡ =#
 
 # ╔═╡ d5d5c8f9-4eb2-4332-8de5-6e20da7e528a
 begin

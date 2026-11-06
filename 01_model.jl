@@ -506,11 +506,11 @@ $\begin{equation}
 where $a_\mathrm{eff} = \langle a^3 \rangle / \langle a^2 \rangle$ is the effective grain radius. We use the values
 
 $\begin{align}
-    a_\mathrm{eff} &= \frac{\langle a^3 \rangle_0}{\langle a^2 \rangle_0} = 0.0159 \, \mathrm{μm} \, , \\
+    a_\mathrm{eff} &= \frac{\langle a^3 \rangle_0}{\langle a^2 \rangle_0} = 0.0158 \, \mathrm{μm} \, , \\
     s &= 3 \, \mathrm{g \, cm^{-3}} \, ,
 \end{align}$
 
-where $a_\mathrm{eff}$ comes from models C and F of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Table 2), the same size distribution we use for dust growth (see the section Dust accretion), and $s$ is taken from footnote 5 of [Ragone-Figueroa2024](https://doi.org/10.1051/0004-6361/202451344), which lies between the values for silicate ($3.3 \, \mathrm{g \, cm^{-3}}$) and graphite ($2.26 \, \mathrm{g \, cm^{-3}}$) in Table 1 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x). Notice that the number-weighted mean radius of the same distribution, $\langle a \rangle = 0.00167 \, \mathrm{μm}$, is not the relevant quantity here, as it is dominated by the smallest grains, and using it would overestimate the grain surface per unit dust mass by a factor of $\sim 9.5$.
+where $a_\mathrm{eff}$ comes from models C and F of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Table 2), the same size distribution we use for dust growth (see the section Dust accretion, which also explains why we use $0.0158 \, \mathrm{μm}$ instead of the tabulated $0.0159 \, \mathrm{μm}$), and $s$ is taken from footnote 5 of [Ragone-Figueroa2024](https://doi.org/10.1051/0004-6361/202451344), which lies between the values for silicate ($3.3 \, \mathrm{g \, cm^{-3}}$) and graphite ($2.26 \, \mathrm{g \, cm^{-3}}$) in Table 1 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x). Notice that the number-weighted mean radius of the same distribution, $\langle a \rangle = 0.00167 \, \mathrm{μm}$, is not the relevant quantity here, as it is dominated by the smallest grains, and using it would overestimate the grain surface per unit dust mass by a factor of $\sim 9.5$.
 
 Using $f_m = 2 \, m_p \, n_m / \rho_\mathrm{cell}$ and $n_a = f_a \, \rho_\mathrm{cell} / m_p$, the condensation rate becomes
 
@@ -564,7 +564,7 @@ where
 $\begin{equation}
     \begin{split}
         C_\mathrm{cond} &= \frac{3 \, C_\rho \, \gamma \, \langle v_a \rangle}{4 \, s \, a_\mathrm{eff}} \\
-        &= 41.497 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, .
+        &= 41.759 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, .
     \end{split}
 \end{equation}$
 """
@@ -1278,7 +1278,7 @@ $\begin{equation}
 
 i.e. $1.363 \times 10^{-26} \, \mathrm{g}$ of dust per hydrogen nucleus. Identifying this value with the dust abundance behind $\sigma_\mathrm{d, eff}$ is our assumption, which links the two works. The solar-metallicity gas of [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) has the dust of the Milky Way, and the grains of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) reproduce its extinction. 
 
-The corresponding opacity is, and
+The corresponding opacity is
 
 $\begin{align}
     C_\mathrm{sd} &= \frac{\sigma_\mathrm{d, eff}}{\mathcal{D}_\mathrm{ref} \, m_p} \\
@@ -1384,7 +1384,7 @@ i.e. $L_\mathrm{sh} = 89.5 \, \mathrm{pc}$ for $\rho_\mathrm{cell} = 1 \, \mathr
 
 With a constant sound speed the column densities scale as $N \propto \rho_\mathrm{cell}^{1/2}$, close to the scaling $N \propto n_\mathrm{H}^{0.42}$ that [Safranek-Shrader2017](https://doi.org/10.1093/mnras/stw2647) find with ray tracing (their eq. 29).
 
-The optical depths $\tau_\mathrm{ion}$ and $\tau_\mathrm{diss}$ used for $\eta_\mathrm{ion}^*$ and $\eta_\mathrm{diss}^*$ (see the section Photodissociation and photoionization) answer a different question. The fraction of the photons emitted by the stars formed in the cell that are absorbed within the cell. As the cell is the control volume of our equations, the relevant path length is set by the cell geometry, so there we keep using the cell size $h = 2 \, (3 \, V_\mathrm{cell} / 4 \pi)^{1/3}$ and the scale lenght.
+The optical depths $\tau_\mathrm{ion}$ and $\tau_\mathrm{diss}$ used for $\eta_\mathrm{ion}^*$ and $\eta_\mathrm{diss}^*$ (see the section Photodissociation and photoionization) answer a different question than the shielding factors. They set the fraction of the photons emitted by the stars formed in the cell that is absorbed before leaving it, $1 - e^{-\tau}$. As the cell is the control volume of our equations, the relevant path length is set by its geometry, so for these optical depths we keep the cell size $h = 2 \, (3 \, V_\mathrm{cell} / 4 \pi)^{1/3}$ as the length scale.
 """
   ╠═╡ =#
 
@@ -2136,11 +2136,13 @@ $\begin{equation}
 	\tau_{\mathrm{dg},\mathrm{X}} = \frac{\tau_\mathrm{X}(\bar{a})}{3} = \frac{\bar{a} \, f_\mathrm{X} \, s_\mathrm{X}}{3 \, Z_\mathrm{X} \, \rho_\mathrm{cell} \, S} \left( \frac{2 \, \pi \, m_\mathrm{X}}{k \, T} \right)^{\!1/2} \, .
 \end{equation}$
 
-We adopt models C and F of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Table 2), which are equivalent for our purposes. Both give
+We adopt models C and F of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Table 2), which are equivalent for our purposes. Both use a power-law size distribution, $\mathcal{N}(a) \propto a^{-3.5}$, between $a_\mathrm{min} = 0.001 \, \mathrm{\mu m}$ and $a_\mathrm{max} = 0.25 \, \mathrm{\mu m}$. With the moments of eq. 27 of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x), the ratio reduces exactly to
 
 $\begin{equation}
-	\bar{a} = \frac{\langle a^3 \rangle_0}{\langle a^2 \rangle_0} = 0.0159 \, \mathrm{\mu m} \, ,
+	\bar{a} = \frac{\langle a^3 \rangle_0}{\langle a^2 \rangle_0} = \sqrt{a_\mathrm{min} \, a_\mathrm{max}} = 0.0158 \, \mathrm{\mu m} \, ,
 \end{equation}$
+
+Table 2 of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) lists $0.0159 \, \mathrm{\mu m}$, which results from dividing the rounded moments ($0.00420^3 / 0.00216^2 = 0.01588 \, \mathrm{\mu m}$; note also that model C lists $\langle a^3 \rangle_0^{1/3} = 0.00402 \, \mathrm{\mu m}$, a typo for the $0.00420 \, \mathrm{\mu m}$ of model F, which has the same distribution). The value is computed from the moments in the section Condensation.
 
 the same value $a_\mathrm{eff}$ we use for the condensation of molecular hydrogen.
 
@@ -2357,8 +2359,8 @@ $\begin{equation}
 with 
 
 $\begin{align}
-	C_\mathrm{acc,Si} &= 0.4909 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, , \\
-	C_\mathrm{acc,C} &= 0.1821 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, .
+	C_\mathrm{acc,Si} &= 0.4940 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, , \\
+	C_\mathrm{acc,C} &= 0.1832 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, .
 \end{align}$
 
 Unlike the other constants of the model, $C_\mathrm{dg}$ depends on the cell, through the abundances $Z_\mathrm{Si}$ and $Z_\mathrm{C}$ (which also set the weights $w_\mathrm{X}$), so it is computed at the start of each integration.
@@ -2711,7 +2713,7 @@ begin
     const s_d = 3.0u"g * cm^-3"
 
 	# Effective grain radius ⟨a³⟩/⟨a²⟩
-    const a_eff = 0.0159u"μm"
+    const a_eff = 0.0158u"μm"
 	
     # Recombination coefficient (γ) times 
 	# the average thermal velocity of hydrogen atoms (⟨va⟩)

@@ -35,7 +35,7 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 /* UVB model: Haardt2012 */
 /* LW background model: Incatasciato2023, J21 constant below z = 6.0 */
 /* Clumping factor: Cρ = 100.0 */
-/* Dust grains (condensation): a_eff = 0.0159 μm, s = 3.0 g cm^-3 */
+/* Dust grains (condensation): a_eff = 0.0158 μm, s = 3.0 g cm^-3 */
 /* Dust initial condition: ξ_Si = 0.25, ξ_C = 0.15 (Hirashita2012) */
 /* Dust accretion: T_gas = 100.0 K, T_dust = 10.0 K */
 /* Dust destruction: ϵ = 0.1, E_SNII = 1.09e51 erg */
@@ -43,10 +43,10 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 
 #define N_EQU 6                          /* Number of equations */
 #define ODE_CREC 8.204976000000000e+00   /* Recombination constant [Myr^(-1) * cm^3 * mp^(-1)] */
-#define ODE_CCOND 4.149680315962227e+01  /* Condensation constant [Myr^(-1) * cm^3 * mp^(-1)] */
+#define ODE_CCOND 4.175944115430344e+01  /* Condensation constant [Myr^(-1) * cm^3 * mp^(-1)] */
 #define ODE_CS 1.942876283158012e-02     /* Star formation constant [Myr^(-1) * cm^(3/2) * mp^(-1/2)] */
-#define ODE_CACCSI 4.908642141884553e-01 /* Silicate accretion constant [Myr^(-1) * cm^3 * mp^(-1)] */
-#define ODE_CACCC 1.820696248189202e-01  /* Graphite accretion constant [Myr^(-1) * cm^3 * mp^(-1)] */
+#define ODE_CACCSI 4.939709497212937e-01 /* Silicate accretion constant [Myr^(-1) * cm^3 * mp^(-1)] */
+#define ODE_CACCC 1.832219642165083e-01  /* Graphite accretion constant [Myr^(-1) * cm^3 * mp^(-1)] */
 #define ODE_CSD 4.907796224212826e-19    /* Dust shielding constant [cm^2 * mp^(-1)] */
 #define ODE_CSH2 9.999999999999999e-16   /* Molecular self-shielding constant [cm^2 * mp^(-1)] */
 #define ODE_CLSH 2.760278182715268e+20   /* Shielding length constant [mp^(1/2) * cm^(-1/2)] */

@@ -25,6 +25,11 @@ jobs:
             - name: Checkout this repository
               uses: actions/checkout@v7
 
+            # Jekyll only reads _config.yml from the root of gh-pages,
+            # so the website files are copied there before exporting/deploying.
+            - name: Move website files to the root
+              run: cp -r website/. . && rm -rf website
+
             - name: Install Julia
               uses: julia-actions/setup-julia@v3
               with:
@@ -60,6 +65,7 @@ jobs:
                     Export_cache_dir="pluto_state_cache",
                     Export_baked_notebookfile=false,
                     Export_baked_state=false,
+                    Export_create_index=false,
                   )'
 
             - name: Deploy to gh-pages
@@ -69,7 +75,3 @@ jobs:
                   branch: gh-pages
                   folder: .
                   single-commit: true
-                  clean-exclude: |
-                      _config.yml
-                      index.md
-                      index.html
