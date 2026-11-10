@@ -510,7 +510,7 @@ $\begin{align}
     s &= 3 \, \mathrm{g \, cm^{-3}} \, ,
 \end{align}$
 
-where $a_\mathrm{eff}$ comes from models C and F of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Table 2), the same size distribution we use for dust growth (see the section Dust accretion, which also explains why we use $0.0158 \, \mathrm{μm}$ instead of the tabulated $0.0159 \, \mathrm{μm}$), and $s$ is taken from footnote 5 of [Ragone-Figueroa2024](https://doi.org/10.1051/0004-6361/202451344), which lies between the values for silicate ($3.3 \, \mathrm{g \, cm^{-3}}$) and graphite ($2.26 \, \mathrm{g \, cm^{-3}}$) in Table 1 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x). Notice that the number-weighted mean radius of the same distribution, $\langle a \rangle = 0.00167 \, \mathrm{μm}$, is not the relevant quantity here, as it is dominated by the smallest grains, and using it would overestimate the grain surface per unit dust mass by a factor of $\sim 9.5$.
+where $a_\mathrm{eff}$ comes from models C and F of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Table 2), the same size distribution we use for dust growth, and $s$ is taken from footnote 5 of [Ragone-Figueroa2024](https://doi.org/10.1051/0004-6361/202451344), which lies between the values for silicate ($3.3 \, \mathrm{g \, cm^{-3}}$) and graphite ($2.26 \, \mathrm{g \, cm^{-3}}$) in Table 1 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x). Notice that the number-weighted mean radius of the same distribution, $\langle a \rangle = 0.00167 \, \mathrm{μm}$, is not the relevant quantity here, as it is dominated by the smallest grains.
 
 Using $f_m = 2 \, m_p \, n_m / \rho_\mathrm{cell}$ and $n_a = f_a \, \rho_\mathrm{cell} / m_p$, the condensation rate becomes
 
@@ -587,7 +587,9 @@ let
 	# ℓ-th moment of a power-law size distribution (eq. 27 of Hirashita & Kuo 2011)
 	moment(ℓ) = (1 - r) / (ℓ + 1 - r) * (amax^(ℓ + 1 - r) - amin^(ℓ + 1 - r)) / (amax^(1 - r) - amin^(1 - r))
 
-	round(moment(3) / moment(2); sigdigits=3) * u"μm"
+	println(
+		"ā = ⟨a^3⟩ / ⟨a^2⟩ = $(round(moment(3) / moment(2); sigdigits=3) * u"μm")"
+	)
 end
   ╠═╡ =#
 
@@ -1967,7 +1969,7 @@ end;
 # M_100 per 10^51 erg of explosion energy, to compare with the 6800 M⊙ per 10^51 erg
 # of McKee (1989)
 #####################################################################################
-round(u"Msun", Ms * (1.0e51u"erg" / E_SNII); sigdigits=4)
+println("McKee (1989): $(round(u"Msun", Ms * (1.0e51u"erg" / E_SNII); sigdigits=4))")
   ╠═╡ =#
 
 # ╔═╡ b5ede1bb-8361-4380-b943-c9780d4a6253
@@ -1997,7 +1999,7 @@ const δ_d = 0.1;
 md"""
 ### Dust accretion
 
-Following [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), dust grows by the accretion of gas-phase metals onto pre-existing grains. Here we derive the accretion term step by step, based on [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) (Section 2.1), [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Section 2), and [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259). We use $\mathrm{X}$ for the key element of each grain species, $Z_\mathrm{X}$ for its mass fraction in the cell, $n_\mathrm{X}$ for its gas-phase number density, and $\mathcal{N}_\mathrm{X}(a)$ for the grain size distribution.
+Following [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), dust grows by the accretion of gas-phase metals onto pre-existing grains. Here we derive the accretion term, based on [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) (Section 2.1), [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Section 2), and [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259). We use $\mathrm{X}$ for the key element of each grain species, $Z_\mathrm{X}$ for its mass fraction in the cell, $n_\mathrm{X}$ for its gas-phase number density, and $\mathcal{N}_\mathrm{X}(a)$ for the grain size distribution.
 
 #### Microscopic relations
 
@@ -2141,9 +2143,6 @@ We adopt models C and F of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2
 $\begin{equation}
 	\bar{a} = \frac{\langle a^3 \rangle_0}{\langle a^2 \rangle_0} = \sqrt{a_\mathrm{min} \, a_\mathrm{max}} = 0.0158 \, \mathrm{\mu m} \, ,
 \end{equation}$
-
-Table 2 of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) lists $0.0159 \, \mathrm{\mu m}$, which results from dividing the rounded moments ($0.00420^3 / 0.00216^2 = 0.01588 \, \mathrm{\mu m}$; note also that model C lists $\langle a^3 \rangle_0^{1/3} = 0.00402 \, \mathrm{\mu m}$, a typo for the $0.00420 \, \mathrm{\mu m}$ of model F, which has the same distribution). The value is computed from the moments in the section Condensation.
-
 the same value $a_\mathrm{eff}$ we use for the condensation of molecular hydrogen.
 
 #### From the grain species to a single dust component
@@ -2542,7 +2541,7 @@ TikzPictures.TikzPicture(
 md"""
 ### Gas initial conditions
 
-Each time a cell enters the model, the gas phases and the stars are set from the current state of the cell in $\texttt{AREPO}$. Star-forming cells follow the two-phase model of [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x): a mass fraction $x$ of cold clouds ($T_c \simeq 1000 \, \mathrm{K}$) embedded in a hot phase. We take $x$ from the effective equation of state of $\texttt{AREPO}$, and the abundance of ionized hydrogen in the hot phase, $y_\mathrm{HII} = n_\mathrm{HII} / n_\mathrm{H}$, from its cooling module. Assuming that the cold clouds are fully neutral, the ionized and neutral fractions of the gas are
+Each time a cell enters the model, the gas phases and the stars are set from the current state of the cell in $\texttt{AREPO}$. Star-forming cells follow the two-phase model of [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x): a mass fraction $x$ of cold clouds embedded in a hot phase. We take $x$ from the effective equation of state of $\texttt{AREPO}$, and the abundance of ionized hydrogen in the hot phase, $y_\mathrm{HII} = n_\mathrm{HII} / n_\mathrm{H}$, from its cooling module. Assuming that the cold clouds are fully neutral, the ionized and neutral fractions of the gas are
 
 $\begin{align}
     f_i^\mathrm{gas} &= (1 - x) \, y_\mathrm{HII} \, , \\
@@ -3172,6 +3171,40 @@ begin
 	]
 end;
 
+# ╔═╡ eb211ddb-1ba6-4ef0-8712-4aa7c4320c26
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Condensation rate coefficient compared with LOZ25, for a cell with Z = Zsun and 
+# the solar abundance pattern (Asplund et al. 2009, scaled to Zsun).
+#####################################################################################
+let
+	# LOZ25 (Wolfire et al. 2008 normalisation and Z_eff of Glover & Jappsen 2007)
+	# Eq. 21: 2 R⊙ Cρ (Z + Z_eff) (f_a + f_m + f_i) / (m_p Z⊙)
+	# f_a + f_m + f_i = 1.0
+	R_sun = 3.5e-17u"cm^3 * s^-1"
+	Z_eff = 1e-3 * Zsun
+	c_old = ustrip(
+		Unitful.NoUnits, 
+		2 * R_sun * Cρ * (Zsun + Z_eff) / (u"mp" * Zsun) / cc_unit
+	)
+
+	# This work, with the initial dust fraction of a solar cell
+	# c_cond (f_d + f_d^eff), with f_d = f_d(0)
+	fd0   = initial_dust_fraction(
+		Z_Si_A09 * Zsun / Z_A09, Z_C_A09 * Zsun / Z_A09, 
+		Zsun,
+	)
+	c_new = c_cond * (fd0 + fd_eff)
+
+	# Coefficients in [mp^-1 Myr^-1 cm^3], and relative change of the rate
+	println("LOZ25           = $(round(c_old; sigdigits=3))")
+	println("this_work       = $(round(c_new; sigdigits=3))")
+	println("relative_change = $(round(c_new / c_old - 1.0; sigdigits=2))")
+	
+end
+  ╠═╡ =#
+
 # ╔═╡ 3a2fce00-7fee-4c04-9ed0-8e7cdc5bcc0a
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -3191,7 +3224,7 @@ let
 	# Cell density [mp * cm^(-3)]
 	ρ_cell = 1.0e3
 
-	round(1.0 / (c_dg * ρ_cell); sigdigits=3) * u"Myr"
+	println("τ_dg(1.0e3) = $(round(1.0 / (c_dg * ρ_cell); sigdigits=3) * u"Myr")")
 end
   ╠═╡ =#
 
@@ -3207,7 +3240,9 @@ let
 	Z_Si = Z_Si_A09 * Zsun / Z_A09
 	Z_C  = Z_C_A09 * Zsun / Z_A09
 
-	round(initial_dust_fraction(Z_Si, Z_C, Zsun) / Zsun; sigdigits=2)
+	println(
+		"DZ(⊙) = $(round(initial_dust_fraction(Z_Si, Z_C, Zsun) / Zsun; sigdigits=2))"
+	)
 end
   ╠═╡ =#
 
@@ -3557,7 +3592,7 @@ UnitfulAstro = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
 [compat]
 CSV = "~1.3.0"
 ChaosTools = "~3.5.4"
-DataFrames = "~1.8.2"
+DataFrames = "~1.8.3"
 DifferentialEquations = "~8.1.1"
 Interpolations = "~0.16.3"
 OrdinaryDiffEqBDF = "~2.4.14"
@@ -3575,7 +3610,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.13.3"
 manifest_format = "2.1"
-project_hash = "bc1e9c0aedb801a20ddddacde1f40a92a5d37272"
+project_hash = "4c36dc326a9fcc9c390f4432247a21dbb6dc1d8d"
 
 [[deps.ADTypes]]
 deps = ["PrecompileTools"]
@@ -3648,10 +3683,10 @@ version = "0.1.46"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra"]
-git-tree-sha1 = "dee8388a9bec89c8713ad176f96960ae2f98598a"
+git-tree-sha1 = "eec8a0ad4e4b673afba213931504c360fffb8f97"
 registries = "General"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "4.7.4"
+version = "4.8.0"
 weakdeps = ["SparseArrays", "StaticArrays"]
 
     [deps.Adapt.extensions]
@@ -3924,10 +3959,10 @@ uuid = "2569d6c7-a4a2-43d3-a901-331e8e4be471"
 version = "0.2.8"
 
 [[deps.ConstructionBase]]
-git-tree-sha1 = "b4b092499347b18a015186eae3042f72267106cb"
+git-tree-sha1 = "b1bc10667320dd5367aff450a992c951ea38fbbc"
 registries = "General"
 uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
-version = "1.6.0"
+version = "1.6.1"
 weakdeps = ["IntervalSets", "LinearAlgebra", "StaticArrays"]
 
     [deps.ConstructionBase.extensions]
@@ -3974,10 +4009,10 @@ version = "1.16.0"
 
 [[deps.DataFrames]]
 deps = ["Compat", "DataAPI", "DataStructures", "Future", "InlineStrings", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrecompileTools", "PrettyTables", "Printf", "Random", "Reexport", "SentinelArrays", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
-git-tree-sha1 = "5fab31e2e01e70ad66e3e24c968c264d1cf166d6"
+git-tree-sha1 = "fd798b61b03b15dda0715aac807885397e6ded88"
 registries = "General"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "1.8.2"
+version = "1.8.3"
 
 [[deps.DataStrings]]
 git-tree-sha1 = "b8032263d364177a0b192ea15f277df4e6ab07e2"
@@ -4011,11 +4046,11 @@ uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 version = "1.9.1"
 
 [[deps.DiffEqBase]]
-deps = ["ArrayInterface", "BracketingNonlinearSolve", "ConcreteStructs", "DocStringExtensions", "FastBroadcast", "FastClosures", "FastPower", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "Logging", "Markdown", "MuladdMacro", "PrecompileTools", "Printf", "RecursiveArrayTools", "Reexport", "RespecializeParams", "SciMLBase", "SciMLLogging", "SciMLOperators", "SciMLStructures", "Setfield", "StaticArraysCore", "SymbolicIndexingInterface", "TruncatedStacktraces"]
-git-tree-sha1 = "3af08981a379247735de45c24220867f66384c8c"
+deps = ["ArrayInterface", "BracketingNonlinearSolve", "DocStringExtensions", "FastBroadcast", "FastClosures", "FastPower", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "Logging", "Markdown", "MuladdMacro", "PrecompileTools", "Printf", "RecursiveArrayTools", "Reexport", "RespecializeParams", "SciMLBase", "SciMLLogging", "SciMLOperators", "SciMLStructures", "Setfield", "StaticArraysCore", "SymbolicIndexingInterface", "TruncatedStacktraces"]
+git-tree-sha1 = "47230845a4944d292c07079838bdfee25bffebf8"
 registries = "General"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "7.21.5"
+version = "7.21.6"
 
     [deps.DiffEqBase.extensions]
     DiffEqBaseCUDAExt = "CUDA"
@@ -4053,19 +4088,6 @@ version = "7.21.5"
     SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
     Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
-
-[[deps.DiffEqCallbacks]]
-deps = ["ConcreteStructs", "DataStructures", "DiffEqBase", "DifferentiationInterface", "LinearAlgebra", "Markdown", "PrecompileTools", "Random", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArraysCore"]
-git-tree-sha1 = "dc3c0668779fd5783c075dab6ed53371eea12e8c"
-registries = "General"
-uuid = "459566f4-90b8-5000-8ac3-15dfb0a30def"
-version = "4.19.6"
-
-    [deps.DiffEqCallbacks.extensions]
-    DiffEqCallbacksFunctorsExt = "Functors"
-
-    [deps.DiffEqCallbacks.weakdeps]
-    Functors = "d9f16b24-f501-4c13-a1f2-28368ffc5196"
 
 [[deps.DiffEqNoiseProcess]]
 deps = ["CommonSolve", "DiffEqBase", "Distributions", "GPUArraysCore", "LinearAlgebra", "Markdown", "PoissonRandom", "PrecompileTools", "QuadGK", "Random", "RecipesBase", "RecursiveArrayTools", "ResettableStacks", "SciMLBase", "StaticArraysCore", "Statistics"]
@@ -4105,10 +4127,10 @@ version = "8.1.1"
 
 [[deps.DifferentiationInterface]]
 deps = ["ADTypes", "LinearAlgebra"]
-git-tree-sha1 = "0693d8b0a4608ff289d228ab4c598df5894845cd"
+git-tree-sha1 = "4b6690f3770daf596a0a092203a2e6130d34c53b"
 registries = "General"
 uuid = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
-version = "0.7.21"
+version = "0.7.22"
 
     [deps.DifferentiationInterface.extensions]
     DifferentiationInterfaceChainRulesCoreExt = "ChainRulesCore"
@@ -4257,10 +4279,10 @@ uuid = "4e289a0a-7415-4d19-859d-a7e5c4648b56"
 version = "1.0.7"
 
 [[deps.EnzymeCore]]
-git-tree-sha1 = "04c4269956f90d8f5c9acc73b774c5293481f4d7"
+git-tree-sha1 = "d88c803e26799193db42e47f6e1e28eeb0322e4d"
 registries = "General"
 uuid = "f151be2c-9106-41f4-ab19-57ee4f262869"
-version = "0.8.26"
+version = "0.8.27"
 weakdeps = ["Adapt", "ChainRulesCore"]
 
     [deps.EnzymeCore.extensions]
@@ -4287,10 +4309,10 @@ uuid = "21656369-7473-754a-2065-74616d696c43"
 version = "1.1.6"
 
 [[deps.ExproniconLite]]
-git-tree-sha1 = "c13f0b150373771b0fdc1713c97860f8df12e6c2"
+git-tree-sha1 = "250aa1562e840b38c72b44a9ebef0f39f6b6e950"
 registries = "General"
 uuid = "55351af7-c7e9-48d6-89ff-24e801d99491"
-version = "0.10.14"
+version = "0.10.16"
 
 [[deps.FFTW]]
 deps = ["AbstractFFTs", "FFTW_jll", "Libdl", "LinearAlgebra", "MKL_jll", "Preferences", "Reexport"]
@@ -4308,10 +4330,10 @@ version = "3.3.12+0"
 
 [[deps.FastBroadcast]]
 deps = ["ArrayInterface", "LinearAlgebra", "PrecompileTools"]
-git-tree-sha1 = "b90aee4f191474eeda3dfa0cb588635f80820cf1"
+git-tree-sha1 = "093bf5e9ea63b36032240033ec2f149088fc0926"
 registries = "General"
 uuid = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
-version = "1.5.0"
+version = "1.5.1"
 
     [deps.FastBroadcast.extensions]
     FastBroadcastPolyesterExt = "Polyester"
@@ -4481,10 +4503,10 @@ version = "0.2.2"
 
 [[deps.Gamma]]
 deps = ["LogExpFunctions"]
-git-tree-sha1 = "becc397f7cfb06e343496ae6ffb04818a851da51"
+git-tree-sha1 = "462ab5e6578928370f632705e96af82f6c1c09a1"
 registries = "General"
 uuid = "a0844989-3bd2-4988-8bea-c9407ab0941b"
-version = "1.2.0"
+version = "1.2.1"
 
 [[deps.Gettext_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "XML2_jll"]
@@ -4574,18 +4596,20 @@ uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.5"
 
 [[deps.InlineStrings]]
-git-tree-sha1 = "06b65886c7577a3784d616e29f1302c2e36e389d"
+git-tree-sha1 = "6e0a59a838f58259f49474e913e39c23e8ca1366"
 registries = "General"
 uuid = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
-version = "1.4.6"
+version = "2.0.1"
 
     [deps.InlineStrings.extensions]
     ArrowTypesExt = "ArrowTypes"
     ParsersExt = "Parsers"
+    SerializationExt = "Serialization"
 
     [deps.InlineStrings.weakdeps]
     ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
     Parsers = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
+    Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 
 [[deps.IntegerMathUtils]]
 git-tree-sha1 = "c72458f1962faeb003bf23cbdb75164fe6280906"
@@ -4619,10 +4643,10 @@ weakdeps = ["ForwardDiff", "Unitful"]
 
 [[deps.IntervalArithmetic]]
 deps = ["CRlibm", "CoreMath", "MacroTools", "OpenBLASConsistentFPCSR_jll", "Printf", "Random", "RoundingEmulator"]
-git-tree-sha1 = "1c531bf0f8a5c60a340926e058fd3f209b5eef5d"
+git-tree-sha1 = "4f051d490760061dcc650a3c6c641bb0c06bb182"
 registries = "General"
 uuid = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
-version = "1.0.12"
+version = "1.0.13"
 
     [deps.IntervalArithmetic.extensions]
     IntervalArithmeticArblibExt = "Arblib"
@@ -4733,11 +4757,11 @@ uuid = "ac6e5ff7-fb65-4e79-a425-ec3bc9c03011"
 version = "1.12.0"
 
 [[deps.JumpProcesses]]
-deps = ["ADTypes", "ArrayInterface", "DataStructures", "DiffEqBase", "DiffEqCallbacks", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "PoissonRandom", "PrecompileTools", "Random", "RecursiveArrayTools", "SciMLBase", "SimpleNonlinearSolve", "StaticArrays", "SymbolicIndexingInterface"]
-git-tree-sha1 = "94bb904c2b04ce952a3d0bf97ed3ddcd5899f2e3"
+deps = ["ADTypes", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "PoissonRandom", "PrecompileTools", "Random", "RecursiveArrayTools", "SciMLBase", "SimpleNonlinearSolve", "StaticArrays", "SymbolicIndexingInterface"]
+git-tree-sha1 = "8bab411bfa528f97ac0f8961288b37c567ed5e80"
 registries = "General"
 uuid = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
-version = "10.0.1"
+version = "10.1.1"
 
     [deps.JumpProcesses.extensions]
     JumpProcessesForwardDiffExt = "ForwardDiff"
@@ -5274,10 +5298,10 @@ weakdeps = ["ForwardDiff"]
     NonlinearSolveSpectralMethodsForwardDiffExt = "ForwardDiff"
 
 [[deps.OffsetArrays]]
-git-tree-sha1 = "117432e406b5c023f665fa73dc26e79ec3630151"
+git-tree-sha1 = "750d0f2b5aac238d50dfee5f7a44fae3175a3305"
 registries = "General"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.17.0"
+version = "1.18.0"
 weakdeps = ["Adapt"]
 
     [deps.OffsetArrays.extensions]
@@ -5446,10 +5470,10 @@ weakdeps = ["StatsBase"]
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools"]
-git-tree-sha1 = "91503bbab255aec9374145accd1b09c7e108cd54"
+git-tree-sha1 = "e5ae52d1f4f19a9591d615cb0f1ef8d415b40933"
 registries = "General"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "3.0.5"
+version = "3.0.6"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "Libdl"]
@@ -5556,10 +5580,10 @@ version = "1.6.1"
 
 [[deps.PrettyTables]]
 deps = ["Crayons", "LaTeXStrings", "Markdown", "PrecompileTools", "Printf", "REPL", "Reexport", "StringManipulation", "StyledStrings", "Tables"]
-git-tree-sha1 = "99fd8f32ab6728ff205cddd24e2d9ea6cbb498d3"
+git-tree-sha1 = "eeac4c9337f876c3c32b8da732141953567f57c9"
 registries = "General"
 uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
-version = "3.5.0"
+version = "3.5.1"
 
     [deps.PrettyTables.extensions]
     PrettyTablesExcelExt = "XLSX"
@@ -6047,10 +6071,10 @@ weakdeps = ["ChainRulesCore", "Statistics"]
     StaticArraysStatisticsExt = "Statistics"
 
 [[deps.StaticArraysCore]]
-git-tree-sha1 = "6ab403037779dae8c514bad259f32a447262455a"
+git-tree-sha1 = "bf7e2d0d9ed9ac2a652fd598c0f784910cc759f2"
 registries = "General"
 uuid = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
-version = "1.4.4"
+version = "1.4.5"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra"]
@@ -6483,6 +6507,7 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╟─80bae1ac-9f61-4512-84c9-c562ad7a61ba
 # ╠═568d9fe3-6716-4a9a-ba1d-b9e6fd039150
 # ╠═dc45a37a-b939-499f-b9d2-4140aee92282
+# ╠═eb211ddb-1ba6-4ef0-8712-4aa7c4320c26
 # ╟─0a6364c3-851e-4f0b-b140-f4f0e633fb36
 # ╠═f9bcdb15-ce25-49a4-9837-53d042065151
 # ╟─14ae7f11-1065-46aa-a6ed-eea400c0d2ec
