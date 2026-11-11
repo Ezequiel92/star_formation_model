@@ -1200,6 +1200,24 @@ function compute_η(age::Float64, Z::Float64)::NTuple{2,Float64}
 
 end;
 
+# ╔═╡ 96fd7dc2-0315-4255-8f27-7ee7869c5673
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Range of saturation values (age >> 100 Myr) for η_diss and η_ion
+#####################################################################################
+let
+	low_Z  = round.(compute_η(15000.0, 0.0); sigdigits=5)
+	high_Z = round.(compute_η(15000.0, 0.2); sigdigits=5)
+	
+	println("η_diss(Z = 0.0) = $(low_Z[1])")
+	println("η_diss(Z = 0.1) = $(high_Z[1])")
+	println()
+	println("η_ion(Z = 0.0) = $(low_Z[2])")
+	println("η_ion(Z = 0.1) = $(high_Z[2])")
+end
+  ╠═╡ =#
+
 # ╔═╡ 9a756404-f35b-40b9-bc88-4b7e3a7df0b6
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1278,7 +1296,7 @@ $\begin{equation}
     \mathcal{D}_\mathrm{ref} = \frac{\rho_d}{m_p \, n_\mathrm{H}} = c_\mathrm{Si} \, \frac{m_\mathrm{Si}}{m_p} \left( \mathrm{\frac{Si}{H}} \right)_{\!\odot} + c_\mathrm{C} \, \frac{m_\mathrm{C}}{m_p} \left( \mathrm{\frac{C}{H}} \right)_{\!\odot} = 8.15 \times 10^{-3} \, ,
 \end{equation}$
 
-i.e. $1.363 \times 10^{-26} \, \mathrm{g}$ of dust per hydrogen nucleus. Identifying this value with the dust abundance behind $\sigma_\mathrm{d, eff}$ is our assumption, which links the two works. The solar-metallicity gas of [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) has the dust of the Milky Way, and the grains of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) reproduce its extinction.
+i.e. $1.36 \times 10^{-26} \, \mathrm{g}$ of dust per hydrogen nucleus. Identifying this value with the dust abundance behind $\sigma_\mathrm{d, eff}$ is our assumption, which links the two works. The solar-metallicity gas of [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) has the dust of the Milky Way, and the grains of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) reproduce its extinction.
 
 The corresponding opacity is
 
@@ -3077,6 +3095,20 @@ function integrate_model(
 
 end;
 
+# ╔═╡ ce51d8ce-e00b-46d6-aaf1-fe2628ae22d4
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Reference dust-to-gas ratio (value for the MW)
+#####################################################################################
+let
+	Drefmp = ustrip(u"g", c_Si * m_Si * SiH_sun + c_C * m_C * CH_sun)
+
+	println("Dref = $(round(D_ref; sigdigits=3))")
+	println("Dref mp = $(round(Drefmp; sigdigits=3))")
+end
+  ╠═╡ =#
+
 # ╔═╡ 0fc36dec-9f45-4f49-a44f-7884ec33d7be
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -3086,8 +3118,9 @@ md"""
 After the integration, the model gives $\texttt{AREPO}$ the SFR of the cell, which $\texttt{AREPO}$ uses to compute the probability of forming a star particle of mass $m_*$ during a time step $\Delta t$
 
 $\begin{equation}
-    p = \frac{M_\mathrm{cell}}{m_*} \left[ 1 - \exp\left( -\frac{\mathrm{SFR} \, \Delta t}{M_\mathrm{cell}} \right) \right] \, .
+    p = \frac{M_\mathrm{cell}}{m_*} \left[ 1 - \exp\!\left( -(1 + \eta_\mathrm{w})\frac{\mathrm{SFR} \, \Delta t}{M_\mathrm{cell}} \right) \right] \, .
 \end{equation}$
+where $\eta_\mathrm{w}$ is a constant factor related to the winds.
 
 The expected stellar mass formed in a time step is $p \, m_* \simeq \mathrm{SFR} \, \Delta t$, so this SFR sets the mass that $\texttt{AREPO}$ turns into star particles.
 
@@ -6527,6 +6560,7 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╠═82d801d9-49f4-4d74-93c0-388b09dc76f1
 # ╠═c869e896-cc87-4b12-bba2-84b0cf0964c6
 # ╠═2c2f97cc-127a-446e-a6cd-e9651df833f0
+# ╠═96fd7dc2-0315-4255-8f27-7ee7869c5673
 # ╟─9a756404-f35b-40b9-bc88-4b7e3a7df0b6
 # ╠═805ef471-1bd2-4ce2-bf50-eeb9c6b10e4d
 # ╟─6eef3827-1af6-431d-a163-67bb595c337d
@@ -6575,6 +6609,7 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╟─6475b25b-8711-44cd-bc3b-e3d42681bb93
 # ╟─14a6478e-939f-4e9c-b905-4cec39917d47
 # ╠═d7cc8a66-220a-4e9b-b42e-a0e085ed3a0f
+# ╠═ce51d8ce-e00b-46d6-aaf1-fe2628ae22d4
 # ╠═3871738a-a126-4996-ad95-9674564a4931
 # ╟─0fc36dec-9f45-4f49-a44f-7884ec33d7be
 # ╟─24920a1b-355c-43e1-aff2-028e6f25584c

@@ -44,10 +44,10 @@ version = "1.5.5+2"
 
 [[deps.Configurations]]
 deps = ["ExproniconLite", "OrderedCollections", "TOML"]
-git-tree-sha1 = "4358750bb58a3caefd5f37a4a0c5bfdbbf075252"
+git-tree-sha1 = "e3a3332c391837afa3422f2c0bda36e0cd73d771"
 registries = "General"
 uuid = "5218b696-f38b-4ac9-8b61-a12ec717816d"
-version = "0.17.6"
+version = "0.17.8"
 
 [[deps.DataAPI]]
 git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
@@ -107,10 +107,10 @@ version = "2.4.3"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "Dates", "EnumX", "Logging", "PrecompileTools", "Random", "Reseau", "SHA", "TranscodingStreams", "URIs", "UUIDs", "Zlib_jll"]
-git-tree-sha1 = "70b131ae84fb6ff84d4e70ba1648fb5747e339a0"
+git-tree-sha1 = "1c43585d8005543674a114997fdf73fc767bbd66"
 registries = "General"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "2.15.0"
+version = "2.15.2"
 
 [[deps.HypertextLiteral]]
 deps = ["Tricks"]
@@ -230,10 +230,10 @@ uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
 version = "3.5.8+0"
 
 [[deps.OrderedCollections]]
-git-tree-sha1 = "94ba93778373a53bfd5a0caaf7d809c445292ff4"
+git-tree-sha1 = "b079a6affebde167dad8ffe0d670b53917fbcb68"
 registries = "General"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
-version = "1.8.2"
+version = "2.0.3"
 
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
