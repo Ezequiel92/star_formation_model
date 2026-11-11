@@ -34,7 +34,7 @@ Because the ISM sets the conditions for SF, considerable effort has gone into su
 | [Richings2016](https://doi.org/10.1093/mnras/stw327) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) |
 | [Hu2016](https://doi.org/10.1093/mnras/stw544) | $\texttt{GADGET3}$ ([Springel2005](https://doi.org/10.1111/j.1365-2966.2005.09655.x)) |
 | [Katz2017](https://doi.org/10.1093/mnras/stx608) | $\texttt{RAMSES-RT}$ ([Rosdahl2013](https://doi.org/10.1093/mnras/stt1722)) |
-| [Pallottini2017](https://doi.org/10.1093/mnras/stx608) | $\texttt{RAMSES}$ ([Teyssier2001](https://doi.org/10.1051/0004-6361:20011817)) |
+| [Pallottini2017](https://doi.org/10.1093/mnras/stx1792) | $\texttt{RAMSES}$ ([Teyssier2001](https://doi.org/10.1051/0004-6361:20011817)) |
 | [Lupi2017](https://doi.org/10.1093/mnras/stx2874) | $\texttt{GASOLINE2}$ ([Wadsley2017](https://doi.org/10.1093/mnras/stx1643)) |
 | [Capelo2018](https://doi.org/10.1093/mnras/stx3355) | $\texttt{GIZMO}$ ([Hopkins2015](https://doi.org/10.1093/mnras/stv195)) |
 | [Nickerson2018](https://doi.org/10.1093/mnras/sty1556) and [Nickerson2019](https://doi.org/10.1093/mnras/stz048) | $\texttt{RAMSES-RT}$ ([Rosdahl2013](https://doi.org/10.1093/mnras/stt1722)) |
@@ -529,7 +529,7 @@ $\begin{equation}
 
 This time scale has two limitations, which we correct as follows.
 
-First, the condensation rate goes to $0$ as $f_d \to 0$, so $\tau_\mathrm{cond}$ diverges. This results from the oversimplified assumption that molecular hydrogen forms exclusively on dust grains. To address it, we follow [Glover2007](https://doi.org/10.1086/519445), who modify the metallicity dependence as $Z \rightarrow Z + Z_\mathrm{eff}$, with $Z_\mathrm{eff} = 10^{-3} \, Z_\odot$. As our rate depends on the dust instead of the metallicity, we use the equivalent floor $f_d \rightarrow f_d + f_d^\mathrm{eff}$, with
+First, the condensation rate goes to $0$ as $f_d \to 0$, so $\tau_\mathrm{cond}$ diverges. This results from the oversimplified assumption that molecular hydrogen forms exclusively on dust grains. To address it, we follow [Glover2007a](https://doi.org/10.1086/519445), who modify the metallicity dependence as $Z \rightarrow Z + Z_\mathrm{eff}$, with $Z_\mathrm{eff} = 10^{-3} \, Z_\odot$. As our rate depends on the dust instead of the metallicity, we use the equivalent floor $f_d \rightarrow f_d + f_d^\mathrm{eff}$, with
 
 $\begin{equation}
     f_d^\mathrm{eff} = 10^{-3} \, \mathcal{D}_\mathrm{ref} \, ,
@@ -537,7 +537,7 @@ $\begin{equation}
 
 i.e. $10^{-3}$ of the Milky Way dust abundance. This correction both eliminates the divergence and accounts for the formation of molecular hydrogen in environments with very low dust content.
 
-Second, the rate is proportional to $n_a \, n_d$, i.e. to the square of the gas density, so computing it with the mean density of the cell underestimates it when the gas is clumpy on scales below the resolution. Following [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), we account for these unresolved density fluctuations with a clumping factor, $C_\rho = \langle \rho^2 \rangle / \langle \rho \rangle^2$, which multiplies the rate (for a detailed justification see Section 3.3 of [Micic2012](https://doi.org/10.1111/j.1365-2966.2012.20477.x)). The clumping factor is also used for the recombination of ionized gas during the epoch of reionization, but we only apply it to the condensation rate. 
+Second, the rate is proportional to $n_a \, n_d$, i.e. to the square of the gas density, so computing it with the mean density of the cell underestimates it when the gas is clumpy on scales below the resolution. Following [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), we account for these unresolved density fluctuations with a clumping factor, $C_\rho = \langle \rho^2 \rangle / \langle \rho \rangle^2$, which multiplies the rate (for a detailed justification see Section 3.3 of [Micic2012](https://doi.org/10.1111/j.1365-2966.2012.20477.x)). The clumping factor is also used for the recombination of ionized gas during the epoch of reionization, but we only apply it to the condensation rate.
 
 The values used in the literature range between $1$ and $100$:
 
@@ -548,7 +548,7 @@ The values used in the literature range between $1$ and $100$:
 | [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x) | Section 2.2.1 | $10$ (taken from [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55)) | Section 2.4 |
 | [Micic2012](https://doi.org/10.1111/j.1365-2966.2012.20477.x) | Section 3.3 | $\sim 1-100$ (See $C_\mathrm{\rho, \, eff}$ in Fig. 7 and 8) | -- |
 | [Davé2016](https://doi.org/10.1093/mnras/stw1862) | Section 2.3 | $30$ | Section 2.10 |
-| [Trayford2025](https://doi.org/10.1093/mnras/staf2040) | Section 3.8 | $1$ to $100$ (density-dependent) | Section 2.5 |
+| [Trayford2026](https://doi.org/10.1093/mnras/staf2040) | Section 3.8 | $1$ to $100$ (density-dependent) | Section 2.5 |
 
 We adopt $C_\rho = 100$, as we find that $C_\rho \gtrsim 100$ is required to form a disk in our cosmological simulations that uses the level 4 initial conditions of the Auriga project ([Grand2017](https://doi.org/10.1093/mnras/stx071)).
 
@@ -575,7 +575,7 @@ $\begin{equation}
 #=╠═╡
 #####################################################################################
 # Effective grain radius, ā = ⟨a^3⟩ / ⟨a^2⟩, of the size distribution of models
-# C and F of Hirashita & Kuo (2011): n(a) ∝ a^(-3.5) between 0.001 and 0.25 μm, 
+# C and F of Hirashita & Kuo (2011): n(a) ∝ a^(-3.5) between 0.001 and 0.25 μm,
 # with the moments weighted by the number of grains (their eq. 27)
 #####################################################################################
 let
@@ -664,25 +664,25 @@ begin
 
 	# Number of stars per unit mass interval [M⊙^(-1)]
 	function ϕ(m::Quantity)
-		
+
 		x = ustrip(u"Msun", m)
-		
+
 		if x > IMF_M_BREAK
 			ϕ_x = 0.0193 * x^(-2.3)
 		else
 			ϕ_x = 0.068 * exp(-(log10(x) - log10(0.079))^2 / (2.0 * 0.69^2)) / x
 		end
-		
+
 		return ϕ_x * u"Msun^-1"
-		
+
 	end
 
 	# IMF normalization (total mass of the stellar population) [M⊙]
 	# The integral is split at the break of ϕ, where it is discontinuous
 	const IMF_NORM = quadgk(
-		m -> m * ϕ(m), 
-		IMF_M_LOW, 
-		IMF_M_BREAK * u"Msun", 
+		m -> m * ϕ(m),
+		IMF_M_LOW,
+		IMF_M_BREAK * u"Msun",
 		IMF_M_HIGH,
 	)[1]
 end;
@@ -803,9 +803,9 @@ begin
 	# Nominal value of C_τdiss in our choice of units
 	const c_τdiss = ustrip(Unitful.NoUnits, C_τdiss / cτ_unit)
 
-	# Solomon factor 
+	# Solomon factor
 	const solomon = 0.15
-	
+
 	# Mass conversion factors
 	const c_diss = solomon * 2.0u"mp"
 	const c_ion  = 1.0u"mp"
@@ -955,24 +955,24 @@ begin
 		sed_path::String
 		# Column names in the tables, it has to have :λ and :Ltot
 		header::Vector{Symbol}
-		# First row with data in the tables 
+		# First row with data in the tables
 		skipto::Int64
-		# Column separator in the tables 
+		# Column separator in the tables
 		delim::String
 		# Regex to extract the IMF, Z, and stellar age from the file names
 		regex::Regex
-		# String to add at the beginning of the second capture (metallicity). 
+		# String to add at the beginning of the second capture (metallicity).
 		str_add::String
 	end
-	
+
 	if HR_LUMINOSITY
-		
+
 		#############################################################################
 		# High resolution SED
 		# Millán-Irigoyen et al. (2021)
 		# https://doi.org/10.1093/mnras/stab1969
 		#############################################################################
-		
+
 		luminosity_table = LuminosityTable(
 			sed_path="./data/luminosity/hr/total/",
 			header=[:λ, :Ltot],
@@ -1000,7 +1000,7 @@ begin
 			regex=r"spneb_([A-Za-z]+)_[\d.]+_[\d.]+_z(\d+)_t(\d+(?:\.\d+)?)",
 			str_add="0."
 		)
-		
+
 	end
 
 	#################################################################################
@@ -1019,38 +1019,38 @@ begin
 		file::String,
 		luminosity_table::LuminosityTable,
 	)::NTuple{2,Quantity}
-	
+
 		# Load the data
 		data = CSV.read(
-			file, 
-			DataFrame; 
+			file,
+			DataFrame;
 			delim=luminosity_table.delim,
 			ignorerepeated=true,
-			header=luminosity_table.header, 
-			skipto=luminosity_table.skipto, 
+			header=luminosity_table.header,
+			skipto=luminosity_table.skipto,
 			types=Float64,
 		)
-	
+
 		# Wavelength
 		λ = data[!, :λ] .* u"Å"
-	
-		# Fix for repeted wavelengths
+
+		# Fix for repeated wavelengths
 		Interpolations.deduplicate_knots!(λ)
-	
+
 		# Total (stellar + nebular) SED per unit wavelength
 		Ltot = data[!, :Ltot] .* u_sed
-	
+
 		# SED interpolation function
 		interp_Ltot = linear_interpolation(λ, Ltot, extrapolation_bc=Flat())
-	
+
 		# SED integrand
 		integrand(λ) = λ * interp_Ltot(λ) / (Unitful.h * Unitful.c)
-	
+
 		Q_diss = quadgk(integrand, λ_diss[1], λ_diss[2])[1] |> u_q
 		Q_ion  = quadgk(integrand, λ_ion[1], λ_ion[2])[1] |> u_q
-	
+
 		return Q_diss, Q_ion
-	
+
 	end
 
 	#################################################################################
@@ -1064,52 +1064,52 @@ begin
 	# Returns
 	#
 	#     A dataframe with columns:
-	# 
+	#
 	#       :Z       -> Stellar metallicity
 	#       :log_age -> Stellar age as log(age [yr])
 	#       :Q_diss  -> Number of dissociating photons per unit time
 	#       :Q_ion   -> Number of ionizing photons per unit time
 	#################################################################################
 	function compute_Q(luminosity_table::LuminosityTable, imf::String)::DataFrame
-	
+
 		# List the files with the SEDs
 	    files = readdir(luminosity_table.sed_path; join=true)
-	
+
 		# Parse the filenames
 		matches = match.(luminosity_table.regex, basename.(files))
-	
+
 		# Read only the files for the target IMF
 		idxs = findall(i->uppercase(matches[i].captures[1]) == imf, eachindex(files))
-	
+
 		target_files   = files[idxs]
 		target_matches = matches[idxs]
-	
+
 		# Allocate memory
 		Z       = Vector{Float64}(undef, length(target_files))
 		log_age = Vector{Float64}(undef, length(target_files))
 		Q_diss  = Vector{Quantity}(undef, length(target_files))
 		Q_ion   = Vector{Quantity}(undef, length(target_files))
-	
+
 	    for (i, (file, m)) in enumerate(zip(target_files, target_matches))
-	
+
 			# Metallicity
 			Z[i] = parse(Float64, luminosity_table.str_add * m.captures[2])
-	
+
 			# Stellar age as log(age [yr])
 			log_age[i] = parse(Float64, m.captures[3])
-	
+
 			# Number of dissociating and ionizing photons per unit time
 			Q_diss[i], Q_ion[i] = integrate_SED(file, luminosity_table)
-			
+
 	    end
-	
+
 		Q_df = sort!(
-			identity.(DataFrame(; Z, log_age, Q_diss, Q_ion)), 
+			identity.(DataFrame(; Z, log_age, Q_diss, Q_ion)),
 			[:Z, :log_age],
 		)
-	
+
 		return Q_df
-		
+
 	end
 end;
 
@@ -1130,7 +1130,7 @@ begin
 	########################################################
 	wide_diss = unstack(Q_df, :log_age, :Z, :Q_diss)
 	sort!(wide_diss, :log_age)
-	
+
 	wide_ion = unstack(Q_df, :log_age, :Z, :Q_ion)
 	sort!(wide_ion, :log_age)
 
@@ -1215,7 +1215,7 @@ $\begin{align}
     e_\mathrm{diss} &= S_d \, S_{\mathrm{H}_2} \, ,
 \end{align}$
 
-where $S_d$ accounts for the attenuation by dust, and $S_{\mathrm{H}_2}$ for the molecular self-shielding. $S_d$ depends on the dust column density, and $S_{\mathrm{H}_2}$ on the molecular column density. The functional forms of both factors follow [Draine1996](https://doi.org/10.1086/177689) and [Glover2007](https://doi.org/10.1086/512238).
+where $S_d$ accounts for the attenuation by dust, and $S_{\mathrm{H}_2}$ for the molecular self-shielding. $S_d$ depends on the dust column density, and $S_{\mathrm{H}_2}$ on the molecular column density. The functional forms of both factors follow [Draine1996](https://doi.org/10.1086/177689) and [Glover2007b](https://doi.org/10.1086/512238).
 
 From eq. 8 of [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), the dust shielding factor is
 
@@ -1223,7 +1223,7 @@ $\begin{equation}
     S_d = \exp\left[ -\sigma_\mathrm{d, eff} \, \frac{Z}{Z_\odot} \, (N_\mathrm{HI} + 2 \, N_{\mathrm{H}_2}) \right] \, ,
 \end{equation}$
 
-where $N_i$ is the column density of species $i$, and $\sigma_\mathrm{d, eff} = 4 \times 10^{-21} \, \mathrm{cm^2}$ is an effective dust cross-section per hydrogen nucleus. This value comes from [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) (Section 2.2), who treat $\sigma_\mathrm{d, eff}$ as an adjustable parameter. They fit it by comparing the atomic-to-molecular transition in their simulations with the molecular fractions measured by FUSE in the Milky Way, the LMC, and the SMC (their Figure 6), and their value is slightly different from the one in [Glover2007](https://doi.org/10.1086/512238).
+where $N_i$ is the column density of species $i$, and $\sigma_\mathrm{d, eff} = 4 \times 10^{-21} \, \mathrm{cm^2}$ is an effective dust cross-section per hydrogen nucleus. This value comes from [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) (Section 2.2), who treat $\sigma_\mathrm{d, eff}$ as an adjustable parameter. They fit it by comparing the atomic-to-molecular transition in their simulations with the molecular fractions measured by FUSE in the Milky Way, the LMC, and the SMC (their Figure 6), and their value is slightly different from the one in [Glover2007b](https://doi.org/10.1086/512238).
 
 Both works assume that the dust-to-gas ratio is proportional to the gas metallicity ([Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), Section 2.2, and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), Section 2.2.1). So $\sigma_\mathrm{d, eff}$ is the cross-section per hydrogen nucleus of gas with solar metallicity, i.e. with the dust abundance of the Milky Way, and $Z / Z_\odot$ is only a proxy for the dust abundance relative to that of the Milky Way.
 
@@ -1278,7 +1278,7 @@ $\begin{equation}
     \mathcal{D}_\mathrm{ref} = \frac{\rho_d}{m_p \, n_\mathrm{H}} = c_\mathrm{Si} \, \frac{m_\mathrm{Si}}{m_p} \left( \mathrm{\frac{Si}{H}} \right)_{\!\odot} + c_\mathrm{C} \, \frac{m_\mathrm{C}}{m_p} \left( \mathrm{\frac{C}{H}} \right)_{\!\odot} = 8.15 \times 10^{-3} \, ,
 \end{equation}$
 
-i.e. $1.363 \times 10^{-26} \, \mathrm{g}$ of dust per hydrogen nucleus. Identifying this value with the dust abundance behind $\sigma_\mathrm{d, eff}$ is our assumption, which links the two works. The solar-metallicity gas of [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) has the dust of the Milky Way, and the grains of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) reproduce its extinction. 
+i.e. $1.363 \times 10^{-26} \, \mathrm{g}$ of dust per hydrogen nucleus. Identifying this value with the dust abundance behind $\sigma_\mathrm{d, eff}$ is our assumption, which links the two works. The solar-metallicity gas of [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) has the dust of the Milky Way, and the grains of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) reproduce its extinction.
 
 The corresponding opacity is
 
@@ -1301,7 +1301,7 @@ $\begin{equation}
 
 where $\omega_{\mathrm{H}_2} = 0.2$ and $x = N_{\mathrm{H}_2} \, / \, 5 \times 10^{14} \, \mathrm{cm^{-2}}$.
 
-Notice that in eq. 37 of [Draine1996](https://doi.org/10.1086/177689) and eq. 32 of [Glover2007](https://doi.org/10.1086/512238) the first term is
+Notice that in eq. 37 of [Draine1996](https://doi.org/10.1086/177689) and eq. 32 of [Glover2007b](https://doi.org/10.1086/512238) the first term is
 
 $\begin{equation}
     \frac{1 - \omega_{\mathrm{H}_2}}{(1 + x / b_5)^2} \, ,
@@ -1349,7 +1349,7 @@ end;
 md"""
 #### Shielding length
 
-The shielding factors $S_d$ and $S_{\mathrm{H}_2}$ describe the attenuation, by the surrounding material, of radiation coming from outside the cell. So, the column densities must be computed with a length that represents the physical structure of the gas.
+The shielding factors $S_d$ and $S_{\mathrm{H}_2}$ describe the attenuation of the radiation, from the stars formed in the cell and from the backgrounds, by the material that surrounds the gas it reaches. So, the column densities must be computed with a length that represents the physical structure of the gas.
 
 Following [Safranek-Shrader2017](https://doi.org/10.1093/mnras/stw2647) (Section 2.5), we approximate the column densities as the product of the local number density and a shielding length, $N = n \, L_\mathrm{sh}$, and use the Jeans length (their eq. 27)
 
@@ -1417,6 +1417,15 @@ begin
 	L_sh(ρc) = c_lsh / sqrt(ρc)
 end;
 
+# ╔═╡ 17cffbe9-6759-4168-8b3e-5072592509d1
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Shielding length for ρ_cell = 1 mp cm^-3
+#####################################################################################
+println("Lsh(1 mp cm^-3) = $(round(u"pc", L_sh(1.0) * u"cm"; sigdigits=3))")
+  ╠═╡ =#
+
 # ╔═╡ aaba63dd-8fc3-405d-ad19-8e8368e70019
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1453,17 +1462,17 @@ begin
 	#     ΓUVB [Myr^(-1)]
 	#################################################################################
 	function compute_UVB(a::Float64)::Float64
-	
+
 		z = (1 / a) - 1
-	
+
 	    ΓUVB = linear_interpolation(
 			UVB_TABLE[!, :redshift],
 			UVB_TABLE[!, :ΓUVB],
 			extrapolation_bc=Flat(),
 		)
-	
+
 		return ΓUVB(z)
-	
+
 	end
 end;
 
@@ -1475,22 +1484,22 @@ md"""
 
 The overall rate of photodissociation of molecular hydrogen depends on how many LW photons are available and the probability that a molecule will absorb one.
 
-Then, the photodissosiation rate can be modeled as (eq. 7 in [Abel1997](https://doi.org/10.1016/S1384-1076(97)00010-9) and eq. 3 in [Incatasciato2023](https://doi.org/10.1093/mnras/stad1008))
+Then, the photodissociation rate can be modeled as (eq. 7 in [Abel1997](https://doi.org/10.1016/S1384-1076(97)00010-9) and eq. 3 in [Incatasciato2023](https://doi.org/10.1093/mnras/stad1008))
 
 $\begin{equation}
-	\frac{\mathrm{d}}{\mathrm{d}t} \rho_m(t) = -\rho_m(t) \int_{LW} \sigma_{pd}(\nu) \, \frac{F_\nu}{h \, \nu} \, \mathrm{d}\nu \, ,
+	\frac{\mathrm{d}}{\mathrm{d}t} \rho_m(t) = -\rho_m(t) \int_{LW} \sigma_\mathrm{pd}(\nu) \, \frac{F_\nu}{h \, \nu} \, \mathrm{d}\nu \, ,
 \end{equation}$
 
 where
 
  *  $F_\nu$ is the energy flux of photons per unit area per unit frequency $[\mathrm{erg \, s^{-1} \, cm^{-2} \, Hz^{-1}}]$,
  *  $h \, \nu$ is the energy of a single photon, $F_\nu / (h \, \nu)$ is therefore the number flux of photons $[\mathrm{photons \, s^{-1} \, cm^{-2} \, Hz^{-1}}]$,
- *  $\sigma_{pd}(\nu)$ is the photodissociation cross-section $[\mathrm{cm^{-2}}]$.
+ *  $\sigma_\mathrm{pd}(\nu)$ is the photodissociation cross-section $[\mathrm{cm^2}]$.
 
 Dividing both sides by the constant $\rho_\text{cell}$ we get the LWB photodissociation term for our equations
 
 $\begin{equation}
-	\left. \frac{\mathrm{d}}{\mathrm{d}t} f_m(t)\right|_{\mathrm{LWB}} = -f_m(t) \int_{LW} \sigma_{pd}(\nu) \, \frac{F_\nu}{h \, \nu} \, \mathrm{d}\nu =: -f_m(t) \, \Gamma_\mathrm{LWB}(z) \, .
+	\left. \frac{\mathrm{d}}{\mathrm{d}t} f_m(t)\right|_{\mathrm{LWB}} = -f_m(t) \int_{LW} \sigma_\mathrm{pd}(\nu) \, \frac{F_\nu}{h \, \nu} \, \mathrm{d}\nu =: -f_m(t) \, \Gamma_\mathrm{LWB}(z) \, .
 \end{equation}$
 
 Assuming an homogeneous background field we can write the energy flux as
@@ -1499,7 +1508,7 @@ $\begin{equation}
 	F_\nu = 4\pi \, J_\nu \, ,
 \end{equation}$
 
-where $J_\nu$ is the radiation intensity, wich is generally parametrized as
+where $J_\nu$ is the radiation intensity, which is generally parametrized as
 
 $\begin{equation}
 	J_\nu(z) = J_{21}(z) \times 10^{-21} \, \mathrm{erg \, s^{-1} \, cm^{-2} \, Hz^{-1} \, sr^{-1}} \, .
@@ -1508,7 +1517,7 @@ $\begin{equation}
 Putting all together we can write the photodissociation rate as
 
 $\begin{equation}
-	\Gamma_\mathrm{LWB}(z) = \left(\frac{4\pi}{h} \times 10^{-21}\right) J_{21}(z) \int_{\mathrm{LW \, band}} \frac{\sigma_{pd}(\nu)}{\nu} \mathrm{d}\nu \, .
+	\Gamma_\mathrm{LWB}(z) = \left(\frac{4\pi}{h} \times 10^{-21}\right) J_{21}(z) \int_{\mathrm{LW \, band}} \frac{\sigma_\mathrm{pd}(\nu)}{\nu} \mathrm{d}\nu \, .
 \end{equation}$
 
 The integral part contains all the complex quantum mechanics of the $\mathrm{H}_2$ molecule's many absorption lines. This integral has been numerically calculated and is treated as a constant value.
@@ -1549,7 +1558,7 @@ begin
 	const LW_SOURCE = "Incatasciato2023"
 
 	#################################################################################
-	# LW background radiation intensity from Incatasciato et al. (2023), 
+	# LW background radiation intensity from Incatasciato et al. (2023),
 	# eq. 9 in [10^(-21) erg s^(-1) cm^(-2) Hz^(-1) sr^(-1)]
 	#################################################################################
 	const lwb_A = 2.119
@@ -1573,11 +1582,11 @@ begin
 	#     ΓLWB [Myr^(-1)]
 	#################################################################################
 	function compute_LWB(a::Float64)::Float64
-	
+
 		z = (1 / a) - 1
-	
+
 		return abel97 * J21(max(z, LWB_Z_MIN))
-	
+
 	end
 end;
 
@@ -1606,10 +1615,10 @@ The denominator represents the total mass of the stellar population and acts as 
 Similarly, the metal yield of the recycled gas is given by
 
 $\begin{equation}
-	Z_\mathrm{SN} = \dfrac{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} m \, f_Z \, \phi(m) \, \mathrm{d}m}{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} (m - m_\mathrm{rem}(m)) \, \phi(m) \, \mathrm{d}m} \, ,
+	Z_\mathrm{SN} = \dfrac{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} m \, p_Z \, \phi(m) \, \mathrm{d}m}{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} (m - m_\mathrm{rem}(m)) \, \phi(m) \, \mathrm{d}m} \, ,
 \end{equation}$
 
-where $f_Z(m)$ is the fraction of the stellar mass returned as metals.
+where $p_Z(m)$ is the fraction of the stellar mass returned as metals.
 
 The two previous equations were taken from [_Nucleosynthesis and Chemical Evolution of Galaxies_](https://doi.org/10.1017/CBO9780511812170) by Bernard Pagel (eq. 7.24 and 7.26), and [_Chemical Evolution
 of Galaxies_](https://doi.org/10.1007/978-94-010-0967-6) by Francesca Matteucci (eq. 2.74).
@@ -1641,14 +1650,14 @@ To compute $R$ and $Z_\mathrm{SN}$ we use the stellar yields of [Portinari1998](
 # Returns
 #
 #     A dataframe with columns:
-# 
+#
 #       :Z      -> Metallicity of the stellar population modeled by the IMF
 #       :ms     -> Stellar mass
 #       :m_rem  -> Remnant mass, after stellar death
 #       :fz_rem -> Fraction of the stellar mass ejected as metals to the ISM
 ##################################################################################
 function compute_sy(
-	path::String, 
+	path::String,
 	sy_model::String;
 	header::Vector{Symbol}=[
 		:Z,    # Metallicity
@@ -1666,19 +1675,19 @@ function compute_sy(
 		:Ca40, # Calcium 40
 		:Fe56, # Iron 56
 		:Mrem, # Remnant mass
-		:C13s, # Secondary contribution of carbon 13 
+		:C13s, # Secondary contribution of carbon 13
 		:N14s, # Secondary contribution of Nitrogen 14
     ],
 	metals::Vector{Symbol}=[
-		:C12, 
-		:O16, 
-		:Ne20, 
-		:Mg24, 
-		:Si28, 
-		:S32, 
-		:Ca40, 
-		:Fe56, 
-		:C13s, 
+		:C12,
+		:O16,
+		:Ne20,
+		:Mg24,
+		:Si28,
+		:S32,
+		:Ca40,
+		:Fe56,
+		:C13s,
 		:N14s,
 	],
 	skipto::Int64=2,
@@ -1697,10 +1706,10 @@ function compute_sy(
     df = identity.(CSV.read(target_file, DataFrame; header, skipto))
 
 	# Stellar mass
-	ms = df[!, :m] .* u"Msun" 
+	ms = df[!, :m] .* u"Msun"
 
-	# Remnant mass 
-    m_rem = df[!, :Mrem] .* u"Msun" 
+	# Remnant mass
+    m_rem = df[!, :Mrem] .* u"Msun"
 
 	# Remnant mass fraction
 	fm = m_rem ./ ms
@@ -1711,7 +1720,7 @@ function compute_sy(
 	# Metallicity
 	Z = df[!, :Z]
 
-	# Mass fraction of metals ejected by the star 
+	# Mass fraction of metals ejected by the star
 	# throughout its evolution and death
 	# See eqs. 1 and 2 from Mollá et al. (2015)
 	# https://doi.org/10.1093/mnras/stv1102
@@ -1720,7 +1729,7 @@ function compute_sy(
 	sy_data = sort(identity.(DataFrame(; Z, ms, m_rem, fz_ejec)), [:Z, :ms])
 
 	return sy_data
-	
+
 end;
 
 # ╔═╡ 0895d464-a029-410d-9e7d-89cfac2d1615
@@ -1730,10 +1739,10 @@ begin
 
 	# Key of the chosen yield model in the files of Mollá et al. (2015)
 	const YIELD_MODEL_KEY = "PCB"
-	
+
 	# Mass limit for the IR hypothesis
-	const M_IR = 8.0u"Msun"              
-	
+	const M_IR = 8.0u"Msun"
+
     # Raw stellar yields from Mollá et al. (2015)
 	# https://doi.org/10.1093/mnras/stv1102
     const sy_path = "./data/stellar_yields"
@@ -1742,7 +1751,7 @@ begin
 
 	# Metallicities
     sy_metals = sort!(unique(sy_df[!, :Z]))
-	
+
     # Stellar masses
     sy_masses = sort!(ustrip.(u"Msun", unique(sy_df[!, :ms])))
 
@@ -1791,7 +1800,7 @@ end
 #     (R [dimensionless], Zsn [dimensionless])
 ##################################################################################
 function compute_recycled_fractions(Z::Float64)
-	
+
 	# Remnant mass
 	mrem(m) = mrem_interp(ustrip(u"Msun", m), Z) * u"Msun"
 
@@ -1821,10 +1830,10 @@ end;
 let
 	R_Zsn_lowest  = compute_recycled_fractions(first(sy_metals))
 	R_Zsn_highest = compute_recycled_fractions(last(sy_metals))
-	
+
 	R_lowest  = R_Zsn_lowest[1]
 	R_highest = R_Zsn_highest[1]
-	
+
 	Zsn_lowest  = R_Zsn_lowest[2]
 	Zsn_highest = R_Zsn_highest[2]
 
@@ -1851,7 +1860,7 @@ We will follow [McKinnon2016](https://doi.org/10.1093/mnras/stw253) and compute 
 $\begin{equation}
 	\tau_\mathrm{dd} = \frac{M_\mathrm{cell}}{\epsilon \, \gamma \, M_s(100)} \, ,
 \end{equation}$
-where $M_\mathrm{cell}$ is the mass of the gas cell, $\epsilon$ is the efficiency with which grains are destroyed in SN shocks, $\gamma$ is the local Type II SN rate, and $M_s(100)$ is the mass of gas shocked to at least $100 \, \mathrm{km \, s^{−1}}$. [McKinnon2016](https://doi.org/10.1093/mnras/stw253) take $\epsilon = 0.3$, but they note that there is a range of physically plausible values. We adopt $\epsilon = 0.1$, the empirical value estimated by [McKee1989](https://doi.org/10.1017/S0074180900125434) and used by [Aoyama2017](https://doi.org/10.1093/mnras/stw3061), [Hirashita2018](https://doi.org/10.1093/mnras/sty2838) (Section 2.2), and [Granato2021](https://doi.org/10.1093/mnras/stab362) (Section 2.3.4). These are the same works on which we will base our dust condensation efficiency for SNe, $\delta_\text{d}$ (see the section Dust production by stars), so dust production and destruction by SNe come from a consistent set of parameters.
+where $M_\mathrm{cell}$ is the mass of the gas cell, $\epsilon$ is the efficiency with which grains are destroyed in SN shocks, $\gamma$ is the local Type II SN rate, and $M_s(100)$ is the mass of gas shocked to at least $100 \, \mathrm{km \, s^{−1}}$. [McKinnon2016](https://doi.org/10.1093/mnras/stw253) take $\epsilon = 0.3$, but they note that there is a range of physically plausible values. We adopt $\epsilon = 0.1$, the empirical value estimated by [McKee1989](https://doi.org/10.1017/S0074180900125434) and used by [Aoyama2017](https://doi.org/10.1093/mnras/stw3061), [Hirashita2019](https://doi.org/10.1093/mnras/sty2838) (Section 2.2), and [Granato2021](https://doi.org/10.1093/mnras/stab362) (Section 2.3.4). These are the same works on which we will base our dust condensation efficiency for SNe, $\delta_\text{d}$ (see the section Dust production by stars), so dust production and destruction by SNe come from a consistent set of parameters.
 
 The swept-up mass, $M_s(100)$, can be obtained from the Taylor-von Neumann-Sedov theory:
 
@@ -1891,13 +1900,13 @@ Using $E = 1.09 \times 10^{51} \, \mathrm{erg}$ (Table 2 in [McKinnon2016](https
 $\begin{equation}
 	M_s = 7443.3 \, \mathrm{M_\odot} \, ,
 \end{equation}$
-i.e. $6829 \, \mathrm{M_\odot}$ per $10^{51} \, \mathrm{erg}$, which reproduces the value 
+i.e. $6829 \, \mathrm{M_\odot}$ per $10^{51} \, \mathrm{erg}$, which reproduces the value
 
 $\begin{equation}
 	M_s(100) = E / (\sigma \, v_s^2) = 6800 \, \mathrm{M_\odot} \, (E / 10^{51} \, \mathrm{erg}) \, ,
 \end{equation}$
 
-of [McKee1989](https://doi.org/10.1017/S0074180900125434) (eq. 6), used in [McKinnon2016](https://doi.org/10.1093/mnras/stw253) (eq. 8), [Hirashita2018](https://doi.org/10.1093/mnras/sty2838), and [Granato2021](https://doi.org/10.1093/mnras/stab362).
+of [McKee1989](https://doi.org/10.1017/S0074180900125434) (eq. 6), used in [McKinnon2016](https://doi.org/10.1093/mnras/stw253) (eq. 8), [Hirashita2019](https://doi.org/10.1093/mnras/sty2838), and [Granato2021](https://doi.org/10.1093/mnras/stab362).
 
 The SNII rate is
 
@@ -1920,7 +1929,7 @@ $\begin{equation}
 where we have defined the constant
 
 $\begin{align}
-	C_\mathrm{dd} &= \epsilon \, M_s \, f_\mathrm{SNII} \\ 
+	C_\mathrm{dd} &= \epsilon \, M_s \, f_\mathrm{SNII} \\
 	&= 9.2 \, .
 \end{align}$
 """
@@ -1933,7 +1942,7 @@ begin
 	###########################################################
 
 	# Sedov-Taylor dimensionless similarity constant
-	# for an adibatic index of γ = 5/3
+	# for an adiabatic index of γ = 5/3
 	const ξ_SNII = 1.15167
 
 	# SNII energy
@@ -1949,7 +1958,7 @@ begin
 	const Ms = C_SNII * ξ_SNII^5 * E_SNII * vs^-2
 
 	# Efficiency with which grains are destroyed in SN shocks
-	# Value at a shock velocity of 100 km/s in McKee (1989), as used in Aoyama2017, Hirashita2018, and Granato2021
+	# Value at a shock velocity of 100 km/s in McKee (1989), as used in Aoyama2017, Hirashita2019, and Granato2021
 	# https://doi.org/10.1093/mnras/stw3061
 	# https://doi.org/10.1093/mnras/sty2838
 	# https://doi.org/10.1093/mnras/stab362
@@ -1980,12 +1989,12 @@ md"""
 
 ### Dust production by stars
 
-After supernova explosions, the ISM is enriched with both metals and dust. To model dust production from SNe, one can either adopt tabulated dust yields for different SN types (e.g. [Millan-Irigoyen2021](https://doi.org/10.1093/mnras/stab1969)), or assume that a fixed fraction of the metal yields condenses into dust via an effective condensation efficiency (e.g. [Aoyama2017](https://doi.org/10.1093/mnras/stw3061), [Hirashita2019](https://doi.org/10.1093/mnras/sty2838), [Granato2021](https://doi.org/10.1093/mnras/stab362), [Choban2026](
+After supernova explosions, the ISM is enriched with both metals and dust. To model dust production from SNe, one can either adopt tabulated dust yields for different SN types (e.g. [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635)), or assume that a fixed fraction of the metal yields condenses into dust via an effective condensation efficiency (e.g. [Aoyama2017](https://doi.org/10.1093/mnras/stw3061), [Hirashita2019](https://doi.org/10.1093/mnras/sty2838), [Granato2021](https://doi.org/10.1093/mnras/stab362), [Choban2026](
 https://doi.org/10.48550/arXiv.2603.08504)). The former approach attempts to capture the complex microphysics of dust formation in stellar ejecta, while the latter provides a simplified, phenomenological prescription. Given the large theoretical and observational uncertainties in SN dust yields (arising from processes such as reverse-shock destruction and poorly constrained condensation conditions) we adopt the simpler approach, encapsulating the relevant physics in a single parameter, the dust condensation efficiency $\delta_\text{d}$.
 
 This contribution to the overall dust budget is expected to be most relevant at early times (i.e. high redshift and low metallicity), whereas at later stages (low redshift and high metallicity) dust growth by accretion of gas-phase metals onto pre-existing grains dominates, rendering the results largely insensitive to the assumed SN condensation efficiency ([Inoue2011](https://doi.org/10.5047/eps.2011.02.013), [Valiante2011](https://doi.org/10.1111/j.1365-2966.2011.19168.x)).
 
-The value of the dust condensation efficiency, $\delta_\text{d}$, depends on both the supernova (SN) type and the resulting dust composition. However, since we do not explicitly distinguish between different SN channels or grain species, we adopt a single effective value of $\delta_\text{d} = 0.1$, consistent with previous works (e.g. [Inoue2011](https://doi.org/10.5047/eps.2011.02.013) (Table 1), [Aoyama2017](https://doi.org/10.1093/mnras/stw3061) (Section 4.4.1), and [Hirashita2018](https://doi.org/10.1093/mnras/sty2838) (Section 2.1)). This choice is further motivated by the fact that, although theoretical models predict that a large fraction of metals ($\sim 0.5 – 0.8$) may initially condense into dust in SN ejecta, a significant portion is subsequently destroyed by reverse shocks before being injected into the ISM. Therefore, the effective efficiency used in simulations should be interpreted as the surviving fraction of dust that successfully reaches the ISM, rather than the initial condensation efficiency ([Zhukovska2008](https://doi.org/10.1051/0004-6361:20077789)).
+The value of the dust condensation efficiency, $\delta_\text{d}$, depends on both the supernova (SN) type and the resulting dust composition. However, since we do not explicitly distinguish between different SN channels or grain species, we adopt a single effective value of $\delta_\text{d} = 0.1$, consistent with previous works (e.g. [Inoue2011](https://doi.org/10.5047/eps.2011.02.013) (Table 1), [Aoyama2017](https://doi.org/10.1093/mnras/stw3061) (Section 4.4.1), and [Hirashita2019](https://doi.org/10.1093/mnras/sty2838) (Section 2.1)). This choice is further motivated by the fact that, although theoretical models predict that a large fraction of metals ($\sim 0.5 – 0.8$) may initially condense into dust in SN ejecta, a significant portion is subsequently destroyed by reverse shocks before being injected into the ISM. Therefore, the effective efficiency used in simulations should be interpreted as the surviving fraction of dust that successfully reaches the ISM, rather than the initial condensation efficiency ([Zhukovska2008](https://doi.org/10.1051/0004-6361:20077789)).
 """
   ╠═╡ =#
 
@@ -2052,7 +2061,7 @@ $\begin{equation}
 	\tau_\mathrm{X}(a) := \xi_\mathrm{X} \, \frac{a}{\dot{a}} \, ,
 \end{equation}$
 
-i.e. $a$ divided by the growth rate the grain would have if all of $\mathrm{X}$ were in the gas phase, $\dot{a} / \xi_\mathrm{X}$. 
+i.e. $a$ divided by the growth rate the grain would have if all of $\mathrm{X}$ were in the gas phase, $\dot{a} / \xi_\mathrm{X}$.
 
 Using the expression for $\dot{a}$ with $n_\mathrm{X} = \xi_\mathrm{X} \, n_\mathrm{X,tot}$
 
@@ -2236,9 +2245,9 @@ The properties of each species are taken from Table 1 of [Hirashita2012](https:/
 As a consistency check, evaluating $\tau_\mathrm{X}(a)$ with the fiducial values of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) ($a = 0.1 \, \mathrm{\mu m}$, $T = 10 \, \mathrm{K}$, $S = 0.3$, and $n_\mathrm{H} = 1000 \, \mathrm{cm^{-3}}$), and their solar abundances ($n_\mathrm{X,tot} = (\mathrm{X/H})_\odot \, n_\mathrm{H}$, with $(\mathrm{Si/H})_\odot = 3.55 \times 10^{-5}$ and $(\mathrm{C/H})_\odot = 3.63 \times 10^{-4}$ from their Table 1), gives
 
 $\begin{align}
-	\tau_\mathrm{Si} &= 1.61 \times 10^8 \, \mathrm{yr} \, , \\ 
+	\tau_\mathrm{Si} &= 1.61 \times 10^8 \, \mathrm{yr} \, , \\
 	\tau_\mathrm{C} &= 0.994 \times 10^8 \, \mathrm{yr} \, ,
-\end{align}$ 
+\end{align}$
 
 the normalization constants $A_\mathrm{X}$ of eqs. 19 and 20 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x).
 """
@@ -2268,7 +2277,7 @@ let
 	f_C  = 1.0
 	m_C  = 12.0u"u"
 	s_C  = 2.26u"g * cm^-3"
-	
+
 	# Growth time scale, with n_X,tot = (X/H) * nH
 	τ(; fx, mx, sx, XH) = (a * fx * sx) / (XH * nH * mx * S) * sqrt((2 * π * mx) / (1.0u"k" * T))
 
@@ -2355,7 +2364,7 @@ $\begin{equation}
 	C_\mathrm{dg} = \sum_\mathrm{X} w_\mathrm{X} \, C_\mathrm{acc,X} \, Z_\mathrm{X} \, , \qquad C_\mathrm{acc,X} = \frac{3 \, S}{\bar{a} \, f_\mathrm{X} \, s_\mathrm{X}} \left( \frac{k \, T}{2 \, \pi \, m_\mathrm{X}} \right)^{\!1/2} \, ,
 \end{equation}$
 
-with 
+with
 
 $\begin{align}
 	C_\mathrm{acc,Si} &= 0.4940 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, , \\
@@ -2403,10 +2412,10 @@ md"## Constants"
 # ╔═╡ f863d68f-590e-4b96-8433-dc6b5177539f
 begin
 	# Number of equations
-	const N_EQU = 6  
-	
+	const N_EQU = 6
+
 	# Number of parameters
-	const N_PAR = 10 
+	const N_PAR = 10
 
 	# Index of each phase in the ODE solution matrix
 	const phase_name_to_index = Dict(
@@ -2437,7 +2446,7 @@ md"## Jacobian"
 #
 # Arguments
 #
-#     system: ODE system. This function should follows the API requirements of 
+#     system: ODE system. This function should follows the API requirements of
 #             DifferentialEquations.jl
 #
 # Returns
@@ -2625,7 +2634,7 @@ $\begin{equation}
 	f_d(0) = \min(\mathrm{DZ} \, Z, f_d^\mathrm{max}) \, .
 \end{equation}$
 
-The dust-to-metal ratio is an intensive quantity, so it can be combined with the metallicity of the cell after $\texttt{AREPO}$ has changed its metal content (stellar enrichment, or mass exchange with the neighboring cells). 
+The dust-to-metal ratio is an intensive quantity, so it can be combined with the metallicity of the cell after $\texttt{AREPO}$ has changed its metal content (stellar enrichment, or mass exchange with the neighboring cells).
 
 The initial condition of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) given above is used only the first time a cell enters the model, and when the stored $f_Z + f_d$ is not positive, as the dust-to-metal ratio is then undefined. We do not reset the dust-to-metal ratio of cells that leave the star-forming regime and enter it again later, as the dust processes outside star-forming cells (e.g. thermal sputtering in hot gas) are not included in the model.
 """
@@ -2633,12 +2642,12 @@ The initial condition of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.201
 
 # ╔═╡ d7cc8a66-220a-4e9b-b42e-a0e085ed3a0f
 begin
-	# Fraction of the key element in the gas phase 
+	# Fraction of the key element in the gas phase
 	# Hirashita 2012, Sect. 4.1
 	const ξ_Si = 0.25   # Silicate (key element Si)
 	const ξ_C  = 0.15   # Graphite (key element C)
 
-	# Mass fraction of the key element in the grain material 
+	# Mass fraction of the key element in the grain material
 	# Hirashita 2012, Table 1
 	const f_Si = 0.166  # Silicate (Mg1.1 Fe0.9 Si O4)
 	const f_C  = 1.0    # Graphite
@@ -2681,24 +2690,24 @@ begin
 	#################################################################################
 	max_dust_fraction(Z_Si, Z_C, Z) = min(cmax_Si * Z_Si + cmax_C * Z_C, Z)
 
-	# Present-day solar photosphere 
+	# Present-day solar photosphere
 	# Asplund 2009, Tables 1 and 4
 	const X_H_A09  = 0.7381 # Hydrogen mass fraction
 	const Z_A09    = 0.0134 # Metallicity
 	const Z_C_A09  = X_H_A09 * 10^(8.43 - 12) * 12.011 / 1.008 # Carbon mass fraction
 	const Z_Si_A09 = X_H_A09 * 10^(7.51 - 12) * 28.086 / 1.008 # Silicon mass fraction
 
-	# Atomic mass of the key element 
+	# Atomic mass of the key element
 	# Hirashita 2012, Table 1
 	const m_Si = 28.1u"u"  # Silicon
 	const m_C  = 12.0u"u"  # Carbon
 
-	# Solar abundance of the key element, by number relative to H 
+	# Solar abundance of the key element, by number relative to H
 	# Hirashita 2012, Table 1
 	const SiH_sun = 3.55e-5  # Silicon
 	const CH_sun  = 3.63e-4  # Carbon
 
-	# Reference (Milky Way) dust-to-hydrogen mass ratio 
+	# Reference (Milky Way) dust-to-hydrogen mass ratio
 	# Hirashita 2012, eq. 18 and Sect. 4.1
 	const D_ref = ustrip(
 		Unitful.NoUnits,
@@ -2713,8 +2722,8 @@ begin
 
 	# Effective grain radius ⟨a³⟩/⟨a²⟩
     const a_eff = 0.0158u"μm"
-	
-    # Recombination coefficient (γ) times 
+
+    # Recombination coefficient (γ) times
 	# the average thermal velocity of hydrogen atoms (⟨va⟩)
 	const γva = 5.0e4u"cm * s^-1"
 
@@ -2762,7 +2771,7 @@ end;
 # Stellar fraction:       fs(t) = Ms(t) / M_cell --> y[4]
 # Metals fraction:        fZ(t) = MZ(t) / M_cell --> y[5]
 # Dust fraction:          fd(t) = Md(t) / M_cell --> y[6]
-# 
+#
 # This function follows the API requirements of DifferentialEquations.jl
 #####################################################################################
 function system!(dydt, ic, parameters, t)
@@ -2812,10 +2821,10 @@ function system!(dydt, ic, parameters, t)
 	# Shielding length [cm]
 	Lsh = L_sh(ρ_cell)
 
-	# Dust optical depth 
+	# Dust optical depth
 	τ_d = c_sd * fd * ρ_cell * Lsh
-	
-	# Dust shielding 
+
+	# Dust shielding
 	sd = exp(-τ_d)
 
 	# Molecular self-shielding optical depth
@@ -2828,7 +2837,7 @@ function system!(dydt, ic, parameters, t)
 	exp_xp1 = exp(-τ_sh)
 	sh2     = ((1 - ωH2) / xp1_2) + (ωH2 * exp_xp1 / sq_xp1)
 
-	# Combined shielding 
+	# Combined shielding
 	e_diss = sd * sh2
 
 	#################
@@ -2917,13 +2926,13 @@ const JACOBIAN_FUNCTION = construct_jacobian(system!);
 # Evaluate the Jacobian
 #
 # Arguments
-# 
+#
 #     J:          Matrix to save the results, it must have size N_EQU × N_EQU
 #     ic:         Initial condition, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
-#     parameters: Parameters for the ODEs, 
+#     parameters: Parameters for the ODEs,
 #                 [ρ, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
 #     t:          Unused variable to comply with the DifferentialEquations.jl API
-# 
+#
 # Returns
 #
 #     The Jacobian matrix
@@ -2959,7 +2968,7 @@ begin
 	const s_Si = 3.3u"g * cm^-3"   # Silicate
 	const s_C  = 2.26u"g * cm^-3"  # Graphite
 
-	# Accretion constant of each species, 
+	# Accretion constant of each species,
 	# c_X = 3 * S / (ā * f_X * s_X) * sqrt(k * T / (2π * m_X))
 	# ā = ⟨a³⟩/⟨a²⟩ = a_eff (models C and F of Hirashita 2011, Table 2)
 	const C_acc_Si = (3 * S) / (a_eff * f_Si * s_Si) * sqrt(u"k" * T / (2 * π * m_Si))
@@ -3015,17 +3024,17 @@ end;
 # Solve the system of ODEs
 #
 # Arguments
-# 
+#
 #     ic:          Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
 #     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
 #     tspan:       Integration span, (ti, tf) [Myr]
 #     times:       Times at which the solution will be returned [Myr]
 #     args:        Positional arguments for the solver of DifferentialEquations.jl
 #     kwargs:      Keyword arguments for the solver of DifferentialEquations.jl
-# 
+#
 # Returns
 #
-#     A vector of vectors [fi(t), fa(t), fm(t), fs(t), fZ(t), fd(t)] 
+#     A vector of vectors [fi(t), fa(t), fm(t), fs(t), fZ(t), fd(t)]
 #     for each t in `times`. It throws an error if the solver did not succeed
 #####################################################################################
 function integrate_model(
@@ -3130,8 +3139,8 @@ begin
 	#################################################################################
 	# Example cell for the tests below
 	#
-	# Solar metallicity (Zsun) with the abundance pattern of Asplund (2009), 
-	# a two-phase split typical of star-forming gas (90% of cold neutral clouds, 
+	# Solar metallicity (Zsun) with the abundance pattern of Asplund (2009),
+	# a two-phase split typical of star-forming gas (90% of cold neutral clouds,
 	# and a fully ionized hot phase), and the gas initial conditions of the model
 	#################################################################################
 
@@ -3175,7 +3184,7 @@ end;
 # ╠═╡ skip_as_script = true
 #=╠═╡
 #####################################################################################
-# Condensation rate coefficient compared with LOZ25, for a cell with Z = Zsun and 
+# Condensation rate coefficient compared with LOZ25, for a cell with Z = Zsun and
 # the solar abundance pattern (Asplund et al. 2009, scaled to Zsun).
 #####################################################################################
 let
@@ -3185,14 +3194,14 @@ let
 	R_sun = 3.5e-17u"cm^3 * s^-1"
 	Z_eff = 1e-3 * Zsun
 	c_old = ustrip(
-		Unitful.NoUnits, 
+		Unitful.NoUnits,
 		2 * R_sun * Cρ * (Zsun + Z_eff) / (u"mp" * Zsun) / cc_unit
 	)
 
 	# This work, with the initial dust fraction of a solar cell
 	# c_cond (f_d + f_d^eff), with f_d = f_d(0)
 	fd0   = initial_dust_fraction(
-		Z_Si_A09 * Zsun / Z_A09, Z_C_A09 * Zsun / Z_A09, 
+		Z_Si_A09 * Zsun / Z_A09, Z_C_A09 * Zsun / Z_A09,
 		Zsun,
 	)
 	c_new = c_cond * (fd0 + fd_eff)
@@ -3201,7 +3210,7 @@ let
 	println("LOZ25           = $(round(c_old; sigdigits=3))")
 	println("this_work       = $(round(c_new; sigdigits=3))")
 	println("relative_change = $(round(c_new / c_old - 1.0; sigdigits=2))")
-	
+
 end
   ╠═╡ =#
 
@@ -3209,8 +3218,8 @@ end
 # ╠═╡ skip_as_script = true
 #=╠═╡
 #####################################################################################
-# Dust growth time scale, τ_dg = 1 / (C_dg ρ_cell), for Z = Zsun 
-# with the solar abundance pattern (Asplund et al. 2009, scaled to Zsun), 
+# Dust growth time scale, τ_dg = 1 / (C_dg ρ_cell), for Z = Zsun
+# with the solar abundance pattern (Asplund et al. 2009, scaled to Zsun),
 # at ρ_cell = 10^3 mp cm^(-3)
 #####################################################################################
 let
@@ -3265,7 +3274,7 @@ md"### Stiffness coefficient"
 # Compute the stiffness ratio
 #
 # Arguments
-# 
+#
 #     ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
 #     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
 #     it:          Integration time [Myr]
@@ -3337,7 +3346,7 @@ md"### Lyapunov spectrum"
 # Compute the Lyapunov spectrum
 #
 # Arguments
-# 
+#
 #     ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
 #     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
 #     it:          Integration time [Myr]
@@ -3368,7 +3377,7 @@ function lyapunov_spectrum(
 	fd_max, c_dg  = accretion_parameters(Z_Si, Z_C, Z)
 
 	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
-	
+
 	ds = CoupledODEs(system!, ic, parameters)
 
 	# Compute the Lyapunov spectrum
@@ -3445,9 +3454,9 @@ $\begin{equation}
 	\text{SFR}_p = 0.02 \, \frac{P}{P + P_0} \, \frac{M_\text{cell}}{t_\text{ff}} \, ,
 \end{equation}$
 
-where $P$ is the gas pressure and $P_0 / k_B = 2.0 \times 10^4 \, \mathrm{K \, cm^{-3}}$. 
+where $P$ is the gas pressure and $P_0$ is the external pressure in the ISM where the molecular fraction is unity ($P_0/ k_B = 2.0 \times 10^4 \, \mathrm{K \, cm^{-3}}$ for the MW and $P_0/ k_B = 4.5 \times 10^4 \, \mathrm{K \, cm^{-3}}$ for the combined data of several galaxies).
 
-So, the star formation efficiency is 
+So, the star formation efficiency is
 
 $\begin{equation}
 	\epsilon_\text{ff}^{\,\text{BLT}} = 0.02 \, \frac{P}{P + P_0} \, .
@@ -3461,7 +3470,7 @@ $\begin{equation}
 
 where $x$ is the cold gas mass fraction, $\rho_\text{th}$ is the threshold density (a constant with a value of $1.03378 \times 10^6$ in internal units of density), and $t_0^*$ is the maximum SFR timescale (a constant with a value of $0.00227$ in internal units of time).
 
-So, the star formation efficiency is 
+So, the star formation efficiency is
 
 $\begin{equation}
 	\epsilon_\text{ff}^{\,\text{STD}} = c \, x \, ,
@@ -3492,13 +3501,13 @@ To find the per-equation and global equilibrium we take the ODEs and set the der
 # ╔═╡ e8c51ae9-ded4-450a-80f9-c484c2b991d1
 #####################################################################################
 # Evaluate the ODEs
-# 
+#
 # Arguments
-# 
+#
 #     fractions:  Mass fractions, [fi, fa, fm, fs, fZ, fd]
 #     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
 #     it:          Integration time [Myr]
-# 
+#
 # Returns
 #
 #     The ODE evaluated at `fractions` and `base_params`
@@ -3530,16 +3539,16 @@ end;
 # ╔═╡ c96ea0ad-47c3-469e-a2f7-0743e681a6d1
 #####################################################################################
 # Test how close to 0 are the ODEs evaluated at `fractions` and `base_params`
-# 
+#
 # Arguments
-# 
+#
 #     fractions:   Mass fractions, [fi, fa, fm, fs, fZ, fd]
 #     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
 #     it:          Integration time [Myr]
 #     limit:       Equilibrium criteria.
-# 
+#
 # Returns
-# 
+#
 #     If the system pass the criteria (the derivatives are close enough to 0)
 #####################################################################################
 function test_equilibrium(
@@ -6524,6 +6533,7 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╠═e14648ff-69f6-47c2-924c-c5ac69e200ed
 # ╟─79fa6ccd-e137-4178-9376-c1222dd0a8f7
 # ╠═e7f0842c-954a-40e1-a112-ec03631e5270
+# ╠═17cffbe9-6759-4168-8b3e-5072592509d1
 # ╟─aaba63dd-8fc3-405d-ad19-8e8368e70019
 # ╠═03754250-3831-41db-ac11-fe6f5a08f0c1
 # ╟─6ddf393c-9f37-43b2-b401-9ab0e7a9e88c
