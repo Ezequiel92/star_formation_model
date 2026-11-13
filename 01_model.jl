@@ -811,6 +811,24 @@ begin
 	const c_ion  = 1.0u"mp"
 end;
 
+# ╔═╡ c3abedda-6f47-440b-a5f1-b3b9e393b678
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Optical depths for ρ_cell = 1 mp cm^-3 and h = 100 pc
+#####################################################################################
+let
+	h  = 100u"pc"
+	ρc = 1.0u"mp*cm^-3"
+	
+	τdiss_fm = ustrip(Unitful.NoUnits, C_τdiss * ρc * h)
+	τion_fa  = ustrip(Unitful.NoUnits, C_τion * ρc * h)
+
+	println("τ_diss / fm = $(round(τdiss_fm; sigdigits=2))")
+	println("τ_ion / fa  = $(round(τion_fa; sigdigits=2))")
+end
+  ╠═╡ =#
+
 # ╔═╡ d59793b2-3414-4051-ac2b-33b6cb8063e8
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1251,7 +1269,7 @@ $\begin{equation}
     \frac{Z}{Z_\odot} \rightarrow \frac{\mathcal{D}}{\mathcal{D}_\mathrm{ref}} \, ,
 \end{equation}$
 
-where $\mathcal{D} = \rho_d / (m_p \, n_\mathrm{H})$ is the dust-to-hydrogen mass ratio, and $\mathcal{D}_\mathrm{ref}$ its value in the Milky Way. With $N_\mathrm{H} = N_\mathrm{HI} + 2 \, N_{\mathrm{H}_2}$, the dust optical depth is
+where $\mathcal{D} = \rho_d / (m_p \, n_\mathrm{H})$ is the dust-to-hydrogen mass ratio, and $\mathcal{D}_\mathrm{ref}$ its value in the Milky Way. Then, the dust optical depth is
 
 $\begin{equation}
     \tau_d = \sigma_\mathrm{d, eff} \, \frac{\mathcal{D}}{\mathcal{D}_\mathrm{ref}} \, N_\mathrm{H} = \frac{\sigma_\mathrm{d, eff}}{\mathcal{D}_\mathrm{ref} \, m_p} \, \Sigma_d \, ,
@@ -1404,7 +1422,68 @@ i.e. $L_\mathrm{sh} = 89.5 \, \mathrm{pc}$ for $\rho_\mathrm{cell} = 1 \, \mathr
 
 With a constant sound speed the column densities scale as $N \propto \rho_\mathrm{cell}^{1/2}$, close to the scaling $N \propto n_\mathrm{H}^{0.42}$ that [Safranek-Shrader2017](https://doi.org/10.1093/mnras/stw2647) find with ray tracing (their eq. 29).
 
-The optical depths $\tau_\mathrm{ion}$ and $\tau_\mathrm{diss}$ used for $\eta_\mathrm{ion}^*$ and $\eta_\mathrm{diss}^*$ (see the section Photodissociation and photoionization) answer a different question than the shielding factors. They set the fraction of the photons emitted by the stars formed in the cell that is absorbed before leaving it, $1 - e^{-\tau}$. As the cell is the control volume of our equations, the relevant path length is set by its geometry, so for these optical depths we keep the cell size $h = 2 \, (3 \, V_\mathrm{cell} / 4 \pi)^{1/3}$ as the length scale.
+The optical depths $\tau_\mathrm{ion}$ and $\tau_\mathrm{diss}$ used for $\eta_\mathrm{ion}^*$ and $\eta_\mathrm{diss}^*$ (see the section Photodissociation and photoionization) answer a different question than the shielding factors. They set the fraction of the photons emitted by the stars formed in the cell that is absorbed before leaving it, $1 - e^{-\tau}$. As the cell is the control volume of our equations, the relevant path length is set by its geometry, so for these optical depths we keep the cell size $h = 2 \, (3 \, V_\mathrm{cell} / 4 \pi)^{1/3}$ as the length scale. The figure below illustrates the difference between the two lengths.
+"""
+  ╠═╡ =#
+
+# ╔═╡ 5ed28f63-9a04-4d33-8728-007b360b3bcd
+# ╠═╡ skip_as_script = true
+#=╠═╡
+TikzPictures.TikzPicture(
+	L"""
+		% Left: fraction of stellar photons absorbed in the cell
+		\begin{scope}
+		    \draw[thick, fill=white, fill opacity=0.08] (0, 0) circle (2.1);
+		    \fill[c_star, draw=white] (0, 0) circle (0.16);
+		    % Absorbed photons
+		    \foreach \ang/\len/\col in {20/1.25/c_ion, 95/1.0/c_diss, 160/1.45/c_ion, 230/1.15/c_diss, 300/1.35/c_ion} {
+		        \draw[\col, thick, -{Stealth[length=4pt]}] (\ang:0.3) -- (\ang:\len);
+		        \fill[\col] (\ang:\len + 0.08) circle (1.3pt);
+		    }
+		    % Escaping photon
+		    \draw[c_diss, thick, densely dashed, -{Stealth[length=4pt]}] (55:0.3) -- (55:2.75);
+		    \node[anchor=west] at (55:2.8) {escapes};
+		    % Cell size
+		    \draw[{Stealth[length=4pt]}-{Stealth[length=4pt]}] (-2.1, -2.45) -- node[below] {$h$} (2.1, -2.45);
+		    \draw[densely dotted] (-2.1, 0) -- (-2.1, -2.45);
+		    \draw[densely dotted] (2.1, 0) -- (2.1, -2.45);
+		    \node[align=center] at (0, 3.05) {Stellar photons absorbed\\in the cell: $1 - e^{-\tau}$, with $\tau = n \, \sigma \, h$};
+		\end{scope}
+
+		% Right: shielding of the cold gas
+		\begin{scope}[xshift=8.2cm]
+		    % Shielding column
+		    \shade[left color=white!6!black, right color=white!45!black] (-2.6, -1.1) rectangle (1.0, 1.1);
+		    \draw[thick] (-2.6, -1.1) rectangle (1.0, 1.1);
+		    % Shielded gas
+		    \draw[thick] (1.0, -1.1) rectangle (2.3, 1.1);
+		    \node[align=center] at (1.65, 0) {cold\\gas};
+		    % Incident radiation, increasingly attenuated
+		    \foreach \y/\col in {-0.75/c_diss, -0.25/c_ion, 0.25/c_diss, 0.75/c_ion} {
+		        \draw[\col, very thick, -{Stealth[length=4pt]}] (-3.9, \y) -- (-2.65, \y);
+		        \draw[\col, draw opacity=0.8, thick, -{Stealth[length=3.5pt]}] (-2.5, \y) -- (-1.0, \y);
+		        \draw[\col, draw opacity=0.6, -{Stealth[length=3pt]}] (-0.85, \y) -- (0.4, \y);
+		    }
+		    \node[align=center, anchor=east] at (-3.95, 0) {stars and\\backgrounds};
+		    % Shielding length
+		    \draw[{Stealth[length=4pt]}-{Stealth[length=4pt]}] (-2.6, -1.45) -- node[below] {$L_\mathrm{sh}$} (1.0, -1.45);
+		    \node at (-0.8, 1.4) {dust and H$_2$};
+		    \node[align=center] at (-0.8, 3.05) {Radiation transmitted to the gas:\\$S_d$ (ionizing) and $S_d \, S_{\mathrm{H}_2}$ (dissociating)};
+		\end{scope}
+	""",
+	options=raw"color=white, font=\small",
+	width="70em",
+	preamble=TIKZ_COLORS * raw"""
+		\usetikzlibrary{arrows.meta}
+	""",
+)
+  ╠═╡ =#
+
+# ╔═╡ cfe7c74a-c482-4d40-a508-d473877ba35a
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+On the left, the fraction of the photons emitted by the stars formed in the cell that is absorbed before leaving it, which sets $\eta_\mathrm{ion}^*$ and $\eta_\mathrm{diss}^*$, is computed with the cell size, $h$. On the right, the attenuation of the radiation (from the stars and from the backgrounds) by the dust and the molecular gas that surround the cold gas, which sets $S_d$ and $S_{\mathrm{H}_2}$, is computed with the shielding length, $L_\mathrm{sh}$. The arrows are the ionizing and dissociating photons, with the colors of photoionization and photodissociation in the overview diagrams. The diagrams are not to scale.
 """
   ╠═╡ =#
 
@@ -1434,6 +1513,30 @@ begin
 	# Shielding length [cm]
 	L_sh(ρc) = c_lsh / sqrt(ρc)
 end;
+
+# ╔═╡ 9de077ea-db46-4911-aadb-1fb4b0873d97
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Dimensionless column density of H2, and self shielding factor
+# for ρ_cell = 1 mp cm^-3
+#####################################################################################
+let
+	xfm(ρc) = c_sh2 * L_sh(ρc) * ρc
+
+	println("x(1 mp cm^-3) / fm = $(round(xfm(1.0); sigdigits=2))")
+	println("x(1 mp cm^-3, fm=1e-4) = $(round(xfm(1.0) * 1.0e-4; sigdigits=2))")
+	println()
+
+	xp1     = xfm(1.0) * 1.0e-4 + 1.0
+	xp1_2   = xp1 * xp1
+	exp_xp1 = exp(-exp_fac * sqrt(xp1))
+	
+	sh2 = ((1 - ωH2) / xp1_2) + (ωH2 * exp_xp1 / sqrt(xp1))
+
+	println("SH2(1 mp cm^-3, fm=1e-4) = $(round(sh2; sigdigits=1))")
+end
+  ╠═╡ =#
 
 # ╔═╡ 17cffbe9-6759-4168-8b3e-5072592509d1
 # ╠═╡ skip_as_script = true
@@ -1608,6 +1711,17 @@ begin
 	end
 end;
 
+# ╔═╡ 691349be-7bfc-41f1-8560-83f1b580ee6b
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#################################################################################
+# LW background radiation intensity at z = 6
+#################################################################################
+let
+	println("J21(z=6) = $(round(J21(LWB_Z_MIN); sigdigits=3))")
+end
+  ╠═╡ =#
+
 # ╔═╡ 7df63fdf-ef41-44f2-8a55-e5c2c849029c
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -1636,9 +1750,15 @@ $\begin{equation}
 	Z_\mathrm{SN} = \dfrac{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} m \, p_Z \, \phi(m) \, \mathrm{d}m}{\int_{m_\mathrm{ir}}^{m_\mathrm{high}} (m - m_\mathrm{rem}(m)) \, \phi(m) \, \mathrm{d}m} \, ,
 \end{equation}$
 
-where $p_Z(m)$ is the fraction of the stellar mass returned as metals.
+where $p_Z(m)$ is the fraction of the stellar mass returned as metals. The metals ejected by a star have two contributions, the metals synthesized during its evolution and those already present in the gas from which it formed (eqs. 1 and 2 of [Mollá2015](https://doi.org/10.1093/mnras/stv1102)),
 
-The two previous equations were taken from [_Nucleosynthesis and Chemical Evolution of Galaxies_](https://doi.org/10.1017/CBO9780511812170) by Bernard Pagel (eq. 7.24 and 7.26), and [_Chemical Evolution
+$\begin{equation}
+	p_Z(m) = q_Z(m) + \left( 1 - \frac{m_\mathrm{rem}(m)}{m} \right) Z \, ,
+\end{equation}$
+
+where $q_Z(m)$ is the sum of the net yields of all metals, as a fraction of the initial mass of the star, and $Z$ is the metallicity with which it formed.
+
+The expressions for $R$ and $Z_\mathrm{SN}$ were taken from [_Nucleosynthesis and Chemical Evolution of Galaxies_](https://doi.org/10.1017/CBO9780511812170) by Bernard Pagel (eq. 7.24 and 7.26), and [_Chemical Evolution
 of Galaxies_](https://doi.org/10.1007/978-94-010-0967-6) by Francesca Matteucci (eq. 2.74).
 
 We use the mass limits:
@@ -2079,7 +2199,7 @@ $\begin{equation}
 	\tau_\mathrm{X}(a) := \xi_\mathrm{X} \, \frac{a}{\dot{a}} \, ,
 \end{equation}$
 
-i.e. $a$ divided by the growth rate the grain would have if all of $\mathrm{X}$ were in the gas phase, $\dot{a} / \xi_\mathrm{X}$.
+i.e. $a$ divided by the growth rate the grain would have if all of $\mathrm{X}$ were in the gas phase, $\dot{a}(n_\mathrm{X} \to n_\mathrm{X,tot}) = \dot{a} / \xi_\mathrm{X}$.
 
 Using the expression for $\dot{a}$ with $n_\mathrm{X} = \xi_\mathrm{X} \, n_\mathrm{X,tot}$
 
@@ -2523,41 +2643,44 @@ Schematic diagram for the contribution of each $\texttt{AREPO}$ component to the
 #=╠═╡
 TikzPictures.TikzPicture(
 	L"""
-	    % Base line
-	    \draw[thick] (0,0) -- (10,0);
-
-	    % Vertical dividers
-	    \foreach \x in {0, 5, 10} {
-	        \draw[thick] (\x, -0.2) -- (\x, 0.2);
+		% Bar of the cell
+		\fill[white, fill opacity=0.35] (0, 0) rectangle (1.6, 0.8);
+		\fill[white, fill opacity=0.20] (1.6, 0) rectangle (4.4, 0.8);
+		\fill[white, fill opacity=0.08] (4.4, 0) rectangle (9.6, 0.8);
+		\draw[thick] (0, 0) rectangle (12.0, 0.8);
+		\foreach \x in {1.6, 4.4, 9.6} {
+		    \draw[thick] (\x, 0) -- (\x, 0.8);
 	    }
+		\draw[very thick] (4.4, -0.12) -- (4.4, 0.92);
 
-	    % Top braces
-	    \draw[thick] (0,0.5) .. controls (2.5,0.8) and (2.5,0.8) .. (5,0.5);
-	    \draw[thick] (5,0.5) .. controls (7.5,0.8) and (7.5,0.8) .. (10,0.5);
+		\node at (0.8, 0.4) {$f_d(0)$};
+		\node at (3.0, 0.4) {$f_Z(0)$};
+		\node at (7.0, 0.4) {$f_a(0)$};
+		\node at (10.8, 0.4) {$f_i(0)$};
 
-	    \node at (2.5,1.0) {metals};
-	    \node at (7.5,1.0) {H + He};
+		% Top braces: what AREPO provides
+		\draw[pen colour={white}, decorate, decoration={calligraphic brace, amplitude=6pt, raise=3pt}, thick]
+		    (0, 0.8) -- node[above=10pt] {metals, $Z$} (4.4, 0.8);
+		\draw[pen colour={white}, decorate, decoration={calligraphic brace, amplitude=6pt, raise=3pt}, thick]
+		    (4.4, 0.8) -- node[above=10pt] {hydrogen and helium, $1 - Z$} (12.0, 0.8);
 
-	    % Bottom braces
-	    \draw[thick] (0,-0.5) .. controls (0.5,-0.8) and (1.5,-0.8) .. (2,-0.5);
-	    \node at (1,-1.0) {dust};
+		% Bottom braces: how the mass is split in the model
+		\draw[pen colour={white}, decorate, decoration={calligraphic brace, amplitude=5pt, raise=3pt, mirror}, thick]
+		    (0, 0) -- node[below=9pt, align=center] {dust\\{\footnotesize $c_\mathrm{Si} \, Z_\mathrm{Si} + c_\mathrm{C} \, Z_\mathrm{C}$}\\{\footnotesize or $\mathrm{DZ} \, Z$}} (1.6, 0);
+		\draw[pen colour={white}, decorate, decoration={calligraphic brace, amplitude=5pt, raise=3pt, mirror}, thick]
+		    (1.6, 0) -- node[below=9pt, align=center] {gas-phase\\metals} (4.4, 0);
+		\draw[pen colour={white}, decorate, decoration={calligraphic brace, amplitude=5pt, raise=3pt, mirror}, thick]
+		    (4.4, 0) -- node[below=9pt, align=center] {neutral gas\\{\footnotesize $(1 - Z) \, [x + (1 - x) (1 - y_\mathrm{HII})]$}} (9.6, 0);
+		\draw[pen colour={white}, decorate, decoration={calligraphic brace, amplitude=5pt, raise=3pt, mirror}, thick]
+		    (9.6, 0) -- node[below=9pt, align=center] {ionized gas\\{\footnotesize $(1 - Z) \, (1 - x) \, y_\mathrm{HII}$}} (12.0, 0);
 
-	    \draw[thick] (2,-0.5) .. controls (2.5,-0.8) and (4.5,-0.8) .. (5,-0.5);
-	    \node at (3.5,-1.0) {$Z$};
-
-	    \draw[thick] (5,-0.5) .. controls (5.5,-0.8) and (7,-0.8) .. (7.5,-0.5);
-	    \node at (6.25,-1.0) {$a$};
-
-	    \draw[thick] (7.5,-0.5) .. controls (8,-0.8) and (9.5,-0.8) .. (10,-0.5);
-	    \node at (8.75,-1.0) {$i$};
-
-	    % Left label
-	    \node[left] at (0,0) {cell};
+		\node[anchor=east] at (-0.15, 0.4) {cell};
 	""",
+	options=raw"color=white, font=\small",
 	width="75em",
-	preamble = """
-		\\usepackage{xcolor}
-	    \\color{white}
+	preamble=raw"""
+		\usepackage{amsmath}
+		\usetikzlibrary{decorations.pathreplacing, calligraphy}
 	""",
 )
   ╠═╡ =#
@@ -3095,6 +3218,20 @@ function integrate_model(
 
 end;
 
+# ╔═╡ 995dade5-a387-4d41-a82c-56373b797438
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Maximum dust-to-metal ratio, f_d_max / Z, for Z = Zsun with the
+# solar abundance pattern of Asplund et al. 2009
+#####################################################################################
+let
+	fd_max_sun = ((Z_Si_A09 / f_Si) + (Z_C_A09 / f_C)) / Z_A09
+
+	println("fd_max(⊙) = $(round(fd_max_sun; sigdigits=3))")
+end
+  ╠═╡ =#
+
 # ╔═╡ ce51d8ce-e00b-46d6-aaf1-fe2628ae22d4
 # ╠═╡ skip_as_script = true
 #=╠═╡
@@ -3159,6 +3296,62 @@ $\begin{equation}
 
 The return of mass within the ODEs is still needed, as it sets the gas phases and the metals during the integration, and closes the mass budget of the six fractions. The factor $1 / (1 - R)$ only concerns the SFR given to $\texttt{AREPO}$, and it makes our SFR directly comparable with the one of the fiducial model in $\texttt{AREPO}$ (see the section Efficiency per free-fall time).
 """
+  ╠═╡ =#
+
+# ╔═╡ 6d04e973-4f89-42e4-a12a-4ed869433dcb
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+## Summary of the coupling with $\texttt{AREPO}$
+
+The diagram below summarizes how the model is coupled with $\texttt{AREPO}$ for a gas cell. The filled (grey) boxes are operations of $\texttt{AREPO}$, and the empty ones are part of our model. If the cell is not turned into a star particle, it can enter the model again in the next time step. Every time it enters, all the components are reset from the current state of the cell, except the dust, as its dust-to-metal ratio $\mathrm{DZ}$ is carried over from one integration to the next (dashed arrow), and sets the initial condition $f_d(0) = \min(\mathrm{DZ} \, Z, f_d^\mathrm{max})$ (see the section Cells that enter the model more than once).
+"""
+  ╠═╡ =#
+
+# ╔═╡ 82efb827-84fd-4692-89ae-732dcaeb68f1
+# ╠═╡ skip_as_script = true
+#=╠═╡
+TikzPictures.TikzPicture(
+	L"""
+		\node[arepo] (cell) {Star-forming cell\\[2pt] {\footnotesize $\rho_\mathrm{cell}$, $Z$, $Z_\mathrm{Si}$, $Z_\mathrm{C}$, $x$, $y_\mathrm{HII}$, $M_\mathrm{cell}$, $\Delta t$, $z$}};
+		\node[model, right=2.6cm of cell] (ic) {Initial conditions\\[2pt] {\footnotesize $f_i(0)$, $f_a(0)$, $f_Z(0)$, $f_d(0)$, $f_m(0) = f_s(0) = 0$}};
+		\node[model, below=1.1cm of ic] (ode) {Integration of the ODEs\\for $t_i = \Delta t$};
+		\node[model, below=1.1cm of ode] (sfr) {$\mathrm{SFR} = \dfrac{f_s(t_i) \, M_\mathrm{cell}}{(1 - R) \, t_i}$};
+		\node[arepo] (prob) at (cell |- sfr) {Probability $p$ of forming\\a star particle};
+		\node[model] (dz) at (cell |- ode) {Store $\mathrm{DZ} = \dfrac{f_d(t_i)}{f_Z(t_i) + f_d(t_i)}$};
+		\node[arepo, below=1.1cm of prob] (star) {Star particle\\{\footnotesize (\texttt{AREPO} stellar evolution)}};
+
+		\draw[link] ([yshift=2.5mm]cell.east) -- ([yshift=2.5mm]ic.west);
+		\draw[link] (ic) -- (ode);
+		\draw[link] (ode) -- (sfr);
+		\draw[link] (sfr) -- (prob);
+		\draw[link] (prob) -- node[right] {yes} (star);
+		\draw[link] (prob) -- node[right] {no} (dz);
+		\draw[link] (dz) -- node[right] {next time step} (cell);
+		\draw[link, dashed] (dz.east) -- ++(1.3, 0) |- node[pos=0.25, right] {$\mathrm{DZ}$} ([yshift=-2.5mm]ic.west);
+	""",
+	options=raw"color=white, font=\small",
+	width="60em",
+	preamble=TIKZ_COLORS * raw"""
+		\usetikzlibrary{arrows.meta, positioning}
+		\tikzset{
+		    stage/.style={
+		        rectangle,
+		        rounded corners=3pt,
+		        draw=white,
+		        thick,
+		        text=white,
+		        align=center,
+		        text width=5.3cm,
+		        minimum height=1.35cm,
+		        inner sep=4pt,
+		    },
+		    arepo/.style={stage, fill=white, fill opacity=0.15, text opacity=1},
+		    model/.style={stage},
+		    link/.style={thick, -{Stealth[length=5pt]}},
+		}
+	""",
+)
   ╠═╡ =#
 
 # ╔═╡ 24920a1b-355c-43e1-aff2-028e6f25584c
@@ -3243,7 +3436,30 @@ let
 	println("LOZ25           = $(round(c_old; sigdigits=3))")
 	println("this_work       = $(round(c_new; sigdigits=3))")
 	println("relative_change = $(round(c_new / c_old - 1.0; sigdigits=2))")
+	println()
+	println("τ_cond(1 mp cm^-3, fd(0)) = $(round(1.0 / c_new; sigdigits=2)) Myr")
+end
+  ╠═╡ =#
 
+# ╔═╡ 465838c2-ce27-4a16-b7a0-5dd4babca9ae
+# ╠═╡ skip_as_script = true
+#=╠═╡
+#####################################################################################
+# Dust optical depth for ρ_cell = 1 mp cm^-3 and ρ_cell = 100 mp cm^-3
+#####################################################################################
+let
+	Z_Si = Z_Si_A09 * Zsun / Z_A09
+	Z_C  = Z_C_A09 * Zsun / Z_A09
+
+	fd0 = initial_dust_fraction(Z_Si, Z_C, Zsun)
+	
+	τd(ρc) = c_sd * fd0 * L_sh(ρc) * ρc
+
+	println("τd(1 mp cm^-3) = $(round(τd(1.0); sigdigits=2))")
+	println("τd(100 mp cm^-3) = $(round(τd(100.0); sigdigits=2))")
+	println()
+	println("exp(-τd(1 mp cm^-3)) = $(round(exp(-τd(1.0)); sigdigits=2))")
+	println("exp(-τd(100 mp cm^-3)) = $(round(exp(-τd(100.0)); sigdigits=2))")
 end
   ╠═╡ =#
 
@@ -3275,7 +3491,7 @@ end
 #=╠═╡
 #####################################################################################
 # Dust-to-metal ratio of the initial condition, f_d(0) / Z, for Z = Zsun with the
-# solar abundance pattern (Asplund et al. 2009, scaled to Zsun)
+# solar abundance pattern of Asplund et al. 2009, scaled to Zsun
 #####################################################################################
 let
 	# Si and C mass fractions for the solar abundance pattern, scaled to Zsun
@@ -3372,26 +3588,61 @@ md"The model, for a typical set of initial conditions, is very stiff (stiffness 
 md"### Lyapunov spectrum"
   ╠═╡ =#
 
+# ╔═╡ a4f129d1-3747-4d82-bb48-f6610925a35d
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+The Lyapunov exponents measure the mean exponential rate at which nearby trajectories separate (positive) or converge (negative), and a system is chaotic if its largest exponent is positive. The exponents are defined as a limit for $t \to \infty$, so they have to be measured after the initial transient and over a time much longer than the slowest timescale of the system.
+
+We compute the asymptotic spectrum in two independent ways:
+
+- Directly, evolving the tangent dynamics for a long time after discarding a transient (`lyapunov_spectrum`).
+- From the eigenvalues of the Jacobian at the state reached after a long integration with the stiff solver (`asymptotic_eigenvalues`). If that state is an equilibrium (all the derivatives are $\approx 0$), the asymptotic Lyapunov exponents are the real parts of these eigenvalues.
+
+In both cases the parameters of the ODEs are kept fixed ($\eta_\mathrm{diss}$ and $\eta_\mathrm{ion}$ are evaluated for the integration time `it`), so this is a mathematical property of the system of equations. In the simulations the model is never integrated for such long times.
+"""
+  ╠═╡ =#
+
 # ╔═╡ ac57dfbe-f19b-4c5f-a753-5f4162e245d4
 # ╠═╡ skip_as_script = true
 #=╠═╡
 #####################################################################################
 # Compute the Lyapunov spectrum
 #
+# The tangent dynamics are evolved for a time Ttr (transient, not used for the
+# averages) and then for N steps of length Δt, with a QR decomposition after each
+# step. The exponents are the averages over the total time N * Δt.
+#
+# The tangent dynamics are integrated with an explicit solver, so this function
+# is only practical at low densities (ρ_cell ~ 10 cm^(-3)). At higher densities the
+# system is too stiff, and asymptotic_eigenvalues should be used instead.
+#
+# With the default values we get the spectrum after the initial transient. 
+# To get the local (finite-time) spectrum at the initial condition use, 
+# for example, Ttr = 0.0, N = 100, and Δt = 1.0e-6.
+#
 # Arguments
 #
-#     ic:         Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+#     ic:          Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
 #     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
-#     it:          Integration time [Myr]
+#     it:          Integration time used to compute η_diss and η_ion [Myr]
+#     Ttr:         Transient time [Myr]
+#     N:           Number of steps (QR decompositions)
+#     Δt:          Time between QR decompositions [Myr]. It has to be short
+#                  enough that the fastest contracting direction does not
+#                  underflow, |λ_min| * Δt ≲ 100
 #
 # Returns
 #
-#     The Lyapunov spectrum
+#     The Lyapunov spectrum [Myr^(-1)], sorted from largest to smallest
 #####################################################################################
 function lyapunov_spectrum(
 	ic::Vector{Float64},
 	base_params::Vector{Float64},
-	it::Float64,
+	it::Float64;
+	Ttr::Float64=500.0,
+	N::Int=50_000,
+	Δt::Float64=0.01,
 )::Vector{Float64}
 
 	# Parameters for the ODEs
@@ -3411,10 +3662,15 @@ function lyapunov_spectrum(
 
 	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
 
-	ds = CoupledODEs(system!, ic, parameters)
+	ds = CoupledODEs(
+		system!,
+		ic,
+		parameters;
+		diffeq=(abstol=1.0e-9, reltol=1.0e-9),
+	)
 
 	# Compute the Lyapunov spectrum
-	return lyapunovspectrum(ds, 100; Δt=1e-6)
+	return sort(lyapunovspectrum(ds, N; Δt, Ttr))
 
 end;
   ╠═╡ =#
@@ -3425,16 +3681,116 @@ end;
 lyapunov_spectrum(EXAMPLE_IC, example_base_params(10.0), 10.0)
   ╠═╡ =#
 
-# ╔═╡ d1f3d076-b9d6-4b92-b25c-4155b5fc464b
+# ╔═╡ cbc99543-8743-47ac-9f10-69364201606c
 # ╠═╡ skip_as_script = true
 #=╠═╡
-lyapunov_spectrum( EXAMPLE_IC, example_base_params(1000.0), 10.0,)
+#####################################################################################
+# Compute the eigenvalues of the Jacobian at the state reached after a long
+# integration
+#
+# If the final state is an equilibrium (`max_rate` ≈ 0), the real parts of the
+# eigenvalues are the asymptotic Lyapunov exponents
+#
+# Arguments
+#
+#     ic:          Initial conditions, [fi(0), fa(0), fm(0), fs(0), fZ(0), fd(0)]
+#     base_params: Parameters for the ODEs, [ρ_cell, Z, a, h, Z_Si, Z_C]
+#     it:          Integration time used to compute η_diss and η_ion [Myr]
+#     t_end:       Time at which the Jacobian is evaluated [Myr]
+#
+# Returns
+#
+#     A NamedTuple with
+#
+#     fractions:   [fi, fa, fm, fs, fZ, fd] at t_end
+#     max_rate:    Largest |dfj/dt| at t_end [Myr^(-1)]
+#     eigenvalues: Eigenvalues of the Jacobian at t_end [Myr^(-1)], 
+#                  sorted from largest to smallest real part
+#####################################################################################
+function asymptotic_eigenvalues(
+	ic::Vector{Float64},
+	base_params::Vector{Float64},
+	it::Float64;
+	t_end::Float64=1.0e5,
+)
+
+	# Parameters for the ODEs
+	# ρ_cell: Density [cm^(-3)]
+	# Z:      Metallicity [dimensionless]
+	# a:      Scale factor [dimensionless]
+	# h:      Cell size [cm]
+	# Z_Si:   Mass fraction of Si [dimensionless]
+	# Z_C:    Mass fraction of C [dimensionless]
+	ρ_cell, Z, a, h, Z_Si, Z_C = base_params
+
+	ΓUVB          = compute_UVB(a)
+	ΓLWB          = compute_LWB(a)
+	η_diss, η_ion = compute_η(it, Z)
+	R, Zsn        = compute_recycled_fractions(Z)
+	fd_max, c_dg  = accretion_parameters(Z_Si, Z_C, Z)
+
+	parameters = [ρ_cell, ΓUVB, ΓLWB, η_diss, η_ion, R, Zsn, h, fd_max, c_dg]
+
+	# Integrate up to t_end with the stiff solver, keeping the parameters fixed
+	sol = solve(
+		ODEProblem(ode_function, ic, (0.0, t_end), parameters),
+		QNDF();
+		save_everystep=false,
+		reltol=1.0e-10,
+		abstol=1.0e-14,
+	)
+
+	# Check the return code of the solver
+	if !occursin("Success", string(sol.retcode))
+		error("asymptotic_eigenvalues: the solver failed with return code $(sol.retcode)")
+	end
+
+	fractions = sol.u[end]
+
+	# Derivatives at the final state
+	dydt = Vector{Float64}(undef, N_EQU)
+	system!(dydt, fractions, parameters, t_end)
+
+	# Jacobian at the final state
+	J = Matrix{Float64}(undef, N_EQU, N_EQU)
+	jacobian!(J, fractions, parameters)
+
+	eigenvalues = sort(ComplexF64.(eigvals(J)); by=real, rev=true)
+
+	return (; fractions, max_rate=maximum(abs, dydt), eigenvalues)
+
+end;
   ╠═╡ =#
 
-# ╔═╡ f336b083-99c7-4345-8ada-78b166a98abe
+# ╔═╡ 03ade87a-a030-4ba3-b0c8-ee7db257c4d2
 # ╠═╡ skip_as_script = true
 #=╠═╡
-md"The model, for a typical set of initial conditions, is chaotic (maximum lyapunov exponent > 0)."
+asymptotic_eigenvalues(EXAMPLE_IC, example_base_params(10.0), 10.0)
+  ╠═╡ =#
+
+# ╔═╡ a3a48a57-0a06-44bc-bdb7-f92382b5b88d
+# ╠═╡ skip_as_script = true
+#=╠═╡
+asymptotic_eigenvalues(EXAMPLE_IC, example_base_params(100.0), 10.0)
+  ╠═╡ =#
+
+# ╔═╡ ea06e1f7-7d20-46cd-8a27-378e6a11e95e
+# ╠═╡ skip_as_script = true
+#=╠═╡
+md"""
+The model is not chaotic. Its largest Lyapunov exponent is zero, and all the others are negative.
+
+**Eigenvalues of the Jacobian.** After $10^5 \, \mathrm{Myr}$ almost all the mass is in stars ($f_s \approx 0.94$) and gas-phase metals ($f_Z \approx 0.05$), and the fractions change at a rate below $2 \times 10^{-8} \, \mathrm{Myr^{-1}}$, so the system is, for all practical purposes, stationary. It is not a strict equilibrium, as a small amount of gas ($\sim 2 \times 10^{-3}$ for $\rho_\mathrm{cell} = 10 \, \mathrm{cm^{-3}}$ and $\sim 3 \times 10^{-5}$ for $100 \, \mathrm{cm^{-3}}$) is still being slowly turned into stars. At that state:
+
+- Two eigenvalues are exactly zero. They correspond to $f_s$ and $f_Z$, which do not appear on the right-hand side of any equation. They only accumulate mass, so shifting either of them changes nothing in the evolution of the system. These are neutral directions, along which two nearby trajectories neither approach nor separate. The existence of a zero eigenvalue is also a consequence of mass conservation.
+- The other four are real and negative, so the four active variables ($f_i$, $f_a$, $f_m$, and $f_d$) relax towards the stationary state without oscillations. The two fast ones ($-233$ and $-1.1 \, \mathrm{Myr^{-1}}$ for $\rho_\mathrm{cell} = 10 \, \mathrm{cm^{-3}}$, $-390$ and $-1.1 \, \mathrm{Myr^{-1}}$ for $100 \, \mathrm{cm^{-3}}$) have rates comparable to the fast processes that involve the molecular and atomic gas (photodissociation, condensation, photoionization, and recombination), which keep the gas phases in balance with each other. The two slow ones ($\sim 10^{-5}$ to $10^{-8} \, \mathrm{Myr^{-1}}$) correspond to the slow consumption of the remaining gas by star formation and to the evolution of the dust.
+
+**Lyapunov spectrum.** For $\rho_\mathrm{cell} = 10 \, \mathrm{cm^{-3}}$, the direct calculation gives the same picture: one exponent that is zero within the accuracy of the calculation ($|\lambda| < 10^{-4} \, \mathrm{Myr^{-1}}$, the small positive value is numerical noise), three small negative ones, and two clearly negative ones. The values are not the same as the eigenvalues because they are averages over $t \approx 500 \, \mathrm{Myr}$, when the cell still has more gas and is further from the stationary state, and the rates depend on the state.
+
+So, two solutions that start close to each other converge in the four active directions and keep their separation in the two neutral ones, but they never diverge exponentially.
+
+Finally, the ratio between the fastest and the slowest non-zero eigenvalues is $\sim 10^8$ to $10^{10}$, which is another way of seeing that the system is very stiff (see the section Stiffness coefficient).
+"""
   ╠═╡ =#
 
 # ╔═╡ 477c8f59-97d1-405d-a1c8-64b7e0b9119f
@@ -3855,17 +4211,17 @@ version = "1.0.9+0"
 
 [[deps.CRlibm]]
 deps = ["CRlibm_jll"]
-git-tree-sha1 = "0db159493e83ecb2d122f9c40138d89b70d43963"
+git-tree-sha1 = "1472c64b9dc55740edd9c4a4fa466c40babccfba"
 registries = "General"
 uuid = "96374032-68de-5a5b-8d9e-752f78720389"
-version = "1.1.1"
+version = "1.2.0"
 
 [[deps.CRlibm_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "e329286945d0cfc04456972ea732551869af1cfc"
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "47c2237c07bf37534f620515e28cc6cf021e6913"
 registries = "General"
 uuid = "4e9b3aee-d8a1-5a3d-ad8b-7d824db253f0"
-version = "1.0.1+0"
+version = "1.0.3+0"
 
 [[deps.CSV]]
 deps = ["CodecZlib", "DataStrings", "Dates", "Downloads", "Durations", "Mmap", "Parsers", "PooledArrays", "PrecompileTools", "Printf", "Tables", "Unicode"]
@@ -4155,10 +4511,10 @@ version = "1.1.0"
 
 [[deps.DiffRules]]
 deps = ["IrrationalConstants", "LogExpFunctions", "NaNMath", "Random", "SpecialFunctions"]
-git-tree-sha1 = "79a2aca180a85c690c58a020d47b426954b590f8"
+git-tree-sha1 = "7ab8388b721794863a6e809a2436e639832ee74a"
 registries = "General"
 uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
-version = "1.16.0"
+version = "1.17.1"
 
 [[deps.DifferentialEquations]]
 deps = ["OrdinaryDiffEq", "PrecompileTools", "Reexport", "SciMLBase"]
@@ -4685,10 +5041,10 @@ weakdeps = ["ForwardDiff", "Unitful"]
 
 [[deps.IntervalArithmetic]]
 deps = ["CRlibm", "CoreMath", "MacroTools", "OpenBLASConsistentFPCSR_jll", "Printf", "Random", "RoundingEmulator"]
-git-tree-sha1 = "4f051d490760061dcc650a3c6c641bb0c06bb182"
+git-tree-sha1 = "b731f8bd40983d4e2ae6d3e73b6e8fbab272949e"
 registries = "General"
 uuid = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
-version = "1.0.13"
+version = "1.0.14"
 
     [deps.IntervalArithmetic.extensions]
     IntervalArithmeticArblibExt = "Arblib"
@@ -4800,10 +5156,10 @@ version = "1.12.0"
 
 [[deps.JumpProcesses]]
 deps = ["ADTypes", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "PoissonRandom", "PrecompileTools", "Random", "RecursiveArrayTools", "SciMLBase", "SimpleNonlinearSolve", "StaticArrays", "SymbolicIndexingInterface"]
-git-tree-sha1 = "8bab411bfa528f97ac0f8961288b37c567ed5e80"
+git-tree-sha1 = "0ec8394b3882e5bdbd547c46ddcb8d890f081522"
 registries = "General"
 uuid = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
-version = "10.1.1"
+version = "10.2.0"
 
     [deps.JumpProcesses.extensions]
     JumpProcessesForwardDiffExt = "ForwardDiff"
@@ -5069,10 +5425,10 @@ version = "2.19.1+0"
 
 [[deps.LogExpFunctions]]
 deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "28d620bcdb37a3fb02de9f521928ee453690f414"
+git-tree-sha1 = "52847246e86dd3dd88c39716748c57fd2bc43dce"
 registries = "General"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "1.0.3"
+version = "1.0.6"
 
     [deps.LogExpFunctions.extensions]
     LogExpFunctionsChainRulesCoreExt = "ChainRulesCore"
@@ -5206,10 +5562,10 @@ version = "0.5.20"
 
 [[deps.MutableArithmetics]]
 deps = ["LinearAlgebra", "SparseArrays", "Test"]
-git-tree-sha1 = "ffd1161361638e5f0bb796a095b0fdc230d6f019"
+git-tree-sha1 = "8f27bfc329178f570dfca20f6a5328e1bad9c92f"
 registries = "General"
 uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
-version = "1.9.3"
+version = "1.9.4"
 
 [[deps.NLSolversBase]]
 deps = ["ADTypes", "DifferentiationInterface", "FiniteDiff", "LinearAlgebra"]
@@ -5608,10 +5964,10 @@ version = "1.7.1"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
-git-tree-sha1 = "edbeefc7a4889f528644251bdb5fc9ab5348bc2c"
+git-tree-sha1 = "1e697ad6f68af89cd3651bbe9b4a7b5d800adf5a"
 registries = "General"
 uuid = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
-version = "1.3.4"
+version = "1.4.0"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -6069,10 +6425,10 @@ version = "0.4.29"
 
 [[deps.SpecialFunctions]]
 deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "88ef0d98204515bc53dd4aaea5f7788882d1b66c"
+git-tree-sha1 = "d1a08b3cb5d1470a2b6dc98ba644f1436d5a740f"
 registries = "General"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.9.1"
+version = "2.9.2"
 weakdeps = ["ChainRulesCore"]
 
     [deps.SpecialFunctions.extensions]
@@ -6216,10 +6572,10 @@ version = "1.2.2"
 
 [[deps.SymbolicUtils]]
 deps = ["AbstractTrees", "ArrayInterface", "Combinatorics", "ConstructionBase", "DataStructures", "DocStringExtensions", "DynamicPolynomials", "EnumX", "ExproniconLite", "Graphs", "LinearAlgebra", "MacroTools", "Moshi", "MultivariatePolynomials", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "ReadOnlyArrays", "SciMLPublic", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArraysCore", "SymbolicIndexingInterface", "TaskLocalValues", "TermInterface", "WeakCacheSets"]
-git-tree-sha1 = "61a82af727479af3d96988079fe3e05cdd57d695"
+git-tree-sha1 = "2a3ffe75ff5ef6ac20c5cf3b94e6367688dfdcb1"
 registries = "General"
 uuid = "d1185830-fcd6-423d-90d6-eec64667417b"
-version = "4.55.0"
+version = "4.56.1"
 
     [deps.SymbolicUtils.extensions]
     SymbolicUtilsChainRulesCoreExt = "ChainRulesCore"
@@ -6316,10 +6672,10 @@ version = "3.5.2"
 
 [[deps.TimerOutputs]]
 deps = ["ExprTools", "PrettyTables", "Printf", "Tables"]
-git-tree-sha1 = "2244393f04554e24b54896b430b2ab3850a2232d"
+git-tree-sha1 = "30350f9ca2e26d58ed7abab3461494d42e0c223e"
 registries = "General"
 uuid = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
-version = "1.2.2"
+version = "1.2.3"
 
     [deps.TimerOutputs.extensions]
     FlameGraphsExt = "FlameGraphs"
@@ -6554,6 +6910,7 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╠═f9bcdb15-ce25-49a4-9837-53d042065151
 # ╟─14ae7f11-1065-46aa-a6ed-eea400c0d2ec
 # ╠═c8efcb3f-cc6f-4c45-a0f3-55cdb73d5195
+# ╠═c3abedda-6f47-440b-a5f1-b3b9e393b678
 # ╟─d59793b2-3414-4051-ac2b-33b6cb8063e8
 # ╟─225887e5-e214-48a0-8a7c-7814b4e66c83
 # ╟─a33249d1-4b85-494c-82c9-0b5a164e32d1
@@ -6563,15 +6920,20 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╠═96fd7dc2-0315-4255-8f27-7ee7869c5673
 # ╟─9a756404-f35b-40b9-bc88-4b7e3a7df0b6
 # ╠═805ef471-1bd2-4ce2-bf50-eeb9c6b10e4d
+# ╠═465838c2-ce27-4a16-b7a0-5dd4babca9ae
 # ╟─6eef3827-1af6-431d-a163-67bb595c337d
 # ╠═e14648ff-69f6-47c2-924c-c5ac69e200ed
+# ╠═9de077ea-db46-4911-aadb-1fb4b0873d97
 # ╟─79fa6ccd-e137-4178-9376-c1222dd0a8f7
+# ╟─5ed28f63-9a04-4d33-8728-007b360b3bcd
+# ╟─cfe7c74a-c482-4d40-a508-d473877ba35a
 # ╠═e7f0842c-954a-40e1-a112-ec03631e5270
 # ╠═17cffbe9-6759-4168-8b3e-5072592509d1
 # ╟─aaba63dd-8fc3-405d-ad19-8e8368e70019
 # ╠═03754250-3831-41db-ac11-fe6f5a08f0c1
 # ╟─6ddf393c-9f37-43b2-b401-9ab0e7a9e88c
 # ╠═5ce798b5-4366-4cc1-8d2d-881a827d6dc9
+# ╠═691349be-7bfc-41f1-8560-83f1b580ee6b
 # ╟─7df63fdf-ef41-44f2-8a55-e5c2c849029c
 # ╠═64c2a3ee-e7a0-4e03-b9a8-86239e1ca81e
 # ╠═0895d464-a029-410d-9e7d-89cfac2d1615
@@ -6590,6 +6952,7 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╠═ef79392b-395c-497a-9c0e-dc2cd468f6e1
 # ╟─8c9ab125-2acb-4732-a9bf-7838e819e4f7
 # ╠═2a39d6f8-da49-4976-9aa7-889391e55a5d
+# ╠═995dade5-a387-4d41-a82c-56373b797438
 # ╠═3a2fce00-7fee-4c04-9ed0-8e7cdc5bcc0a
 # ╟─0bdf9dbf-479c-46f6-bd86-50576095cba0
 # ╟─6fe43e3a-2e8f-4708-a3ec-6f5a8088060e
@@ -6612,6 +6975,8 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╠═ce51d8ce-e00b-46d6-aaf1-fe2628ae22d4
 # ╠═3871738a-a126-4996-ad95-9674564a4931
 # ╟─0fc36dec-9f45-4f49-a44f-7884ec33d7be
+# ╟─6d04e973-4f89-42e4-a12a-4ed869433dcb
+# ╟─82efb827-84fd-4692-89ae-732dcaeb68f1
 # ╟─24920a1b-355c-43e1-aff2-028e6f25584c
 # ╠═ad67d733-4365-4b37-ab45-1b936c80d617
 # ╟─8fd489b2-620a-40cd-8283-dc88b7f3584f
@@ -6620,10 +6985,13 @@ uuid = "23338594-aafe-5451-b93e-139f81909106"
 # ╠═8ade720c-37b7-4436-8bcd-8e902f52057b
 # ╟─b39e416e-a204-4f6b-a6e4-00f6a71d3b27
 # ╟─c414f207-0d4f-4cc4-965c-9b68b5a85400
+# ╟─a4f129d1-3747-4d82-bb48-f6610925a35d
 # ╠═ac57dfbe-f19b-4c5f-a753-5f4162e245d4
 # ╠═b1e67fcd-f70b-4dd2-87e5-74bef1fa201e
-# ╠═d1f3d076-b9d6-4b92-b25c-4155b5fc464b
-# ╟─f336b083-99c7-4345-8ada-78b166a98abe
+# ╠═cbc99543-8743-47ac-9f10-69364201606c
+# ╠═03ade87a-a030-4ba3-b0c8-ee7db257c4d2
+# ╠═a3a48a57-0a06-44bc-bdb7-f92382b5b88d
+# ╟─ea06e1f7-7d20-46cd-8a27-378e6a11e95e
 # ╟─477c8f59-97d1-405d-a1c8-64b7e0b9119f
 # ╟─08e05c65-06a2-4560-92eb-b014dc7c3d70
 # ╟─2235689d-9c83-4907-aa17-c2624fbeb68d

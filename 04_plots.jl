@@ -335,17 +335,15 @@ diagram_color = TikzPictures.TikzPicture(
 		\usepackage{amsmath}
 		\usetikzlibrary{arrows.meta, positioning}
 
-		% Colors for a white background (print), one per physical process, as in the
-		% diagrams of 01_model.jl (colorblind-safe palette of Okabe & Ito 2008, with
-		% darker tones for yellow and green)
-		\definecolor{c_rec}{HTML}{CC79A7}   % Recombination
-		\definecolor{c_ion}{HTML}{0072B2}   % Photoionization
-		\definecolor{c_cond}{HTML}{E69F00}  % Condensation
-		\definecolor{c_diss}{HTML}{009E73}  % Photodissociation
-		\definecolor{c_sf}{HTML}{D55E00}    % Star formation
-		\definecolor{c_star}{HTML}{A88B00}  % Return of mass, metals, and dust by stars
-		\definecolor{c_dg}{HTML}{5B8C1A}    % Dust growth
-		\definecolor{c_dd}{HTML}{7B68AE}    % Dust destruction
+		% Colors for a white background, one per physical process.
+		\definecolor{c_rec}{HTML}{F032B4}  % Recombination (pink)
+		\definecolor{c_ion}{HTML}{1450E6}  % Photoionization (blue)
+		\definecolor{c_cond}{HTML}{E06C00} % Condensation (orange)
+		\definecolor{c_diss}{HTML}{12A30A} % Photodissociation (green)
+		\definecolor{c_sf}{HTML}{C00A30}   % Star formation (red)
+		\definecolor{c_star}{HTML}{9E8A00} % Return of mass, metals, and dust by stars (gold)
+		\definecolor{c_dg}{HTML}{0099B3}   % Dust growth (teal)
+		\definecolor{c_dd}{HTML}{9A2ED2}   % Dust destruction (purple)
 
 		\tikzset{
 		    >={Stealth[length=2.4mm]},
@@ -1502,17 +1500,17 @@ version = "1.11.0"
 
 [[deps.CRlibm]]
 deps = ["CRlibm_jll"]
-git-tree-sha1 = "0db159493e83ecb2d122f9c40138d89b70d43963"
+git-tree-sha1 = "1472c64b9dc55740edd9c4a4fa466c40babccfba"
 registries = "General"
 uuid = "96374032-68de-5a5b-8d9e-752f78720389"
-version = "1.1.1"
+version = "1.2.0"
 
 [[deps.CRlibm_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "e329286945d0cfc04456972ea732551869af1cfc"
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "47c2237c07bf37534f620515e28cc6cf021e6913"
 registries = "General"
 uuid = "4e9b3aee-d8a1-5a3d-ad8b-7d824db253f0"
-version = "1.0.1+0"
+version = "1.0.3+0"
 
 [[deps.CSV]]
 deps = ["CodecZlib", "DataStrings", "Dates", "Downloads", "Durations", "Mmap", "Parsers", "PooledArrays", "PrecompileTools", "Printf", "Tables", "Unicode"]
@@ -1888,10 +1886,10 @@ version = "1.1.0"
 
 [[deps.DiffRules]]
 deps = ["IrrationalConstants", "LogExpFunctions", "NaNMath", "Random", "SpecialFunctions"]
-git-tree-sha1 = "3d20476f68b524304f3fde071c3f34a559965c84"
+git-tree-sha1 = "7ab8388b721794863a6e809a2436e639832ee74a"
 registries = "General"
 uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
-version = "1.17.0"
+version = "1.17.1"
 
 [[deps.DifferentialEquations]]
 deps = ["OrdinaryDiffEq", "PrecompileTools", "Reexport", "SciMLBase"]
@@ -2316,10 +2314,10 @@ version = "1.3.7"
 
 [[deps.ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions"]
-git-tree-sha1 = "a55669aa77ae8bbdc7310c4027112500ff5ec874"
+git-tree-sha1 = "d05cff742a91d2c7aff386962aee5982bf57c096"
 registries = "General"
 uuid = "f6369f11-7733-5829-9624-2563aa707210"
-version = "1.4.7"
+version = "1.4.8"
 weakdeps = ["StaticArrays"]
 
     [deps.ForwardDiff.extensions]
@@ -2634,10 +2632,10 @@ weakdeps = ["ForwardDiff", "Unitful"]
 
 [[deps.IntervalArithmetic]]
 deps = ["CRlibm", "CoreMath", "MacroTools", "OpenBLASConsistentFPCSR_jll", "Printf", "Random", "RoundingEmulator"]
-git-tree-sha1 = "4f051d490760061dcc650a3c6c641bb0c06bb182"
+git-tree-sha1 = "b731f8bd40983d4e2ae6d3e73b6e8fbab272949e"
 registries = "General"
 uuid = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
-version = "1.0.13"
+version = "1.0.14"
 
     [deps.IntervalArithmetic.extensions]
     IntervalArithmeticArblibExt = "Arblib"
@@ -2768,10 +2766,10 @@ version = "3.2.1+0"
 
 [[deps.JuliaInterpreter]]
 deps = ["CodeTracking", "InteractiveUtils", "Random"]
-git-tree-sha1 = "c35411a62b74a0288934ffcfad4fa8dd09b72630"
+git-tree-sha1 = "28cb2c1b2e8fe3a9aa50ac75f2eead535bc89f05"
 registries = "General"
 uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
-version = "0.12.2"
+version = "0.12.3"
 
 [[deps.JuliaSyntaxHighlighting]]
 deps = ["StyledStrings"]
@@ -2780,10 +2778,10 @@ version = "1.12.0"
 
 [[deps.JumpProcesses]]
 deps = ["ADTypes", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "FunctionWrappers", "Graphs", "LinearAlgebra", "PoissonRandom", "PrecompileTools", "Random", "RecursiveArrayTools", "SciMLBase", "SimpleNonlinearSolve", "StaticArrays", "SymbolicIndexingInterface"]
-git-tree-sha1 = "8bab411bfa528f97ac0f8961288b37c567ed5e80"
+git-tree-sha1 = "0ec8394b3882e5bdbd547c46ddcb8d890f081522"
 registries = "General"
 uuid = "ccbc3e58-028d-4f4c-8cd5-9ae44345cda5"
-version = "10.1.1"
+version = "10.2.0"
 
     [deps.JumpProcesses.extensions]
     JumpProcessesForwardDiffExt = "ForwardDiff"
@@ -3076,10 +3074,10 @@ version = "2.19.1+0"
 
 [[deps.LogExpFunctions]]
 deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "d00df9d81118a5b977eae0f16808e442aef3a655"
+git-tree-sha1 = "52847246e86dd3dd88c39716748c57fd2bc43dce"
 registries = "General"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "1.0.4"
+version = "1.0.6"
 
     [deps.LogExpFunctions.extensions]
     LogExpFunctionsChainRulesCoreExt = "ChainRulesCore"
@@ -3253,10 +3251,10 @@ version = "0.5.20"
 
 [[deps.MutableArithmetics]]
 deps = ["LinearAlgebra", "SparseArrays", "Test"]
-git-tree-sha1 = "ffd1161361638e5f0bb796a095b0fdc230d6f019"
+git-tree-sha1 = "8f27bfc329178f570dfca20f6a5328e1bad9c92f"
 registries = "General"
 uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
-version = "1.9.3"
+version = "1.9.4"
 
 [[deps.NLSolversBase]]
 deps = ["ADTypes", "DifferentiationInterface", "FiniteDiff", "LinearAlgebra"]
@@ -3766,10 +3764,10 @@ version = "1.7.1"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
-git-tree-sha1 = "edbeefc7a4889f528644251bdb5fc9ab5348bc2c"
+git-tree-sha1 = "1e697ad6f68af89cd3651bbe9b4a7b5d800adf5a"
 registries = "General"
 uuid = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
-version = "1.3.4"
+version = "1.4.0"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -3841,10 +3839,10 @@ weakdeps = ["ForwardDiff"]
 
 [[deps.QOI]]
 deps = ["ColorTypes", "FileIO", "FixedPointNumbers"]
-git-tree-sha1 = "472daaa816895cb7aee81658d4e7aec901fa1106"
+git-tree-sha1 = "dd58036d3b9b072a1ad7c911b5da397862f8aa63"
 registries = "General"
 uuid = "4b34888f-f399-49d4-9bb3-47ed5cae4e65"
-version = "1.0.2"
+version = "1.0.3"
 
 [[deps.QuadGK]]
 deps = ["DataStructures", "LinearAlgebra"]
@@ -4293,10 +4291,10 @@ version = "0.4.29"
 
 [[deps.SpecialFunctions]]
 deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "88ef0d98204515bc53dd4aaea5f7788882d1b66c"
+git-tree-sha1 = "d1a08b3cb5d1470a2b6dc98ba644f1436d5a740f"
 registries = "General"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.9.1"
+version = "2.9.2"
 weakdeps = ["ChainRulesCore"]
 
     [deps.SpecialFunctions.extensions]
@@ -4439,10 +4437,10 @@ version = "0.7.4"
 
 [[deps.StructUtils]]
 deps = ["Dates", "UUIDs"]
-git-tree-sha1 = "b04bfab37484defe300b2f9ed64469abab2431ff"
+git-tree-sha1 = "d9cfc07e1d1a8985aa9d03870d642b5d7ab2cf33"
 registries = "General"
 uuid = "ec057cc2-7a8d-4b58-b3b3-92acb9f63b42"
-version = "2.12.0"
+version = "2.12.1"
 
     [deps.StructUtils.extensions]
     StructUtilsDBInterfaceExt = ["DBInterface", "Tables"]
@@ -4493,10 +4491,10 @@ version = "1.2.2"
 
 [[deps.SymbolicUtils]]
 deps = ["AbstractTrees", "ArrayInterface", "Combinatorics", "ConstructionBase", "DataStructures", "DocStringExtensions", "DynamicPolynomials", "EnumX", "ExproniconLite", "Graphs", "LinearAlgebra", "MacroTools", "Moshi", "MultivariatePolynomials", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "ReadOnlyArrays", "SciMLPublic", "Setfield", "SparseArrays", "SpecialFunctions", "StaticArraysCore", "SymbolicIndexingInterface", "TaskLocalValues", "TermInterface", "WeakCacheSets"]
-git-tree-sha1 = "61a82af727479af3d96988079fe3e05cdd57d695"
+git-tree-sha1 = "2a3ffe75ff5ef6ac20c5cf3b94e6367688dfdcb1"
 registries = "General"
 uuid = "d1185830-fcd6-423d-90d6-eec64667417b"
-version = "4.55.0"
+version = "4.56.1"
 
     [deps.SymbolicUtils.extensions]
     SymbolicUtilsChainRulesCoreExt = "ChainRulesCore"
@@ -4798,11 +4796,11 @@ uuid = "3161d3a3-bdf6-5164-811a-617609db77b4"
 version = "1.5.7+1"
 
 [[deps.isoband_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "51b5eeb3f98367157a7a12a1fb0aa5328946c03c"
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "802a93f12846faa41241459edbbd943e0789a4b3"
 registries = "General"
 uuid = "9a68df92-36a6-505f-a73e-abb412b6bfb4"
-version = "0.2.3+0"
+version = "0.2.4+0"
 
 [[deps.libaom_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
