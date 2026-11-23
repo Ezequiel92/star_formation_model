@@ -820,7 +820,7 @@ end;
 let
 	h  = 100u"pc"
 	ρc = 1.0u"mp*cm^-3"
-	
+
 	τdiss_fm = ustrip(Unitful.NoUnits, C_τdiss * ρc * h)
 	τion_fa  = ustrip(Unitful.NoUnits, C_τion * ρc * h)
 
@@ -1227,7 +1227,7 @@ end;
 let
 	low_Z  = round.(compute_η(15000.0, 0.0); sigdigits=5)
 	high_Z = round.(compute_η(15000.0, 0.2); sigdigits=5)
-	
+
 	println("η_diss(Z = 0.0) = $(low_Z[1])")
 	println("η_diss(Z = 0.1) = $(high_Z[1])")
 	println()
@@ -1531,7 +1531,7 @@ let
 	xp1     = xfm(1.0) * 1.0e-4 + 1.0
 	xp1_2   = xp1 * xp1
 	exp_xp1 = exp(-exp_fac * sqrt(xp1))
-	
+
 	sh2 = ((1 - ωH2) / xp1_2) + (ωH2 * exp_xp1 / sqrt(xp1))
 
 	println("SH2(1 mp cm^-3, fm=1e-4) = $(round(sh2; sigdigits=1))")
@@ -2146,7 +2146,7 @@ const δ_d = 0.1;
 md"""
 ### Dust accretion
 
-Following [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), dust grows by the accretion of gas-phase metals onto pre-existing grains. Here we derive the accretion term, based on [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) (Section 2.1), [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Section 2), and [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259). We use $\mathrm{X}$ for the key element of each grain species, $Z_\mathrm{X}$ for its mass fraction in the cell, $n_\mathrm{X}$ for its gas-phase number density, and $\mathcal{N}_\mathrm{X}(a)$ for the grain size distribution.
+Following [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635), dust grows by the accretion of gas-phase metals onto pre-existing grains. Here we derive the accretion term, based on [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) (Section 2.1), [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Section 2), and [Hirashita1999](https://scixplorer.org/abs/1999A&A...344L..87H). We use $\mathrm{X}$ for the key element of each grain species, $Z_\mathrm{X}$ for its mass fraction in the cell, $n_\mathrm{X}$ for its gas-phase number density, and $\mathcal{N}_\mathrm{X}(a)$ for the grain size distribution.
 
 #### Microscopic relations
 
@@ -2357,7 +2357,7 @@ $\begin{align}
 
 #### From the grain population to the cell
 
-Dust and depletion are uniform across phases (Section 2 of [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259), citing [McKee1989](https://doi.org/10.1017/S0074180900125434)), so the mass of dust exposed to accretion is $M_d \, X_\mathrm{cold}$, where $X_\mathrm{cold}$ is the mass fraction of cold gas. For this reason, [Hirashita1999](https://doi.org/10.48550/arXiv.astro-ph/9903259) (eq. 2) writes the accretion term as
+Dust and depletion are uniform across phases (Section 2 of [Hirashita1999](https://scixplorer.org/abs/1999A&A...344L..87H), citing [McKee1989](https://doi.org/10.1017/S0074180900125434)), so the mass of dust exposed to accretion is $M_d \, X_\mathrm{cold}$, where $X_\mathrm{cold}$ is the mass fraction of cold gas. For this reason, [Hirashita1999](https://scixplorer.org/abs/1999A&A...344L..87H) (eq. 2) writes the accretion term as
 
 $\begin{equation}
 	\left[ \frac{\mathrm{d}M_d}{\mathrm{d}t} \right]_\mathrm{acc} = \frac{M_d \, X_\mathrm{cold} \, \xi}{\tau_\mathrm{dg}} \, .
@@ -3452,7 +3452,7 @@ let
 	Z_C  = Z_C_A09 * Zsun / Z_A09
 
 	fd0 = initial_dust_fraction(Z_Si, Z_C, Zsun)
-	
+
 	τd(ρc) = c_sd * fd0 * L_sh(ρc) * ρc
 
 	println("τd(1 mp cm^-3) = $(round(τd(1.0); sigdigits=2))")
@@ -3617,8 +3617,8 @@ In both cases the parameters of the ODEs are kept fixed ($\eta_\mathrm{diss}$ an
 # is only practical at low densities (ρ_cell ~ 10 cm^(-3)). At higher densities the
 # system is too stiff, and asymptotic_eigenvalues should be used instead.
 #
-# With the default values we get the spectrum after the initial transient. 
-# To get the local (finite-time) spectrum at the initial condition use, 
+# With the default values we get the spectrum after the initial transient.
+# To get the local (finite-time) spectrum at the initial condition use,
 # for example, Ttr = 0.0, N = 100, and Δt = 1.0e-6.
 #
 # Arguments
@@ -3704,7 +3704,7 @@ lyapunov_spectrum(EXAMPLE_IC, example_base_params(10.0), 10.0)
 #
 #     fractions:   [fi, fa, fm, fs, fZ, fd] at t_end
 #     max_rate:    Largest |dfj/dt| at t_end [Myr^(-1)]
-#     eigenvalues: Eigenvalues of the Jacobian at t_end [Myr^(-1)], 
+#     eigenvalues: Eigenvalues of the Jacobian at t_end [Myr^(-1)],
 #                  sorted from largest to smallest real part
 #####################################################################################
 function asymptotic_eigenvalues(
