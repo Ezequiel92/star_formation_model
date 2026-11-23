@@ -287,7 +287,7 @@ md"""
 
 We have the freedom to choose three independent units in this model. Time, mass, and length. The choice is reflected in the constants $C_\mathrm{star}$, $C_\mathrm{rec}$, $C_\mathrm{cond}$, $C_\mathrm{acc,Si}$, $C_\mathrm{acc,C}$, $C_\mathrm{sd}$, $C_\mathrm{sh2}$, $C_\mathrm{lsh}$, $C_\mathrm{\tau ion}$, and $C_\mathrm{\tau diss}$.
 
-We will use $\mathrm{[T] = Myr}$, $\mathrm{[M] = mp}$ (proton mass) and $\mathrm{[L] = cm}$.
+We will use $\mathrm{[T] = Myr}$, $\mathrm{[M]} = m_\mathrm{p}$ (proton mass) and $\mathrm{[L] = cm}$.
 """
   ╠═╡ =#
 
@@ -373,7 +373,7 @@ where
 $\begin{equation}
 	\begin{split}
 	    C_\mathrm{star} &= \sqrt{\frac{32 \, G}{3\pi}} \\
-		&= 0.0194 \, \mathrm{mp^{-1/2} \, Myr^{-1} \, cm^{3/2}} \, .
+		&= 0.0194 \, m_\mathrm{p}^{-1/2} \, \mathrm{Myr^{-1} \, cm^{3/2}} \, .
 	\end{split}
 \end{equation}$
 """
@@ -406,45 +406,45 @@ md"""
 The rate of recombination for hydrogen can be written as ([Osterbrock2006](http://www.worldcat.org/oclc/60611705), [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), [Millan-Irigoyen2020](https://doi.org/10.1093/mnras/staa635))
 
 $\begin{equation}
-    \frac{\mathrm{d}}{\mathrm{d}t} n_a \biggr\rvert_\mathrm{recombination} = \alpha_H \, n_e \, n_i \, ,
+    \frac{\mathrm{d}}{\mathrm{d}t} n_a \biggr\rvert_\mathrm{recombination} = \alpha_\mathrm{H} \, n_e \, n_i \, ,
 \end{equation}$
 
-where $\alpha_H$ is the recombination coefficient, $n_e$ is the electron number density, and $n_i$ is the ionized hydrogen number density. We note that in our model $n_e = n_i$.
+where $\alpha_\mathrm{H}$ is the recombination coefficient, $n_e$ is the electron number density, and $n_i$ is the ionized hydrogen number density. We note that in our model $n_e = n_i$.
 
-Using $n_a = f_a \, \rho_\mathrm{cell} / m_p$, we can write
+Using $n_a = f_a \, \rho_\mathrm{cell} / m_\mathrm{p}$, we can write
 
 $\begin{equation}
 	\begin{split}
-	    \frac{\mathrm{d}}{\mathrm{d}t} f_a \biggr\rvert_\mathrm{recombination} &= \frac{m_p}{\rho_\mathrm{cell}} \, \alpha_H \, n_e \, n_i \\
-		&= \frac{m_p}{\rho_\mathrm{cell}} \, \alpha_H \, f_i \, \frac{\rho_\mathrm{cell}}{m_p} \, f_i \, \frac{\rho_\mathrm{cell}}{m_p} \\
-	    &= \alpha_H \, f_i^{\,2} \, \frac{\rho_\mathrm{cell}}{m_p} \, .
+	    \frac{\mathrm{d}}{\mathrm{d}t} f_a \biggr\rvert_\mathrm{recombination} &= \frac{m_\mathrm{p}}{\rho_\mathrm{cell}} \, \alpha_\mathrm{H} \, n_e \, n_i \\
+		&= \frac{m_\mathrm{p}}{\rho_\mathrm{cell}} \, \alpha_\mathrm{H} \, f_i \, \frac{\rho_\mathrm{cell}}{m_\mathrm{p}} \, f_i \, \frac{\rho_\mathrm{cell}}{m_\mathrm{p}} \\
+	    &= \alpha_\mathrm{H} \, f_i^{\,2} \, \frac{\rho_\mathrm{cell}}{m_\mathrm{p}} \, .
 	\end{split}
 \end{equation}$
 
 Following the discussion in [Nebrin2023](https://doi.org/10.3847/2515-5172/acd37a), and assuming an optically thick cloud, we will use case B recombination (sum over all hydrogen states except the ground state). Using the values in table 2.1 of [Osterbrock2006](http://www.worldcat.org/oclc/60611705) for $T = 10^4 \, \mathrm{K}$ we have
 
 $\begin{equation}
-    \alpha_H = 2.6 \times 10^{-13} \, \mathrm{cm}^3 \, \mathrm{s}^{-1} \, .
+    \alpha_\mathrm{H} = 2.6 \times 10^{-13} \, \mathrm{cm}^3 \, \mathrm{s}^{-1} \, .
 \end{equation}$
 
 So, we can write
 
 $\begin{equation}
-    \frac{\mathrm{d}}{\mathrm{d}t} f_a \biggr\rvert_\mathrm{recombination} = \alpha_H \, f_i^{\,2} \, \frac{\rho_\mathrm{cell}}{m_p} = \frac{f_i}{\tau_\mathrm{rec}} \, ,
+    \frac{\mathrm{d}}{\mathrm{d}t} f_a \biggr\rvert_\mathrm{recombination} = \alpha_\mathrm{H} \, f_i^{\,2} \, \frac{\rho_\mathrm{cell}}{m_\mathrm{p}} = \frac{f_i}{\tau_\mathrm{rec}} \, ,
 \end{equation}$
 
 where the time scale $\tau_\mathrm{rec}$ is
 
 $\begin{equation}
-    \tau_\mathrm{rec} = \frac{m_p}{\alpha_H \, f_i \, \rho_\mathrm{cell}} = \frac{1}{C_\mathrm{rec} \, f_i \, \rho_\mathrm{cell}} \, ,
+    \tau_\mathrm{rec} = \frac{m_\mathrm{p}}{\alpha_\mathrm{H} \, f_i \, \rho_\mathrm{cell}} = \frac{1}{C_\mathrm{rec} \, f_i \, \rho_\mathrm{cell}} \, ,
 \end{equation}$
 
 with the constant
 
 $\begin{equation}
 	\begin{split}
-		C_\mathrm{rec} &= \frac{\alpha_H}{m_p} \\
-		&= 8.205 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^{3}} \, .
+		C_\mathrm{rec} &= \frac{\alpha_\mathrm{H}}{m_\mathrm{p}} \\
+		&= 8.205 \, m_\mathrm{p}^{-1} \, \mathrm{Myr^{-1} \, cm^{3}} \, .
 	\end{split}
 \end{equation}$
 """
@@ -512,11 +512,11 @@ $\begin{align}
 
 where $a_\mathrm{eff}$ comes from models C and F of [Hirashita2011](https://doi.org/10.1111/j.1365-2966.2011.19131.x) (Table 2), the same size distribution we use for dust growth, and $s$ is taken from footnote 5 of [Ragone-Figueroa2024](https://doi.org/10.1051/0004-6361/202451344), which lies between the values for silicate ($3.3 \, \mathrm{g \, cm^{-3}}$) and graphite ($2.26 \, \mathrm{g \, cm^{-3}}$) in Table 1 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x). Notice that the number-weighted mean radius of the same distribution, $\langle a \rangle = 0.00167 \, \mathrm{μm}$, is not the relevant quantity here, as it is dominated by the smallest grains.
 
-Using $f_m = 2 \, m_p \, n_m / \rho_\mathrm{cell}$ and $n_a = f_a \, \rho_\mathrm{cell} / m_p$, the condensation rate becomes
+Using $f_m = 2 \, m_\mathrm{p} \, n_m / \rho_\mathrm{cell}$ and $n_a = f_a \, \rho_\mathrm{cell} / m_\mathrm{p}$, the condensation rate becomes
 
 $\begin{align}
-    \frac{\mathrm{d}}{\mathrm{d}t} f_m \biggr\rvert_\mathrm{condensation} &= \frac{2 \, m_p}{\rho_\mathrm{cell}} \, \frac{1}{2} \, \gamma \, \langle v_a \rangle \, n_d \, n_a \, \langle \sigma_d \rangle \\
-	&= \frac{m_p}{\rho_\mathrm{cell}} \, \gamma \, \langle v_a \rangle \, f_a \, \frac{\rho_\mathrm{cell}}{m_p} \, \frac{3}{4} \, \frac{f_d \, \rho_\mathrm{cell}}{s \, a_\mathrm{eff}} \\
+    \frac{\mathrm{d}}{\mathrm{d}t} f_m \biggr\rvert_\mathrm{condensation} &= \frac{2 \, m_\mathrm{p}}{\rho_\mathrm{cell}} \, \frac{1}{2} \, \gamma \, \langle v_a \rangle \, n_d \, n_a \, \langle \sigma_d \rangle \\
+	&= \frac{m_\mathrm{p}}{\rho_\mathrm{cell}} \, \gamma \, \langle v_a \rangle \, f_a \, \frac{\rho_\mathrm{cell}}{m_\mathrm{p}} \, \frac{3}{4} \, \frac{f_d \, \rho_\mathrm{cell}}{s \, a_\mathrm{eff}} \\
 	&= \frac{3}{4} \, \frac{\gamma \, \langle v_a \rangle \, \rho_\mathrm{cell}}{s \, a_\mathrm{eff}} \, f_d \, f_a \\
 	&= \frac{f_a}{\tau_\mathrm{cond}} \, ,
 \end{align}$
@@ -532,10 +532,10 @@ This time scale has two limitations, which we correct as follows.
 First, the condensation rate goes to $0$ as $f_d \to 0$, so $\tau_\mathrm{cond}$ diverges. This results from the oversimplified assumption that molecular hydrogen forms exclusively on dust grains. To address it, we follow [Glover2007a](https://doi.org/10.1086/519445), who modify the metallicity dependence as $Z \rightarrow Z + Z_\mathrm{eff}$, with $Z_\mathrm{eff} = 10^{-3} \, Z_\odot$. As our rate depends on the dust instead of the metallicity, we use the equivalent floor $f_d \rightarrow f_d + f_d^\mathrm{eff}$, with
 
 $\begin{equation}
-    f_d^\mathrm{eff} = 10^{-3} \, \mathcal{D}_\mathrm{ref} \, ,
+    f_d^\mathrm{eff} = 10^{-3} \, X \, \mathcal{D}_\mathrm{ref} \, ,
 \end{equation}$
 
-i.e. $10^{-3}$ of the Milky Way dust abundance. This correction both eliminates the divergence and accounts for the formation of molecular hydrogen in environments with very low dust content.
+i.e. $10^{-3}$ of the Milky Way dust-to-gas mass ratio. The hydrogen mass fraction, $X = 0.76$, converts $\mathcal{D}_\mathrm{ref}$, which is a mass of dust per unit mass of hydrogen, into a mass of dust per unit mass of gas, the same normalization as $f_d$. This correction both eliminates the divergence and accounts for the formation of molecular hydrogen in environments with very low dust content.
 
 Second, the rate is proportional to $n_a \, n_d$, i.e. to the square of the gas density, so computing it with the mean density of the cell underestimates it when the gas is clumpy on scales below the resolution. Following [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), we account for these unresolved density fluctuations with a clumping factor, $C_\rho = \langle \rho^2 \rangle / \langle \rho \rangle^2$, which multiplies the rate (for a detailed justification see Section 3.3 of [Micic2012](https://doi.org/10.1111/j.1365-2966.2012.20477.x)). The clumping factor is also used for the recombination of ionized gas during the epoch of reionization, but we only apply it to the condensation rate.
 
@@ -564,7 +564,7 @@ where
 $\begin{equation}
     \begin{split}
         C_\mathrm{cond} &= \frac{3 \, C_\rho \, \gamma \, \langle v_a \rangle}{4 \, s \, a_\mathrm{eff}} \\
-        &= 41.759 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, .
+        &= 41.759 \, m_\mathrm{p}^{-1} \, \mathrm{Myr^{-1} \, cm^3} \, .
     \end{split}
 \end{equation}$
 """
@@ -725,7 +725,7 @@ $\begin{equation}
 Then, the optical depth for ionizing photons is given by
 
 $\begin{equation}
-    \tau_\mathrm{ion} = \left(\frac{f_a \, \rho_\mathrm{cell}}{m_p}\right) \sigma_\mathrm{ion} \, h \, ,
+    \tau_\mathrm{ion} = \left(\frac{f_a \, \rho_\mathrm{cell}}{m_\mathrm{p}}\right) \sigma_\mathrm{ion} \, h \, ,
 \end{equation}$
 
 where $\sigma_\mathrm{ion}$ is the hydrogen photoionization cross-section at the Lyman limit, given by (Table 2 of [Hirashita2002](https://doi.org/10.1046/j.1365-8711.2002.05968.x))
@@ -737,13 +737,13 @@ $\begin{equation}
 So, $\tau_\mathrm{ion} = C_\mathrm{\tau ion} \, f_a \, \rho_\mathrm{cell} \, h$, with
 
 $\begin{equation}
-    C_\mathrm{\tau ion} = \frac{\sigma_\mathrm{ion}}{m_p} = 6.3 \times 10^{-18} \, \mathrm{mp^{-1} \, cm^2} \, .
+    C_\mathrm{\tau ion} = \frac{\sigma_\mathrm{ion}}{m_\mathrm{p}} = 6.3 \times 10^{-18} \, m_\mathrm{p}^{-1} \, \mathrm{cm^2} \, .
 \end{equation}$
 
 The corresponding optical depth for dissociation is
 
 $\begin{equation}
-    \tau_\mathrm{diss} = \left(\frac{f_m \, \rho_\mathrm{cell}}{2 \, m_p}\right) \sigma_\mathrm{diss,eff} \, h \, ,
+    \tau_\mathrm{diss} = \left(\frac{f_m \, \rho_\mathrm{cell}}{2 \, m_\mathrm{p}}\right) \sigma_\mathrm{diss,eff} \, h \, ,
 \end{equation}$
 
 where the factor of 2 accounts for the two protons in each $\mathrm{H}_2$ molecule, and we use the effective cross-section $\sigma_\mathrm{diss,eff}$ (eq. 22 in [Nickerson2018](https://doi.org/10.1093/mnras/sty1556))
@@ -755,7 +755,7 @@ $\begin{equation}
 So, $\tau_\mathrm{diss} = C_\mathrm{\tau diss} \, f_m \, \rho_\mathrm{cell} \, h$, with
 
 $\begin{equation}
-    C_\mathrm{\tau diss} = \frac{\sigma_\mathrm{diss,eff}}{2 \, m_p} = 1.05 \times 10^{-19} \, \mathrm{mp^{-1} \, cm^2} \, .
+    C_\mathrm{\tau diss} = \frac{\sigma_\mathrm{diss,eff}}{2 \, m_\mathrm{p}} = 1.05 \times 10^{-19} \, m_\mathrm{p}^{-1} \, \mathrm{cm^2} \, .
 \end{equation}$
 
 Photodissociation of molecular hydrogen by Lyman-Werner photons occurs via the two-step Solomon process ([Draine1996](http://doi.org/10.1086/177689), [Incatasciato2023](https://doi.org/10.1093/mnras/stad1008))
@@ -776,8 +776,8 @@ $\begin{align}
 Using that probability, the unit conversion coefficients are
 
 $\begin{align}
-    c_\mathrm{diss} &= 0.3 \, \mathrm{mp} \, , \\
-    c_\mathrm{ion} &= 1.0 \, \mathrm{mp} \, .
+    c_\mathrm{diss} &= 0.3 \, m_\mathrm{p} \, , \\
+    c_\mathrm{ion} &= 1.0 \, m_\mathrm{p} \, .
 \end{align}$
 
 These reflect the mass affected per photodissociation or ionization event.
@@ -1256,12 +1256,12 @@ where $S_d$ accounts for the attenuation by dust, and $S_{\mathrm{H}_2}$ for the
 From eq. 8 of [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), the dust shielding factor is
 
 $\begin{equation}
-    S_d = \exp\left[ -\sigma_\mathrm{d, eff} \, \frac{Z}{Z_\odot} \, (N_\mathrm{HI} + 2 \, N_{\mathrm{H}_2}) \right] \, ,
+    S_d = \exp\left[ -\sigma_{d,\mathrm{eff}} \, \frac{Z}{Z_\odot} \, (N_\mathrm{HI} + 2 \, N_{\mathrm{H}_2}) \right] \, ,
 \end{equation}$
 
-where $N_i$ is the column density of species $i$, and $\sigma_\mathrm{d, eff} = 4 \times 10^{-21} \, \mathrm{cm^2}$ is an effective dust cross-section per hydrogen nucleus. This value comes from [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) (Section 2.2), who treat $\sigma_\mathrm{d, eff}$ as an adjustable parameter. They fit it by comparing the atomic-to-molecular transition in their simulations with the molecular fractions measured by FUSE in the Milky Way, the LMC, and the SMC (their Figure 6), and their value is slightly different from the one in [Glover2007b](https://doi.org/10.1086/512238).
+where $N_i$ is the column density of species $i$, and $\sigma_{d,\mathrm{eff}} = 4 \times 10^{-21} \, \mathrm{cm^2}$ is an effective dust cross-section per hydrogen nucleus. This value comes from [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) (Section 2.2), who treat $\sigma_{d,\mathrm{eff}}$ as an adjustable parameter. They fit it by comparing the atomic-to-molecular transition in their simulations with the molecular fractions measured by FUSE in the Milky Way, the LMC, and the SMC (their Figure 6), and their value is slightly different from the one in [Glover2007b](https://doi.org/10.1086/512238).
 
-Both works assume that the dust-to-gas ratio is proportional to the gas metallicity ([Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), Section 2.2, and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), Section 2.2.1). So $\sigma_\mathrm{d, eff}$ is the cross-section per hydrogen nucleus of gas with solar metallicity, i.e. with the dust abundance of the Milky Way, and $Z / Z_\odot$ is only a proxy for the dust abundance relative to that of the Milky Way.
+Both works assume that the dust-to-gas ratio is proportional to the gas metallicity ([Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55), Section 2.2, and [Christensen2012](https://doi.org/10.1111/j.1365-2966.2012.21628.x), Section 2.2.1). So $\sigma_{d,\mathrm{eff}}$ is the cross-section per hydrogen nucleus of gas with solar metallicity, i.e. with the dust abundance of the Milky Way, and $Z / Z_\odot$ is only a proxy for the dust abundance relative to that of the Milky Way.
 
 Since we follow the dust explicitly, we undo that substitution
 
@@ -1269,13 +1269,13 @@ $\begin{equation}
     \frac{Z}{Z_\odot} \rightarrow \frac{\mathcal{D}}{\mathcal{D}_\mathrm{ref}} \, ,
 \end{equation}$
 
-where $\mathcal{D} = \rho_d / (m_p \, n_\mathrm{H})$ is the dust-to-hydrogen mass ratio, and $\mathcal{D}_\mathrm{ref}$ its value in the Milky Way. Then, the dust optical depth is
+where $\mathcal{D} = \rho_d / (m_\mathrm{p} \, n_\mathrm{H})$ is the dust-to-hydrogen mass ratio, and $\mathcal{D}_\mathrm{ref}$ its value in the Milky Way. Then, the dust optical depth is
 
 $\begin{equation}
-    \tau_d = \sigma_\mathrm{d, eff} \, \frac{\mathcal{D}}{\mathcal{D}_\mathrm{ref}} \, N_\mathrm{H} = \frac{\sigma_\mathrm{d, eff}}{\mathcal{D}_\mathrm{ref} \, m_p} \, \Sigma_d \, ,
+    \tau_d = \sigma_{d,\mathrm{eff}} \, \frac{\mathcal{D}}{\mathcal{D}_\mathrm{ref}} \, N_\mathrm{H} = \frac{\sigma_{d,\mathrm{eff}}}{\mathcal{D}_\mathrm{ref} \, m_\mathrm{p}} \, \Sigma_d \, ,
 \end{equation}$
 
-where $\Sigma_d = \mathcal{D} \, m_p \, N_\mathrm{H}$ is the dust mass column density, and $\sigma_\mathrm{d, eff} / (\mathcal{D}_\mathrm{ref} \, m_p)$ is the effective opacity per unit of dust mass.
+where $\Sigma_d = \mathcal{D} \, m_\mathrm{p} \, N_\mathrm{H}$ is the dust mass column density, and $\sigma_{d,\mathrm{eff}} / (\mathcal{D}_\mathrm{ref} \, m_\mathrm{p})$ is the effective opacity per unit of dust mass.
 
 To estimate the column density, we use the shielding length $L_\mathrm{sh}$ (see the section Shielding length), assuming that the shielding material has the density and composition of the cell, so
 
@@ -1292,7 +1292,7 @@ $\begin{equation}
 where
 
 $\begin{equation}
-    C_\mathrm{sd} = \frac{\sigma_\mathrm{d, eff}}{\mathcal{D}_\mathrm{ref} \, m_p} \, .
+    C_\mathrm{sd} = \frac{\sigma_{d,\mathrm{eff}}}{\mathcal{D}_\mathrm{ref} \, m_\mathrm{p}} \, .
 \end{equation}$
 
 [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) do not give the dust abundance of the gas their fit refers to, so we need an independent estimate of $\mathcal{D}_\mathrm{ref}$. We take it from [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x), who set the abundance of silicate and graphite grains to reproduce the mean extinction curve of the Milky Way per hydrogen nucleus (Section 4.1). For each grain species, with key element $\mathrm{X}$ (Si for silicate and C for graphite), eq. 18 of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) at solar metallicity gives the dust mass density
@@ -1311,16 +1311,16 @@ where $(\mathrm{X/H})_\odot$ is the solar abundance of $\mathrm{X}$ (by number),
 Summing both species, and defining $c_\mathrm{X} = (1 - \xi_\mathrm{X}) / f_\mathrm{X}$ (the dust mass per unit mass of $\mathrm{X}$, so $c_\mathrm{Si} = 4.52$ and $c_\mathrm{C} = 0.85$)
 
 $\begin{equation}
-    \mathcal{D}_\mathrm{ref} = \frac{\rho_d}{m_p \, n_\mathrm{H}} = c_\mathrm{Si} \, \frac{m_\mathrm{Si}}{m_p} \left( \mathrm{\frac{Si}{H}} \right)_{\!\odot} + c_\mathrm{C} \, \frac{m_\mathrm{C}}{m_p} \left( \mathrm{\frac{C}{H}} \right)_{\!\odot} = 8.15 \times 10^{-3} \, ,
+    \mathcal{D}_\mathrm{ref} = \frac{\rho_d}{m_\mathrm{p} \, n_\mathrm{H}} = c_\mathrm{Si} \, \frac{m_\mathrm{Si}}{m_\mathrm{p}} \left( \mathrm{\frac{Si}{H}} \right)_{\!\odot} + c_\mathrm{C} \, \frac{m_\mathrm{C}}{m_\mathrm{p}} \left( \mathrm{\frac{C}{H}} \right)_{\!\odot} = 8.15 \times 10^{-3} \, ,
 \end{equation}$
 
-i.e. $1.36 \times 10^{-26} \, \mathrm{g}$ of dust per hydrogen nucleus. Identifying this value with the dust abundance behind $\sigma_\mathrm{d, eff}$ is our assumption, which links the two works. The solar-metallicity gas of [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) has the dust of the Milky Way, and the grains of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) reproduce its extinction.
+i.e. $1.36 \times 10^{-26} \, \mathrm{g}$ of dust per hydrogen nucleus. Identifying this value with the dust abundance behind $\sigma_{d,\mathrm{eff}}$ is our assumption, which links the two works. The solar-metallicity gas of [Gnedin2009](https://doi.org/10.1088/0004-637X/697/1/55) has the dust of the Milky Way, and the grains of [Hirashita2012](https://doi.org/10.1111/j.1365-2966.2012.20702.x) reproduce its extinction.
 
 The corresponding opacity is
 
 $\begin{align}
-    C_\mathrm{sd} &= \frac{\sigma_\mathrm{d, eff}}{\mathcal{D}_\mathrm{ref} \, m_p} \\
-    &= 4.908 \times 10^{-19} \, \mathrm{mp^{-1} \, cm^2} \, .
+    C_\mathrm{sd} &= \frac{\sigma_{d,\mathrm{eff}}}{\mathcal{D}_\mathrm{ref} \, m_\mathrm{p}} \\
+    &= 4.908 \times 10^{-19} \, m_\mathrm{p}^{-1} \, \mathrm{cm^2} \, .
 \end{align}$
 """
   ╠═╡ =#
@@ -1348,14 +1348,14 @@ where $b_5 = b / 10^5 \, \mathrm{cm \, s^{-1}}$ and $b$ is the Doppler broadenin
 We can rewrite $x$ as
 
 $\begin{equation}
-    x = \frac{f_m \, \rho_\mathrm{cell} \, L_\mathrm{sh}}{2 \, m_p \, x_\mathrm{nf}} = C_\mathrm{sh2} \, f_m \, \rho_\mathrm{cell} \, L_\mathrm{sh} \, ,
+    x = \frac{f_m \, \rho_\mathrm{cell} \, L_\mathrm{sh}}{2 \, m_\mathrm{p} \, x_\mathrm{nf}} = C_\mathrm{sh2} \, f_m \, \rho_\mathrm{cell} \, L_\mathrm{sh} \, ,
 \end{equation}$
 
 where $x_\mathrm{nf} = 5 \times 10^{14} \, \mathrm{cm^{-2}}$ and
 
 $\begin{align}
-    C_\mathrm{sh2} &= \frac{1}{2 \, m_p \, x_\mathrm{nf}} \\
-	&= 10^{-15} \, \mathrm{mp^{-1} \, cm^2}\, .
+    C_\mathrm{sh2} &= \frac{1}{2 \, m_\mathrm{p} \, x_\mathrm{nf}} \\
+	&= 10^{-15} \, m_\mathrm{p}^{-1} \, \mathrm{cm^2}\, .
 \end{align}$
 """
   ╠═╡ =#
@@ -1398,7 +1398,7 @@ where $c_s$ is the sound speed. The physical motivation is that the gas able to 
 In star-forming cells $\texttt{AREPO}$ uses the two-phase model of [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x). The internal energy of these cells represents the effective pressure of the two-phase medium, and not the temperature of the shielded gas, so we cannot use it. The cold clouds have a temperature $T_c \simeq 1000 \, \mathrm{K}$, but [Springel2003](https://doi.org/10.1046/j.1365-8711.2003.06206.x) note that their results do not depend on this choice as long as $T_c \ll 10^4 \, \mathrm{K}$, i.e. it is not a physical estimate of the temperature of the molecular gas. Applying the ceiling of model L1a to the cold phase, $T = \min(T_c, T_\mathrm{ceil}) = T_\mathrm{ceil}$, so we will use the isothermal sound speed
 
 $\begin{equation}
-    c_s = \left( \frac{k_B \, T_\mathrm{ceil}}{\mu \, m_p} \right)^{\!1/2} = 0.52 \, \mathrm{km \, s^{-1}} \, ,
+    c_s = \left( \frac{k_\mathrm{B} \, T_\mathrm{ceil}}{\mu \, m_\mathrm{p}} \right)^{\!1/2} = 0.52 \, \mathrm{km \, s^{-1}} \, ,
 \end{equation}$
 
 with $\mu = 4 / (1 + 3 \, X_\mathrm{H}) = 1.22$, the mean molecular weight of neutral gas that $\texttt{AREPO}$ uses for the cold phase.
@@ -1415,10 +1415,10 @@ where
 
 $\begin{align}
     C_\mathrm{lsh} &= \left( \frac{\pi \, c_s^2}{G} \right)^{\!1/2} \\
-	&= 2.760 \times 10^{20} \, \mathrm{mp^{1/2} \, cm^{-1/2}} \, ,
+	&= 2.760 \times 10^{20} \, m_\mathrm{p}^{1/2} \, \mathrm{cm^{-1/2}} \, ,
 \end{align}$
 
-i.e. $L_\mathrm{sh} = 89.5 \, \mathrm{pc}$ for $\rho_\mathrm{cell} = 1 \, \mathrm{mp \, cm^{-3}}$.
+i.e. $L_\mathrm{sh} = 89.5 \, \mathrm{pc}$ for $\rho_\mathrm{cell} = 1 \, m_\mathrm{p} \, \mathrm{cm^{-3}}$.
 
 With a constant sound speed the column densities scale as $N \propto \rho_\mathrm{cell}^{1/2}$, close to the scaling $N \propto n_\mathrm{H}^{0.42}$ that [Safranek-Shrader2017](https://doi.org/10.1093/mnras/stw2647) find with ray tracing (their eq. 29).
 
@@ -1763,9 +1763,9 @@ of Galaxies_](https://doi.org/10.1007/978-94-010-0967-6) by Francesca Matteucci 
 
 We use the mass limits:
 
-*  $m_\mathrm{low} = 0.15 \, M_\odot$ (lower limit of the IMF of $\texttt{HR-pyPopStar}$),
-*  $m_\mathrm{ir} = 8 \, M_\odot$ (approximate threshold for core-collapse supernovae, $\texttt{SNII\_MinMass\_Msun}$ in $\texttt{AREPO}$),
-*  $m_\mathrm{high} = 100 \, M_\odot$ (upper limit of the IMF, the same in $\texttt{HR-pyPopStar}$).
+*  $m_\mathrm{low} = 0.15 \, \mathrm{M_\odot}$ (lower limit of the IMF of $\texttt{HR-pyPopStar}$),
+*  $m_\mathrm{ir} = 8 \, \mathrm{M_\odot}$ (approximate threshold for core-collapse supernovae, $\texttt{SNII\_MinMass\_Msun}$ in $\texttt{AREPO}$),
+*  $m_\mathrm{high} = 100 \, \mathrm{M_\odot}$ (upper limit of the IMF, the same in $\texttt{HR-pyPopStar}$).
 
 [Ascasibar2015](https://doi.org/10.1093/mnras/stv098) found $R \approx 0.18$ and $Z_\mathrm{sn} \approx 0.09$, using the yield model of [Woosley1995](https://doi.org/10.2172/115557) and the IMF of [Kroupa2001](https://doi.org/10.1046/j.1365-8711.2001.04022.x), although the exact mass integration limits used were not specified.
 
@@ -2505,8 +2505,8 @@ $\begin{equation}
 with
 
 $\begin{align}
-	C_\mathrm{acc,Si} &= 0.4940 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, , \\
-	C_\mathrm{acc,C} &= 0.1832 \, \mathrm{mp^{-1} \, Myr^{-1} \, cm^3} \, .
+	C_\mathrm{acc,Si} &= 0.4940 \, m_\mathrm{p}^{-1} \, \mathrm{Myr^{-1} \, cm^3} \, , \\
+	C_\mathrm{acc,C} &= 0.1832 \, m_\mathrm{p}^{-1} \, \mathrm{Myr^{-1} \, cm^3} \, .
 \end{align}$
 
 Unlike the other constants of the model, $C_\mathrm{dg}$ depends on the cell, through the abundances $Z_\mathrm{Si}$ and $Z_\mathrm{C}$ (which also set the weights $w_\mathrm{X}$), so it is computed at the start of each integration.
@@ -2868,8 +2868,9 @@ begin
 	# the average thermal velocity of hydrogen atoms (⟨va⟩)
 	const γva = 5.0e4u"cm * s^-1"
 
-	# Dust fraction floor (1e-3 of the Milky Way dust-to-hydrogen mass ratio)
-	const fd_eff = 1e-3 * D_ref
+	# Dust fraction floor: 1e-3 of the Milky Way dust-to-gas mass ratio, X_H * D_ref
+	# (D_ref is per unit hydrogen mass, while fd is per unit total gas mass)
+	const fd_eff = 1e-3 * X_H * D_ref
 
 	# Clumping factor
 	const Cρ = 100.0
@@ -3843,7 +3844,7 @@ $\begin{equation}
 	\text{SFR}_p = 0.02 \, \frac{P}{P + P_0} \, \frac{M_\text{cell}}{t_\text{ff}} \, ,
 \end{equation}$
 
-where $P$ is the gas pressure and $P_0$ is the external pressure in the ISM where the molecular fraction is unity ($P_0/ k_B = 2.0 \times 10^4 \, \mathrm{K \, cm^{-3}}$ for the MW and $P_0/ k_B = 4.5 \times 10^4 \, \mathrm{K \, cm^{-3}}$ for the combined data of several galaxies).
+where $P$ is the gas pressure and $P_0$ is the external pressure in the ISM at which the molecular and atomic gas surface densities are equal, i.e. at which the molecular fraction is $0.5$ ($P_0/ k_\mathrm{B} = 2.0 \times 10^4 \, \mathrm{K \, cm^{-3}}$ for the MW and $P_0/ k_\mathrm{B} = 3.5 \times 10^4 \, \mathrm{K \, cm^{-3}}$ for the combined data of the 14 galaxies in their sample).
 
 So, the star formation efficiency is
 
@@ -4006,7 +4007,7 @@ UnitfulAstro = "~1.2.2"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.13.3"
+julia_version = "1.13.4"
 manifest_format = "2.1"
 project_hash = "4c36dc326a9fcc9c390f4432247a21dbb6dc1d8d"
 
@@ -5536,7 +5537,7 @@ version = "0.3.13"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2026.10.20"
+version = "2026.11.5"
 
 [[deps.MuladdMacro]]
 deps = ["PrecompileTools"]
@@ -5715,7 +5716,7 @@ version = "0.3.34+0"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.30+0"
+version = "0.3.30+1"
 
 [[deps.OpenJpeg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libtiff_jll", "LittleCMS_jll", "libpng_jll"]
@@ -6869,7 +6870,7 @@ version = "2023.1.0+0"
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
-version = "17.8.3+0"
+version = "17.8.5+0"
 
 [[deps.tectonic_jll]]
 deps = ["Artifacts", "Fontconfig_jll", "FreeType2_jll", "Graphite2_jll", "HarfBuzz_ICU_jll", "HarfBuzz_jll", "ICU_jll", "JLLWrappers", "Libdl", "OpenSSL_jll", "Zlib_jll", "libpng_jll"]

@@ -57,7 +57,7 @@ static char *UVB_TABLE_PATH = "../code/src/el_sfr/tables/UVB.txt";
 #define Z_FLOOR 1.0e-10                  /* Metallicity below which a cell is considered pristine [dimensionless] */
 #define ODE_CTION 6.3000e-18             /* Photoionization optical depth constant [cm^2 * mp^(-1)] */
 #define ODE_CTDISS 1.0500e-19            /* Photodissociation optical depth constant [cm^2 * mp^(-1)] */
-#define FD_EFF 8.150297643300318e-06     /* Dust fraction floor for condensation [dimensionless] */
+#define FD_EFF 6.194226208908242e-06     /* Dust fraction floor for condensation [dimensionless] */
 #define WH2 2.0000e-01                   /* Molecular self-shielding parameter [dimensionless] */
 #define ODE_EXPFAC 8.500000000000000e-04 /* Exponential factor of the molecular self-shielding [dimensionless] */
 #define ABEL97 4.354948800000000e+01     /* H2 photodissociation rate per unit J21 [Myr^(-1)] */
